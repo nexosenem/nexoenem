@@ -1115,9 +1115,17 @@ $('#moreMobile')?.addEventListener('click',()=>toggleMenu(true));
 
 function nexoAccessTier(){
   if(state.membership?.is_ultra||state.membership?.plan==='ultra')return 'ultra';
-  if(state.profile?.role==='admin')return 'ultra';
   if(state.membership?.is_plus||state.membership?.plan==='plus')return 'plus';
   return 'free';
+}
+
+function nexoPlanLabel(tier=nexoAccessTier()){
+  return tier==='ultra'?'Ultra':tier==='plus'?'Plus':'Free';
+}
+
+function nexoRolePlanLabel(){
+  const role=state.profile?.role==='admin'?'Administrador':'Estudante';
+  return role+' · '+nexoPlanLabel();
 }
 
 function isNexoUltra(){
@@ -1181,8 +1189,8 @@ function renderPlanExperience(){
   const plan=ultra?'ULTRA':plus?'PLUS':'FREE';
   document.body.dataset.plan=ultra?'ultra':plus?'plus':'free';
   if($('#headerPlanBadge'))$('#headerPlanBadge').textContent=plan;
-  if($('#profilePlanLabel'))$('#profilePlanLabel').textContent=ultra?'Acesso Ultra':('Plano '+(plus?'Plus':'Free'));
-  if($('#profileRole'))$('#profileRole').textContent=ultra?'Administrador · Ultra':('Estudante · '+(plus?'Plus':'Free'));
+  if($('#profilePlanLabel'))$('#profilePlanLabel').textContent='Plano '+nexoPlanLabel(tier);
+  if($('#profileRole'))$('#profileRole').textContent=nexoRolePlanLabel();
   if($('#currentPlanChip')){
     $('#currentPlanChip').textContent=ultra?'NEXO Ultra':('Plano '+(plus?'Plus':'Free'));
     $('#currentPlanChip').classList.toggle('plus',plus&&!ultra);
@@ -1199,7 +1207,7 @@ function renderPlanExperience(){
   setUsageBar('#planCoreBar',u.core_sessions_today,l.core_sessions_per_day);
   setUsageBar('#planEssayBar',u.essay_reviews_month,l.essay_reviews_per_month);
   setUsageBar('#planArenaBar',u.arena_entries_week,l.arena_entries_per_week);
-  if($('#planUsageStatus'))$('#planUsageStatus').textContent=ultra?'Ultra administrativo · tudo liberado':plus?'Plus ativo · sem limites de uso':'Free · limites reiniciam automaticamente';
+  if($('#planUsageStatus'))$('#planUsageStatus').textContent=ultra?'Ultra ativo · todos os recursos liberados':plus?'Plus ativo · sem limites de uso':'Free · limites reiniciam automaticamente';
   const request=$('#requestPlusBtn');
   if(request){
     request.disabled=plus||ultra;
@@ -1213,12 +1221,11 @@ async function loadNexoMembership({silent=true}={}){
     const {data,error}=await client.rpc('get_nexo_membership');
     if(error)throw error;
     const server=data||{};
-    const roleUltra=state.profile?.role==='admin';
     state.membership={
       ...server,
-      plan:roleUltra?'ultra':(server.plan||'free'),
-      is_ultra:Boolean(server.is_ultra||roleUltra),
-      is_plus:Boolean(server.is_plus||server.is_ultra||roleUltra)
+      plan:server.plan||'free',
+      is_ultra:Boolean(server.is_ultra||server.plan==='ultra'),
+      is_plus:Boolean(server.is_plus||server.is_ultra||['plus','ultra'].includes(server.plan))
     };
     renderPlanExperience();
     return state.membership;
@@ -1242,16 +1249,11 @@ async function refreshCurrentRole({silent=true}={}){
     const previousRole=state.profile?.role||'student';
     state.profile={...(state.profile||{}),...data};
     const isAdmin=data.role==='admin';
-    if(isAdmin){
-      state.membership={...(state.membership||{}),plan:'ultra',is_ultra:true,is_plus:true};
-    }else if(state.membership?.plan==='ultra'||state.membership?.is_ultra){
-      await loadNexoMembership({silent:true});
-    }
     renderPlanExperience();
 
-    $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    $('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
-    if(roleLabel)roleLabel.textContent=isAdmin?(isNexoUltra()?'Administrador · Ultra':'Administrador'):('Estudante · '+(isNexoPlus()?'Plus':'Free'));
+    if(roleLabel)roleLabel.textContent=nexoRolePlanLabel();
 
     if(previousRole!==data.role&&!silent){
       toast(isAdmin?'Seu acesso de administrador foi liberado.':'Seu acesso de administrador foi removido.');
@@ -1364,7 +1366,7 @@ async function initApp(session) {
     if($('#profileName'))$('#profileName').textContent = name.split(' ')[0];
     if($('#menuName'))$('#menuName').textContent = name;
     if($('#menuEmail'))$('#menuEmail').textContent = state.user.email || '';
-    if($('#profileRole'))$('#profileRole').textContent = isNexoUltra()?'Administrador · Ultra':('Estudante · '+(isNexoPlus()?'Plus':'Free'));
+    if($('#profileRole'))$('#profileRole').textContent=nexoRolePlanLabel();
     if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
     $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
   });
@@ -5524,30 +5526,50 @@ function renderAdminUsers(){
   const list=$('#adminUserList');
   if(!list)return;
   const q=($('#adminUserSearch')?.value||'').trim().toLowerCase();
-  const users=state.adminUsers.filter(u=>!q||[u.full_name,u.email,u.role].filter(Boolean).join(' ').toLowerCase().includes(q));
+  const users=state.adminUsers.filter(u=>!q||[u.full_name,u.email,u.role,u.plan].filter(Boolean).join(' ').toLowerCase().includes(q));
   list.innerHTML=users.length?users.map(u=>{
     const isAdmin=u.role==='admin';
     const current=Boolean(u.is_current_user);
+    const plan=['free','plus','ultra'].includes(u.plan)?u.plan:'free';
     const name=u.full_name||u.email?.split('@')[0]||'Usuário';
     return `<article class="admin-user-row">
       <div class="admin-user-avatar">${esc(initials(name))}</div>
       <div class="admin-user-info">
         <b>${esc(name)} ${current?'<span class="you-chip">VOCÊ</span>':''}</b>
         <small>${esc(u.email||'Sem e-mail')}</small>
-        <span class="role-chip ${isAdmin?'admin':'student'}">${isAdmin?'Administrador':'Aluno'}</span>
+        <div class="admin-access-chips">
+          <span class="role-chip ${isAdmin?'admin':'student'}">${isAdmin?'Administrador':'Aluno'}</span>
+          <span class="plan-access-chip ${plan}">Plano ${plan==='ultra'?'Ultra':plan==='plus'?'Plus':'Free'}</span>
+        </div>
       </div>
-      <div class="admin-user-action">
-        ${current
-          ? '<button disabled title="Você não pode remover seu próprio acesso por aqui">Administrador</button>'
-          : isAdmin
-            ? '<button class="danger" data-set-user-role="'+u.id+'" data-role="student">Remover admin</button>'
-            : '<button class="promote" data-set-user-role="'+u.id+'" data-role="admin">Tornar admin</button>'}
+      <div class="admin-user-access">
+        <div class="admin-access-control">
+          <small>CARGO</small>
+          <div class="admin-role-action">
+            ${current
+              ? '<button disabled title="Você não pode remover seu próprio acesso por aqui">Admin</button>'
+              : isAdmin
+                ? '<button class="danger" data-set-user-role="'+u.id+'" data-role="student">Remover admin</button>'
+                : '<button class="promote" data-set-user-role="'+u.id+'" data-role="admin">Tornar admin</button>'}
+          </div>
+        </div>
+        <div class="admin-access-control">
+          <small>PLANO</small>
+          <div class="admin-plan-switch" data-user-plan-control="${u.id}">
+            <button class="${plan==='free'?'active':''}" data-set-user-plan="${u.id}" data-plan="free">Free</button>
+            <button class="${plan==='plus'?'active':''}" data-set-user-plan="${u.id}" data-plan="plus">Plus</button>
+            <button class="ultra ${plan==='ultra'?'active':''}" data-set-user-plan="${u.id}" data-plan="ultra">Ultra</button>
+          </div>
+        </div>
       </div>
     </article>`;
   }).join(''):'<div class="admin-user-empty">Nenhuma conta encontrada.</div>';
 
   list.querySelectorAll('[data-set-user-role]').forEach(btn=>{
     btn.onclick=()=>setAdminUserRole(btn.dataset.setUserRole,btn.dataset.role);
+  });
+  list.querySelectorAll('[data-set-user-plan]').forEach(btn=>{
+    btn.onclick=()=>setAdminUserPlan(btn.dataset.setUserPlan,btn.dataset.plan);
   });
 }
 
@@ -5574,6 +5596,35 @@ async function setAdminUserRole(userId,role){
     console.error('set admin role',err);
     const msg=String(err?.message||err||'');
     toast(msg.includes('cannot_remove_own_admin')?'Você não pode remover seu próprio acesso.':'Não foi possível alterar o acesso dessa conta.','error');
+  }
+}
+
+async function setAdminUserPlan(userId,plan){
+  const user=state.adminUsers.find(u=>u.id===userId);
+  if(!user||!['free','plus','ultra'].includes(plan))return;
+  if(user.plan===plan)return;
+
+  const name=user.full_name||user.email||'esta conta';
+  const label=plan==='ultra'?'Ultra':plan==='plus'?'Plus':'Free';
+  if(!confirm('Alterar o plano de '+name+' para NEXO '+label+'?'))return;
+
+  try{
+    const {data,error}=await client.functions.invoke('admin-users',{
+      body:{action:'set_plan',target_user_id:userId,plan}
+    });
+    if(error)throw error;
+    if(data?.error)throw new Error(data.error);
+
+    toast('Plano de '+name+' alterado para '+label+'.');
+
+    if(user.is_current_user){
+      await loadNexoMembership({silent:false});
+      await loadNexoJourney({silent:true});
+    }
+    await loadAdminUsers();
+  }catch(err){
+    console.error('set admin plan',err);
+    toast('Não foi possível alterar o plano dessa conta.','error');
   }
 }
 
