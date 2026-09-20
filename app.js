@@ -1438,6 +1438,71 @@ function blockMaintenance(key){
   return true;
 }
 
+
+const NEXO_WEEK_DAYS=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
+
+function weekTaskIcon(type){
+  return ({questions:'✓',review:'↻',focus:'◷',essay:'✎',simulation:'▤',errors:'!',recovery:'+'})[type]||'•';
+}
+function weekTaskActionLabel(type){
+  return ({questions:'Treinar agora',review:'Revisar agora',focus:'Abrir foco',essay:'Escrever redação',simulation:'Fazer simulado',errors:'Revisar erros',recovery:'Recuperar'})[type]||'Começar';
+}
+async function loadNexoWeekPlan({silent=true}={}){
+  if(!state.user?.id)return null;
+  try{
+    const {data,error}=await client.rpc('get_or_create_nexo_week_plan');
+    if(error)throw error;
+    state.weekPlan=data||null;
+    renderNexoWeekPlan();
+    return state.weekPlan;
+  }catch(err){
+    console.error('NEXO week plan',err);
+    logClientError('week_plan',err,'week_load');
+    if(!silent)toast('Não consegui montar sua Semana NEXO agora.','error');
+    return null;
+  }
+}
+function renderNexoWeekPlan(){
+  const plan=state.weekPlan||{},tasks=Array.isArray(plan.tasks)?plan.tasks:[];
+  const completed=Number(plan.completed||tasks.filter(t=>t.status==='completed').length||0);
+  const total=Number(plan.total||tasks.length||7),pct=total?Math.round(completed*100/total):0;
+  const today=(new Date().getDay()+6)%7;
+  $('[data-week-progress]').forEach(el=>el.textContent=completed+'/'+total);
+  $('[data-week-summary]').forEach(el=>el.textContent=tasks.length?'Plano de '+Number(plan.daily_minutes||state.profile?.daily_minutes||60)+' min/dia · '+completed+' de '+total+' missões concluídas.':'Complete seu diagnóstico para o NEXO montar a semana.');
+  $('[data-week-tasks]').forEach(el=>{
+    const compact=el.closest('.mobile-week-card')?tasks.slice(0,3):tasks.slice(0,4);
+    el.innerHTML=compact.length?compact.map(task=>`<button class="week-mini-task ${task.status==='completed'?'done':''} ${Number(task.day_index)===today?'today':''}" data-week-open="${task.id}"><span>${weekTaskIcon(task.task_type)}</span><div><b>${NEXO_WEEK_DAYS[Number(task.day_index)]||'Dia'} · ${esc(task.title)}</b><small>${esc(task.topic||task.subject||task.area||'Plano NEXO')} · ${Number(task.target_minutes||0)} min</small></div><i>${task.status==='completed'?'✓':'→'}</i></button>`).join(''):'<p class="week-loading">Faça algumas questões para liberar o plano semanal.</p>';
+  });
+  if($('#weekFullProgress'))$('#weekFullProgress').textContent=pct+'%';
+  if($('#weekFullTitle'))$('#weekFullTitle').textContent=completed===total&&total?'Semana concluída. Excelente consistência.':'Seu plano adaptativo desta semana';
+  if($('#weekFullSummary'))$('#weekFullSummary').textContent='O NEXO distribuiu '+total+' missões usando seu tempo disponível e suas prioridades atuais.';
+  const grid=$('#weekFullGrid');
+  if(grid){
+    grid.innerHTML=tasks.length?tasks.map(task=>`<article class="panel week-day-card ${task.status==='completed'?'done':''} ${Number(task.day_index)===today?'today':''}"><header><span>${String(Number(task.day_index)+1).padStart(2,'0')} · ${NEXO_WEEK_DAYS[Number(task.day_index)]||'Dia'}</span><b>${task.status==='completed'?'CONCLUÍDO':Number(task.day_index)===today?'HOJE':'PLANEJADO'}</b></header><div class="week-day-main"><span class="week-day-icon">${weekTaskIcon(task.task_type)}</span><div><h3>${esc(task.title)}</h3><p>${esc(task.topic||task.subject||task.area||'Atividade personalizada')}</p></div></div><div class="week-day-meta"><span>${Number(task.target_minutes||0)} min</span>${task.target_count?'<span>'+Number(task.target_count)+' item(ns)</span>':''}</div><div class="week-day-actions"><button class="outline-btn" data-week-launch="${task.id}">${weekTaskActionLabel(task.task_type)}</button><button class="primary-btn" data-week-complete="${task.id}" ${task.status==='completed'?'disabled':''}>${task.status==='completed'?'✓ Concluído':'Marcar concluído'}</button></div></article>`).join(''):'<article class="panel"><p style="color:var(--muted)">Ainda não há tarefas para esta semana.</p></article>';
+    $('[data-week-launch]',grid).forEach(btn=>btn.onclick=()=>{const task=tasks.find(t=>String(t.id)===String(btn.dataset.weekLaunch));if(task)launchNexoWeekTask(task)});
+    $('[data-week-complete]',grid).forEach(btn=>btn.onclick=()=>completeNexoWeekTask(Number(btn.dataset.weekComplete)));
+  }
+  $('[data-week-open]').forEach(btn=>btn.onclick=()=>openPage('semana'));
+}
+async function completeNexoWeekTask(taskId){
+  try{
+    const {data,error}=await client.rpc('complete_nexo_week_task',{p_task_id:Number(taskId)});
+    if(error)throw error;
+    toast(data?.awarded?'Missão concluída · +30 XP e +5 N-Coins':'Missão concluída.');
+    await Promise.all([loadNexoWeekPlan({silent:true}),loadNexoJourney({silent:true})]);
+  }catch(err){console.error('week task complete',err);toast('Não consegui concluir essa missão agora.','error')}
+}
+async function launchNexoWeekTask(task){
+  if(!task)return;
+  const type=task.task_type;
+  if(type==='focus'){const min=Number(task.target_minutes||25);if(!focusModeState.running)setFocusMinutes([25,45,60].reduce((best,x)=>Math.abs(x-min)<Math.abs(best-min)?x:best,25));openFocusMode();return}
+  if(type==='essay'){openPage('redacao');$('#randomEssayTheme')?.click();setTimeout(()=>$('#essayText')?.focus(),120);return}
+  if(type==='simulation'){openPage('questoes');await startStudySession({mode:'simulado',area:task.area||'',subject:'',topic:'',difficulty:'',visualOnly:false,size:Number(task.target_count||20)});return}
+  if(type==='errors'){openPage('desempenho');await startErrorReview();return}
+  openPage('questoes');
+  await startStudySession({mode:type==='review'?'review':'core',area:task.area||'',subject:task.subject||'',topic:task.topic||'',difficulty:'',visualOnly:false,size:Number(task.target_count||8)});
+}
+
 function maintenanceModuleForPage(id){
   return ({
     questoes:'questions',
