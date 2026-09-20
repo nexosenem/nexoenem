@@ -1238,28 +1238,49 @@ async function handleSession(session) {
 }
 
 function reportSessionError(err) {
-  console.error('Falha ao carregar a sessão:', err);
+  console.error('Falha ao carregar a sessão/app:', err);
   logClientError('auth_session',err,'session_load');
-  $('#app').classList.add('hidden');
-  $('#authScreen').classList.remove('hidden');
-  $('#niaButton')?.classList.add('hidden');
-  $('#niaPanel')?.classList.add('hidden');
-  showAuthMessage('Não consegui restaurar sua sessão. Entre novamente para continuar.', true);
+
+  // Se o Supabase já entregou uma sessão válida, um erro de inicialização da UI
+  // não deve derrubar a conta nem mandar o usuário de volta para o login.
+  if(state.user?.id){
+    $('#authScreen').classList.add('hidden');
+    $('#app').classList.remove('hidden');
+    $('#niaPanel')?.classList.add('hidden');
+    clearAuthMessage();
+    toast('Sua sessão continua ativa. Recarreguei o NEXO sem desconectar sua conta.','error');
+  }else{
+    $('#app').classList.add('hidden');
+    $('#authScreen').classList.remove('hidden');
+    $('#niaButton')?.classList.add('hidden');
+    $('#niaPanel')?.classList.add('hidden');
+    showAuthMessage('Não consegui restaurar sua sessão. Entre novamente para continuar.', true);
+  }
+
   $('#boot').classList.add('fade');
   setTimeout(()=>$('#boot').classList.add('hidden'),450);
 }
 
-client.auth.onAuthStateChange((_event, session) => {
-  // O callback precisa retornar imediatamente. Fazer chamadas assíncronas do
-  // Supabase aqui pode bloquear o auth client e deixar o login preso em “Entrando...”.
-  setTimeout(() => {
-    handleSession(session).catch(reportSessionError);
-  }, 0);
-});
+let authBootstrapStarted=false;
 
-client.auth.getSession()
-  .then(({data}) => handleSession(data.session))
-  .catch(reportSessionError);
+function startAuthBootstrap(){
+  if(authBootstrapStarted)return;
+  authBootstrapStarted=true;
+
+  client.auth.onAuthStateChange((_event, session) => {
+    // Mantém o callback síncrono e agenda a inicialização para o próximo tick.
+    setTimeout(() => {
+      handleSession(session).catch(reportSessionError);
+    }, 0);
+  });
+
+  client.auth.getSession()
+    .then(({data,error}) => {
+      if(error)throw error;
+      return handleSession(data.session);
+    })
+    .catch(reportSessionError);
+}
 
 window.addEventListener('focus',()=>refreshCurrentRole({silent:false}));
 document.addEventListener('visibilitychange',()=>{
@@ -4843,4 +4864,8 @@ $('#addMaterial').onclick=async()=>{
 };
 
 window.addEventListener('resize',()=>{if(innerWidth>760)toggleMenu(false)});
+
+// Importante: inicia a restauração da sessão somente após todo o arquivo ter
+// terminado de declarar NEXO_EMOTIONS, imagens, Jornada e demais constantes.
+queueMicrotask(startAuthBootstrap);
 })();
