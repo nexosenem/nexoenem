@@ -573,3 +573,19 @@ body.light .core-metrics b{color:#172238}
   .mobile-core-card .core-metrics span{padding:7px 4px}
   .mobile-core-card .core-metrics b{font-size:13px}
 }
+
+
+/* NEXO Core focus recommendation */
+.focus-card.core-focus{
+  border-color:rgba(111,88,240,.58)!important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(64,209,255,.09),transparent 35%),
+    linear-gradient(145deg,rgba(71,51,164,.13),rgba(9,18,33,.92))!important;
+  box-shadow:0 12px 34px rgba(31,27,87,.16)
+}
+.focus-card.core-focus .risk{
+  color:#c7beff!important;
+  border-color:rgba(116,91,238,.36)!important;
+  background:rgba(91,68,207,.12)!important
+}
+body.light .focus-card.core-focus{background:linear-gradient(145deg,#f7f4ff,#f8fcff)!important}
