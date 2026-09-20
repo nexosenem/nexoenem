@@ -2349,3 +2349,182 @@ body.light .admin-content-row{background:#f7f9fd}
 .cloudinary-security-status.warning{color:#f2c879;background:rgba(195,139,44,.1);border-color:rgba(195,139,44,.32)}
 .cloudinary-security-status.checking{color:var(--muted)}
 @media(max-width:520px){.content-filter-line{grid-template-columns:1fr}.content-filter-line .outline-btn{width:100%}}
+
+
+/* =========================================================
+   NEXO MASCOT FAMILY SYSTEM v1
+   Avatar = expressive square crop
+   Bust   = medium mentor presentation
+   Hero   = full-body brand presentation
+   ========================================================= */
+
+[data-nexo-family="avatar"]{
+  object-fit:cover!important;
+  object-position:center 28%!important;
+}
+
+[data-nexo-family="bust"]{
+  object-fit:contain!important;
+  object-position:center top!important;
+  transform:none!important;
+  padding:0!important;
+  background:transparent!important;
+}
+
+[data-nexo-family="hero"]{
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  transform:none!important;
+  padding:0!important;
+  background:transparent!important;
+}
+
+/* Desktop home: full-body hero, no face crop */
+.hero-nexo-art{
+  overflow:hidden;
+}
+.home-nexo-mascot[data-nexo-family="hero"]{
+  width:min(250px,72%)!important;
+  height:96%!important;
+  left:50%!important;
+  bottom:-8px!important;
+  border-radius:0!important;
+  filter:
+    drop-shadow(0 22px 38px rgba(0,0,0,.42))
+    drop-shadow(0 0 28px rgba(86,94,255,.16))!important;
+}
+
+/* Medium mentor placements use the bust rather than a square avatar */
+.nexo-guide-card img[data-nexo-family="bust"],
+.page-nexo-mentor img[data-nexo-family="bust"],
+.simulation-hero-mascot img[data-nexo-family="bust"],
+#onboardingMascot[data-nexo-family="bust"],
+#nexoHeroImage[data-nexo-family="bust"]{
+  object-fit:contain!important;
+  object-position:center top!important;
+  transform:none!important;
+}
+
+.nexo-guide-card img[data-nexo-family="bust"]{
+  width:58px!important;
+  height:72px!important;
+  border-radius:15px!important;
+}
+
+.page-nexo-mentor img[data-nexo-family="bust"]{
+  width:62px!important;
+  height:74px!important;
+  border-radius:16px!important;
+}
+
+.simulation-hero-mascot img[data-nexo-family="bust"]{
+  width:112px!important;
+  height:132px!important;
+  border-radius:22px!important;
+}
+
+#nexoHeroImage[data-nexo-family="bust"]{
+  width:94px!important;
+  height:112px!important;
+  border-radius:18px!important;
+}
+
+/* Onboarding has enough room for a real bust instead of a stretched face */
+#onboardingMascot[data-nexo-family="bust"]{
+  width:245px!important;
+  height:300px!important;
+  left:50%!important;
+  top:14px!important;
+  transform:translateX(-50%)!important;
+  border-radius:30px!important;
+  filter:drop-shadow(0 22px 34px rgba(0,0,0,.38))!important;
+}
+
+/* Small expressive avatar family */
+.core-avatar img,
+.nia-mini-avatar img,
+.answer-professor img,
+.professor-nexo-inline img,
+.performance-core-mascot img,
+.sim-report-professor img,
+.session-finish-state img{
+  object-fit:cover!important;
+  object-position:center 28%!important;
+  padding:0!important;
+}
+
+/* Mobile home: bust is intentionally taller than the old square face */
+@media(max-width:760px){
+  .mobile-hero{
+    min-height:252px!important;
+  }
+
+  .mobile-nexo-stage{
+    right:8px!important;
+    top:24px!important;
+    width:154px!important;
+    height:196px!important;
+    border-radius:28px!important;
+    overflow:hidden!important;
+    background:
+      radial-gradient(circle at 50% 33%,rgba(73,169,255,.20),transparent 55%),
+      linear-gradient(160deg,rgba(14,25,53,.96),rgba(7,15,30,.96))!important;
+  }
+
+  .mobile-nexo-stage img[data-nexo-family="bust"]{
+    width:100%!important;
+    height:100%!important;
+    object-fit:contain!important;
+    object-position:center top!important;
+    padding:3px 5px 0!important;
+  }
+
+  .mobile-hero h1{
+    max-width:66%!important;
+  }
+
+  .mobile-hero p{
+    max-width:64%!important;
+  }
+
+  .nexo-float-chip.chip-a{
+    right:88px!important;
+    top:10px!important;
+  }
+
+  .nexo-float-chip.chip-b{
+    right:4px!important;
+    bottom:8px!important;
+  }
+
+  #onboardingMascot[data-nexo-family="bust"]{
+    width:110px!important;
+    height:136px!important;
+    left:8px!important;
+    top:5px!important;
+    transform:none!important;
+    border-radius:18px!important;
+  }
+
+  #nexoHeroImage[data-nexo-family="bust"]{
+    width:82px!important;
+    height:96px!important;
+  }
+
+  .nexo-guide-card img[data-nexo-family="bust"]{
+    width:54px!important;
+    height:66px!important;
+  }
+}
+
+@media(max-width:390px){
+  .mobile-nexo-stage{
+    width:142px!important;
+    height:184px!important;
+    right:4px!important;
+  }
+
+  .mobile-hero h1{
+    max-width:69%!important;
+  }
+}
