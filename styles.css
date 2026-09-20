@@ -5050,3 +5050,24 @@ body.light .plan-card li span{color:#627187}
   .header-journey-copy>span i{display:none}
   .plan-usage-grid{grid-template-columns:1fr}
 }
+
+
+/* Admin Free/Plus publishing controls */
+.admin-plan-toggle{
+  display:flex!important;
+  align-items:center;
+  gap:9px;
+  padding:9px 10px;
+  margin:8px 0 10px;
+  border:1px solid rgba(69,172,216,.20);
+  border-radius:11px;
+  background:rgba(35,135,178,.07);
+  cursor:pointer;
+}
+.admin-plan-toggle input{width:17px;height:17px;accent-color:#4bc4e7}
+.admin-plan-toggle span{display:block}
+.admin-plan-toggle b{display:block;font-size:8px;color:#92def5}
+.admin-plan-toggle small{display:block;margin-top:2px;color:#71849a;font-size:6.5px}
+.admin-content-flags{display:flex;gap:4px;flex-wrap:wrap}
+.status-pill.plus{color:#85e1fb!important;border-color:rgba(61,180,223,.27)!important;background:rgba(38,143,190,.10)!important}
+.status-pill.free{color:#8ca0b8!important;border-color:rgba(88,104,139,.20)!important;background:rgba(72,86,117,.08)!important}
