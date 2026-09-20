@@ -291,6 +291,7 @@ const state = {
   personalRadar:[],
   learningIntelligence:null,
   recommendationExplanation:null,
+  examTimer:null,
   pendingGuidedTraining:null,
   lastFinishedStudy:null,
   favorites:new Set(),
@@ -2903,6 +2904,7 @@ $('#mobileQuickTen').onclick=()=>{
 };
 
 function resetSessionUI() {
+  stopExamClock();
   const previous=state.session;
   if(previous?.coreSessionId) closeNexoSession('abandoned',previous);
   stopQuestionBehaviorMonitor();
@@ -2991,6 +2993,62 @@ function updateStudyNavigation(config={}){
 $('[data-study-back-home]')?.addEventListener('click',()=>openPage('inicio'));
 $('[data-study-back-library]')?.addEventListener('click',()=>openPage('materiais'));
 
+
+function stopExamClock(){
+  if(state.examTimer){clearInterval(state.examTimer);state.examTimer=null}
+  $('#examClockPill')?.classList.add('hidden');
+}
+function formatExamClock(totalSeconds){
+  const s=Math.max(0,Math.floor(Number(totalSeconds||0)));
+  const m=Math.floor(s/60),sec=s%60;
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+function renderExamClock(){
+  const s=state.session,pill=$('#examClockPill');
+  if(!s?.examMode||!pill){pill?.classList.add('hidden');return}
+  pill.classList.remove('hidden');
+  const elapsed=Math.max(0,Math.floor((Date.now()-Number(s.examStartedAt||Date.now()))/1000));
+  const questionElapsed=Math.max(0,Math.floor((Date.now()-Number(state.questionStartedAt||Date.now()))/1000));
+  const text=$('#examClockText'),status=$('#examClockStatus');
+  if(text)text.textContent=formatExamClock(elapsed);
+  pill.classList.toggle('warn',questionElapsed>=120&&questionElapsed<180);
+  pill.classList.toggle('danger',questionElapsed>=180);
+  if(status)status.textContent=questionElapsed>=180?'3+ min · considere pular':questionElapsed>=120?'2 min · atenção ao ritmo':'ritmo de prova';
+  s.paceAlerts=s.paceAlerts||{};
+  const key=String(s.index);
+  if(questionElapsed>=120&&!s.paceAlerts[key+'-120']){
+    s.paceAlerts[key+'-120']=true;
+    toast('⏱ 2 minutos nesta questão. Procure a pista decisiva.');
+  }
+  if(questionElapsed>=180&&!s.paceAlerts[key+'-180']){
+    s.paceAlerts[key+'-180']=true;
+    nexoHaptic([35,45,35]);
+    toast('⏱ 3 minutos. Em prova real, considere marcar para voltar depois.','info');
+  }
+}
+function ensureExamClock(){
+  if(!state.session?.examMode)return stopExamClock();
+  if(!state.session.examStartedAt)state.session.examStartedAt=Date.now();
+  if(state.examTimer)return renderExamClock();
+  renderExamClock();
+  state.examTimer=setInterval(renderExamClock,1000);
+}
+function renderExamRegisteredAnswer(option,duration){
+  $('.q-option',$('#questionCard')).forEach((b,i)=>{
+    b.classList.remove('selected','correct','wrong','exam-registered');
+    if(i===Number(option))b.classList.add('exam-registered');
+  });
+  $('.confirm-answer-wrap')?.remove();
+  const box=document.createElement('div');
+  box.className='exam-answer-registered';
+  box.innerHTML='<span>✓ RESPOSTA REGISTRADA</span><div><b>Gabarito oculto até o final.</b><small>Tempo nesta questão: '+formatStudyDuration(duration)+' · mantenha o ritmo e siga.</small></div><button id="nextAfterExamAnswer" class="primary-btn">Próxima questão →</button>';
+  $('#questionCard').appendChild(box);
+  $('#nextAfterExamAnswer')?.addEventListener('click',()=>nextQuestion());
+  $('#nextQuestionBottom')?.classList.remove('hidden');
+  $('#nextQuestionBottom').onclick=()=>nextQuestion();
+  $('.question-mobile-actions')?.classList.add('answered');
+}
+
 async function startStudySession(config) {
   if(blockMaintenance('questions'))return;
   if(['core','adaptive'].includes(config?.mode)&&blockMaintenance('core'))return;
@@ -3014,7 +3072,7 @@ async function startStudySession(config) {
     const size=Math.min(config.size||10,fresh.length);
     const queue=fresh.slice(0,size);
     const coreSessionId=await beginNexoSession(config,queue.length);
-    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0}};
+    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,examStartedAt:config.examMode?Date.now():null,paceAlerts:{},resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
     $('#sessionSetup').classList.add('hidden');
     $('#studyWorkspace').classList.remove('hidden');
     $('#sessionAreaBadge').textContent=config.area||'Treino';
@@ -3022,6 +3080,7 @@ async function startStudySession(config) {
     $('#sessionSubtitle').textContent=reviewMode?'Modo revisão: você já respondeu todas as questões novas deste filtro.':'Sua sessão está fixa neste conteúdo até você decidir trocar.';
     updateStudyNavigation(state.session);
     persistStudySession();
+    ensureExamClock();
     await showCurrentQuestion();
   }catch(err){
     console.error(err);logClientError('study_session',err,'session_build');
@@ -3087,6 +3146,7 @@ async function showCurrentQuestion() {
   state.current=state.session.queue[state.session.index];
   persistStudySession();
   state.answered=false;state.selectedOption=null;state.lastAnswer=null;state.questionStartedAt=Date.now();
+  ensureExamClock();
   startQuestionBehaviorMonitor(state.current);
   $('.question-mobile-actions')?.classList.remove('answered');
   $('#nextQuestionBottom').classList.add('hidden');
@@ -3988,7 +4048,13 @@ async function submitAnswer(option) {
     state.session.resultStats=stats;
   }
   const correct=Number(data.correct_option);
-  $$('.q-option',$('#questionCard')).forEach((b,i)=>{
+  if(state.session?.examMode){
+    renderExamRegisteredAnswer(option,duration);
+    client.rpc('refresh_my_learning_achievements').then(()=>loadNexoJourney({silent:true})).catch(()=>{});
+    Promise.all([loadDashboard(),loadNexoCore(),loadNexoMembership({silent:true})]).catch(()=>{});
+    return;
+  }
+  $('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected');
     if(i===correct)b.classList.add('correct');
     else if(i===option)b.classList.add('wrong');
@@ -4226,6 +4292,12 @@ function renderSimulationReport(finished,report){
         </article>
       </section>
 
+      <section class="sim-strategy-readout">
+        <div><span>ESTRATÉGIA DE PROVA</span><h4>${Number(report?.slow_questions||0)>=3?'Sua maior alavanca é saber abandonar a questão na hora certa.':avg>150?'Ganhar alguns segundos por questão pode mudar muito o bloco inteiro.':'Seu ritmo está saudável; proteja a precisão.'}</h4><p>${Number(report?.slow_questions||0)>=3?'Regra prática: aos 2 minutos procure um caminho curto; aos 3 minutos, marque para voltar e siga a prova.':avg>150?'Treine um Sprint de 5 questões procurando identificar a pista decisiva antes de calcular tudo.':'Continue usando o relógio como referência, sem transformar velocidade em pressa.'}</p></div>
+        <div class="sim-strategy-badges"><span><b>${Number(report?.slow_questions||0)}</b><small>acima de 3 min</small></span><span><b>${formatStudyDuration(avg)}</b><small>média</small></span><span><b>${changes}</b><small>trocas</small></span></div>
+        <button id="startStrategySprint" class="outline-btn">Treinar decisão · 5 questões →</button>
+      </section>
+
       <section class="sim-report-mission">
         <div class="sim-mission-copy">
           <span>✦ PRÓXIMA MISSÃO</span>
@@ -4255,6 +4327,19 @@ function renderSimulationReport(finished,report){
     size:5
   }));
 
+  $('#startStrategySprint')?.addEventListener('click',async()=>{
+    const target=weak[0];
+    await startStudySession({
+      mode:'simulado',examMode:true,
+      area:finished.area||'',subject:target?.subject||finished.subject||'',topic:target?.topic||'',difficulty:'',visualOnly:false,size:5
+    });
+    if(state.session){
+      $('#sessionAreaBadge').textContent='SPRINT';
+      $('#sessionTitle').textContent=target?.topic||'Treino de decisão';
+      $('#sessionSubtitle').textContent='5 questões em modo prova. Aos 3 minutos, pratique a decisão de seguir.';
+      ensureExamClock();
+    }
+  });
   $('#askNexoSimulation').onclick=()=>{
     $('#niaPanel').classList.remove('hidden');
     setNexoMood(mood);
@@ -4278,6 +4363,7 @@ function renderSimulationReport(finished,report){
     topic:finished.topic||'',
     difficulty:finished.difficulty||'',
     visualOnly:false,
+    examMode:Boolean(finished.examMode),
     size:Number(finished.size||20)
   });
   $('#viewPerformanceAfterSim').onclick=()=>openPage('desempenho');
@@ -4414,6 +4500,7 @@ function renderStudySessionReport(finished,report){
 
 async function finishSession() {
   stopQuestionBehaviorMonitor();
+  stopExamClock();
   clearPersistedStudySession();
   const finished={...(state.session||{})};
   const reportId=finished.coreSessionId||null;
@@ -4442,41 +4529,52 @@ async function finishSession() {
 
 $$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
   const mode=b.dataset.simMode||'area';
+  const startExam=async(config,label,title,subtitle)=>{
+    openPage('questoes');
+    await startStudySession({...config,mode:'simulado',examMode:true});
+    if(state.session){
+      $('#sessionAreaBadge').textContent=label;
+      $('#sessionTitle').textContent=title;
+      $('#sessionSubtitle').textContent=subtitle;
+      ensureExamClock();
+    }
+  };
+
   if(mode==='adaptive'){
     if(!state.core)await loadNexoCore();
     const rec=state.core?.recommended_action;
-    openPage('questoes');
-    await startStudySession({
-      mode:'simulado',
-      area:rec?.area||'',
-      subject:rec?.subject||'',
-      topic:rec?.topic||'',
-      difficulty:'',
-      visualOnly:false,
-      size:20
-    });
-    if(state.session){
-      $('#sessionAreaBadge').textContent='Simulado Core';
-      $('#sessionTitle').textContent=rec?.topic||'Simulado adaptativo';
-      $('#sessionSubtitle').textContent=rec?.reason||'Prova montada para calibrar seu perfil atual.';
-    }
-    return;
+    return startExam({
+      area:rec?.area||'',subject:rec?.subject||'',topic:rec?.topic||'',difficulty:'',visualOnly:false,size:20
+    },'Simulado Core',rec?.topic||'Simulado adaptativo',rec?.reason||'Prova adaptada ao seu perfil. O gabarito aparece só no final.');
   }
 
   if(mode==='mixed'){
-    openPage('questoes');
-    await startStudySession({mode:'simulado',area:'',subject:'',difficulty:'',visualOnly:false,size:30});
-    if(state.session){
-      $('#sessionAreaBadge').textContent='Misto ENEM';
-      $('#sessionTitle').textContent='Simulado misto';
-      $('#sessionSubtitle').textContent='30 questões distribuídas entre as áreas disponíveis.';
-    }
-    return;
+    return startExam({area:'',subject:'',topic:'',difficulty:'',visualOnly:false,size:30},
+      'Misto ENEM','Simulado misto','30 questões entre as áreas disponíveis · feedback somente no final.');
   }
 
-  openPage('questoes');
-  setSelectedArea(b.dataset.simArea);
-  await startStudySession({mode:'simulado',area:b.dataset.simArea,subject:'',difficulty:'',visualOnly:false,size:20});
+  if(mode==='sprint'){
+    const top=buildPersonalRadar()[0];
+    return startExam({area:top?.area||'',subject:top?.subject||'',topic:top?.topic||'',radarTopic:top?.topic||'',difficulty:'',visualOnly:false,size:5},
+      'SPRINT','Ritmo e decisão','5 questões para treinar leitura, tempo e decisão de seguir ou pular.');
+  }
+
+  if(mode==='mini'){
+    return startExam({area:'',subject:'',topic:'',difficulty:'',visualOnly:false,size:10},
+      'MINI ENEM','Mini simulado','10 questões mistas em modo prova. Sem gabarito até o relatório final.');
+  }
+
+  if(mode==='full'){
+    if(!state.membership)await loadNexoMembership({silent:true});
+    if(nexoAccessTier()==='free')return openNexoPlans('A prova longa de 90 questões é um modo intensivo do NEXO Plus.');
+    return startExam({area:'',subject:'',topic:'',difficulty:'',visualOnly:false,size:90},
+      'PROVA LONGA','90 questões','Modo prova longo. Use o relógio, pule quando necessário e corrija tudo no final.');
+  }
+
+  const area=b.dataset.simArea||'';
+  setSelectedArea(area);
+  return startExam({area,subject:'',topic:'',difficulty:'',visualOnly:false,size:20},
+    'SIMULADO',area,'20 questões de '+area+' · feedback somente no final.');
 });
 
 function renderMasteryMap(){
