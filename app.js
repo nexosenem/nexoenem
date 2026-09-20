@@ -565,6 +565,34 @@ $('#closeMenu').onclick=()=>toggleMenu(false);
 $('#scrim').onclick=()=>toggleMenu(false);
 $('#moreMobile').onclick=()=>toggleMenu(true);
 
+async function refreshCurrentRole({silent=true}={}){
+  if(!state.user?.id)return null;
+  try{
+    const {data,error}=await client.from('profiles')
+      .select('role,full_name')
+      .eq('id',state.user.id)
+      .maybeSingle();
+    if(error)throw error;
+    if(!data)return null;
+
+    const previousRole=state.profile?.role||'student';
+    state.profile={...(state.profile||{}),...data};
+    const isAdmin=data.role==='admin';
+
+    $('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    const roleLabel=$('#profileRole');
+    if(roleLabel)roleLabel.textContent=isAdmin?'Administrador':'Estudante';
+
+    if(previousRole!==data.role&&!silent){
+      toast(isAdmin?'Seu acesso de administrador foi liberado.':'Seu acesso de administrador foi removido.');
+    }
+    return data.role;
+  }catch(err){
+    console.error('refresh role',err);
+    return state.profile?.role||null;
+  }
+}
+
 function openPage(id) {
   if (id === 'admin' && state.profile?.role !== 'admin') {
     toast('Essa área é restrita ao administrador.','error'); return;
@@ -692,6 +720,14 @@ client.auth.onAuthStateChange((_event, session) => {
 client.auth.getSession()
   .then(({data}) => handleSession(data.session))
   .catch(reportSessionError);
+
+window.addEventListener('focus',()=>refreshCurrentRole({silent:false}));
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='visible')refreshCurrentRole({silent:false});
+});
+setInterval(()=>{
+  if(state.user)refreshCurrentRole({silent:false});
+},30000);
 
 async function loadQuestionMeta() {
   const { data, error } = await client.from('questions')
