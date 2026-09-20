@@ -2915,8 +2915,72 @@ function renderFocusRoadmap(){
     return '<article><span>0'+(i+1)+'</span><div><small>'+stage+'</small><b>'+esc(x.topic||x.subject||x.area||'Foco')+'</b><p>'+mastery+'% de domínio · '+Math.round(Number(x.priority??100-mastery))+'% prioridade</p></div></article>';
   }).join(''):'<div class="journey-empty">Complete algumas questões para o Core construir sua rota de evolução.</div>';
 }
+async function loadErrorNotebook(){
+  const el=$('#errorNotebook'); if(!el)return [];
+  const {data,error}=await client.from('question_attempts')
+    .select('question_id,is_correct,created_at,question:questions(id,area,subject,topic,source_year,source_question_number)')
+    .eq('is_correct',false)
+    .order('created_at',{ascending:false})
+    .limit(80);
+  if(error){
+    console.error('error notebook',error);
+    el.innerHTML='<p style="color:var(--muted)">Não foi possível carregar o Caderno de Erros agora.</p>';
+    return [];
+  }
+  const seen=new Set(),rows=[];
+  for(const item of data||[]){
+    const id=Number(item.question_id||item.question?.id||0);
+    if(!id||seen.has(id))continue;
+    seen.add(id); rows.push(item);
+    if(rows.length>=8)break;
+  }
+  state.errorReviewIds=rows.map(x=>Number(x.question_id||x.question?.id)).filter(Boolean);
+  el.innerHTML=rows.length?rows.map((item,index)=>{
+    const q=item.question||{};
+    return '<article class="error-note-row"><span class="error-note-index">'+String(index+1).padStart(2,'0')+'</span><div><b>'+esc(q.topic||q.subject||'Questão ENEM')+'</b><small>'+esc(q.subject||q.area||'')+(q.source_year?' · ENEM '+esc(q.source_year):'')+(q.source_question_number?' · Q'+esc(q.source_question_number):'')+'</small></div><button data-error-open="'+Number(item.question_id||q.id)+'">Refazer</button><button data-error-topic="'+esc(q.topic||'')+'" data-error-area="'+esc(q.area||'')+'" data-error-subject="'+esc(q.subject||'')+'">Treinar tema</button></article>';
+  }).join(''):'<div class="journey-empty">Nenhum erro recente por aqui. Continue treinando para alimentar sua revisão inteligente.</div>';
+  $('[data-error-open]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.errorOpen)));
+  $('[data-error-topic]',el).forEach(btn=>btn.onclick=async()=>{
+    openPage('questoes');
+    await startStudySession({mode:'review_topic',area:btn.dataset.errorArea||'',subject:btn.dataset.errorSubject||'',topic:btn.dataset.errorTopic||'',difficulty:'',visualOnly:false,size:6});
+    if(state.session){
+      $('#sessionAreaBadge').textContent='Revisão NEXO';
+      $('#sessionTitle').textContent=btn.dataset.errorTopic||btn.dataset.errorSubject||'Revisão direcionada';
+      $('#sessionSubtitle').textContent='Sessão curta para consolidar um conteúdo em que você errou recentemente.';
+    }
+  });
+  return state.errorReviewIds;
+}
+
+async function startErrorReview(){
+  try{
+    if(!state.membership)await loadNexoMembership({silent:true});
+    if(planUsageReached('questions'))return openNexoPlans('Você atingiu as 10 questões disponíveis hoje no plano Free.');
+    const ids=(state.errorReviewIds?.length?state.errorReviewIds:await loadErrorNotebook()).slice(0,5);
+    if(!ids.length)return toast('Ainda não há erros recentes para revisar.');
+    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+    const {data,error}=await client.from('questions').select(fields).in('id',ids);
+    if(error)throw error;
+    const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
+    const queue=ids.map(id=>byId.get(Number(id))).filter(Boolean);
+    if(!queue.length)throw new Error('Não encontrei as questões da revisão.');
+    if(state.session?.coreSessionId)await closeNexoSession('abandoned',state.session);
+    const coreSessionId=await beginNexoSession({mode:'review'},queue.length);
+    openPage('questoes');
+    state.session={mode:'review',queue,index:0,size:queue.length,reviewMode:true,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,maxHints:2,coachTimeSeconds:55,coachLongSeconds:105};
+    $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
+    $('#sessionAreaBadge').textContent='Revisão NEXO';
+    $('#sessionTitle').textContent='Caderno de Erros';
+    $('#sessionSubtitle').textContent='Segunda tentativa: releia o comando, refaça o raciocínio e compare sua decisão com a anterior.';
+    await showCurrentQuestion();
+  }catch(err){
+    console.error('error review',err);logClientError('error_review',err,'review_build');
+    if(!handlePlanLimitError(err))toast('Não foi possível montar sua revisão agora.','error');
+  }
+}
+
 async function renderPerformance() {
-  await Promise.all([loadDashboard(),loadNexoCore()]);
+  await Promise.all([loadDashboard(),loadNexoCore(),loadErrorNotebook()]);
   const d=state.dashboard||{attempts:0,correct:0,accuracy:0,by_area:[]};
   const core=state.core||{};
   const momentum=core.momentum||{};
@@ -2952,6 +3016,7 @@ async function renderPerformance() {
     setNexoImage(heroMascot,NEXO_MEDIA_IMAGES.bustPensativo);
   }
   $('#performanceCoreStart').onclick=()=>rec?startCoreRecommendation():(openPage('questoes'),resetSessionUI());
+  if($('#startErrorReview'))$('#startErrorReview').onclick=startErrorReview;
 
   const map=new Map((d.by_area||[]).map(x=>[x.area,x]));
   const areas=['Linguagens','Ciências Humanas','Ciências da Natureza','Matemática'];
