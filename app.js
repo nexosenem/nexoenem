@@ -405,7 +405,7 @@ function renderNexoCommandCenter(){
   const daily=(state.journey?.missions||[]).filter(m=>m.period==='daily');
   const dailyDone=daily.filter(m=>m.status==='completed'||m.status==='claimed').length;
   const dailyPct=daily.length?Math.round(dailyDone*100/daily.length):0;
-  $('[data-nexo-command]').forEach(card=>{
+  document.querySelectorAll('[data-nexo-command]').forEach(card=>{
     const level=card.querySelector('[data-command-level]'), streak=card.querySelector('[data-command-streak]'), coins=card.querySelector('[data-command-coins]'), next=card.querySelector('[data-command-next]');
     const dailyCount=card.querySelector('[data-command-daily-count]'),dailyBar=card.querySelector('[data-command-daily-bar]'),dailyLabel=card.querySelector('[data-command-daily-label]'),start=card.querySelector('[data-command-start]');
     if(level)level.textContent='NV. '+Number(p.level||1);
