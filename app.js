@@ -40,6 +40,8 @@ const state = {
   session:null,
   current:null,
   answered:false,
+  selectedOption:null,
+  lastAnswer:null,
   questionStartedAt:0,
   pdfCache:new Map(),
   visualCache:new Map(),
@@ -178,7 +180,7 @@ $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();o
 
 async function initApp(session) {
   state.user = session.user;
-  const { data:profile, error } = await client.from('profiles').select('id,full_name,avatar_url,role').eq('id',state.user.id).single();
+  const { data:profile, error } = await client.from('profiles').select('id,full_name,avatar_url,role,assistant_outfit').eq('id',state.user.id).single();
   if (error) {
     console.error(error);
     toast('Não foi possível carregar seu perfil.','error');
@@ -191,7 +193,8 @@ async function initApp(session) {
   $('#menuEmail').textContent = state.user.email || '';
   $('#profileRole').textContent = profile.role === 'admin' ? 'Administrador' : 'Estudante';
   $('#avatar').textContent = initials(name);
-  $$('.admin-only').forEach(el=>el.classList.toggle('hidden',profile.role!=='admin'));
+  $('.admin-only').forEach(el=>el.classList.toggle('hidden',profile.role!=='admin'));
+  applyNiaOutfit(profile.assistant_outfit || localStorage.getItem('nia-outfit') || 'purple', false);
 
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
@@ -400,7 +403,8 @@ async function showCurrentQuestion() {
     finishSession(); return;
   }
   state.current=state.session.queue[state.session.index];
-  state.answered=false;state.questionStartedAt=Date.now();
+  state.answered=false;state.selectedOption=null;state.lastAnswer=null;state.questionStartedAt=Date.now();
+  $('.question-mobile-actions')?.classList.remove('answered');
   $('#nextQuestionBottom').classList.add('hidden');
   $('#sessionMeta').textContent=`Questão ${state.session.index+1} de ${state.session.size}`;
   $('#sessionProgress').style.width=`${Math.round((state.session.index/state.session.size)*100)}%`;
@@ -435,15 +439,28 @@ async function renderQuestion(q) {
     <div class="q-section-title">COMANDO</div>
     <div class="q-prompt">${esc(q.prompt)}</div>
     <div class="q-options">${(q.options||[]).map((opt,i)=>`<button class="q-option" data-option="${i}"><span>${'ABCDE'[i]}</span><b>${esc(opt)}</b></button>`).join('')}</div>
-    <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small><button id="nextInline" class="primary-btn hidden">Próxima →</button></div>`;
+    <div class="confirm-answer-wrap"><small>Selecione uma alternativa. Você poderá conferir antes de enviar.</small><button id="confirmAnswer" class="primary-btn" disabled>Confirmar resposta</button></div>
+    <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small></div>`;
 
-  $$('.q-option',card).forEach(b=>b.onclick=()=>submitAnswer(Number(b.dataset.option)));
+  $('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
 
   if(visual){
     const ok=await renderVisual(q);
     if(!ok && state.current?.id===q.id){
-      showVisualFallback(q);
+      $('#visualWrap')?.remove();
     }
+  }
+}
+
+function selectAnswerOption(option){
+  if(state.answered)return;
+  state.selectedOption=option;
+  $('.q-option',$('#questionCard')).forEach((b,i)=>b.classList.toggle('selected',i===option));
+  const confirm=$('#confirmAnswer');
+  if(confirm){
+    confirm.disabled=false;
+    confirm.textContent=`Confirmar ${'ABCDE'[option]}`;
+    confirm.onclick=()=>submitAnswer(option);
   }
 }
 
@@ -578,8 +595,46 @@ async function renderVisual(q) {
   }
 }
 
+function getQuestionHint(q){
+  const topic=(q.topic||'').toLowerCase(), subject=(q.subject||'').toLowerCase();
+  if(q.area==='Matemática'){
+    if(/estat|média|mediana|moda/.test(topic)) return 'Macete de prova: antes de fazer contas, organize os valores em ordem. Média = soma ÷ quantidade; mediana = valor central; moda = valor que mais aparece. Muitas alternativas erradas trocam esses três conceitos.';
+    if(/geometr|área|volume|polígono/.test(topic)) return 'Macete de prova: marque no desenho apenas as medidas que realmente entram na fórmula. Faça uma estimativa do tamanho da resposta antes da conta para eliminar alternativas absurdas.';
+    if(/porcent|finance|razão|propor/.test(topic)) return 'Macete de prova: transforme porcentagens comuns em frações mentais: 50%=1/2, 25%=1/4, 20%=1/5, 10%=1/10. Isso costuma cortar bastante tempo de cálculo.';
+    return 'Macete de prova: traduza o enunciado para uma relação matemática antes de calcular. Depois use as alternativas como ferramenta: estime a ordem de grandeza e elimine valores incompatíveis.';
+  }
+  if(q.area==='Ciências da Natureza'){
+    if(/físic|energia|fenômenos/.test((subject+' '+topic))) return 'Macete de prova: identifique primeiro as grandezas, unidades e o que varia. Se houver gráfico, observe eixos, inclinação e tendência antes de escolher qualquer fórmula.';
+    if(/quím|transform/.test((subject+' '+topic))) return 'Macete de prova: procure palavras que indiquem transformação, proporção, concentração, pH ou oxirredução. Antes de calcular, confira unidade e conservação de matéria/carga.';
+    if(/biolog|vida|ecolog|saúde/.test((subject+' '+topic))) return 'Macete de prova: em Biologia, tente localizar a relação de causa e efeito. O ENEM costuma cobrar consequência de um processo, não só a definição isolada.';
+  }
+  if(q.area==='Linguagens') return 'Macete de prova: leia primeiro o comando e descubra exatamente o que ele quer. Depois volte ao texto procurando marcas que sustentem a alternativa — evite escolher só porque a frase “parece bonita”.';
+  if(q.area==='Ciências Humanas') return 'Macete de prova: identifique tempo, espaço, agente social e conceito central. Elimine alternativas anacrônicas ou que generalizam além do que o texto permite.';
+  return null;
+}
+
+function buildAnswerExplanation(q,data,selected){
+  const correct=Number(data.correct_option);
+  const selectedText=q.options?.[selected]||'';
+  const correctText=q.options?.[correct]||'';
+  const topic=q.topic||q.subject||'conteúdo';
+  let method='';
+  if(q.area==='Matemática') method='Releia os dados, transforme o enunciado em relações matemáticas e verifique qual alternativa satisfaz todas as condições.';
+  else if(q.area==='Ciências da Natureza') method='Relacione o fenômeno descrito ao princípio científico central e elimine alternativas que contradizem causa, unidade ou mecanismo.';
+  else if(q.area==='Linguagens') method='Volte ao trecho que responde ao comando e confira qual alternativa é sustentada pelo texto, pelo gênero ou pelo efeito de linguagem.';
+  else method='Localize no texto o conceito histórico, geográfico, filosófico ou sociológico que o comando exige e descarte extrapolações.';
+  const whyWrong=data.correct ? 'Sua escolha coincide com o gabarito oficial.' : `Você marcou ${'ABCDE'[selected]} (“${selectedText}”). Essa opção não atende completamente ao que o comando pede; compare-a com ${'ABCDE'[correct]} (“${correctText}”), que é a alternativa compatível com o gabarito oficial.`;
+  return {
+    summary:data.explanation||`Gabarito oficial: alternativa ${'ABCDE'[correct]}.`,
+    whyWrong,
+    method:`${method} O ponto de revisão desta questão é “${topic}”.`
+  };
+}
+
 async function submitAnswer(option) {
-  if(state.answered||!state.current)return;
+  if(state.answered||!state.current||state.selectedOption===null)return;
+  const confirm=$('#confirmAnswer');
+  if(confirm){confirm.disabled=true;confirm.textContent='Corrigindo...';}
   state.answered=true;
   $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=true);
   const duration=Math.max(1,Math.round((Date.now()-state.questionStartedAt)/1000));
@@ -589,22 +644,45 @@ async function submitAnswer(option) {
     p_duration_seconds:duration
   });
   if(error){
-    state.answered=false; $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
+    state.answered=false;
+    $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
+    if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
     toast('Não foi possível registrar a resposta.','error');console.error(error);return;
   }
+  state.lastAnswer=data;
   const correct=Number(data.correct_option);
   $$('.q-option',$('#questionCard')).forEach((b,i)=>{
+    b.classList.remove('selected');
     if(i===correct)b.classList.add('correct');
     else if(i===option)b.classList.add('wrong');
   });
+  $('.confirm-answer-wrap')?.remove();
+  const detail=buildAnswerExplanation(state.current,data,option);
+  const hint=getQuestionHint(state.current);
   const box=document.createElement('div');
   box.className='answer-panel '+(data.correct?'':'wrong');
-  box.innerHTML=`<h4>${data.correct?'✓ Resposta correta':'✕ Resposta incorreta'}</h4><p>${esc(data.explanation||'Confira a alternativa correta e revise o conteúdo relacionado.')}</p>`;
+  box.innerHTML=`
+    <div class="answer-title"><span class="answer-letter">${data.correct?'✓':'×'}</span><div><h4>${data.correct?'Resposta correta':'Resposta incorreta'}</h4><small>Gabarito: ${'ABCDE'[correct]}</small></div></div>
+    <div class="answer-reason"><h5>Por que?</h5><p>${esc(detail.summary)}</p></div>
+    <div class="answer-reason"><h5>${data.correct?'O que você acertou':'Onde sua alternativa falha'}</h5><p>${esc(detail.whyWrong)}</p></div>
+    <div class="answer-reason"><h5>Como pensar nesta questão</h5><p>${esc(detail.method)}</p></div>
+    <div id="hintBox" class="hint-box hidden"></div>
+    <div class="post-answer-actions">
+      ${hint?'<button id="showHint">⚡ Macete</button>':''}
+      <button id="openComments">💬 Comentários</button>
+      <button id="nextAfterAnswer" class="next-action">Próxima questão →</button>
+    </div>`;
   $('#questionCard').appendChild(box);
-  $('#nextInline').classList.remove('hidden');
-  $('#nextInline').onclick=()=>nextQuestion();
-  $('#nextQuestionBottom').classList.remove('hidden');
-  $('#nextQuestionBottom').onclick=()=>nextQuestion();
+  if(hint){
+    $('#showHint').onclick=()=>{
+      const h=$('#hintBox');
+      h.classList.toggle('hidden');
+      h.innerHTML=`<h4>⚡ Macete para ganhar tempo</h4><p>${esc(hint)}</p>`;
+    };
+  }
+  $('#openComments').onclick=()=>openQuestionComments(state.current.id);
+  $('#nextAfterAnswer').onclick=()=>nextQuestion();
+  $('.question-mobile-actions')?.classList.add('answered');
   await Promise.all([loadDashboard(),loadRecentAttempts()]);
 }
 
@@ -664,16 +742,28 @@ async function renderFocus() {
 }
 
 function fillThemes() {
-  $('#essayTheme').innerHTML=THEMES.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('');
+  $('#essayTheme').innerHTML=THEMES.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+'<option value="custom">✦ Tema personalizado</option>';
   $('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
   updateEssayPrompt();
   $$('[data-theme]').forEach(b=>b.onclick=()=>{$('#essayTheme').value=b.dataset.theme;updateEssayPrompt();openPage('redacao');$('#essayText').focus()});
 }
+function getEssayThemeData(){
+  if($('#essayTheme').value==='custom'){
+    const title=$('#customEssayTheme').value.trim();
+    const prompt=$('#customEssayPrompt').value.trim();
+    return {title:title||'Tema personalizado',prompt:prompt||('Produza um texto dissertativo-argumentativo sobre: '+(title||'o tema escolhido'))};
+  }
+  return THEMES.find(x=>x.id===Number($('#essayTheme').value))||THEMES[0];
+}
 function updateEssayPrompt(){
-  const t=THEMES.find(x=>x.id===Number($('#essayTheme').value))||THEMES[0];
+  const custom=$('#essayTheme').value==='custom';
+  $('#customThemeFields').classList.toggle('hidden',!custom);
+  const t=getEssayThemeData();
   $('#essayPrompt').innerHTML=`<b>Proposta:</b> ${esc(t.prompt)}`;
 }
 $('#essayTheme').addEventListener('change',updateEssayPrompt);
+$('#customEssayTheme').addEventListener('input',updateEssayPrompt);
+$('#customEssayPrompt').addEventListener('input',updateEssayPrompt);
 $('#essayText').addEventListener('input',()=>$('#wordCount').textContent=(($('#essayText').value.match(/\S+/g)||[]).length)+' palavras');
 
 function essayScores(text){
@@ -698,7 +788,11 @@ $('#analyzeEssay').onclick=async()=>{
   const timer=setInterval(()=>{$('#loaderText').textContent=msgs[++i%msgs.length]},520);
   await sleep(2300);
   const scores=essayScores(text),total=scores.reduce((a,b)=>a+b,0);
-  const t=THEMES.find(x=>x.id===Number($('#essayTheme').value))||THEMES[0];
+  const t=getEssayThemeData();
+  if($('#essayTheme').value==='custom' && !$('#customEssayTheme').value.trim()){
+    clearInterval(timer);loader.classList.add('hidden');
+    return toast('Escreva o tema personalizado antes de analisar.','error');
+  }
   const feedback={
     strength:scores[3]>=160?'Boa presença de mecanismos de coesão e encadeamento.':'A estrutura está identificável; vale tornar a progressão entre parágrafos ainda mais explícita.',
     priority:scores.indexOf(Math.min(...scores))+1
@@ -714,19 +808,44 @@ $('#analyzeEssay').onclick=async()=>{
   showEssayResult(text,scores,total);
 };
 
+function buildDetailedEssayReview(text,scores){
+  const words=text.match(/\S+/g)||[];
+  const paras=text.split(/\n\s*\n/).filter(x=>x.trim());
+  const sentences=text.split(/[.!?]+/).map(x=>x.trim()).filter(Boolean);
+  const connectors=(text.match(/\b(portanto|além disso|contudo|assim|desse modo|nesse sentido|porém|todavia|consequentemente|logo|dessa forma|ademais)\b/gi)||[]).length;
+  const intervention=/\b(estado|governo|escola|sociedade|mídia|empresas|família|ministério|prefeitura)\b/i.test(text)&&/\b(deve|devem|promover|criar|ampliar|garantir|implementar|investir)\b/i.test(text);
+  const avg=sentences.length?Math.round(words.length/sentences.length):words.length;
+  const thesis=/\b(portanto|assim|desse modo|diante disso|é necessário|é preciso|torna-se)\b/i.test(text);
+  const notes=[];
+  notes.push(paras.length>=4?'A estrutura em parágrafos está próxima do formato esperado para uma dissertação-argumentativa.':'Organize melhor a arquitetura do texto: introdução, dois desenvolvimentos e conclusão costuma ser uma base segura.');
+  notes.push(connectors>=5?'Você usa conectivos com boa frequência; agora vale variar e conferir se cada um expressa a relação lógica correta.':'A ligação entre as ideias pode ficar mais explícita. Use conectivos de causa, contraste, consequência e conclusão sem repeti-los demais.');
+  notes.push(avg>28?'Algumas frases estão longas. Quebre períodos muito extensos para reduzir ambiguidade e erros de pontuação.':'O tamanho médio dos períodos está controlado, o que favorece clareza.');
+  notes.push(intervention?'Há sinais de proposta de intervenção com agente e ação. Complete com meio, finalidade e detalhamento sempre que faltar.':'A conclusão precisa deixar mais claro quem fará o quê, por qual meio e com qual finalidade.');
+  return {paras:paras.length,words:words.length,connectors,intervention,thesis,notes};
+}
+
 function showEssayResult(text,scores,total){
   const comps=['Norma-padrão','Compreensão da proposta','Argumentação','Coesão','Intervenção'];
   const weak=scores.map((s,i)=>({s,i})).sort((a,b)=>a.s-b.s)[0].i;
+  const review=buildDetailedEssayReview(text,scores);
   const tips=[
-    'Revise concordância, pontuação e escolha vocabular. Frases mais controladas reduzem desvios.',
-    'Garanta que todos os parágrafos respondam diretamente ao recorte do tema.',
-    'Aprofunde a relação entre repertório, causa, consequência e tese.',
-    'Use conectivos variados e retome ideias de forma clara entre frases e parágrafos.',
-    'Apresente agente, ação, meio, finalidade e detalhamento na proposta de intervenção.'
+    'Revise concordância, regência, pontuação e escolha vocabular. Procure períodos longos e veja se podem ser divididos.',
+    'Faça cada parágrafo conversar diretamente com o tema. Evite repertórios que aparecem só como citação e não ajudam a defender a tese.',
+    'Transforme afirmações em raciocínio: apresente a ideia, explique a causa, mostre uma consequência e conecte isso à tese.',
+    'Use conectivos variados e faça retomadas claras. Coesão não é encher o texto de “portanto”; é deixar visível a relação entre as ideias.',
+    'Na intervenção, procure cinco peças: agente, ação, meio/modo, finalidade e detalhamento — sempre respeitando os direitos humanos.'
   ];
-  $('#essayResult').innerHTML=`<div class="score-card"><span class="eyebrow">NOTA ESTIMADA</span><div class="score-circle" style="background:conic-gradient(#5f7cff 0 ${total/10}%,#1e2b42 ${total/10}% 100%)"><b>${total}</b></div><p>${(text.match(/\S+/g)||[]).length} palavras analisadas</p></div>
+  const t=getEssayThemeData();
+  $('#essayResult').innerHTML=`<div class="score-card"><span class="eyebrow">NOTA ESTIMADA</span><div class="score-circle" style="background:conic-gradient(#5f7cff 0 ${total/10}%,#1e2b42 ${total/10}% 100%)"><b>${total}</b></div><p>${review.words} palavras · ${review.paras} parágrafo(s)</p></div>
     <div class="competencies">${scores.map((s,i)=>`<div class="comp-row"><span>C${i+1}</span><div><i style="width:${s/2}%"></i></div><b>${s}</b></div>`).join('')}</div>
-    <div class="essay-notes"><article><h4>Ponto forte</h4><p>${scores[3]>=160?'Boa presença de mecanismos de coesão e encadeamento.':'A redação apresenta estrutura reconhecível e pode ganhar mais fluidez.'}</p></article><article><h4>Prioridade — C${weak+1}: ${comps[weak]}</h4><p>${tips[weak]}</p></article><article><h4>Importante</h4><p>Esta é uma estimativa automática de estudo e não substitui a correção oficial do ENEM.</p></article></div>`;
+    <div class="detailed-review">
+      <article><h4>Resenha da NIA</h4><p>Seu texto sobre “${esc(t.title)}” tem uma base reconhecível de dissertação. O principal ponto de evolução agora está na competência C${weak+1} (${comps[weak]}). Em vez de mexer em tudo de uma vez, priorize esse aspecto na próxima versão e depois faça uma segunda revisão focada em clareza e correção gramatical.</p><div class="nia-review-signature">NIA · análise orientativa do NEXO</div></article>
+      <article><h4>O que está funcionando</h4><p>${scores[3]>=160?'A progressão entre as partes está relativamente bem marcada e há mecanismos de ligação entre ideias.':'Já existe uma linha de raciocínio identificável; com conectivos mais precisos e retomadas melhores, ela ficará mais fácil de acompanhar.'}</p></article>
+      <article><h4>O que eu melhoraria primeiro</h4><p>${tips[weak]}</p></article>
+      <article><h4>Leitura de estrutura</h4><div class="review-checklist">${review.notes.map(n=>`<span><i>✓</i>${esc(n)}</span>`).join('')}</div></article>
+      <article><h4>Plano para reescrever</h4><p>1) releia o tema e escreva sua tese em uma frase; 2) dê uma função para cada parágrafo; 3) em cada argumento, ligue causa e consequência; 4) revise conectivos; 5) finalize conferindo a proposta de intervenção e a norma-padrão.</p></article>
+      <article><h4>Importante</h4><p>Esta análise é uma ferramenta automática de estudo, baseada em regras linguísticas e estruturais. Ela não substitui a correção humana nem a avaliação oficial do ENEM.</p></article>
+    </div>`;
 }
 
 async function loadVideos() {
@@ -778,6 +897,85 @@ async function loadRanking(){
   $('#rankingList').innerHTML=(data||[]).map(x=>`<div class="rank-row"><span class="rank-pos">#${x.rank_position}</span><b>${esc(x.full_name)}</b><span>${x.correct_answers} acertos</span></div>`).join('')||'<p style="color:var(--muted)">O ranking aparecerá quando houver respostas.</p>';
 }
 
+async function openQuestionComments(questionId){
+  if(!questionId)return;
+  $('#commentModal').dataset.questionId=String(questionId);
+  $('#commentModal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  await loadQuestionComments(questionId);
+}
+$('#closeComments').onclick=()=>{ $('#commentModal').classList.add('hidden'); document.body.style.overflow=''; };
+$('#commentModal').addEventListener('click',e=>{if(e.target===$('#commentModal'))$('#closeComments').click()});
+
+async function loadQuestionComments(questionId){
+  $('#questionComments').innerHTML='<div class="comment-empty">Carregando comentários...</div>';
+  const {data,error}=await client.rpc('get_question_comments',{p_question_id:Number(questionId)});
+  if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
+  $('#questionComments').innerHTML=data?.length?data.map(c=>`<article class="comment-item">
+    <div class="comment-top"><div class="comment-author"><span class="mini-avatar">${esc((c.author_name||'A')[0])}</span><div class="comment-meta"><b>${esc(c.author_name)}</b><small>${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
+    <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
+    <p>${esc(c.body)}</p>
+  </article>`).join(''):'<div class="comment-empty">Ainda não há comentários. Seja o primeiro a compartilhar uma dúvida ou um jeito de resolver.</div>';
+  $('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
+  $('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
+}
+$('#sendComment').onclick=async()=>{
+  const qid=Number($('#commentModal').dataset.questionId),body=$('#commentText').value.trim();
+  if(!qid||body.length<2)return toast('Escreva um comentário antes de enviar.','error');
+  const {error}=await client.from('question_comments').insert({question_id:qid,user_id:state.user.id,body});
+  if(error)return toast('Não foi possível comentar.','error');
+  $('#commentText').value='';toast('Comentário publicado.');loadQuestionComments(qid);
+};
+async function reportComment(id){
+  const reason=window.prompt('Por que você está denunciando este comentário?\nEx.: ofensa, spam, conteúdo impróprio');
+  if(!reason?.trim())return;
+  const {data,error}=await client.rpc('report_comment',{p_comment_id:id,p_reason:reason.trim()});
+  if(error)return toast('Não foi possível enviar a denúncia.','error');
+  toast(data?.auto_hidden?'Comentário ocultado após múltiplas denúncias.':'Denúncia enviada para moderação.');
+  loadQuestionComments(Number($('#commentModal').dataset.questionId));
+}
+async function deleteComment(id){
+  if(!confirm('Excluir este comentário?'))return;
+  const {error}=await client.from('question_comments').delete().eq('id',id);
+  if(error)return toast('Não foi possível excluir o comentário.','error');
+  loadQuestionComments(Number($('#commentModal').dataset.questionId));
+}
+
+const NIA_ANSWERS=[
+  {k:/tempo|2 min|3 min|prova|rel[oó]gio/i,a:'No ENEM, trabalhe por blocos. Se uma questão passou de ~3 minutos sem avanço real, marque para voltar. Priorize as que você entende de primeira e reserve um bloco final para as difíceis e para o cartão-resposta.'},
+  {k:/chut|n[aã]o sei|eliminar/i,a:'Quando precisar chutar, tente primeiro eliminar alternativas incompatíveis com unidade, escala, período histórico ou ideia central do texto. Evite procurar “a mais bonita”: procure a que atende exatamente ao comando.'},
+  {k:/reda[cç][aã]o|come[cç]ar|introdu/i,a:'Uma abertura segura: contextualize o tema em 1–2 frases, apresente o problema e termine a introdução com uma tese que antecipe os dois argumentos que serão desenvolvidos.'},
+  {k:/conclus|interven/i,a:'Na conclusão do ENEM, monte a intervenção com cinco peças: agente + ação + meio/modo + finalidade + detalhamento. Depois confira se ela respeita os direitos humanos.'},
+  {k:/matem[aá]tica|conta|c[aá]lculo/i,a:'Em Matemática, não comece calculando. Primeiro identifique o que a questão realmente pede, estime a resposta e use as alternativas para eliminar ordens de grandeza impossíveis.'},
+  {k:/ansied|nervos|press[aã]o/i,a:'Na hora da prova, use um procedimento simples: leia o comando, faça uma tentativa objetiva e, se travar, marque para voltar. A estratégia reduz a sensação de que você precisa resolver tudo imediatamente.'},
+  {k:/estud|rotina|organiza/i,a:'Monte ciclos curtos: teoria essencial → 10 a 20 questões → revisão dos erros. O que você erra deve decidir boa parte do próximo bloco de estudo, em vez de repetir só o que já domina.'}
+];
+function niaAnswer(text){
+  const hit=NIA_ANSWERS.find(x=>x.k.test(text));
+  return hit?.a||'Eu ainda não tenho uma resposta pronta específica para isso. Posso ajudar melhor com tempo de prova, estratégias de questão, Matemática, redação, organização de estudos e revisão de erros.';
+}
+function addNiaMessage(text,type){
+  const div=document.createElement('div');div.className='nia-msg '+type;div.textContent=text;$('#niaMessages').appendChild(div);$('#niaMessages').scrollTop=$('#niaMessages').scrollHeight;
+}
+function askNia(text){
+  if(!text?.trim())return;
+  addNiaMessage(text.trim(),'user');
+  setTimeout(()=>addNiaMessage(niaAnswer(text),'bot'),180);
+}
+$('#niaButton').onclick=()=>$('#niaPanel').classList.toggle('hidden');
+$('#closeNia').onclick=()=>$('#niaPanel').classList.add('hidden');
+$('#niaSend').onclick=()=>{const v=$('#niaInput').value;$('#niaInput').value='';askNia(v)};
+$('#niaInput').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#niaSend').click()}});
+$('[data-nia]').forEach(b=>b.onclick=()=>askNia(b.dataset.nia));
+function applyNiaOutfit(outfit,save=true){
+  const allowed=['purple','neon','academic','street'];if(!allowed.includes(outfit))outfit='purple';
+  const avatar=$('#niaAvatar');if(avatar)avatar.className='nia-mini-avatar outfit-'+outfit;
+  $('[data-outfit]').forEach(b=>b.classList.toggle('active',b.dataset.outfit===outfit));
+  localStorage.setItem('nia-outfit',outfit);
+  if(save&&state.user) client.from('profiles').update({assistant_outfit:outfit,updated_at:new Date().toISOString()}).eq('id',state.user.id);
+}
+$('[data-outfit]').forEach(b=>b.onclick=()=>applyNiaOutfit(b.dataset.outfit,true));
+
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
   const [profiles,attempts,feedbacks,videos]=await Promise.all([
@@ -792,6 +990,10 @@ async function loadAdmin(){
 
   const {data}=await client.from('feedback').select('id,rating,message,status,created_at,user_id').order('created_at',{ascending:false}).limit(60);
   $('#adminFeedbacks').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">N</span><div><b><span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum feedback recebido.</p>';
+
+  const reports=await client.rpc('get_reported_comments');
+  $('#reportedComments').innerHTML=reports.data?.length?reports.data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">!</span><div><b>${esc(x.author_name)} · ${x.report_count} denúncia(s)</b><p>${esc(x.body)}</p><small>Questão #${x.question_id}</small><div class="comment-actions"><button data-admin-remove="${x.comment_id}" class="danger">Remover comentário</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum comentário denunciado.</p>';
+  $('[data-admin-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Remover este comentário da comunidade?'))return;const {error}=await client.rpc('admin_remove_comment',{p_comment_id:Number(b.dataset.adminRemove)});if(error)return toast('Falha ao remover.','error');toast('Comentário removido.');loadAdmin()});
 }
 
 $('#addVideo').onclick=async()=>{
