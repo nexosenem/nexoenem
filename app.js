@@ -59,6 +59,21 @@ function toast(message, type='info') {
   toast.timer = setTimeout(()=>el.classList.add('hidden'), 2900);
 }
 
+async function logClientError(area,error,code='runtime'){
+  if(!state?.user?.id)return;
+  const message=String(error?.message||error||'unknown error').slice(0,500);
+  try{
+    await client.from('nexo_client_errors').insert({
+      user_id:state.user.id,
+      area:String(area||'app').slice(0,80),
+      code:String(code||'runtime').slice(0,80),
+      message
+    });
+  }catch(logError){
+    console.warn('NEXO telemetry unavailable',logError);
+  }
+}
+
 function showAuthMessage(message, error=false) {
   const el = $('#authMessage');
   el.textContent = message;
@@ -229,6 +244,7 @@ async function handleSession(session) {
 
 function reportSessionError(err) {
   console.error('Falha ao carregar a sessão:', err);
+  logClientError('auth_session',err,'session_load');
   $('#app').classList.add('hidden');
   $('#authScreen').classList.remove('hidden');
   showAuthMessage('Sua sessão não pôde ser carregada. Tente entrar novamente.', true);
@@ -263,7 +279,7 @@ async function loadQuestionMeta() {
 
 async function loadDashboard() {
   const { data, error } = await client.rpc('get_my_dashboard');
-  if (error) { console.error(error); return; }
+  if (error) { console.error(error); logClientError('dashboard',error,'dashboard_load'); return; }
   state.dashboard = data || {attempts:0,correct:0,accuracy:0,by_area:[],weak_topics:[]};
   const attempts = Number(state.dashboard.attempts||0);
   const correct = Number(state.dashboard.correct||0);
@@ -301,6 +317,7 @@ async function loadNexoCore(){
     state.core=data||null;
   }catch(err){
     console.error('NEXO Core',err);
+    logClientError('nexo_core',err,'core_load');
     state.core=null;
   }
   renderNexoCore();
@@ -513,7 +530,7 @@ async function startStudySession(config) {
     $('#sessionSubtitle').textContent=reviewMode?'Modo revisão: você já respondeu todas as questões novas deste filtro.':'Sua sessão está fixa neste conteúdo até você decidir trocar.';
     await showCurrentQuestion();
   }catch(err){
-    console.error(err);toast(err.message||'Não foi possível montar a sessão.','error');
+    console.error(err);logClientError('study_session',err,'session_build');toast(err.message||'Não foi possível montar a sessão.','error');
   }finally{
     if(btn){btn.disabled=false;btn.innerHTML='Começar sessão <span>→</span>';}
   }
@@ -842,6 +859,7 @@ async function submitAnswer(option) {
     }
   }catch(error){
     console.error('submit_answer',error);
+    logClientError('questions',error,'submit_answer');
     state.answered=false;
     $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
