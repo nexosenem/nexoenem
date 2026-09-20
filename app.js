@@ -797,9 +797,37 @@ function renderNexoCore(){
   const core=state.core||{};
   const rec=core.recommended_action||null;
   const momentum=core.momentum||{};
+  const behavior=core.behavior||{};
   const initial=Boolean(rec && !rec.topic && Number(rec.attempts||0)===0);
+  const signal=rec?.learning_signal||behavior.profile||'calibrating';
+  const signalMeta={
+    hesitation:{label:'DECISÃO',text:'Você sabe mais do que parece, mas ainda hesita para confirmar.'},
+    content:{label:'CONTEÚDO',text:'O principal ganho agora vem de consolidar o conteúdo.'},
+    guided:{label:'AUTONOMIA',text:'Você aprende com pistas; o Core vai reduzir a ajuda aos poucos.'},
+    decisive:{label:'DECISÃO FORTE',text:'Suas escolhas estão ficando rápidas e estáveis.'},
+    balanced:{label:'EQUILIBRADO',text:'Seu padrão de decisão está equilibrado.'},
+    calibrating:{label:'CALIBRANDO',text:'Preciso de mais algumas questões para ler seu padrão de decisão.'},
+    diagnostic:{label:'DIAGNÓSTICO',text:'Primeiro vamos medir domínio, tempo e comportamento de escolha.'}
+  };
+  const signalInfo=signalMeta[signal]||signalMeta.balanced;
   $$('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
-  $$('[data-core-status]').forEach(el=>el.textContent=initial?'primeiro diagnóstico':rec?'adaptativo':'calibrando');
+  $$('[data-core-status]').forEach(el=>el.textContent=initial?'primeiro diagnóstico':rec?('adaptativo · '+signalInfo.label.toLowerCase()):'calibrando');
+  $$('[data-core-behavior]').forEach(el=>{
+    const measured=Number(behavior.measured_attempts||0);
+    const visible=Boolean(rec && !initial && (measured>=3 || ['content','hesitation','guided'].includes(signal)));
+    el.classList.toggle('hidden',!visible);
+    if(visible){
+      const extra=signal==='hesitation'&&Number(rec?.hesitation_rate||0)
+        ? ' · '+Math.round(Number(rec.hesitation_rate))+'% de hesitação'
+        : signal==='guided'&&Number(rec?.avg_hints||0)
+          ? ' · '+Number(rec.avg_hints).toFixed(1)+' pistas/questão'
+          : signal==='decisive'&&Number(behavior.avg_first_choice_seconds||0)
+            ? ' · '+Math.round(Number(behavior.avg_first_choice_seconds))+'s até a 1ª escolha'
+            : '';
+      el.innerHTML='<b>'+esc(signalInfo.label)+'</b><span>'+esc(signalInfo.text+extra)+'</span>';
+      el.dataset.signal=signal;
+    }
+  });
   $$('[data-core-title]').forEach(el=>el.textContent=initial
     ? ('Diagnóstico inicial · '+(rec.area||'ENEM'))
     : rec
@@ -849,6 +877,7 @@ async function startCoreRecommendation(){
     return;
   }
   openPage('questoes');
+  const learningSignal=rec.learning_signal||'balanced';
   await startStudySession({
     mode:'core',
     area:rec.area||'',
@@ -856,7 +885,11 @@ async function startCoreRecommendation(){
     topic:rec.topic||'',
     difficulty:'',
     visualOnly:false,
-    size:Number(rec.size||6)
+    size:Number(rec.size||6),
+    learningSignal,
+    maxHints:learningSignal==='guided'?2:3,
+    coachTimeSeconds:learningSignal==='hesitation'?50:learningSignal==='content'?75:65,
+    coachLongSeconds:learningSignal==='hesitation'?100:learningSignal==='content'?140:125
   });
   if(state.session){
     $('#sessionAreaBadge').textContent='NEXO Core';
@@ -1178,7 +1211,8 @@ function showQuestionCoachReaction(type,{force=false}={}){
   }else if(type==='hint_repeat'){
     mood='acolhedor';
     message='Você já usou mais de uma pista. Agora tente aplicar uma delas antes de pedir outra; se ainda travar, eu aprofundo o método sem entregar o gabarito.';
-    label=behavior.hintCount>=3?'Pistas usadas':'Próxima pista';
+    const maxHints=Math.max(1,Math.min(3,Number(state.session?.maxHints||3)));
+    label=behavior.hintCount>=maxHints?'Pistas usadas':'Próxima pista';
   }
 
   behavior.lastReaction=type;
@@ -1195,28 +1229,41 @@ function showQuestionCoachReaction(type,{force=false}={}){
   },7000);
 }
 
-function startQuestionBehaviorMonitor(q){
+function startQuestionBehaviorMonitor(q,seed=null){
   stopQuestionBehaviorMonitor();
   const questionId=Number(q?.id||0);
+  const signal=state.session?.learningSignal||'balanced';
+  const coachSeconds=Number(state.session?.coachTimeSeconds||(
+    signal==='hesitation'?50:
+    signal==='content'?75:
+    65
+  ));
+  const longSeconds=Number(state.session?.coachLongSeconds||(
+    signal==='hesitation'?100:
+    signal==='content'?140:
+    125
+  ));
+  const startedAt=Number(seed?.startedAt||Date.now());
   const behavior={
     questionId,
-    startedAt:Date.now(),
-    selectionChanges:0,
-    hintCount:0,
-    firstSelectionAt:0,
-    lastReaction:'',
+    startedAt,
+    selectionChanges:Number(seed?.selectionChanges||0),
+    hintCount:Number(seed?.hintCount||0),
+    firstSelectionAt:Number(seed?.firstSelectionAt||0),
+    lastReaction:seed?.lastReaction||'',
     timers:[],
     uiTimer:null
   };
   state.questionBehavior=behavior;
 
+  const elapsed=Math.max(0,Date.now()-startedAt);
   behavior.timers.push(setTimeout(()=>{
     if(questionBehaviorIsActive(questionId))showQuestionCoachReaction('time');
-  },65000));
+  },Math.max(500,coachSeconds*1000-elapsed)));
 
   behavior.timers.push(setTimeout(()=>{
     if(questionBehaviorIsActive(questionId))showQuestionCoachReaction('long_time',{force:true});
-  },125000));
+  },Math.max(1000,longSeconds*1000-elapsed)));
 }
 
 async function renderQuestion(q) {
@@ -1256,13 +1303,15 @@ async function renderQuestion(q) {
     preHint.onclick=()=>{
       const behavior=state.questionBehavior;
       if(!behavior||!questionBehaviorIsActive(q.id))return;
-      behavior.hintCount=Math.min(3,Number(behavior.hintCount||0)+1);
+      const maxHints=Math.max(1,Math.min(3,Number(state.session?.maxHints||3)));
+      if(Number(behavior.hintCount||0)>=maxHints)return;
+      behavior.hintCount=Math.min(maxHints,Number(behavior.hintCount||0)+1);
       const box=$('#preAnswerHintBox');
       const hint=preAnswerHintFor(q,behavior.hintCount);
-      box.innerHTML='<div class="pre-hint-icon">✦</div><div><b>Pista '+behavior.hintCount+' de 3</b><p>'+esc(hint)+'</p></div>';
+      box.innerHTML='<div class="pre-hint-icon">✦</div><div><b>Pista '+behavior.hintCount+' de '+maxHints+'</b><p>'+esc(hint)+'</p></div>';
       box.classList.remove('hidden');
-      if(behavior.hintCount>=3){
-        preHint.textContent='3 pistas usadas';
+      if(behavior.hintCount>=maxHints){
+        preHint.textContent=maxHints+' pista'+(maxHints>1?'s':'')+' usada'+(maxHints>1?'s':'');
         preHint.disabled=true;
       }else{
         preHint.textContent='Outra pista';
@@ -1735,6 +1784,19 @@ function buildImmediateNexoReaction(q,data,duration){
 }
 async function submitAnswer(option) {
   if(state.answered||!state.current||state.selectedOption===null)return;
+  const behaviorSnapshot=state.questionBehavior?{
+    questionId:state.questionBehavior.questionId,
+    startedAt:state.questionBehavior.startedAt,
+    selectionChanges:Number(state.questionBehavior.selectionChanges||0),
+    hintCount:Number(state.questionBehavior.hintCount||0),
+    firstSelectionAt:Number(state.questionBehavior.firstSelectionAt||0),
+    lastReaction:state.questionBehavior.lastReaction||''
+  }:null;
+  const firstSelectionSeconds=behaviorSnapshot?.firstSelectionAt
+    ? Math.max(0,Math.round((behaviorSnapshot.firstSelectionAt-behaviorSnapshot.startedAt)/1000))
+    : null;
+  const selectionChanges=Number(behaviorSnapshot?.selectionChanges||0);
+  const hintCount=Number(behaviorSnapshot?.hintCount||0);
   stopQuestionBehaviorMonitor();
   const confirm=$('#confirmAnswer');
   if(confirm){confirm.disabled=true;confirm.textContent='Corrigindo...';}
@@ -1744,11 +1806,14 @@ async function submitAnswer(option) {
 
   let data;
   try{
-    const rpcPromise=client.rpc('submit_answer',{
+    const rpcPromise=client.rpc('submit_answer_v2',{
       p_question_id:Number(state.current.id),
       p_selected_option:Number(option),
       p_duration_seconds:duration,
-      p_session_id:state.session?.coreSessionId||null
+      p_session_id:state.session?.coreSessionId||null,
+      p_first_selection_seconds:firstSelectionSeconds,
+      p_selection_changes:selectionChanges,
+      p_hint_count:hintCount
     });
     const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout_submit_answer')),15000));
     const result=await Promise.race([rpcPromise,timeoutPromise]);
@@ -1762,7 +1827,7 @@ async function submitAnswer(option) {
     console.error('submit_answer',error);
     logClientError('questions',error,'submit_answer');
     state.answered=false;
-    if(state.current)startQuestionBehaviorMonitor(state.current);
+    if(state.current)startQuestionBehaviorMonitor(state.current,behaviorSnapshot);
     $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
     const msg=error?.message==='timeout_submit_answer'
@@ -1773,7 +1838,7 @@ async function submitAnswer(option) {
   }
 
   const reaction=buildImmediateNexoReaction(state.current,data,duration);
-  state.lastAnswer={...data,duration_seconds:duration,nexo_reaction:reaction};
+  state.lastAnswer={...data,duration_seconds:duration,first_selection_seconds:firstSelectionSeconds,selection_changes:selectionChanges,hint_count:hintCount,nexo_reaction:reaction};
   const correct=Number(data.correct_option);
   $$('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected');
@@ -1922,6 +1987,10 @@ function renderSimulationReport(finished,report){
   const accuracy=Number(report?.accuracy||0);
   const avg=Number(report?.avg_seconds||0);
   const total=Number(report?.total_seconds||0);
+  const firstChoice=Number(report?.avg_first_choice_seconds||0);
+  const changes=Number(report?.selection_changes||0);
+  const hints=Number(report?.hints_used||0);
+  const learningSignal=report?.learning_signal||'balanced';
   const weak=Array.isArray(report?.weak_topics)?report.weak_topics:[];
   const subjects=Array.isArray(report?.by_subject)?report.by_subject:[];
   const mood=accuracy>=75?'confiante':accuracy>=55?'serio':'acolhedor';
@@ -1942,6 +2011,13 @@ function renderSimulationReport(finished,report){
         <article><span>≈</span><div><b>${formatStudyDuration(avg)}</b><small>média por questão</small></div></article>
         <article><span>!</span><div><b>${Number(report?.slow_questions||0)}</b><small>questões acima de 3 min</small></div></article>
         <article><span>⚡</span><div><b>${Number(report?.fast_correct||0)}</b><small>acertos em até 75s</small></div></article>
+        <article><span>◌</span><div><b>${firstChoice?formatStudyDuration(firstChoice):'—'}</b><small>até a 1ª escolha</small></div></article>
+        <article><span>↔</span><div><b>${changes}</b><small>trocas de alternativa · ${hints} pistas</small></div></article>
+      </section>
+      <section class="sim-behavior-signal" data-signal="${esc(learningSignal)}">
+        <span>LEITURA DE COMPORTAMENTO</span>
+        <b>${learningSignal==='hesitation'?'Você conhece parte do conteúdo, mas hesita para decidir.':learningSignal==='content'?'O principal gargalo desta sessão foi conteúdo.':learningSignal==='guided'?'Você ainda depende bastante de pistas para avançar.':learningSignal==='calibrating'?'Ainda preciso de mais respostas para separar conteúdo de hesitação.':'Seu padrão de decisão ficou relativamente equilibrado.'}</b>
+        <small>O NEXO Core usa tempo até a primeira escolha, trocas de alternativa e uso de pistas junto com seus acertos.</small>
       </section>
 
       <section class="sim-report-grid">
