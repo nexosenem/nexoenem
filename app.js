@@ -1762,6 +1762,7 @@ async function submitAnswer(option) {
     console.error('submit_answer',error);
     logClientError('questions',error,'submit_answer');
     state.answered=false;
+    if(state.current)startQuestionBehaviorMonitor(state.current);
     $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
     const msg=error?.message==='timeout_submit_answer'
