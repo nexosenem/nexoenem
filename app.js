@@ -199,7 +199,36 @@ $('#registerForm').addEventListener('submit', async e => {
   }
 });
 
+$('#forgotPassword').onclick=async()=>{
+  clearAuthMessage();
+  const email=$('#loginEmail').value.trim();
+  if(!email){
+    showAuthMessage('Digite seu e-mail acima para receber o link de recuperação.',true);
+    $('#loginEmail').focus();
+    return;
+  }
+  const btn=$('#forgotPassword');
+  btn.disabled=true;
+  const old=btn.textContent;
+  btn.textContent='Enviando...';
+  try{
+    const {error}=await client.auth.resetPasswordForEmail(email,{
+      redirectTo:window.location.origin+window.location.pathname
+    });
+    if(error)throw error;
+    showAuthMessage('Link de recuperação enviado. Confira sua caixa de entrada e o spam.');
+  }catch(err){
+    console.error('password recovery',err);
+    showAuthMessage('Não foi possível enviar o link agora. Tente novamente em alguns instantes.',true);
+  }finally{
+    btn.disabled=false;
+    btn.textContent=old;
+  }
+};
+
 $('#logoutBtn').onclick = async () => {
+  $('#niaButton')?.classList.add('hidden');
+  $('#niaPanel')?.classList.add('hidden');
   await client.auth.signOut();
   $('#profileMenu').classList.add('hidden');
 };
@@ -243,38 +272,72 @@ $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();o
 
 async function initApp(session) {
   state.user = session.user;
-  const { data:profile, error } = await client.from('profiles').select('id,full_name,avatar_url,role,assistant_outfit').eq('id',state.user.id).single();
-  if (error) {
-    console.error(error);
-    toast('Não foi possível carregar seu perfil.','error');
-    return;
+
+  let profile=null;
+  try{
+    const result=await client.from('profiles')
+      .select('id,full_name,avatar_url,role,assistant_outfit')
+      .eq('id',state.user.id)
+      .maybeSingle();
+    if(result.error)throw result.error;
+    profile=result.data;
+  }catch(err){
+    console.error('profile bootstrap',err);
+    logClientError('profile',err,'profile_load');
   }
-  state.profile = profile;
-  const name = profile.full_name || state.user.email?.split('@')[0] || 'Aluno';
+
+  state.profile = profile || {
+    id:state.user.id,
+    full_name:state.user.user_metadata?.full_name || state.user.email?.split('@')[0] || 'Aluno',
+    avatar_url:null,
+    role:'student',
+    assistant_outfit:'classic'
+  };
+
+  const name = state.profile.full_name || state.user.email?.split('@')[0] || 'Aluno';
   $('#profileName').textContent = name.split(' ')[0];
   $('#menuName').textContent = name;
   $('#menuEmail').textContent = state.user.email || '';
-  $('#profileRole').textContent = profile.role === 'admin' ? 'Administrador' : 'Estudante';
+  $('#profileRole').textContent = state.profile.role === 'admin' ? 'Administrador' : 'Estudante';
   $('#avatar').textContent = initials(name);
-  $$('.admin-only').forEach(el=>el.classList.toggle('hidden',profile.role!=='admin'));
-  applyNexoStyle(profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
+  $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
+  applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
   updateHomeExperience();
 
+  clearAuthMessage();
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
+  $('#niaButton')?.classList.remove('hidden');
 
-  await Promise.all([loadQuestionMeta(), loadDashboard(), loadNexoCore(), loadAssistantIntents()]);
+  const results=await Promise.allSettled([
+    loadQuestionMeta(),
+    loadDashboard(),
+    loadNexoCore(),
+    loadAssistantIntents()
+  ]);
+  results.forEach((result,index)=>{
+    if(result.status==='rejected'){
+      const areas=['questões','dashboard','NEXO Core','Professor Nexo'];
+      console.error('bootstrap '+areas[index],result.reason);
+      logClientError('bootstrap',result.reason,'bootstrap_'+index);
+    }
+  });
+
   fillThemes();
-  await loadRecentAttempts();
+  loadRecentAttempts().catch(err=>logClientError('recent_attempts',err,'recent_load'));
   renderBank();
 }
 
 async function handleSession(session) {
-  if (session) await initApp(session);
-  else {
+  if (session) {
+    await initApp(session);
+  } else {
     state.user=null; state.profile=null;
     $('#app').classList.add('hidden');
     $('#authScreen').classList.remove('hidden');
+    $('#niaButton')?.classList.add('hidden');
+    $('#niaPanel')?.classList.add('hidden');
+    clearAuthMessage();
   }
   $('#boot').classList.add('fade');
   setTimeout(()=>$('#boot').classList.add('hidden'),450);
@@ -285,7 +348,9 @@ function reportSessionError(err) {
   logClientError('auth_session',err,'session_load');
   $('#app').classList.add('hidden');
   $('#authScreen').classList.remove('hidden');
-  showAuthMessage('Sua sessão não pôde ser carregada. Tente entrar novamente.', true);
+  $('#niaButton')?.classList.add('hidden');
+  $('#niaPanel')?.classList.add('hidden');
+  showAuthMessage('Não consegui restaurar sua sessão. Entre novamente para continuar.', true);
   $('#boot').classList.add('fade');
   setTimeout(()=>$('#boot').classList.add('hidden'),450);
 }
