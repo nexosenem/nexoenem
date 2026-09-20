@@ -833,21 +833,41 @@ $('#loginForm').addEventListener('submit', async e => {
   clearAuthMessage();
   const email = $('#loginEmail').value.trim();
   const password = $('#loginPassword').value;
-  const btn = e.submitter;
-  btn.disabled = true;
-  btn.textContent = 'Entrando...';
+  const btn = e.submitter || $('#loginForm button[type="submit"]');
+
+  if(!email || !password){
+    showAuthMessage('Preencha seu e-mail e sua senha para entrar.', true);
+    return;
+  }
+
+  if(btn){
+    btn.disabled = true;
+    btn.textContent = 'Entrando...';
+  }
 
   try {
-    const { error } = await client.auth.signInWithPassword({ email, password });
+    const { data, error } = await client.auth.signInWithPassword({ email, password });
     if (error) {
       showAuthMessage(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error.message, true);
+      return;
     }
+
+    if(!data?.session){
+      showAuthMessage('Login confirmado, mas a sessão não foi criada. Tente novamente.', true);
+      return;
+    }
+
+    showAuthMessage('Login confirmado. Abrindo o NEXO...');
+    await handleSession(data.session);
   } catch (err) {
     console.error('Falha no login:', err);
-    showAuthMessage('Não foi possível entrar agora. Verifique sua conexão e tente novamente.', true);
+    reportSessionError(err);
+    showAuthMessage('O login foi recebido, mas houve uma falha ao abrir a plataforma. Atualize a página e tente novamente.', true);
   } finally {
-    btn.disabled = false;
-    btn.innerHTML = 'Entrar no NEXO <span>→</span>';
+    if(btn){
+      btn.disabled = false;
+      btn.innerHTML = 'Entrar no NEXO <span>→</span>';
+    }
   }
 });
 
@@ -1257,12 +1277,33 @@ async function initApp(session) {
   else $('#niaButton')?.classList.remove('hidden');
 }
 
+let sessionInitPromise=null;
+let initializedSessionUserId=null;
+
 async function handleSession(session) {
   if(window.__nexoBootWatchdog){clearTimeout(window.__nexoBootWatchdog);window.__nexoBootWatchdog=null;}
+
+  if(session?.user?.id && initializedSessionUserId===session.user.id && !$('#app')?.classList.contains('hidden')){
+    $('#authScreen')?.classList.add('hidden');
+    return;
+  }
+
+  if(sessionInitPromise && session?.user?.id===state.user?.id){
+    return sessionInitPromise;
+  }
+
   if (session) {
-    await initApp(session);
+    sessionInitPromise=(async()=>{
+      await initApp(session);
+      initializedSessionUserId=session.user.id;
+    })();
+    try{
+      await sessionInitPromise;
+    }finally{
+      sessionInitPromise=null;
+    }
   } else {
-    state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null; state.membership=null;
+    state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null; state.membership=null; initializedSessionUserId=null;
     $('#app').classList.add('hidden');
     $('#authScreen').classList.remove('hidden');
     $('#niaButton')?.classList.add('hidden');
