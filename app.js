@@ -1425,7 +1425,10 @@ function openPage(id) {
   if (id==='videoaulas') loadVideos();
   if (id==='materiais') loadMaterials();
   if (id==='banco') renderBank();
-  if (id==='redacao') loadEssayThemeProgress({rerender:true}).catch(()=>{});
+  if (id==='redacao') {
+    loadEssayThemeProgress({rerender:true}).catch(()=>{});
+    updateOfficialEssaySheetAction().catch(()=>{});
+  }
   if (id==='feedback') loadMyFeedback();
   if (id==='ranking') loadNexoJourney();
   if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
@@ -3618,19 +3621,55 @@ $('#essayText').addEventListener('input',()=>$('#wordCount').textContent=(($('#e
 
 const OFFICIAL_ENEM_ESSAY_SHEET={
   url:'',
-  label:'Folha oficial de redação do ENEM'
+  label:'Folha oficial de redação do ENEM',
+  loading:false,
+  checked:false
 };
 
-function updateOfficialEssaySheetAction(){
+function essaySheetTitleMatches(title=''){
+  const normalized=String(title||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+  return normalized.includes('enem')&&normalized.includes('folha')&&normalized.includes('reda');
+}
+
+async function updateOfficialEssaySheetAction({refresh=false}={}){
   const btn=$('#officialEssaySheetBtn');
   const note=$('#officialEssaySheetNote');
   if(!btn)return;
+
+  if((refresh||!OFFICIAL_ENEM_ESSAY_SHEET.checked)&&!OFFICIAL_ENEM_ESSAY_SHEET.loading){
+    OFFICIAL_ENEM_ESSAY_SHEET.loading=true;
+    btn.disabled=true;
+    btn.textContent='Procurando folha oficial...';
+    try{
+      const {data,error}=await client.from('materials')
+        .select('title,file_url,format,is_published,created_at')
+        .eq('is_published',true)
+        .order('created_at',{ascending:false})
+        .limit(100);
+      if(error)throw error;
+
+      const sheet=(data||[]).find(row=>{
+        const isPdf=String(row.format||'').toLowerCase()==='pdf'||/\.pdf(?:$|\?)/i.test(String(row.file_url||''));
+        return isPdf&&essaySheetTitleMatches(row.title);
+      });
+
+      OFFICIAL_ENEM_ESSAY_SHEET.url=sheet?.file_url||'';
+      OFFICIAL_ENEM_ESSAY_SHEET.label=sheet?.title||'Folha oficial de redação do ENEM';
+      OFFICIAL_ENEM_ESSAY_SHEET.checked=true;
+    }catch(err){
+      console.error('official essay sheet',err);
+      OFFICIAL_ENEM_ESSAY_SHEET.checked=true;
+    }finally{
+      OFFICIAL_ENEM_ESSAY_SHEET.loading=false;
+    }
+  }
+
   const ready=Boolean(OFFICIAL_ENEM_ESSAY_SHEET.url);
   btn.disabled=!ready;
-  btn.textContent=ready?'Abrir PDF para imprimir ↗':'PDF aguardando envio';
+  btn.textContent=ready?'Abrir folha oficial para imprimir ↗':'PDF aguardando envio';
   if(note)note.textContent=ready
-    ?'Abra o PDF oficial e use a opção Imprimir do navegador.'
-    :'Assim que a folha oficial for enviada, ela ficará disponível aqui para impressão.';
+    ?'A folha oficial está disponível. Abra o PDF e use Imprimir no navegador.'
+    :'Envie o PDF nos Materiais com um título contendo “Folha”, “Redação” e “ENEM”; ele será conectado aqui automaticamente.';
 }
 
 $('#officialEssaySheetBtn')?.addEventListener('click',()=>{
@@ -6297,6 +6336,10 @@ $('#addMaterial').onclick=async()=>{
     $('#materialTitle').value=$('#materialSubject').value=$('#materialTopic').value=$('#materialDescription').value='';
     $('#materialFile').value='';if($('#materialPlusOnly'))$('#materialPlusOnly').checked=false;
     toast(plus_only?'Material publicado como conteúdo Plus.':'Material publicado.');
+    if(isPdf&&essaySheetTitleMatches(title)){
+      OFFICIAL_ENEM_ESSAY_SHEET.checked=false;
+      await updateOfficialEssaySheetAction({refresh:true});
+    }
     await loadAdmin();
   }catch(err){
     console.error(err);
