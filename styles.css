@@ -4508,3 +4508,60 @@ body.light .student-avatar-shell{box-shadow:0 10px 24px rgba(28,45,77,.12)}
   .journey-home-stats{display:none}
   .mobile-journey-home{grid-template-columns:52px 1fr}
 }
+
+
+/* NEXO Journey rewards inside question correction */
+.answer-reward-strip{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  padding:9px 10px;
+  border-top:1px solid rgba(78,94,132,.14);
+  border-bottom:1px solid rgba(78,94,132,.14);
+  background:
+    linear-gradient(90deg,rgba(103,76,221,.07),rgba(41,157,202,.05));
+}
+.answer-reward-strip>span{
+  min-width:76px;
+  padding:7px 8px;
+  border-radius:10px;
+  border:1px solid rgba(86,101,143,.17);
+  background:rgba(9,20,38,.72);
+}
+.answer-reward-strip>span b{
+  display:block;
+  color:#e8ecff;
+  font-size:9px;
+}
+.answer-reward-strip>span small{
+  display:block;
+  margin-top:1px;
+  color:#71839a;
+  font-size:5.8px;
+  text-transform:uppercase;
+  letter-spacing:.7px;
+}
+.answer-reward-strip>button{
+  margin-left:auto;
+  border:1px solid rgba(110,89,226,.34);
+  border-radius:10px;
+  padding:8px 10px;
+  background:linear-gradient(135deg,rgba(105,77,218,.18),rgba(42,141,190,.13));
+  color:#d9d2ff;
+  font-size:7px;
+  font-weight:850;
+  cursor:pointer;
+}
+body.light .answer-reward-strip>span{background:#fff;border-color:#e1e6ef}
+body.light .answer-reward-strip>span b{color:#18243a}
+
+@media(max-width:760px){
+  .answer-reward-strip{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:5px;
+    padding:8px;
+  }
+  .answer-reward-strip>span{min-width:0;padding:6px 7px}
+  .answer-reward-strip>button{grid-column:1/-1;margin-left:0;width:100%}
+}
