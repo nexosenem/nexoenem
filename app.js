@@ -5096,7 +5096,7 @@ function openLibraryTopic(subject,topic){
     state.materialOpenTopic=key;
     renderMaterials();
     setTimeout(()=>{
-      const nodes=$('.content-topic-group');
+      const nodes=$$('.content-topic-group');
       const target=nodes.find(el=>el.querySelector('.content-topic-name h3')?.textContent?.trim()===String(topic||'').trim());
       target?.scrollIntoView({behavior:'smooth',block:'start'});
     },80);
@@ -5113,7 +5113,7 @@ function spacedReviewCandidate(){
 }
 
 function renderNexoToday(){
-  const cards=$('[data-nexo-today]');
+  const cards=$$('[data-nexo-today]');
   if(!cards.length)return;
   const saved=readPersistedStudySession();
   const partial=(state.materials||[])
