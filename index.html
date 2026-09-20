@@ -695,6 +695,20 @@
             <div class="panel-title"><div><b>Caderno de Erros</b><small>questões que merecem uma segunda tentativa</small></div><button class="outline-btn small" id="startErrorReview">Revisar meus erros →</button></div>
             <div id="errorNotebook" class="error-notebook"><p style="color:var(--muted)">Carregando seus erros recentes...</p></div>
           </article>
+          <div class="learning-intelligence-grid">
+            <article class="panel error-pattern-panel">
+              <div class="panel-title"><div><b>Mapa de Erros</b><small>por que você está perdendo pontos</small></div><span id="errorPatternStatus">analisando</span></div>
+              <div id="errorPatternMap" class="error-pattern-map"><p style="color:var(--muted)">O NEXO vai separar seus erros por padrão de comportamento.</p></div>
+            </article>
+            <article class="panel review-queue-panel">
+              <div class="panel-title"><div><b>Fila de Revisão</b><small>o que precisa voltar hoje</small></div><span id="reviewQueueCount">0 pendentes</span></div>
+              <div id="reviewQueue" class="review-queue"><p style="color:var(--muted)">Nenhuma revisão pendente agora.</p></div>
+            </article>
+          </div>
+          <article class="panel profile-evolution-panel">
+            <div class="panel-title"><div><b>Meu perfil de evolução</b><small>atividade, consistência, domínio e ritmo</small></div><button class="outline-btn small" data-page="ranking">Ver Jornada →</button></div>
+            <div id="profileEvolution" class="profile-evolution-grid"></div>
+          </article>
           <div class="analysis-grid performance-analysis-grid">
             <article class="panel"><div class="panel-title"><b>Desempenho por área</b><small>visão acumulada</small></div><div id="areaPerformance" class="performance-list"></div></article>
             <article class="panel"><div class="panel-title"><b>Ritmo recente</b><small>últimos 7 dias</small></div><div id="performanceMomentum" class="performance-momentum"></div></article>
@@ -1145,6 +1159,7 @@
                 <li><b>1 sessão NEXO Core por dia</b><span>Treino adaptativo com limite diário</span></li>
                 <li><b>1 correção de redação por mês</b><span>Experimente a correção completa do Professor Nexo</span></li>
                 <li><b>1 entrada na Arena por semana</b><span>Ranking e Pontos NEXO</span></li>
+                <li><b>Biblioteca e trilhas NEXO</b><span>Aulas, resumos, macetes e progresso por assunto</span></li>
                 <li><b>Jornada e avatar</b><span>Cosméticos básicos e conquistáveis</span></li>
               </ul>
               <button class="outline-btn wide" disabled>Seu plano base</button>
@@ -1157,6 +1172,7 @@
               <ul>
                 <li><b>Questões ilimitadas</b><span>Sem limite diário de respostas</span></li>
                 <li><b>NEXO Core ilimitado</b><span>Sessões adaptativas sem limite</span></li>
+                <li><b>Análises avançadas</b><span>Mapa de erros, domínio e fila de revisão sem limite de sessões</span></li>
                 <li><b>Redações ilimitadas</b><span>Correções e histórico completos</span></li>
                 <li><b>Arena sem limite semanal</b><span>Treine e dispute quando quiser</span></li>
                 <li><b>Análises avançadas</b><span>Comportamento, ritmo, decisão e evolução</span></li>
@@ -1578,6 +1594,20 @@
           </div>
         </section>
 
+        <section class="onboarding-step hidden" data-onboarding-step="5">
+          <span class="onboarding-question">05 · DIAGNÓSTICO</span>
+          <h3>Quer começar com um diagnóstico rápido?</h3>
+          <p>O NEXO usa algumas questões da sua área prioritária para calibrar o primeiro plano. Você pode fazer agora ou começar pelos conteúdos.</p>
+          <div class="diagnostic-choice-grid">
+            <button type="button" class="active" data-onboarding-diagnostic="yes"><span>✦</span><div><b>Sim, calibrar meu nível</b><small>5–10 questões e depois uma rota personalizada</small></div></button>
+            <button type="button" data-onboarding-diagnostic="no"><span>▣</span><div><b>Prefiro estudar primeiro</b><small>Começar pela Biblioteca e testar depois</small></div></button>
+          </div>
+          <div class="onboarding-preview">
+            <span>PROFESSOR NEXO</span>
+            <p>O diagnóstico não vale nota. Ele só me ajuda a não recomendar coisa fácil demais ou difícil demais para você.</p>
+          </div>
+        </section>
+
         <footer class="onboarding-actions">
           <button id="onboardingBack" type="button" class="ghost-btn hidden">← Voltar</button>
           <div class="onboarding-action-spacer"></div>
@@ -1638,6 +1668,19 @@
       <button id="niaSend" aria-label="Enviar para o Nexo">→</button>
     </div>
   </aside>
+
+  <div id="achievementCelebration" class="achievement-celebration hidden" role="dialog" aria-modal="true">
+    <section class="achievement-celebration-card">
+      <button id="closeAchievementCelebration" aria-label="Fechar">×</button>
+      <div class="achievement-burst" aria-hidden="true">✦ ✧ ✦</div>
+      <img src="./assets/nexo-family/bust-confiante.avif" alt="Professor Nexo">
+      <span>CONQUISTA DESBLOQUEADA</span>
+      <h3 id="achievementCelebrationName">Novo marco</h3>
+      <p id="achievementCelebrationText">Seu progresso virou uma conquista.</p>
+      <div id="achievementCelebrationReward">+0 XP · +0 N-Coins</div>
+      <button id="openAchievementJourney" class="primary-btn">Ver na Jornada →</button>
+    </section>
+  </div>
 
   <div id="essayLoader" class="loader hidden">
     <div class="loader-card"><div class="orb-loader"><i></i><i></i><i></i></div><h3>Analisando sua redação...</h3><p id="loaderText">Avaliando estrutura e argumentação.</p></div>
