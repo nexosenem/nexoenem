@@ -1677,6 +1677,91 @@ function currentEssayVersionNumber(){
   return Math.max(2,Number(parent?.version_number||1)+1);
 }
 
+
+function studyResumeKey(){
+  return 'nexo-resume-session:'+String(state.user?.id||'guest');
+}
+function persistStudySession(){
+  if(!state.user?.id||!state.session?.queue?.length)return;
+  try{
+    const s=state.session;
+    localStorage.setItem(studyResumeKey(),JSON.stringify({
+      savedAt:Date.now(),
+      ids:s.queue.map(q=>Number(q.id)).filter(Boolean),
+      index:Number(s.index||0),
+      size:Number(s.size||s.queue.length),
+      mode:s.mode||'manual',
+      area:s.area||'',
+      subject:s.subject||'',
+      topic:s.topic||'',
+      difficulty:s.difficulty||'',
+      visualOnly:Boolean(s.visualOnly),
+      reviewMode:Boolean(s.reviewMode),
+      coreSessionId:s.coreSessionId||null,
+      maxHints:s.maxHints||null,
+      coachTimeSeconds:s.coachTimeSeconds||null,
+      coachLongSeconds:s.coachLongSeconds||null
+    }));
+  }catch(_){}
+}
+function readPersistedStudySession(){
+  try{
+    const raw=localStorage.getItem(studyResumeKey());
+    if(!raw)return null;
+    const saved=JSON.parse(raw);
+    if(!saved?.ids?.length||Date.now()-Number(saved.savedAt||0)>12*60*60*1000){
+      localStorage.removeItem(studyResumeKey());
+      return null;
+    }
+    if(Number(saved.index||0)>=Number(saved.size||saved.ids.length)){
+      localStorage.removeItem(studyResumeKey());
+      return null;
+    }
+    return saved;
+  }catch(_){return null}
+}
+function clearPersistedStudySession(){
+  try{localStorage.removeItem(studyResumeKey())}catch(_){}
+  decorateResumeStudySession();
+}
+function decorateResumeStudySession(){
+  const saved=readPersistedStudySession();
+  ['#recentAttempts','#mobileRecent'].forEach(selector=>{
+    const el=$(selector);if(!el)return;
+    el.querySelector('.resume-study-row')?.remove();
+    if(!saved)return;
+    const row=document.createElement('button');
+    row.className='resume-study-row';
+    row.innerHTML='<span>▶</span><div><b>Continuar sessão</b><small>Questão '+(Number(saved.index||0)+1)+' de '+Number(saved.size||saved.ids.length)+' · '+esc(saved.topic||saved.subject||saved.area||'treino')+'</small></div><i>→</i>';
+    row.onclick=resumePersistedStudySession;
+    el.prepend(row);
+  });
+}
+async function resumePersistedStudySession(){
+  const saved=readPersistedStudySession();
+  if(!saved)return toast('Não há sessão pendente.');
+  try{
+    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+    const {data,error}=await client.from('questions').select(fields).in('id',saved.ids);
+    if(error)throw error;
+    const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
+    const queue=saved.ids.map(id=>byId.get(Number(id))).filter(Boolean);
+    if(!queue.length)throw new Error('session questions unavailable');
+    state.session={...saved,queue,size:queue.length,index:Math.min(Number(saved.index||0),queue.length-1),correctStreak:0,wrongStreak:0,answeredCount:0};
+    openPage('questoes');
+    $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
+    $('#sessionAreaBadge').textContent=saved.mode==='core'?'NEXO Core':(saved.area||'Treino');
+    $('#sessionTitle').textContent=saved.topic||saved.subject||saved.area||'Sessão retomada';
+    $('#sessionSubtitle').textContent='Você voltou exatamente de onde parou.';
+    await showCurrentQuestion();
+    toast('Sessão retomada.');
+  }catch(err){
+    console.error('resume session',err);
+    clearPersistedStudySession();
+    toast('Não consegui retomar essa sessão.','error');
+  }
+}
+
 function maintenanceModuleForPage(id){
   return ({
     questoes:'questions',
