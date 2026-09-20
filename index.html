@@ -955,6 +955,7 @@
           <nav class="journey-tabs" aria-label="Seções da Jornada">
             <button class="active" data-journey-tab="missions">Missões</button>
             <button data-journey-tab="league">Ligas</button>
+            <button data-journey-tab="groups">Grupos</button>
             <button data-journey-tab="avatar">Avatar</button>
             <button data-journey-tab="wardrobe">Guarda-roupa</button>
             <button data-journey-tab="store">Loja</button>
@@ -977,6 +978,28 @@
             </div>
             <div class="league-road">
               <span data-league="Bronze">Bronze</span><span data-league="Prata">Prata</span><span data-league="Ouro">Ouro</span><span data-league="Platina">Platina</span><span data-league="Diamante">Diamante</span><span data-league="NEXO">NEXO</span>
+            </div>
+          </div>
+
+          <div class="journey-panel" data-journey-panel="groups">
+            <div class="journey-section-head"><div><span class="eyebrow">GRUPOS DE ESTUDO</span><h3>Estude junto sem transformar o NEXO em feed infinito.</h3></div><p>Grupos servem para metas compartilhadas, constância e apoio. Não alteram nota, domínio nem ranking acadêmico.</p></div>
+            <div class="study-groups-layout">
+              <section class="panel study-group-create">
+                <div class="panel-title"><div><b>Criar grupo</b><small>você recebe um código para convidar</small></div></div>
+                <input id="studyGroupName" class="text-input" maxlength="60" placeholder="Nome do grupo">
+                <textarea id="studyGroupDescription" rows="3" maxlength="500" placeholder="Objetivo do grupo (opcional)"></textarea>
+                <button id="createStudyGroup" class="primary-btn wide">Criar grupo →</button>
+                <div class="study-group-divider"><span>ou</span></div>
+                <input id="studyGroupCode" class="text-input" maxlength="8" placeholder="Código do grupo">
+                <button id="joinStudyGroup" class="outline-btn wide">Entrar com código</button>
+              </section>
+              <section class="panel study-group-list-card">
+                <div class="panel-title"><div><b>Meus grupos</b><small>metas e membros</small></div><button id="refreshStudyGroups" class="ghost-btn small">↻</button></div>
+                <div id="studyGroupsList" class="study-groups-list"><p class="learning-empty">Você ainda não participa de um grupo.</p></div>
+              </section>
+              <section class="panel study-group-detail-card">
+                <div id="studyGroupDetail" class="study-group-detail"><p class="learning-empty">Selecione um grupo para ver membros e metas.</p></div>
+              </section>
             </div>
           </div>
 
