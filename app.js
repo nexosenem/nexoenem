@@ -1500,7 +1500,7 @@ async function launchNexoWeekTask(task){
   if(type==='simulation'){openPage('questoes');await startStudySession({mode:'simulado',area:task.area||'',subject:'',topic:'',difficulty:'',visualOnly:false,size:Number(task.target_count||20)});return}
   if(type==='errors'){openPage('desempenho');await startErrorReview();return}
   openPage('questoes');
-  await startStudySession({mode:type==='review'?'review':'core',area:task.area||'',subject:task.subject||'',topic:task.topic||'',difficulty:'',visualOnly:false,size:Number(task.target_count||8)});
+  await startStudySession({mode:type==='review'?'review':'adaptive',area:task.area||'',subject:task.subject||'',topic:task.topic||'',difficulty:'',visualOnly:false,size:Number(task.target_count||8)});
 }
 
 
