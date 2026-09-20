@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Folha de Redação ENEM - treino A4</title>
+<style>
+  *{box-sizing:border-box}
+  :root{font-family:Arial,Helvetica,sans-serif;color:#111;background:#2f3138}
+  body{margin:0;min-height:100vh;background:#2f3138}
+  .toolbar{
+    position:sticky;top:0;z-index:10;display:flex;gap:8px;align-items:center;justify-content:center;
+    padding:10px max(10px,env(safe-area-inset-left)) 10px max(10px,env(safe-area-inset-right));
+    background:rgba(20,22,28,.94);backdrop-filter:blur(12px);border-bottom:1px solid rgba(255,255,255,.08)
+  }
+  .toolbar button,.toolbar a{
+    appearance:none;border:1px solid rgba(255,255,255,.16);border-radius:12px;background:#0d1728;color:#fff;
+    min-height:44px;padding:0 14px;font-size:14px;font-weight:800;text-decoration:none;display:inline-flex;align-items:center;justify-content:center
+  }
+  .toolbar .print{background:linear-gradient(90deg,#7256ed,#37b7e8);border:0}
+  .wrap{padding:18px 10px 36px;display:grid;place-items:start center}
+  .sheet{
+    width:210mm;height:297mm;background:#fff;position:relative;padding:12mm 12mm 10mm;color:#111;
+    box-shadow:0 18px 70px rgba(0,0,0,.35);overflow:hidden
+  }
+  .frame{position:absolute;inset:10mm 12mm;border:.35mm solid #303030;pointer-events:none}
+  h1{margin:0;font-size:5.4mm;line-height:1.05;letter-spacing:-.15mm}
+  .sub{margin:2.2mm 0 5mm;font-size:2.7mm}
+  .meta{display:grid;gap:2mm;margin-bottom:4.2mm;font-size:2.7mm}
+  .meta-row{display:flex;align-items:end;gap:3mm}
+  .meta-row span{white-space:nowrap}
+  .write-line{height:5mm;flex:1;border-bottom:.25mm solid #333}
+  .write-line.short{flex:0 0 42mm}
+  .write-line.medium{flex:0 0 78mm}
+  .lines{margin-top:1mm}
+  .row{
+    display:grid;grid-template-columns:8mm 1fr;align-items:end;height:6.5mm;font-size:2.45mm
+  }
+  .num{text-align:right;padding-right:2mm;line-height:1}
+  .rule{height:100%;border-left:.25mm solid #555;border-bottom:.25mm solid #444}
+  .footer{position:absolute;left:18mm;right:20mm;bottom:13mm;border-top:.25mm solid #555;padding-top:2.5mm}
+  .footer b{font-size:2.7mm}
+  .footer p{margin:1.2mm 0 0;font-size:2.3mm;line-height:1.35}
+  .cal{margin-top:3mm;font-size:2.2mm}
+  .cal-line{width:50mm;border-top:.45mm solid #111;margin-top:2mm;position:relative}
+  .cal-line:before,.cal-line:after{content:"";position:absolute;top:-1.5mm;height:3mm;border-left:.35mm solid #111}
+  .cal-line:before{left:0}.cal-line:after{right:0}
+  .cal-label{width:50mm;text-align:center;font-size:2.2mm;font-weight:800;margin-top:1mm}
+  @media(max-width:900px){
+    .wrap{padding:12px 6px 28px;overflow:auto;justify-content:start}
+    .sheet{transform-origin:top left}
+  }
+  @media screen and (max-width:900px){
+    .sheet{
+      width:min(210mm,calc(100vw - 12px));
+      height:auto;
+      aspect-ratio:210/297;
+      padding:calc((100vw - 12px)*.05714);
+    }
+    .frame{inset:4.75% 5.7% 3.4%}
+    h1{font-size:clamp(14px,3.1vw,22px)}
+    .sub,.meta{font-size:clamp(8px,1.55vw,11px)}
+    .row{height:2.188%;font-size:clamp(7px,1.25vw,9px)}
+    .footer{left:8.6%;right:9.5%;bottom:4.4%}
+    .footer b{font-size:clamp(8px,1.4vw,10px)}
+    .footer p,.cal{font-size:clamp(6px,1.1vw,8px)}
+  }
+  @page{size:A4 portrait;margin:0}
+  @media print{
+    html,body{background:#fff;width:210mm;height:297mm;margin:0;padding:0}
+    .toolbar{display:none!important}
+    .wrap{padding:0;display:block}
+    .sheet{width:210mm!important;height:297mm!important;aspect-ratio:auto!important;box-shadow:none!important;padding:12mm 12mm 10mm!important;transform:none!important}
+    .frame{inset:10mm 12mm!important}
+    h1{font-size:5.4mm!important}.sub,.meta{font-size:2.7mm!important}
+    .row{height:6.5mm!important;font-size:2.45mm!important}
+    .footer{left:18mm!important;right:20mm!important;bottom:13mm!important}
+    .footer b{font-size:2.7mm!important}.footer p{font-size:2.3mm!important}.cal{font-size:2.2mm!important}
+  }
+</style>
+</head>
+<body>
+  <div class="toolbar">
+    <button class="print" onclick="window.print()">Imprimir / salvar PDF</button>
+    <a href="./index.html#redacao">Voltar ao NEXO</a>
+  </div>
+  <main class="wrap">
+    <section class="sheet" aria-label="Folha de redação com 30 linhas">
+      <div class="frame"></div>
+      <h1>REDAÇÃO ENEM - MODELO DE TREINO EM TAMANHO REAL</h1>
+      <p class="sub">Papel A4, orientação retrato, escala 100% / tamanho real.</p>
+
+      <div class="meta">
+        <div class="meta-row"><span>Tema:</span><i class="write-line"></i></div>
+        <div class="meta-row"><span>Data:</span><i class="write-line short"></i><span style="margin-left:5mm">Tempo:</span><i class="write-line medium"></i></div>
+      </div>
+
+      <div class="lines">
+        <div class="row"><span class="num">1</span><span class="rule"></span></div><div class="row"><span class="num">2</span><span class="rule"></span></div><div class="row"><span class="num">3</span><span class="rule"></span></div><div class="row"><span class="num">4</span><span class="rule"></span></div><div class="row"><span class="num">5</span><span class="rule"></span></div><div class="row"><span class="num">6</span><span class="rule"></span></div><div class="row"><span class="num">7</span><span class="rule"></span></div><div class="row"><span class="num">8</span><span class="rule"></span></div><div class="row"><span class="num">9</span><span class="rule"></span></div><div class="row"><span class="num">10</span><span class="rule"></span></div><div class="row"><span class="num">11</span><span class="rule"></span></div><div class="row"><span class="num">12</span><span class="rule"></span></div><div class="row"><span class="num">13</span><span class="rule"></span></div><div class="row"><span class="num">14</span><span class="rule"></span></div><div class="row"><span class="num">15</span><span class="rule"></span></div><div class="row"><span class="num">16</span><span class="rule"></span></div><div class="row"><span class="num">17</span><span class="rule"></span></div><div class="row"><span class="num">18</span><span class="rule"></span></div><div class="row"><span class="num">19</span><span class="rule"></span></div><div class="row"><span class="num">20</span><span class="rule"></span></div><div class="row"><span class="num">21</span><span class="rule"></span></div><div class="row"><span class="num">22</span><span class="rule"></span></div><div class="row"><span class="num">23</span><span class="rule"></span></div><div class="row"><span class="num">24</span><span class="rule"></span></div><div class="row"><span class="num">25</span><span class="rule"></span></div><div class="row"><span class="num">26</span><span class="rule"></span></div><div class="row"><span class="num">27</span><span class="rule"></span></div><div class="row"><span class="num">28</span><span class="rule"></span></div><div class="row"><span class="num">29</span><span class="rule"></span></div><div class="row"><span class="num">30</span><span class="rule"></span></div>
+      </div>
+
+      <footer class="footer">
+        <b>IMPORTANTE</b>
+        <p>Modelo de treino com 30 linhas. A Folha de Redação definitiva usada na aplicação do Enem é personalizada e entregue pelo Inep no dia da prova.</p>
+        <p>Referência: A Redação do Enem 2026 - Cartilha do(a) participante.</p>
+        <div class="cal">Conferência de escala: a linha abaixo deve medir exatamente 50 mm após a impressão.</div>
+        <div class="cal-line"></div>
+        <div class="cal-label">50 mm</div>
+      </footer>
+    </section>
+  </main>
+<script>
+  // Voltar preservando o comportamento mesmo quando o site é servido por Worker.
+  document.querySelector('a[href="./index.html#redacao"]')?.addEventListener('click',e=>{
+    try{sessionStorage.setItem('nexo-return-page','redacao')}catch(_){}
+  });
+</script>
+</body>
+</html>
