@@ -2,5 +2,5 @@ window.NEXO_MASCOT_ASSETS={head:"data:image/webp;base64,UklGRuQNAABXRUJQVlA4INgN
 
 ;(function(){
   const a=window.NEXO_MASCOT_ASSETS||{};
-  window.NEXO_MASCOT_ASSETS={head:a.head||'',hero:a.hero||a.head||''};
+  window.NEXO_MASCOT_ASSETS={head:a.head||'',hero:a.head||''};
 })();
