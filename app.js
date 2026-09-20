@@ -693,7 +693,7 @@ async function handleSession(session) {
   if (session) {
     await initApp(session);
   } else {
-    state.user=null; state.profile=null;
+    state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null;
     $('#app').classList.add('hidden');
     $('#authScreen').classList.remove('hidden');
     $('#niaButton')?.classList.add('hidden');
@@ -1843,6 +1843,8 @@ async function submitAnswer(option) {
   }
 
   const reaction=buildImmediateNexoReaction(state.current,data,duration);
+  const game=data.gamification||{};
+  const previousJourneyLevel=Number(state.journey?.profile?.level||0);
   state.lastAnswer={...data,duration_seconds:duration,first_selection_seconds:firstSelectionSeconds,selection_changes:selectionChanges,hint_count:hintCount,nexo_reaction:reaction};
   const correct=Number(data.correct_option);
   $$('.q-option',$('#questionCard')).forEach((b,i)=>{
@@ -1876,6 +1878,14 @@ async function submitAnswer(option) {
       </div>
     </div>
 
+    <div class="answer-reward-strip">
+      <span><b>+${Number(game.xp_gained||0)}</b><small>XP</small></span>
+      <span><b>+${Number(game.coins_gained||0)}</b><small>N-Coins</small></span>
+      <span><b>+${Number(game.points_gained||0)}</b><small>Pontos NEXO</small></span>
+      <span><b>NV. ${Number(game.level||state.journey?.profile?.level||1)}</b><small>${esc(game.title||'Jornada')}</small></span>
+      ${Number(game.claimable_missions||0)>0?'<button id="answerJourneyOpen">✦ '+Number(game.claimable_missions)+' recompensa'+(Number(game.claimable_missions)>1?'s':'')+' pronta'+(Number(game.claimable_missions)>1?'s':'')+'</button>':''}
+    </div>
+
     <div class="answer-learning-grid">
       <article class="learning-block primary-learning">
         <span>01 · ENTENDA</span>
@@ -1904,6 +1914,13 @@ async function submitAnswer(option) {
       <button id="nextAfterAnswer" class="next-action">Próxima questão →</button>
     </div>`
   $('#questionCard').appendChild(box);
+  $('#answerJourneyOpen')?.addEventListener('click',()=>{
+    openPage('ranking');
+    setJourneyTab('missions');
+  });
+  if(previousJourneyLevel&&Number(game.level||0)>previousJourneyLevel){
+    toast('Nível '+game.level+' alcançado! Nova etapa da NEXO Jornada desbloqueada.');
+  }
   if(shortcut){
     $('#showHint').onclick=()=>{
       const h=$('#hintBox');
