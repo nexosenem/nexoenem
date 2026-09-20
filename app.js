@@ -3654,8 +3654,8 @@ $('#customEssayPrompt').addEventListener('input',updateEssayPrompt);
 $('#essayText').addEventListener('input',()=>$('#wordCount').textContent=(($('#essayText').value.match(/\S+/g)||[]).length)+' palavras');
 
 const OFFICIAL_ENEM_ESSAY_SHEET={
-  localUrl:'./assets/folha-redacao-enem-treino-a4.pdf',
-  url:'./assets/folha-redacao-enem-treino-a4.pdf',
+  localUrl:'./folha-redacao-enem.html',
+  url:'./folha-redacao-enem.html',
   label:'Folha ENEM para treino - tamanho real',
   officialReference:'https://www.gov.br/inep/pt-br/centrais-de-conteudo/acervo-linha-editorial/publicacoes-institucionais/avaliacoes-e-exames-da-educacao-basica/a-redacao-do-enem-2026-cartilha-do-a-participante',
   loading:false,
@@ -3703,10 +3703,10 @@ async function updateOfficialEssaySheetAction({refresh=false}={}){
   const ready=Boolean(OFFICIAL_ENEM_ESSAY_SHEET.url);
   const usingUploaded=Boolean(OFFICIAL_ENEM_ESSAY_SHEET.url&&OFFICIAL_ENEM_ESSAY_SHEET.url!==OFFICIAL_ENEM_ESSAY_SHEET.localUrl);
   btn.disabled=!ready;
-  btn.textContent=usingUploaded?'Abrir folha enviada para imprimir ↗':'Abrir PDF em tamanho real ↗';
+  btn.textContent=usingUploaded?'Abrir folha enviada para imprimir ↗':'Abrir folha em tamanho real ↗';
   if(note)note.textContent=usingUploaded
     ?'A folha enviada está disponível para impressão.'
-    :'Modelo de treino A4 com 30 linhas. Imprima em escala 100%. A folha definitiva do Enem é personalizada e entregue pelo Inep no dia da prova.';
+    :'Modelo de treino A4 com 30 linhas. A página abre visível no celular e permite imprimir ou salvar como PDF em escala 100%. A folha definitiva do Enem é personalizada e entregue pelo Inep no dia da prova.';
 }
 
 $('#officialEssaySheetBtn')?.addEventListener('click',()=>{
