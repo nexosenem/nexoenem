@@ -26,14 +26,35 @@ const CLOUDINARY = Object.freeze({
   uploadPreset:'nexo_uploads'
 });
 
-function uploadToCloudinary(file,onProgress=()=>{}){
-  return new Promise((resolve,reject)=>{
-    if(!file)return reject(new Error('Nenhum arquivo selecionado.'));
-    const endpoint=`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/auto/upload`;
-    const form=new FormData();
-    form.append('file',file);
-    form.append('upload_preset',CLOUDINARY.uploadPreset);
+async function getCloudinaryUploadAuth(){
+  try{
+    const {data,error}=await client.functions.invoke('cloudinary-signature',{body:{}});
+    if(error||!data?.signature||!data?.api_key||!data?.timestamp)return null;
+    return data;
+  }catch(err){
+    console.warn('Cloudinary signed upload indisponível; usando preset temporário.',err);
+    return null;
+  }
+}
 
+async function uploadToCloudinary(file,onProgress=()=>{}){
+  if(!file)throw new Error('Nenhum arquivo selecionado.');
+  const auth=await getCloudinaryUploadAuth();
+  const cloudName=auth?.cloud_name||CLOUDINARY.cloudName;
+  const endpoint=`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+  const form=new FormData();
+  form.append('file',file);
+
+  if(auth){
+    form.append('api_key',String(auth.api_key));
+    form.append('timestamp',String(auth.timestamp));
+    form.append('signature',String(auth.signature));
+    if(auth.folder)form.append('folder',String(auth.folder));
+  }else{
+    form.append('upload_preset',CLOUDINARY.uploadPreset);
+  }
+
+  return new Promise((resolve,reject)=>{
     const xhr=new XMLHttpRequest();
     xhr.open('POST',endpoint,true);
     xhr.upload.onprogress=e=>{
