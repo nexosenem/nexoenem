@@ -156,6 +156,113 @@ const THEMES = [
   {id:46,axis:'Proteção e prevenção',title:'Prevenção de desastres e cultura de redução de riscos nas cidades brasileiras',prompt:'Analise a importância do planejamento preventivo diante de enchentes, deslizamentos e outros desastres e proponha ações de informação, infraestrutura e preparação comunitária.'}
 ];
 
+
+const NEXO_SUBTOPICS=Object.freeze({
+  'Estatística e análise de dados':[
+    {name:'Média e medidas centrais',keys:['média','media','mediana','moda']},
+    {name:'Gráficos e tabelas',keys:['gráfico','grafico','tabela','coluna','barra','histograma']},
+    {name:'Dispersão e comparação',keys:['desvio','amplitude','dispersão','dispersao']},
+    {name:'Leitura de dados',keys:['percentual','frequência','frequencia','dados']}
+  ],
+  'Geometria e trigonometria':[
+    {name:'Áreas e perímetros',keys:['área','area','perímetro','perimetro']},
+    {name:'Pitágoras e triângulos',keys:['pitágoras','pitagoras','hipotenusa','triângulo','triangulo']},
+    {name:'Escala e semelhança',keys:['escala','semelhança','semelhanca']},
+    {name:'Trigonometria',keys:['seno','cosseno','tangente','ângulo','angulo']},
+    {name:'Sólidos e volume',keys:['volume','cilindro','cone','esfera','prisma']}
+  ],
+  'Porcentagem e matemática financeira':[
+    {name:'Porcentagem',keys:['porcentagem','percentual','%']},
+    {name:'Variação percentual',keys:['aumento','redução','reducao','variação','variacao']},
+    {name:'Juros',keys:['juros','taxa','capital','montante']},
+    {name:'Descontos e preços',keys:['desconto','preço','preco','promoção','promocao']}
+  ],
+  'Probabilidade e combinatória':[
+    {name:'Probabilidade simples',keys:['probabilidade','chance','evento']},
+    {name:'Contagem',keys:['combinação','combinacao','arranjo','permutação','permutacao']},
+    {name:'Princípio multiplicativo',keys:['possibilidades','maneiras','formas diferentes']},
+    {name:'Probabilidade condicional',keys:['dado que','condicional']}
+  ],
+  'Funções e modelagem':[
+    {name:'Função afim',keys:['função afim','funcao afim','reta','1º grau','primeiro grau']},
+    {name:'Função quadrática',keys:['quadrática','quadratica','parábola','parabola','2º grau']},
+    {name:'Gráficos',keys:['gráfico','grafico','eixo','coordenada']},
+    {name:'Modelagem',keys:['modelo','expressão','expressao','equação','equacao']}
+  ],
+  'Raciocínio quantitativo':[
+    {name:'Taxas e razões',keys:['taxa','razão','razao','por unidade']},
+    {name:'Estimativa',keys:['aproximadamente','estimativa','aprox']},
+    {name:'Conversão de unidades',keys:['km','metro','litro','minuto','hora','unidade']},
+    {name:'Comparação quantitativa',keys:['comparar','maior','menor','proporção','proporcao']}
+  ],
+  'Mecânica':[
+    {name:'Cinemática',keys:['velocidade','aceleração','aceleracao','deslocamento','movimento']},
+    {name:'Forças e Newton',keys:['força','forca','newton','atrito','peso']},
+    {name:'Energia e trabalho',keys:['energia','trabalho','cinética','cinetica','potencial']},
+    {name:'Potência e impulso',keys:['potência','potencia','impulso','quantidade de movimento']}
+  ],
+  'Genética e evolução':[
+    {name:'Mendel e heredogramas',keys:['mendel','alelo','genótipo','genotipo','heredograma']},
+    {name:'DNA e genética molecular',keys:['dna','rna','gene','cromossomo','proteína','proteina']},
+    {name:'Seleção natural',keys:['seleção','selecao','adaptação','adaptacao']},
+    {name:'Evolução e variabilidade',keys:['evolução','evolucao','mutação','mutacao','variabilidade']}
+  ],
+  'Estequiometria e soluções':[
+    {name:'Mol e massa molar',keys:['mol','massa molar']},
+    {name:'Estequiometria',keys:['estequiometr','balanceamento','reagente','produto']},
+    {name:'Concentração',keys:['concentração','concentracao','soluto','solução','solucao']},
+    {name:'Diluição',keys:['diluição','diluicao','diluir']}
+  ],
+  'Brasil Colônia e Império':[
+    {name:'Colonização',keys:['colonização','colonizacao','capitania','metrópole','metropole']},
+    {name:'Escravidão e resistência',keys:['escravid','quilombo','resistência','resistencia']},
+    {name:'Independência',keys:['independência','independencia','1822']},
+    {name:'Império e cidadania',keys:['império','imperio','monarquia','cidadania','abolição','abolicao']}
+  ],
+  'Urbanização e população':[
+    {name:'Urbanização',keys:['urbanização','urbanizacao','cidade','metrópole','metropole']},
+    {name:'Migrações',keys:['migração','migracao','migratório','migratorio']},
+    {name:'Demografia',keys:['natalidade','mortalidade','pirâmide etária','piramide etaria','população','populacao']},
+    {name:'Segregação e rede urbana',keys:['segregação','segregacao','rede urbana','periferia']}
+  ],
+  'Variação linguística e linguagem':[
+    {name:'Variação linguística',keys:['variação','variacao','regional','dialeto']},
+    {name:'Registro e adequação',keys:['formal','informal','registro','adequação','adequacao']},
+    {name:'Preconceito linguístico',keys:['preconceito linguístico','preconceito linguistico']},
+    {name:'Efeito de sentido',keys:['efeito de sentido','gíria','giria','oralidade']}
+  ],
+  'Leitura e compreensão':[
+    {name:'Compreensão global',keys:['main idea','tema','assunto','purpose','propósito','proposito']},
+    {name:'Inferência',keys:['infer','imply','implied','deduz','concluir']},
+    {name:'Referência e conectores',keys:['reference','refer','pronoun','however','therefore','pero','aunque']},
+    {name:'Vocabulário em contexto',keys:['meaning','word','expressão','expressao','significa']}
+  ],
+  'Análise do texto literário':[
+    {name:'Voz e foco',keys:['eu lírico','eu lirico','narrador','voz']},
+    {name:'Figuras e efeitos',keys:['metáfora','metafora','ironia','figura','efeito']},
+    {name:'Forma e linguagem',keys:['verso','ritmo','rima','linguagem']},
+    {name:'Contexto literário',keys:['modernismo','romantismo','realismo','movimento']}
+  ]
+});
+
+function normalizeTextKey(value=''){
+  return String(value||'').normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+
+function inferQuestionSubtopic(q={}){
+  const topic=String(q.topic||'');
+  const defs=NEXO_SUBTOPICS[topic]||[];
+  if(!defs.length)return null;
+  const hay=normalizeTextKey([q.prompt,q.base_text,q.source_reference,q.subject,q.topic].filter(Boolean).join(' '));
+  let best=null,bestHits=0;
+  for(const def of defs){
+    let hits=0;
+    for(const key of def.keys||[])if(hay.includes(normalizeTextKey(key)))hits++;
+    if(hits>bestHits){best=def;bestHits=hits}
+  }
+  return bestHits?best.name:defs[0].name;
+}
+
 const state = {
   user:null,
   profile:null,
@@ -179,6 +286,11 @@ const state = {
   materialOpenTopic:'',
   contentProgress:new Map(),
   topicMastery:new Map(),
+  subtopicMastery:new Map(),
+  nexoScore:null,
+  personalRadar:[],
+  learningIntelligence:null,
+  recommendationExplanation:null,
   pendingGuidedTraining:null,
   lastFinishedStudy:null,
   favorites:new Set(),
@@ -4001,8 +4113,9 @@ async function submitAnswer(option) {
     loadNexoMembership({silent:true}),
     loadNexoJourney({silent:true}),
     loadNexoWeekPlan({silent:true}),
-    loadTopicMastery()
-  ]).catch(err=>console.error('refresh after answer',err));
+    loadTopicMastery(),
+    loadSubtopicMastery()
+  ]).then(()=>{ if($('.page.active')?.id==='desempenho')renderV3Intelligence(); }).catch(err=>console.error('refresh after answer',err));
 }
 
 async function nextQuestion() {
@@ -4456,6 +4569,143 @@ async function startErrorReview(){
 }
 
 
+
+async function loadSubtopicMastery(){
+  if(!state.user?.id)return state.subtopicMastery;
+  try{
+    const {data,error}=await client.from('question_attempts')
+      .select('is_correct,duration_seconds,created_at,question:questions(area,subject,topic,difficulty,prompt,base_text,source_reference)')
+      .order('created_at',{ascending:false})
+      .limit(500);
+    if(error)throw error;
+    const map=new Map();
+    for(const a of data||[]){
+      const q=a.question||{};
+      const name=inferQuestionSubtopic(q);
+      if(!name)continue;
+      const key=String(q.topic||'')+'::'+name;
+      const row=map.get(key)||{topic:q.topic||'',subject:q.subject||'',area:q.area||'',name,attempts:0,correct:0,totalSeconds:0,lastAt:null};
+      row.attempts++;
+      if(a.is_correct)row.correct++;
+      row.totalSeconds+=Number(a.duration_seconds||0);
+      const at=a.created_at?new Date(a.created_at):null;
+      if(at&&(!row.lastAt||at>row.lastAt))row.lastAt=at;
+      map.set(key,row);
+    }
+    for(const row of map.values()){
+      row.accuracy=row.attempts?Math.round(row.correct*100/row.attempts):0;
+      const confidence=1-Math.exp(-row.attempts/5);
+      row.confidence=Math.round(confidence*100);
+      row.mastery=clamp(Math.round(((row.correct+1.5)/(row.attempts+3))*(.80+.20*confidence)*100),0,100);
+      row.avgSeconds=row.attempts?Math.round(row.totalSeconds/row.attempts):0;
+    }
+    state.subtopicMastery=map;
+  }catch(err){
+    console.error('subtopic mastery',err);
+    logClientError('learning',err,'subtopic_mastery');
+  }
+  return state.subtopicMastery;
+}
+
+function essayPreparationScore(){
+  const rows=state.essayHistory||[];
+  if(!rows.length)return 50;
+  const recent=rows.slice(0,5);
+  return clamp(Math.round(recent.reduce((sum,r)=>sum+Number(r.estimated_score||0),0)/recent.length/10),0,100);
+}
+
+function calculateNexoScore(){
+  const topicRows=[...state.topicMastery.values()];
+  const d=state.dashboard||{};
+  const core=state.core||{};
+  const momentum=core.momentum||{};
+  const overall=core.overall||{};
+  const mastery=topicRows.length?Math.round(topicRows.reduce((s,x)=>s+Number(x.masteryScore||0),0)/topicRows.length):50;
+  const due=reviewQueueItems().length;
+  const retention=clamp(Math.round(mastery-Math.min(30,due*5)),0,100);
+  const questions=clamp(Number(d.accuracy||0)||50,0,100);
+  const avgSec=Number(overall.avg_seconds||0);
+  const speed=avgSec?clamp(Math.round(100-Math.max(0,avgSec-120)*.35),25,100):50;
+  const days=Number(momentum.study_days_7d||0);
+  const consistency=clamp(Math.round(days/7*100),0,100);
+  const writing=essayPreparationScore();
+  const raw=mastery*.30+retention*.15+questions*.20+speed*.10+consistency*.15+writing*.10;
+  const attempts=Number(d.attempts||0);
+  const confidence=clamp(Math.round((1-Math.exp(-attempts/35))*100),0,100);
+  const score=Math.round(raw*10);
+  state.nexoScore={score,confidence,components:{mastery,retention,questions,speed,consistency,writing}};
+  return state.nexoScore;
+}
+
+function buildPersonalRadar(){
+  const rows=(state.radarTopics||[]).map(row=>{
+    const meta=topicLearningMeta(row.topic,row.subject);
+    const global=clamp(Number(row.nexo_priority_score||0),0,100);
+    const weakness=100-clamp(Number(meta.score||0),0,100);
+    const review=meta.reviewDue?100:meta.key==='review'?80:20;
+    const personal=Math.round(global*.45+weakness*.40+review*.15);
+    return {...row,personal_priority:personal,student_mastery:Number(meta.score||0),review_due:Boolean(meta.reviewDue)};
+  }).sort((a,b)=>b.personal_priority-a.personal_priority);
+  state.personalRadar=rows;
+  return rows;
+}
+
+function renderV3Intelligence(){
+  const score=calculateNexoScore();
+  const value=$('#nexoScoreValue'),label=$('#nexoScoreLabel'),conf=$('#nexoScoreConfidence'),breakdown=$('#nexoScoreBreakdown');
+  if(value)value.textContent=score.score;
+  if(label)label.textContent=score.score>=800?'Preparação forte':score.score>=650?'Boa base em construção':score.score>=500?'Evoluindo com pontos claros de ganho':'Fase de construção';
+  if(conf)conf.textContent='confiança '+score.confidence+'%';
+  if(breakdown){
+    const labels={mastery:'Domínio',retention:'Retenção',questions:'Questões',speed:'Velocidade',consistency:'Consistência',writing:'Redação'};
+    breakdown.innerHTML=Object.entries(score.components).map(([k,v])=>'<div><span>'+labels[k]+'</span><i><em style="width:'+v+'%"></em></i><b>'+v+'%</b></div>').join('');
+  }
+
+  const radar=buildPersonalRadar().slice(0,6),radarEl=$('#personalRadarList');
+  if(radarEl)radarEl.innerHTML=radar.length?radar.map((x,i)=>'<button data-personal-radar-topic="'+encodeURIComponent(x.topic)+'" data-personal-radar-subject="'+encodeURIComponent(x.subject||'')+'"><span>'+String(i+1).padStart(2,'0')+'</span><div><b>'+esc(x.topic)+'</b><small>'+esc(x.subject||x.area||'')+' · domínio '+Math.round(x.student_mastery)+'%'+(x.review_due?' · revisão pendente':'')+'</small></div><strong>'+x.personal_priority+'</strong></button>').join(''):'<p class="learning-empty">Resolva algumas questões para gerar seu Radar Pessoal.</p>';
+  $('[data-personal-radar-topic]',radarEl||document).forEach(btn=>btn.onclick=()=>{
+    const topic=decodeURIComponent(btn.dataset.personalRadarTopic||''),subject=decodeURIComponent(btn.dataset.personalRadarSubject||'');
+    const lesson=topicLesson(topic,subject);
+    lesson?openLibraryTopic(subject,topic):startStudySession({mode:'core',subject,topic,size:5,difficulty:'',visualOnly:false});
+  });
+
+  const subEl=$('#subtopicMasteryMap');
+  if(subEl){
+    const rows=[...state.subtopicMastery.values()].sort((a,b)=>(a.mastery-b.mastery)||(b.attempts-a.attempts)).slice(0,12);
+    subEl.innerHTML=rows.length?rows.map(x=>'<article><div><small>'+esc(x.topic)+'</small><b>'+esc(x.name)+'</b><span>'+x.attempts+' questão(ões) · confiança '+x.confidence+'%</span></div><strong>'+x.mastery+'%</strong><i><em style="width:'+x.mastery+'%"></em></i></article>').join(''):'<p class="learning-empty">Os subassuntos aparecem conforme o NEXO reconhece padrões nas questões respondidas.</p>';
+    if($('#subtopicConfidenceLabel'))$('#subtopicConfidenceLabel').textContent='estimativa por texto · '+rows.length+' subassunto'+(rows.length===1?'':'s');
+  }
+}
+
+function buildRecommendationExplanation(){
+  const saved=readPersistedStudySession();
+  if(saved)return {title:'Continuar a sessão preserva seu contexto.',text:'Você já começou uma sessão e interromper agora criaria troca de contexto desnecessária.',factors:[['CONTINUIDADE','sessão em andamento'],['RESTANTE',Math.max(1,Number(saved.size||0)-Number(saved.index||0))+' questões'],['OBJETIVO',saved.topic||saved.subject||saved.area||'treino atual']]};
+  const review=spacedReviewCandidate();
+  if(review)return {title:'Este assunto chegou na hora de revisar.',text:'O intervalo de revisão venceu e uma sessão curta ajuda a proteger retenção.',factors:[['DOMÍNIO',Math.round(review.meta.score||0)+'%'],['INTERVALO',review.meta.intervalDays+' dia(s)'],['ÚLTIMO CONTATO',review.days+' dia(s) atrás']]};
+  const rec=state.core?.recommended_action;
+  if(rec)return {title:'O NEXO Core encontrou margem de evolução.',text:rec.reason||'A recomendação combina desempenho, prioridade e histórico recente.',factors:[['ASSUNTO',rec.topic||rec.subject||rec.area||'prioridade'],['DOMÍNIO',Math.round(Number(rec.mastery||0))+'%'],['PRIORIDADE',Math.round(Number(rec.priority||0))+'/100']]};
+  const top=buildPersonalRadar()[0];
+  if(top)return {title:'Este assunto tem alto retorno para você.',text:'O Radar Pessoal cruza frequência histórica no ENEM com seu domínio e necessidade de revisão.',factors:[['RADAR ENEM',Math.round(Number(top.nexo_priority_score||0))+'/100'],['SEU DOMÍNIO',Math.round(Number(top.student_mastery||0))+'%'],['PRIORIDADE PESSOAL',top.personal_priority+'/100']]};
+  return {title:'Ainda estou calibrando.',text:'Com mais algumas respostas, a recomendação passa a usar seu desempenho real.',factors:[['DADOS','ainda insuficientes'],['PRÓXIMO PASSO','resolver questões'],['CONTROLE','você pode escolher qualquer matéria']]};
+}
+
+function openRecommendationWhy(){
+  const data=buildRecommendationExplanation();
+  state.recommendationExplanation=data;
+  $('#recommendationWhyTitle').textContent=data.title;
+  $('#recommendationWhyText').textContent=data.text;
+  $('#recommendationWhyFactors').innerHTML=(data.factors||[]).map(x=>'<article><small>'+esc(x[0])+'</small><b>'+esc(x[1])+'</b></article>').join('');
+  $('#recommendationWhyModal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeRecommendationWhy(){
+  $('#recommendationWhyModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+}
+$('[data-nexo-why]').forEach(btn=>btn.addEventListener('click',openRecommendationWhy));
+$('#closeRecommendationWhy')?.addEventListener('click',closeRecommendationWhy);
+$('#recommendationWhyModal')?.addEventListener('click',e=>{if(e.target===$('#recommendationWhyModal'))closeRecommendationWhy()});
+
 function classifyAttemptPattern(a){
   if(a?.is_correct)return null;
   const duration=Number(a?.duration_seconds||0);
@@ -4558,7 +4808,7 @@ function renderProfileEvolution(){
 }
 
 async function renderPerformance() {
-  const [, , , intel]=await Promise.all([loadDashboard(),loadNexoCore(),loadErrorNotebook(),loadLearningIntelligence(),loadTopicMastery(),loadNexoJourney({silent:true}),loadMaterials({silent:true})]);
+  const [, , , intel]=await Promise.all([loadDashboard(),loadNexoCore(),loadErrorNotebook(),loadLearningIntelligence(),loadTopicMastery(),loadNexoJourney({silent:true}),loadMaterials({silent:true}),loadSubtopicMastery(),loadEssayHistory(),loadEnemRadar({silent:true})]);
   const d=state.dashboard||{attempts:0,correct:0,accuracy:0,by_area:[]};
   const core=state.core||{};
   const momentum=core.momentum||{};
@@ -4567,6 +4817,7 @@ async function renderPerformance() {
   renderErrorPatternMap(intel);
   renderReviewQueue();
   renderProfileEvolution();
+  renderV3Intelligence();
 
   const {data:sessions,error:sessionError}=await client.from('nexo_study_sessions')
     .select('id,mode,area,subject,topic,planned_count,answered_count,correct_count,total_duration_seconds,status,started_at,ended_at')
