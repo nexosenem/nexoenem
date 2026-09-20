@@ -332,3 +332,11 @@ body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
   .nia-button{right:13px;bottom:78px;width:52px;height:52px;border-radius:17px}
   .nia-panel{right:8px;left:8px;bottom:72px;width:auto;max-height:76vh}
 }
+
+@media(max-width:760px){
+  .visual-wrap.visual-zoom .visual-stage{background:#050914;align-content:center}
+  .visual-wrap.visual-zoom .q-media-image{
+    width:auto;max-width:100%;max-height:calc(100vh - 90px);object-fit:contain;
+    border-radius:10px;background:#fff;box-shadow:0 12px 50px rgba(0,0,0,.45)
+  }
+}
