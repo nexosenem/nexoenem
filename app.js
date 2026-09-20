@@ -4958,6 +4958,11 @@ async function saveContentProgress(type,id,{seconds=0,percent=0,completed=false}
   const {error}=await client.from('content_progress').upsert(row,{onConflict:'user_id,content_type,content_id'});
   if(error){console.error('content progress',error);return false}
   state.contentProgress.set(contentKey(type,id),row);
+  if(completed){
+    client.rpc('refresh_my_learning_achievements').then(()=>{
+      loadNexoJourney({silent:true}).catch(()=>{});
+    }).catch(err=>console.warn('learning achievements',err));
+  }
   return true;
 }
 
