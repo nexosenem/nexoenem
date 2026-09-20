@@ -464,3 +464,26 @@ body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
   .auth-panel{padding-top:18px}
   .auth-card{box-shadow:0 22px 60px rgba(0,0,0,.42)}
 }
+
+
+/* Direct login photo layer */
+.auth-visual{position:relative!important;overflow:hidden!important;background:#050914!important}
+.auth-nexo-photo{
+  position:absolute;inset:0;width:100%;height:100%;display:block;object-fit:cover;object-position:center 42%;
+  z-index:0;pointer-events:none
+}
+.auth-nexo-overlay{
+  position:absolute;inset:0;z-index:1;pointer-events:none;
+  background:linear-gradient(90deg,rgba(5,9,20,.97) 0%,rgba(5,9,20,.82) 27%,rgba(5,9,20,.38) 60%,rgba(5,9,20,.12) 100%),
+             linear-gradient(0deg,rgba(5,9,20,.9) 0%,rgba(5,9,20,.04) 50%,rgba(5,9,20,.12) 100%)
+}
+.auth-brand,.auth-copy{position:relative!important;z-index:3!important}
+.auth-orbit[hidden]{display:none!important}
+
+@media(max-width:760px){
+  .auth-nexo-photo{object-position:62% 42%}
+  .auth-nexo-overlay{
+    background:linear-gradient(90deg,rgba(5,9,20,.94) 0%,rgba(5,9,20,.62) 48%,rgba(5,9,20,.20) 100%),
+               linear-gradient(0deg,rgba(5,9,20,.9) 0%,rgba(5,9,20,.06) 58%)
+  }
+}
