@@ -2558,3 +2558,12 @@ body.light .admin-user-row{background:#f7f9fd}
   .admin-user-action{grid-column:1/-1}
   .admin-user-action button{width:100%}
 }
+
+.profile-menu #profileAdminShortcut{color:#efbd58;border-color:rgba(220,166,66,.38);margin-bottom:6px}
+@media(max-width:760px){
+  .sidebar{overflow-y:auto;overscroll-behavior:contain}
+  .side-nav{flex:0 0 auto}
+  .sidebar-spacer{min-height:12px}
+  .sidebar-quote{margin-top:8px;flex:0 0 auto}
+  .admin-link{order:99}
+}
