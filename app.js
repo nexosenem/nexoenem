@@ -2210,8 +2210,9 @@ async function loadVideos() {
 }
 function renderVideos(){
   const s=$('#videoSearch').value.toLowerCase().trim();
+  const favoritesOnly=$('#videoFavoritesOnly')?.classList.contains('active');
   const list=state.videos
-    .filter(v=>!s||[v.title,v.area,v.subject,v.topic,v.description].filter(Boolean).join(' ').toLowerCase().includes(s))
+    .filter(v=>(!s||[v.title,v.area,v.subject,v.topic,v.description].filter(Boolean).join(' ').toLowerCase().includes(s))&&(!favoritesOnly||favoriteContent('video',v.id)))
     .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a)));
   $('#videoGrid').innerHTML=list.length?list.map(v=>{
     const fav=favoriteContent('video',v.id);
@@ -2234,6 +2235,7 @@ function renderVideos(){
   wireContentCards();
 }
 $('#videoSearch').addEventListener('input',renderVideos);
+$('#videoFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active');renderVideos()});
 
 async function loadMaterials(){
   const {data,error}=await client.from('materials').select('*').eq('is_published',true).order('created_at',{ascending:false});
@@ -2244,8 +2246,9 @@ async function loadMaterials(){
 }
 function renderMaterials(){
   const s=($('#materialSearch')?.value||'').toLowerCase().trim();
+  const favoritesOnly=$('#materialFavoritesOnly')?.classList.contains('active');
   const list=state.materials
-    .filter(m=>!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLowerCase().includes(s))
+    .filter(m=>(!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLowerCase().includes(s))&&(!favoritesOnly||favoriteContent('material',m.id)))
     .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a)));
   const grid=$('#materialGrid');
   if(!grid)return;
@@ -2272,6 +2275,7 @@ function renderMaterials(){
   wireContentCards();
 }
 $('#materialSearch')?.addEventListener('input',renderMaterials);
+$('#materialFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active');renderMaterials()});
 
 function renderBank(){
   const search=$('#bankSearch').value.toLowerCase().trim(),area=$('#bankArea').value;
@@ -2770,8 +2774,24 @@ function applyNiaOutfit(outfit,save=true){applyNexoStyle(outfit,save)}
 $$('[data-outfit]').forEach(b=>b.onclick=()=>applyNexoStyle(b.dataset.outfit,true));
 
 
+async function checkCloudinarySecurityStatus(){
+  const el=$('#cloudinarySecurityStatus');
+  if(!el)return;
+  el.className='cloudinary-security-status checking';
+  el.textContent='Verificando proteção dos uploads...';
+  const auth=await getCloudinaryUploadAuth();
+  if(auth){
+    el.className='cloudinary-security-status safe';
+    el.textContent='✓ Upload assinado ativo — arquivos protegidos por autenticação de administrador.';
+  }else{
+    el.className='cloudinary-security-status warning';
+    el.textContent='⚠ Upload assinado aguardando CLOUDINARY_API_SECRET. O site usa o preset temporário até essa configuração.';
+  }
+}
+
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
+  checkCloudinarySecurityStatus();
   const [profiles,attempts,feedbacks,videosCount,materialsCount,progressRows,videosRows,materialsRows]=await Promise.all([
     client.from('profiles').select('*',{count:'exact',head:true}),
     client.from('question_attempts').select('*',{count:'exact',head:true}),
