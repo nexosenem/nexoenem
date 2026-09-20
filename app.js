@@ -4234,17 +4234,12 @@ function renderJourneyAchievements(){
   </article>`).join('');
 }
 
-let avatarEditorCategory='appearance';
+let avatarEditorCategory='base';
 
 function avatarEditorGroupForField(field){
-  return ({
-    base:'appearance',skin:'appearance',
-    hair:'hair',hair_color:'hair',
-    outfit:'outfit',
-    accessory:'accessory',
-    frame:'frame',
-    background:'scene',aura:'scene'
-  })[field]||'appearance';
+  return ['base','skin','hair','hair_color','outfit','accessory','frame','background','aura'].includes(field)
+    ? field
+    : 'base';
 }
 
 function avatarEditorIconForField(field){
@@ -4254,39 +4249,104 @@ function avatarEditorIconForField(field){
   })[field]||'•';
 }
 
+function avatarEditorLabel(field){
+  return ({
+    base:'Base',skin:'Tom de pele',hair:'Cabelo',hair_color:'Cor do cabelo',
+    outfit:'Roupa',accessory:'Acessório',frame:'Moldura',background:'Ambiente',aura:'Aura'
+  })[field]||'Personalização';
+}
+
+function avatarOptionCleanLabel(btn){
+  return String(btn?.dataset?.baseLabel||btn?.getAttribute?.('aria-label')||btn?.textContent||'')
+    .replace(/\s*🔒$/,'')
+    .replace(/\s*PLUS$/i,'')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function avatarPreviewForOption(btn,draft){
+  const field=btn.dataset.avatarField;
+  const value=btn.dataset.avatarValue;
+  let preview=normalizedAvatar(draft);
+
+  if(field==='base'){
+    const starter=starterAvatarForBase(value);
+    preview={
+      ...preview,
+      base:starter.base,
+      hair:starter.hair,
+      outfit:starter.outfit,
+      accessory:'none'
+    };
+  }else{
+    preview[field]=value;
+  }
+
+  return normalizeAvatarDraftForBase(preview);
+}
+
+function avatarOptionStateLabel(btn){
+  if(btn.classList.contains('active'))return 'USANDO';
+  if(btn.dataset.locked!=='true')return 'DISPONÍVEL';
+  if(btn.dataset.lockReason==='plus')return 'PLUS';
+  if(btn.dataset.lockReason==='level')return 'NÍVEL '+Number(btn.dataset.unlockLevel||1);
+  return 'LOJA';
+}
+
+function renderAvatarVisualCard(btn,draft){
+  if(!btn||btn.hidden)return;
+
+  const field=btn.dataset.avatarField;
+  const label=avatarOptionCleanLabel(btn);
+  btn.dataset.baseLabel=label;
+
+  if(btn.classList.contains('tone-swatch')){
+    const stateLabel=avatarOptionStateLabel(btn);
+    btn.innerHTML='<i></i><span class="avatar-option-copy"><b>'+esc(label||btn.getAttribute('aria-label')||'Tom')+'</b><small>'+esc(stateLabel)+'</small></span>';
+    return;
+  }
+
+  const preview=avatarPreviewForOption(btn,draft);
+  const stateLabel=avatarOptionStateLabel(btn);
+  btn.innerHTML='<span class="avatar-option-preview"></span><span class="avatar-option-copy"><b>'+esc(label||btn.dataset.avatarValue||'Opção')+'</b><small>'+esc(stateLabel)+'</small></span>';
+  const previewTarget=btn.querySelector('.avatar-option-preview');
+  renderStudentAvatar(previewTarget,preview);
+  btn.dataset.avatarIcon=avatarEditorIconForField(field);
+}
+
 function renderAvatarEditorCategory(){
   const controls=$('#avatarBuilderControls');
   if(!controls)return;
 
-  $$('[data-avatar-category]',controls).forEach(btn=>{
+  $('[data-avatar-category]',controls).forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.avatarCategory===avatarEditorCategory);
   });
 
-  $$('.avatar-option-group',controls).forEach(group=>{
+  $('.avatar-option-group',controls).forEach(group=>{
     const first=group.querySelector('[data-avatar-field]');
     const category=avatarEditorGroupForField(first?.dataset.avatarField||'base');
     group.dataset.avatarEditorGroup=category;
     group.classList.toggle('editor-hidden',category!==avatarEditorCategory);
   });
 
-  const activeGroups=$$('.avatar-option-group',controls).filter(group=>group.dataset.avatarEditorGroup===avatarEditorCategory);
+  const activeGroups=$('.avatar-option-group',controls).filter(group=>group.dataset.avatarEditorGroup===avatarEditorCategory);
   const selected=[];
   activeGroups.forEach(group=>{
     const active=group.querySelector('[data-avatar-field].active:not([hidden])');
-    if(active){
-      const label=active.dataset.baseLabel||active.getAttribute('aria-label')||active.textContent||'';
-      selected.push(label.replace(/\s*🔒$/,'').replace(/\s*PLUS$/i,'').trim());
-    }
+    if(active)selected.push(avatarOptionCleanLabel(active));
   });
 
   const title=$('#avatarSelectionTitle');
   const text=$('#avatarSelectionText');
-  const labels={
-    appearance:'Aparência',hair:'Cabelo',outfit:'Roupa',
-    accessory:'Acessórios',frame:'Moldura',scene:'Cenário'
-  };
-  if(title)title.textContent=labels[avatarEditorCategory]||'Personalização';
-  if(text)text.textContent=selected.length?selected.join(' · '):'Escolha uma opção para visualizar.';
+  if(title)title.textContent=avatarEditorLabel(avatarEditorCategory);
+  if(text)text.textContent=selected.length
+    ? selected.join(' · ')
+    : 'Escolha uma opção para visualizar no personagem.';
+
+  const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
+  $('[data-avatar-field]',controls)
+    .filter(btn=>btn.dataset.avatarEditorCategory===avatarEditorCategory&&!btn.hidden)
+    .forEach(btn=>renderAvatarVisualCard(btn,draft));
 }
 
 function renderAvatarBuilder(){
@@ -4324,10 +4384,8 @@ function renderAvatarBuilder(){
     btn.dataset.locked=locked?'true':'false';
     btn.dataset.lockReason=plusLocked?'plus':itemLocked?(level<Number(item?.unlock_level||1)?'level':'store'):'';
     btn.dataset.unlockLevel=item?.unlock_level?String(item.unlock_level):'';
-    if(!btn.classList.contains('tone-swatch')){
-      const base=(btn.dataset.baseLabel||btn.textContent).replace(/\s*🔒$/,'').replace(/\s*PLUS$/i,'');
-      btn.dataset.baseLabel=base;
-      btn.textContent=locked?(base+(plusLocked?' PLUS':' 🔒')):base;
+    if(!btn.dataset.baseLabel){
+      btn.dataset.baseLabel=avatarOptionCleanLabel(btn);
     }
   });
   renderAvatarEditorCategory();
@@ -4472,7 +4530,7 @@ $('#avatarBuilderControls')?.addEventListener('click',e=>{
   const categoryBtn=e.target.closest?.('[data-avatar-category]');
   if(!categoryBtn)return;
   e.preventDefault();
-  avatarEditorCategory=categoryBtn.dataset.avatarCategory||'appearance';
+  avatarEditorCategory=categoryBtn.dataset.avatarCategory||'base';
   renderAvatarEditorCategory();
   categoryBtn.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'});
 });
