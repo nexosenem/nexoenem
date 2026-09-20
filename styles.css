@@ -7647,3 +7647,284 @@ body.light .admin-plan-duration{background:#fff}
   .journey-store-item{min-height:280px!important}
   .store-item-visual{height:142px!important}
 }
+
+/* =========================================================
+   NEXO Avatar v4 · proportional previews + fixed mobile dock
+   ========================================================= */
+.avatar-editor-dock{position:relative}
+.student-avatar-figure .av-logo{
+  width:10%!important;
+  height:auto!important;
+  aspect-ratio:1!important;
+  font-size:9px!important;
+  line-height:1!important;
+  border-radius:4px!important;
+}
+
+/* Render every small card from a standard-size character, then scale the whole character.
+   This keeps pixel-based details proportional instead of deforming accessories. */
+.avatar-option-preview,
+.avatar-look-preview,
+.wardrobe-avatar-preview,
+.store-avatar-preview,
+.avatar-builder-mini-preview{
+  position:relative!important;
+  overflow:hidden!important;
+  contain:layout paint;
+}
+.avatar-option-preview .student-avatar-shell,
+.avatar-look-preview .student-avatar-shell,
+.wardrobe-avatar-preview .student-avatar-shell,
+.store-avatar-preview .student-avatar-shell,
+.avatar-builder-mini-preview .student-avatar-shell{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:180px!important;
+  height:180px!important;
+  min-width:180px!important;
+  min-height:180px!important;
+  aspect-ratio:1/1!important;
+  transform-origin:center!important;
+  box-shadow:none!important;
+}
+.avatar-option-preview .student-avatar-shell{transform:translate(-50%,-50%) scale(.43)!important}
+.avatar-look-preview .student-avatar-shell{transform:translate(-50%,-50%) scale(.64)!important}
+.wardrobe-avatar-preview .student-avatar-shell{transform:translate(-50%,-50%) scale(.56)!important}
+.store-avatar-preview .student-avatar-shell{transform:translate(-50%,-50%) scale(.70)!important}
+.avatar-builder-mini-preview .student-avatar-shell{transform:translate(-50%,-50%) scale(.36)!important}
+
+.store-selects{display:flex;gap:7px;min-width:0}
+#storeCollection,#storeCategory{
+  min-width:150px;border:1px solid var(--line);border-radius:10px;background:#091528;color:var(--text);
+  padding:8px 9px;font-size:8px
+}
+body.light #storeCollection,body.light #storeCategory{background:#fff}
+
+@media(max-width:760px){
+  .avatar-builder{display:block!important}
+  .avatar-builder-stage{display:none!important}
+  .avatar-builder-controls{
+    padding:0 10px 18px!important;
+    border-radius:16px!important;
+    overflow:visible!important;
+  }
+  .avatar-editor-dock{
+    position:sticky!important;
+    top:126px!important;
+    z-index:34!important;
+    margin:0 -10px 10px!important;
+    padding:8px 10px 7px!important;
+    background:rgba(6,14,27,.985)!important;
+    border-bottom:1px solid rgba(80,94,132,.18);
+    backdrop-filter:blur(18px);
+    box-shadow:0 10px 26px rgba(2,7,16,.28);
+  }
+  .avatar-builder-live{
+    position:relative!important;
+    top:auto!important;
+    z-index:auto!important;
+    min-height:74px!important;
+    margin:0 0 7px!important;
+    padding:7px 9px!important;
+  }
+  .avatar-builder-mini-preview{
+    width:62px!important;
+    height:62px!important;
+    flex:0 0 62px!important;
+  }
+  .avatar-builder-mini-preview .student-avatar-shell{
+    transform:translate(-50%,-50%) scale(.34)!important;
+  }
+  .avatar-builder-live b{font-size:11px!important}
+  .avatar-builder-live small{font-size:8px!important}
+  .avatar-editor-nav{
+    position:relative!important;
+    top:auto!important;
+    z-index:auto!important;
+    margin:0!important;
+    padding:0 0 7px!important;
+    background:none!important;
+    gap:6px!important;
+  }
+  .avatar-editor-nav button{
+    min-width:76px!important;
+    min-height:50px!important;
+    padding:6px 8px!important;
+  }
+  .avatar-editor-nav button span{font-size:9px!important}
+  .avatar-selection-summary{
+    margin:0!important;
+    padding:7px 9px!important;
+    border-radius:10px!important;
+  }
+  .avatar-selection-summary b{font-size:11px!important}
+  .avatar-selection-summary>small{font-size:8px!important}
+  .avatar-option-group{padding:10px 0!important}
+  .avatar-option-group>span{font-size:10px!important}
+  .avatar-option-group>div,
+  .skin-tone-group>div{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+  .avatar-option-group button[data-avatar-field]{
+    min-height:122px!important;
+    font-size:11px!important;
+    border-radius:13px!important;
+  }
+  .avatar-option-preview{min-height:74px!important}
+  .avatar-option-copy b{font-size:10px!important}
+  .avatar-option-copy small{font-size:7px!important}
+  .avatar-looks-grid{grid-template-columns:1fr!important}
+  .avatar-look-card{min-height:255px!important}
+  .avatar-look-preview{min-height:140px!important}
+  .avatar-look-copy h4{font-size:13px!important}
+  .avatar-look-copy p{font-size:9px!important}
+  .avatar-look-copy>span,.avatar-look-foot small,.avatar-look-foot button{font-size:8px!important}
+  #saveJourneyAvatar{
+    position:sticky!important;
+    bottom:76px!important;
+    z-index:35!important;
+    width:100%!important;
+    min-height:52px!important;
+    font-size:11px!important;
+  }
+  .store-selects{width:100%;display:grid;grid-template-columns:1fr 1fr}
+  #storeCollection,#storeCategory{min-width:0;width:100%}
+}
+@media(max-width:420px){
+  .avatar-editor-dock{top:122px!important}
+  .avatar-option-group>div,
+  .skin-tone-group>div{grid-template-columns:1fr 1fr!important}
+  .store-selects{grid-template-columns:1fr}
+}
+
+/* =========================================================
+   Redação NEXO v2
+   ========================================================= */
+.essay-page-v2{padding-bottom:44px}
+.essay-page-head{align-items:center}
+.essay-mentor{min-width:250px}
+.essay-flow-bar{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:8px;
+  margin:0 0 12px;
+}
+.essay-flow-bar>span{
+  display:grid;
+  grid-template-columns:30px 1fr;
+  grid-template-rows:auto auto;
+  column-gap:8px;
+  align-items:center;
+  padding:10px 11px;
+  border:1px solid var(--line);
+  border-radius:13px;
+  background:rgba(8,17,32,.64);
+}
+.essay-flow-bar i{
+  grid-row:1/3;
+  width:30px;height:30px;border-radius:9px;
+  display:grid;place-items:center;
+  background:rgba(105,80,221,.12);
+  color:#9d8ef2;font-style:normal;font-weight:900;font-size:10px;
+}
+.essay-flow-bar b{font-size:9px}
+.essay-flow-bar small{color:var(--muted);font-size:7px;margin-top:1px}
+.essay-flow-bar .active{border-color:rgba(109,87,232,.38);background:linear-gradient(135deg,rgba(102,76,218,.11),rgba(42,139,183,.05))}
+.essay-workspace-v2{
+  display:grid;
+  grid-template-columns:minmax(0,1.32fr) minmax(310px,.68fr);
+  gap:12px;
+  align-items:start;
+}
+.essay-editor-v2{padding:16px}
+.essay-editor-heading,.essay-writing-head{
+  display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin-bottom:10px
+}
+.essay-editor-heading h3,.essay-writing-head h3{margin:3px 0 0;font-size:16px}
+.essay-enem-chip{
+  flex:0 0 auto;padding:5px 8px;border:1px solid rgba(108,85,226,.28);border-radius:999px;
+  color:#a99cf4;background:rgba(97,73,207,.07);font-size:7px;font-weight:900;letter-spacing:.6px
+}
+.essay-theme-control label,.essay-editor-v2>label{display:grid;gap:6px;color:#9aabc1;font-size:8px;font-weight:800}
+.essay-theme-control select{
+  width:100%;min-height:44px;border:1px solid var(--line);border-radius:11px;
+  background:#081529;color:var(--text);padding:0 11px;font-size:10px
+}
+.essay-prompt-v2{
+  margin:10px 0 15px;padding:12px 13px;border-radius:12px;
+  border:1px solid rgba(76,163,204,.18);
+  background:linear-gradient(135deg,rgba(42,151,194,.06),rgba(106,79,220,.05));
+  color:#9eafc5;font-size:9px;line-height:1.55
+}
+.essay-prompt-v2 b{color:#dfe7f5}
+.essay-writing-head{margin-top:4px}
+.essay-writing-head>span{
+  color:#8a9bb2;font-size:8px;font-weight:900;padding:5px 8px;border-radius:999px;border:1px solid var(--line)
+}
+.essay-writing-shell{
+  position:relative;border:1px solid rgba(83,99,139,.24);border-radius:14px;overflow:hidden;
+  background:#071326;box-shadow:inset 0 1px 0 rgba(255,255,255,.015)
+}
+.essay-writing-shell textarea{
+  width:100%;min-height:520px;resize:vertical;border:0!important;outline:0!important;
+  padding:18px!important;background:transparent!important;color:var(--text)!important;
+  font:500 15px/1.85 Georgia,"Times New Roman",serif!important;
+}
+.essay-writing-shell textarea::placeholder{color:#53647d}
+.essay-structure-check{
+  display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin:10px 0
+}
+.essay-structure-check span{
+  padding:7px 8px;border:1px solid var(--line);border-radius:9px;color:#7f90a7;font-size:7px;font-weight:800
+}
+.essay-structure-check i{color:#6bd2b0;font-style:normal;margin-right:4px}
+.essay-editor-actions{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;padding-top:2px
+}
+.essay-editor-actions>small{max-width:58%;color:#718198;font-size:7.5px;line-height:1.45}
+.essay-editor-actions .primary-btn{min-width:210px;min-height:44px}
+.essay-side-v2{display:grid;gap:12px;position:sticky;top:78px}
+.essay-guide-card{padding:15px}
+.essay-guide-card h3{font-size:15px;margin:5px 0 10px}
+.essay-guide-card>p{color:var(--muted);font-size:8px;line-height:1.5;margin:10px 0 0}
+.essay-competency-mini{display:grid;gap:6px}
+.essay-competency-mini span{
+  display:grid;grid-template-columns:36px 1fr;align-items:center;padding:8px 9px;
+  border:1px solid var(--line);border-radius:10px;background:rgba(8,18,34,.48)
+}
+.essay-competency-mini b{color:#9d8ef2;font-size:10px}
+.essay-competency-mini small{color:#8a9ab0;font-size:8px}
+.essay-result-v2{min-height:270px}
+.essay-empty-v2{min-height:235px;display:grid;place-items:center;text-align:center;align-content:center}
+.essay-empty-v2>span{font-size:30px;color:#9382ef}
+.essay-empty-v2 h3{margin:7px 0 3px}
+.essay-empty-v2 p{max-width:260px;margin:0;color:var(--muted);font-size:8px;line-height:1.5}
+body.light .essay-flow-bar>span,
+body.light .essay-writing-shell,
+body.light .essay-competency-mini span,
+body.light .essay-theme-control select{background:#fff}
+
+@media(max-width:980px){
+  .essay-workspace-v2{grid-template-columns:1fr}
+  .essay-side-v2{position:static;grid-template-columns:1fr 1fr}
+}
+@media(max-width:760px){
+  .essay-page-head{align-items:flex-start}
+  .essay-mentor{width:100%;min-width:0}
+  .essay-flow-bar{
+    grid-template-columns:repeat(4,minmax(118px,1fr));
+    overflow-x:auto;padding-bottom:3px;scrollbar-width:none
+  }
+  .essay-flow-bar::-webkit-scrollbar{display:none}
+  .essay-editor-v2{padding:11px}
+  .essay-editor-heading,.essay-writing-head{align-items:flex-start}
+  .essay-editor-heading h3,.essay-writing-head h3{font-size:14px}
+  .essay-writing-shell textarea{
+    min-height:430px;font-size:15px!important;line-height:1.75!important;padding:15px!important
+  }
+  .essay-structure-check{grid-template-columns:1fr 1fr}
+  .essay-editor-actions{align-items:stretch;flex-direction:column}
+  .essay-editor-actions>small{max-width:none;font-size:8px}
+  .essay-editor-actions .primary-btn{width:100%;min-width:0;min-height:50px}
+  .essay-side-v2{grid-template-columns:1fr}
+  .essay-guide-card h3{font-size:14px}
+}
