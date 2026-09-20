@@ -1114,12 +1114,31 @@ function niaAnswer(text){
 const NEXO_EMOTIONS={feliz:'😊',serio:'🎯',confiante:'💪',duvida:'🤔',acolhedor:'💙',animado:'✨'};
 
 function initNexoMascotVisuals(){
-  const a=window.NEXO_MASCOT_ASSETS;
-  if(!a)return;
-  const launcher=$('#nexoLauncherAvatar'),avatar=$('#nexoAvatarImage'),hero=$('#nexoHeroImage');
-  if(launcher)launcher.src=a.head;
-  if(avatar)avatar.src=a.head;
-  if(hero)hero.src=a.hero;
+  const a=window.NEXO_MASCOT_ASSETS||{};
+  const fallback=a.head||'';
+
+  function bindImage(el,src,fallbackSrc=fallback){
+    if(!el)return;
+    el.removeAttribute('alt');
+    el.onerror=()=>{
+      if(fallbackSrc && el.src!==fallbackSrc){
+        el.onerror=null;
+        el.src=fallbackSrc;
+      }else{
+        el.style.display='none';
+      }
+    };
+    if(src||fallbackSrc){
+      el.style.display='block';
+      el.src=src||fallbackSrc;
+    }else{
+      el.style.display='none';
+    }
+  }
+
+  bindImage($('#nexoLauncherAvatar'),a.head);
+  bindImage($('#nexoAvatarImage'),a.head);
+  bindImage($('#nexoHeroImage'),a.hero||a.head);
 }
 initNexoMascotVisuals();
 
