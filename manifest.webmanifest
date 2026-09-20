@@ -1,0 +1,10 @@
+{
+  "name": "NEXO ENEM",
+  "short_name": "NEXO ENEM",
+  "description": "Plataforma de estudos para o ENEM",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#050914",
+  "theme_color": "#070b18",
+  "orientation": "portrait-primary"
+}
