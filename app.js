@@ -1661,7 +1661,7 @@ function renderEnemRadar(){
           '<button class="outline-btn radar-train-btn" data-radar-train="'+key+'">Treinar <span>→</span></button>'+
         '</article>';
       }).join('');
-      $('[data-radar-train]',list).forEach(btn=>{
+      $$('[data-radar-train]',list).forEach(btn=>{
         btn.onclick=async()=>{
           if(btn.disabled)return;
           const key=decodeURIComponent(btn.dataset.radarTrain||'');
