@@ -161,6 +161,7 @@ const state = {
   profile:null,
   dashboard:null,
   questionMeta:[],
+  questionCatalog:null,
   subjects:{},
   selectedArea:'',
   session:null,
@@ -2363,17 +2364,61 @@ setInterval(()=>{
   if(state.user)refreshCurrentRole({silent:false});
 },30000);
 
-async function loadQuestionMeta() {
-  const { data, error } = await client.from('questions')
-    .select('id,area,subject,topic,difficulty,source_year,source_question_number,media_type')
-    .order('id',{ascending:true}).limit(1000);
-  if (error) throw error;
-  state.questionMeta = data || [];
-  state.subjects = {};
-  for (const q of state.questionMeta) {
-    state.subjects[q.area] ??= new Set();
-    state.subjects[q.area].add(q.subject);
+function applyQuestionCatalogSummary(summary){
+  if(!summary)return;
+  const fmt=n=>Number(n||0).toLocaleString('pt-BR');
+  const areaMap=new Map((summary.areas||[]).map(row=>[row.area,row]));
+  $('.subject-card[data-area]').forEach(card=>{
+    const row=areaMap.get(card.dataset.area);
+    const small=card.querySelector('small');
+    if(row&&small)small.textContent=fmt(row.archive_questions||row.active_questions)+' questões no acervo';
+  });
+  const total=Number(summary.archive_total||0);
+  if($('#desktopHeroSubtitle')&&total){
+    $('#desktopHeroSubtitle').innerHTML='<b>'+fmt(total)+' questões ENEM no acervo</b> • provas de <b>2009 a 2025</b> • redação • NEXO Core adaptativo.';
   }
+}
+
+async function loadQuestionMeta() {
+  const rows=[];
+  const pageSize=1000;
+  for(let from=0;from<10000;from+=pageSize){
+    const {data,error}=await client.from('questions')
+      .select('id,area,subject,topic,difficulty,source_year,source_question_number,media_type')
+      .eq('is_active',true)
+      .order('id',{ascending:true})
+      .range(from,from+pageSize-1);
+    if(error)throw error;
+    const page=data||[];
+    rows.push(...page);
+    if(page.length<pageSize)break;
+  }
+  state.questionMeta=rows;
+
+  let catalog=null;
+  try{
+    const {data,error}=await client.rpc('get_question_catalog_summary');
+    if(error)throw error;
+    catalog=data||null;
+  }catch(err){
+    console.error('question catalog summary',err);
+  }
+  state.questionCatalog=catalog;
+  state.subjects={};
+
+  if(Array.isArray(catalog?.subjects)&&catalog.subjects.length){
+    for(const row of catalog.subjects){
+      if(!row?.area||!row?.subject||Number(row.active_questions||0)<=0)continue;
+      state.subjects[row.area]??=new Set();
+      state.subjects[row.area].add(row.subject);
+    }
+  }else{
+    for(const q of state.questionMeta){
+      state.subjects[q.area]??=new Set();
+      state.subjects[q.area].add(q.subject);
+    }
+  }
+  applyQuestionCatalogSummary(catalog);
 }
 
 async function loadDashboard() {
@@ -2630,14 +2675,25 @@ function resetSessionUI() {
 }
 
 async function getSeenIds() {
-  const { data } = await client.from('question_attempts').select('question_id').order('created_at',{ascending:false}).limit(3000);
-  return new Set((data||[]).map(x=>Number(x.question_id)));
+  const seen=new Set();
+  const pageSize=1000;
+  for(let from=0;from<5000;from+=pageSize){
+    const {data,error}=await client.from('question_attempts')
+      .select('question_id')
+      .order('created_at',{ascending:false})
+      .range(from,from+pageSize-1);
+    if(error){console.error('seen questions',error);break;}
+    const page=data||[];
+    page.forEach(x=>seen.add(Number(x.question_id)));
+    if(page.length<pageSize)break;
+  }
+  return seen;
 }
 
 async function fetchQuestions(filters={}) {
   let q = client.from('questions').select(
     'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop'
-  ).eq('is_active',true).limit(500);
+  ).eq('is_active',true).limit(1000);
   if (filters.area) q=q.eq('area',filters.area);
   if (filters.subject) q=q.eq('subject',filters.subject);
   if (filters.difficulty) q=q.eq('difficulty',Number(filters.difficulty));
