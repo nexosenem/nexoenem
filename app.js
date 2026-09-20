@@ -1766,6 +1766,7 @@ function maintenanceModuleForPage(id){
   return ({
     questoes:'questions',
     banco:'questions',
+    semana:'core',
     redacao:'essays',
     ranking:'journey',
     videoaulas:'content',
