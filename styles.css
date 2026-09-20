@@ -9608,3 +9608,26 @@ body.light .exam-strategy-rules span,body.light .sim-strategy-badges span{backgr
   .sim-strategy-badges{display:grid;grid-template-columns:repeat(3,1fr)}
   .sim-strategy-readout .outline-btn{width:100%;min-height:48px}
 }
+
+
+/* NEXO V5 Essay Intelligence */
+.essay-intelligence-v5{max-width:1320px;margin:14px auto 0;display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.essay-plan-v5-card{overflow:hidden}.essay-competency-plan{display:grid;gap:10px}
+.essay-comp-trainer-tabs{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.essay-comp-trainer-tabs button{border:1px solid rgba(89,107,146,.22);border-radius:10px;background:rgba(8,18,34,.42);color:#8c9cb2;padding:8px;font-size:8px;font-weight:900}
+.essay-comp-trainer-tabs button.active{border-color:rgba(112,89,235,.44);background:rgba(105,82,226,.10);color:#c0b6ff}
+.essay-comp-mission{padding:12px;border:1px solid rgba(107,88,224,.21);border-radius:13px;background:linear-gradient(145deg,rgba(91,69,205,.08),rgba(38,138,172,.04))}
+.essay-comp-mission>span{font-size:7px;color:#9d91ef;font-weight:950;letter-spacing:.1em}.essay-comp-mission h4{font-size:13px;margin:4px 0 5px}.essay-comp-mission p{font-size:9px;color:#91a0b5;line-height:1.5;margin:0}.essay-comp-mission>div{margin-top:9px;padding:8px;border-radius:9px;background:rgba(8,18,34,.38);font-size:8px;color:#8191a8}.essay-comp-mission footer{display:flex;gap:7px;margin-top:10px}.essay-comp-mission footer button{flex:1;font-size:8px}
+.essay-version-compare{display:grid;gap:11px}.essay-compare-head{display:flex;align-items:center;justify-content:center;gap:18px;padding:12px;border:1px solid rgba(91,108,147,.18);border-radius:12px;background:rgba(8,18,34,.42)}.essay-compare-head span{text-align:center}.essay-compare-head small{display:block;font-size:7px;color:#74849b}.essay-compare-head b{display:block;font-size:22px;margin-top:2px}.essay-compare-head>i{font-style:normal;color:#7e71d4}
+.essay-compare-comps{display:grid;gap:7px}.essay-compare-comps>div{display:grid;grid-template-columns:28px 1fr 36px;gap:7px;align-items:center}.essay-compare-comps span{font-size:8px;font-weight:900}.essay-compare-comps i{height:6px;background:rgba(90,107,144,.16);border-radius:99px;overflow:hidden}.essay-compare-comps em{display:block;height:100%;background:linear-gradient(90deg,#6c58ee,#42d3e4);border-radius:inherit}.essay-compare-comps b{text-align:right;font-size:8px}.essay-compare-comps b.up{color:#67d6ad}.essay-compare-comps b.down{color:#e58d7e}
+.essay-repertoire-list,.essay-argument-list{display:grid;gap:8px}.essay-repertoire-list article,.essay-argument-list article{display:grid;grid-template-columns:28px minmax(0,1fr) auto;gap:8px;padding:10px;border:1px solid rgba(91,108,147,.18);border-radius:12px;background:rgba(8,18,34,.42)}.essay-repertoire-list article>span,.essay-argument-list article>span{width:26px;height:26px;border-radius:8px;display:grid;place-items:center;background:rgba(107,85,227,.08);color:#9d90e9;font-size:7px;font-weight:900}.essay-repertoire-list b,.essay-argument-list b{font-size:9px}.essay-repertoire-list p,.essay-argument-list p{font-size:8px;line-height:1.45;color:#8494aa;margin:3px 0}.essay-repertoire-list small,.essay-argument-list small{font-size:7px;color:#708098;line-height:1.4}.essay-argument-list button{align-self:center;border:1px solid rgba(110,88,228,.28);border-radius:9px;background:rgba(101,79,218,.07);color:#b6aaff;padding:7px 8px;font-size:7px;font-weight:850}
+body.light .essay-comp-trainer-tabs button,body.light .essay-compare-head,body.light .essay-repertoire-list article,body.light .essay-argument-list article{background:#fff}
+@media(max-width:980px){.essay-intelligence-v5{grid-template-columns:1fr 1fr}.essay-argument-card{grid-column:1/-1}}
+@media(max-width:760px){
+  .essay-intelligence-v5{grid-template-columns:1fr}
+  .essay-argument-card{grid-column:auto}
+  .essay-comp-mission footer{display:grid}
+  .essay-comp-mission footer button{min-height:46px}
+  .essay-repertoire-list article,.essay-argument-list article{grid-template-columns:28px 1fr}
+  .essay-argument-list button{grid-column:1/-1;min-height:42px}
+}
