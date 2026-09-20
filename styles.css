@@ -3407,3 +3407,151 @@ img[data-core-avatar]{
   .mobile-nexo-stage{width:148px!important;height:204px!important}
   .mobile-section-head h3{font-size:21px!important}
 }
+
+
+/* =========================================================
+   NEXO CORE · LEARNING BEHAVIOR SIGNALS v1
+   ========================================================= */
+.core-behavior-signal{
+  display:flex;
+  align-items:flex-start;
+  gap:7px;
+  margin-top:8px;
+  padding:7px 8px;
+  border-radius:10px;
+  border:1px solid rgba(91,108,151,.18);
+  background:rgba(10,22,41,.62);
+}
+
+.core-behavior-signal b{
+  flex:0 0 auto;
+  padding:3px 6px;
+  border-radius:999px;
+  font-size:6.5px;
+  letter-spacing:.8px;
+  line-height:1;
+  color:#b9adff;
+  background:rgba(104,79,219,.13);
+  border:1px solid rgba(122,95,229,.24);
+}
+
+.core-behavior-signal span{
+  color:#8494aa;
+  font-size:8px;
+  line-height:1.45;
+}
+
+.core-behavior-signal[data-signal="hesitation"] b{
+  color:#89c4ff;
+  background:rgba(47,108,193,.12);
+  border-color:rgba(69,137,230,.26);
+}
+
+.core-behavior-signal[data-signal="content"] b{
+  color:#ffc58f;
+  background:rgba(185,104,45,.12);
+  border-color:rgba(221,130,63,.24);
+}
+
+.core-behavior-signal[data-signal="guided"] b{
+  color:#d0b7ff;
+  background:rgba(117,78,197,.13);
+  border-color:rgba(142,98,221,.26);
+}
+
+.core-behavior-signal[data-signal="decisive"] b{
+  color:#7de1c0;
+  background:rgba(42,151,116,.12);
+  border-color:rgba(57,188,146,.24);
+}
+
+body.light .core-behavior-signal{
+  background:#f8f9fd;
+  border-color:#dde4ef;
+}
+
+body.light .core-behavior-signal span{color:#617086}
+
+/* Session report: behavioral reading from NEXO Core */
+.sim-report-metrics{
+  grid-template-columns:repeat(3,1fr)!important;
+}
+
+.sim-behavior-signal{
+  margin:0 14px 14px;
+  padding:11px 12px;
+  border-radius:12px;
+  border:1px solid rgba(83,101,145,.18);
+  background:
+    radial-gradient(circle at 100% 0%,rgba(72,182,255,.07),transparent 32%),
+    rgba(9,20,37,.68);
+}
+
+.sim-behavior-signal>span{
+  display:block;
+  font-size:7px;
+  font-weight:850;
+  letter-spacing:1.35px;
+  color:#8e80ef;
+  margin-bottom:4px;
+}
+
+.sim-behavior-signal>b{
+  display:block;
+  font-size:11px;
+  line-height:1.35;
+  color:#e8edf8;
+}
+
+.sim-behavior-signal>small{
+  display:block;
+  margin-top:4px;
+  font-size:8px;
+  line-height:1.45;
+  color:#7d8da3;
+}
+
+.sim-behavior-signal[data-signal="hesitation"]{
+  border-color:rgba(65,137,225,.25);
+}
+
+.sim-behavior-signal[data-signal="content"]{
+  border-color:rgba(218,126,63,.24);
+}
+
+.sim-behavior-signal[data-signal="guided"]{
+  border-color:rgba(137,95,219,.26);
+}
+
+body.light .sim-behavior-signal{
+  background:#f7f9fd;
+  border-color:#dbe3ee;
+}
+
+body.light .sim-behavior-signal>b{color:#1b293e}
+
+@media(max-width:760px){
+  .core-behavior-signal{
+    margin-top:7px;
+    padding:6px 7px;
+    gap:6px;
+  }
+
+  .core-behavior-signal b{
+    font-size:6px;
+    padding:3px 5px;
+  }
+
+  .core-behavior-signal span{
+    font-size:7.3px;
+  }
+
+  .sim-report-metrics{
+    grid-template-columns:1fr 1fr!important;
+  }
+
+  .sim-behavior-signal{
+    margin:0 10px 10px;
+    padding:10px;
+  }
+}
