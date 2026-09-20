@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-32">
+  <link rel="stylesheet" href="./styles.css?v=20260920-33">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -549,6 +549,7 @@
               <label>Área<select id="videoArea"><option>Linguagens</option><option>Ciências Humanas</option><option>Ciências da Natureza</option><option>Matemática</option></select></label>
               <label>Matéria<input id="videoSubject" class="text-input" placeholder="Ex.: Matemática"></label>
               <label>Tema<input id="videoTopic" class="text-input" placeholder="Ex.: Função afim"></label>
+              <label>Descrição<textarea id="videoDescription" rows="3" placeholder="Resumo curto da aula"></textarea></label>
               <label>Arquivo de vídeo<input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"></label>
               <div class="or-divider"><span>ou</span></div>
               <label>URL externa<input id="videoUrl" class="text-input" placeholder="https://..."></label>
@@ -574,6 +575,14 @@
               <h3>Comentários denunciados</h3>
               <div id="reportedComments" class="admin-feedbacks"></div>
             </article>
+            <article class="panel admin-content-panel">
+              <div class="panel-title"><b>Gerenciar videoaulas</b><small>editar, ocultar ou remover</small></div>
+              <div id="adminVideoList" class="admin-content-list"></div>
+            </article>
+            <article class="panel admin-content-panel">
+              <div class="panel-title"><b>Gerenciar materiais</b><small>PDFs e imagens</small></div>
+              <div id="adminMaterialList" class="admin-content-list"></div>
+            </article>
           </div>
         </section>
       </main>
@@ -586,6 +595,34 @@
       <button data-page="desempenho"><span>▥</span><small>Desempenho</small></button>
       <button id="moreMobile"><span>☰</span><small>Mais</small></button>
     </nav>
+  </div>
+
+  <div id="contentViewer" class="content-viewer hidden" aria-modal="true" role="dialog">
+    <section class="content-viewer-shell">
+      <header class="content-viewer-head">
+        <div>
+          <span class="eyebrow">BIBLIOTECA NEXO</span>
+          <h3 id="contentViewerTitle">Conteúdo</h3>
+          <small id="contentViewerSubtitle"></small>
+        </div>
+        <button id="closeContentViewer" class="icon-btn" aria-label="Fechar conteúdo">×</button>
+      </header>
+      <div id="contentViewerBody" class="content-viewer-body"></div>
+      <footer class="content-viewer-actions">
+        <button id="viewerFavorite" class="outline-btn">☆ Favoritar</button>
+        <label id="viewerSpeedWrap" class="viewer-speed">Velocidade
+          <select id="viewerSpeed">
+            <option value="0.75">0.75x</option>
+            <option value="1" selected>1x</option>
+            <option value="1.25">1.25x</option>
+            <option value="1.5">1.5x</option>
+            <option value="2">2x</option>
+          </select>
+        </label>
+        <button id="viewerPractice" class="outline-btn">Treinar esse assunto</button>
+        <button id="viewerComplete" class="primary-btn">Marcar como concluído</button>
+      </footer>
+    </section>
   </div>
 
   <div id="commentModal" class="community-modal hidden" aria-modal="true" role="dialog">
@@ -748,6 +785,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-34"></script>
+  <script src="./app.js?v=20260920-35"></script>
 </body>
 </html>
