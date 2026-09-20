@@ -619,17 +619,47 @@ function updateOnboardingPreview(){
   if(text)text.textContent='Com '+timeLabel+' por dia, seu primeiro diagnóstico terá cerca de '+size+' questões em '+area+'. Meta atual: '+ob.goalScore+' pontos.';
 }
 
+function onboardingStepNumbers(){
+  return [...document.querySelectorAll('#nexoOnboarding [data-onboarding-step]')]
+    .map(section=>Number(section.dataset.onboardingStep))
+    .filter(Number.isFinite)
+    .sort((a,b)=>a-b);
+}
+
+function onboardingStepPosition(){
+  const steps=onboardingStepNumbers();
+  const index=Math.max(0,steps.indexOf(Number(state.onboarding.step)));
+  return {steps,index,total:steps.length||1,current:steps[index]||1,last:steps[steps.length-1]||1};
+}
+
+function scrollOnboardingToTop(){
+  const content=$('#nexoOnboarding .onboarding-content');
+  if(content?.scrollTo)content.scrollTo({top:0,behavior:'smooth'});
+  else if(content)content.scrollTop=0;
+}
+
 function renderOnboardingStep(){
   const ob=state.onboarding;
-  $$('[data-onboarding-step]').forEach(section=>section.classList.toggle('hidden',Number(section.dataset.onboardingStep)!==ob.step));
-  $('#onboardingStepLabel').textContent=ob.step+' de 4';
-  $('#onboardingProgress').style.width=(ob.step/4*100)+'%';
-  $('#onboardingBack').classList.toggle('hidden',ob.step===1);
-  $('#onboardingNext').innerHTML=ob.step===4
+  const meta=onboardingStepPosition();
+  if(!meta.steps.includes(Number(ob.step)))ob.step=meta.current;
+
+  $$('[data-onboarding-step]').forEach(section=>{
+    section.classList.toggle('hidden',Number(section.dataset.onboardingStep)!==Number(ob.step));
+  });
+
+  const currentIndex=Math.max(0,meta.steps.indexOf(Number(ob.step)));
+  const position=currentIndex+1;
+  const total=Math.max(1,meta.steps.length);
+  const lastStep=meta.steps[meta.steps.length-1]||Number(ob.step);
+
+  if($('#onboardingStepLabel'))$('#onboardingStepLabel').textContent=position+' de '+total;
+  if($('#onboardingProgress'))$('#onboardingProgress').style.width=(position/total*100)+'%';
+  if($('#onboardingBack'))$('#onboardingBack').classList.toggle('hidden',position===1);
+  if($('#onboardingNext'))$('#onboardingNext').innerHTML=Number(ob.step)===lastStep
     ? 'Criar meu plano <span>→</span>'
     : 'Continuar <span>→</span>';
 
-  const mentor={
+  const mentorMap={
     1:{
       title:'Esse é o seu espaço dentro do NEXO.',
       text:'Monte seu personagem com os itens gratuitos iniciais. Conforme você estuda, novos cabelos, roupas, acessórios e ambientes aparecem na Jornada.',
@@ -650,14 +680,20 @@ function renderOnboardingStep(){
       text:'Eu prefiro 30 minutos consistentes a duas horas que nunca acontecem. Escolha um tempo que você consegue sustentar.',
       image:NEXO_MEDIA_IMAGES.bustAcolhedor
     }
-  }[ob.step];
-  $('#onboardingMentorTitle').textContent=mentor.title;
-  $('#onboardingMentorText').textContent=mentor.text;
-  setNexoImage($('#onboardingMascot'),mentor.image);
-  if(ob.step===1)renderOnboardingAvatar();
+  };
+  const mentor=mentorMap[Number(ob.step)]||{
+    title:'Seu plano está quase pronto.',
+    text:'Continue para concluir sua configuração inicial.',
+    image:NEXO_MEDIA_IMAGES.bustConfiante
+  };
 
-  $('#goalScoreValue').textContent=String(ob.goalScore);
-  $('#goalScoreRange').value=String(ob.goalScore);
+  if($('#onboardingMentorTitle'))$('#onboardingMentorTitle').textContent=mentor.title;
+  if($('#onboardingMentorText'))$('#onboardingMentorText').textContent=mentor.text;
+  setNexoImage($('#onboardingMascot'),mentor.image);
+  if(Number(ob.step)===1)renderOnboardingAvatar();
+
+  if($('#goalScoreValue'))$('#goalScoreValue').textContent=String(ob.goalScore);
+  if($('#goalScoreRange'))$('#goalScoreRange').value=String(ob.goalScore);
   $$('[data-goal-score]').forEach(btn=>{
     const v=Number(btn.dataset.goalScore);
     btn.classList.toggle('active',v===ob.goalScore || (v===900 && ob.goalScore>=900));
@@ -669,11 +705,13 @@ function renderOnboardingStep(){
     const icon=btn.querySelector('i');
     if(icon)icon.textContent=active?'✓':'+';
   });
-  $('#onboardingAreaHint').textContent=ob.areas.length
+  if($('#onboardingAreaHint'))$('#onboardingAreaHint').textContent=ob.areas.length
     ? ob.areas.length+' selecionada(s) · '+(ob.areas[0]||'')+' será a primeira prioridade.'
     : 'Escolha pelo menos uma área.';
 
-  $$('[data-onboarding-minutes]').forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.onboardingMinutes)===ob.dailyMinutes));
+  $$('[data-onboarding-minutes]').forEach(btn=>{
+    btn.classList.toggle('active',Number(btn.dataset.onboardingMinutes)===ob.dailyMinutes);
+  });
   updateOnboardingPreview();
 }
 
@@ -796,20 +834,50 @@ $$('[data-onboarding-minutes]').forEach(btn=>btn.onclick=()=>{
   renderOnboardingStep();
 });
 $('#onboardingBack').onclick=()=>{
-  state.onboarding.step=Math.max(1,state.onboarding.step-1);
-  renderOnboardingStep();
-};
-$('#onboardingNext').onclick=async()=>{
-  if(state.onboarding.step===3 && !state.onboarding.areas.length){
-    toast('Escolha pelo menos uma área para continuar.','error');
-    return;
-  }
-  if(state.onboarding.step<4){
-    state.onboarding.step+=1;
+  try{
+    const meta=onboardingStepPosition();
+    const index=Math.max(0,meta.steps.indexOf(Number(state.onboarding.step)));
+    if(index<=0)return;
+    state.onboarding.step=meta.steps[index-1];
     renderOnboardingStep();
-    return;
+    scrollOnboardingToTop();
+  }catch(err){
+    console.error('onboarding back',err);
+    logClientError('onboarding',err,'onboarding_back');
+    toast('Não consegui voltar uma etapa. Tente novamente.','error');
   }
-  await saveNexoOnboarding();
+};
+$('#onboardingNext').onclick=async e=>{
+  e?.preventDefault?.();
+  const btn=$('#onboardingNext');
+  if(btn?.dataset.advancing==='1')return;
+  if(btn)btn.dataset.advancing='1';
+
+  try{
+    const meta=onboardingStepPosition();
+    const current=Number(state.onboarding.step);
+    const index=Math.max(0,meta.steps.indexOf(current));
+
+    if(current===3 && !state.onboarding.areas.length){
+      toast('Escolha pelo menos uma área para continuar.','error');
+      return;
+    }
+
+    if(index<meta.steps.length-1){
+      state.onboarding.step=meta.steps[index+1];
+      renderOnboardingStep();
+      scrollOnboardingToTop();
+      return;
+    }
+
+    await saveNexoOnboarding();
+  }catch(err){
+    console.error('onboarding next',err);
+    logClientError('onboarding',err,'onboarding_next');
+    toast('Não consegui avançar agora. Tente novamente.','error');
+  }finally{
+    if(btn)delete btn.dataset.advancing;
+  }
 };
 $('#editStudyPlan').onclick=()=>openNexoOnboarding(true);
 
