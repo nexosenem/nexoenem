@@ -97,11 +97,20 @@ $('#loginForm').addEventListener('submit', async e => {
   const email = $('#loginEmail').value.trim();
   const password = $('#loginPassword').value;
   const btn = e.submitter;
-  btn.disabled = true; btn.textContent = 'Entrando...';
-  const { error } = await client.auth.signInWithPassword({ email, password });
-  btn.disabled = false; btn.innerHTML = 'Entrar <span>→</span>';
-  if (error) {
-    showAuthMessage(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error.message, true);
+  btn.disabled = true;
+  btn.textContent = 'Entrando...';
+
+  try {
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) {
+      showAuthMessage(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error.message, true);
+    }
+  } catch (err) {
+    console.error('Falha no login:', err);
+    showAuthMessage('Não foi possível entrar agora. Verifique sua conexão e tente novamente.', true);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = 'Entrar <span>→</span>';
   }
 });
 
@@ -193,7 +202,7 @@ async function initApp(session) {
   $('#menuEmail').textContent = state.user.email || '';
   $('#profileRole').textContent = profile.role === 'admin' ? 'Administrador' : 'Estudante';
   $('#avatar').textContent = initials(name);
-  $('.admin-only').forEach(el=>el.classList.toggle('hidden',profile.role!=='admin'));
+  $$('.admin-only').forEach(el=>el.classList.toggle('hidden',profile.role!=='admin'));
   applyNiaOutfit(profile.assistant_outfit || localStorage.getItem('nia-outfit') || 'purple', false);
 
   $('#authScreen').classList.add('hidden');
@@ -216,8 +225,26 @@ async function handleSession(session) {
   setTimeout(()=>$('#boot').classList.add('hidden'),450);
 }
 
-client.auth.onAuthStateChange((_event,session)=>handleSession(session));
-client.auth.getSession().then(({data})=>handleSession(data.session));
+function reportSessionError(err) {
+  console.error('Falha ao carregar a sessão:', err);
+  $('#app').classList.add('hidden');
+  $('#authScreen').classList.remove('hidden');
+  showAuthMessage('Sua sessão não pôde ser carregada. Tente entrar novamente.', true);
+  $('#boot').classList.add('fade');
+  setTimeout(()=>$('#boot').classList.add('hidden'),450);
+}
+
+client.auth.onAuthStateChange((_event, session) => {
+  // O callback precisa retornar imediatamente. Fazer chamadas assíncronas do
+  // Supabase aqui pode bloquear o auth client e deixar o login preso em “Entrando...”.
+  setTimeout(() => {
+    handleSession(session).catch(reportSessionError);
+  }, 0);
+});
+
+client.auth.getSession()
+  .then(({data}) => handleSession(data.session))
+  .catch(reportSessionError);
 
 async function loadQuestionMeta() {
   const { data, error } = await client.from('questions')
@@ -458,7 +485,7 @@ async function renderQuestion(q) {
     <div class="confirm-answer-wrap"><small>Selecione uma alternativa. Você poderá conferir antes de enviar.</small><button id="confirmAnswer" class="primary-btn" disabled>Confirmar resposta</button></div>
     <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small></div>`;
 
-  $('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
+  $$('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
 
   if(visual){
     const ok=await renderVisual(q);
@@ -471,7 +498,7 @@ async function renderQuestion(q) {
 function selectAnswerOption(option){
   if(state.answered)return;
   state.selectedOption=option;
-  $('.q-option',$('#questionCard')).forEach((b,i)=>b.classList.toggle('selected',i===option));
+  $$('.q-option',$('#questionCard')).forEach((b,i)=>b.classList.toggle('selected',i===option));
   const confirm=$('#confirmAnswer');
   if(confirm){
     confirm.disabled=false;
@@ -652,7 +679,7 @@ async function submitAnswer(option) {
   const confirm=$('#confirmAnswer');
   if(confirm){confirm.disabled=true;confirm.textContent='Corrigindo...';}
   state.answered=true;
-  $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=true);
+  $$$('.q-option',$('#questionCard')).forEach(b=>b.disabled=true);
   const duration=Math.max(1,Math.round((Date.now()-state.questionStartedAt)/1000));
   const { data, error } = await client.rpc('submit_answer',{
     p_question_id:Number(state.current.id),
@@ -661,13 +688,13 @@ async function submitAnswer(option) {
   });
   if(error){
     state.answered=false;
-    $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
+    $$$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
     toast('Não foi possível registrar a resposta.','error');console.error(error);return;
   }
   state.lastAnswer=data;
   const correct=Number(data.correct_option);
-  $$('.q-option',$('#questionCard')).forEach((b,i)=>{
+  $$$('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected');
     if(i===correct)b.classList.add('correct');
     else if(i===option)b.classList.add('wrong');
@@ -933,8 +960,8 @@ async function loadQuestionComments(questionId){
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
   </article>`).join(''):'<div class="comment-empty">Ainda não há comentários. Seja o primeiro a compartilhar uma dúvida ou um jeito de resolver.</div>';
-  $('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
-  $('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
+  $$('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
+  $$('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
 }
 $('#sendComment').onclick=async()=>{
   const qid=Number($('#commentModal').dataset.questionId),body=$('#commentText').value.trim();
@@ -983,15 +1010,15 @@ $('#niaButton').onclick=()=>$('#niaPanel').classList.toggle('hidden');
 $('#closeNia').onclick=()=>$('#niaPanel').classList.add('hidden');
 $('#niaSend').onclick=()=>{const v=$('#niaInput').value;$('#niaInput').value='';askNia(v)};
 $('#niaInput').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#niaSend').click()}});
-$('[data-nia]').forEach(b=>b.onclick=()=>askNia(b.dataset.nia));
+$$('[data-nia]').forEach(b=>b.onclick=()=>askNia(b.dataset.nia));
 function applyNiaOutfit(outfit,save=true){
   const allowed=['purple','neon','academic','street'];if(!allowed.includes(outfit))outfit='purple';
   const avatar=$('#niaAvatar');if(avatar)avatar.className='nia-mini-avatar outfit-'+outfit;
-  $('[data-outfit]').forEach(b=>b.classList.toggle('active',b.dataset.outfit===outfit));
+  $$('[data-outfit]').forEach(b=>b.classList.toggle('active',b.dataset.outfit===outfit));
   localStorage.setItem('nia-outfit',outfit);
   if(save&&state.user) client.from('profiles').update({assistant_outfit:outfit,updated_at:new Date().toISOString()}).eq('id',state.user.id);
 }
-$('[data-outfit]').forEach(b=>b.onclick=()=>applyNiaOutfit(b.dataset.outfit,true));
+$$('[data-outfit]').forEach(b=>b.onclick=()=>applyNiaOutfit(b.dataset.outfit,true));
 
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
@@ -1010,7 +1037,7 @@ async function loadAdmin(){
 
   const reports=await client.rpc('get_reported_comments');
   $('#reportedComments').innerHTML=reports.data?.length?reports.data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">!</span><div><b>${esc(x.author_name)} · ${x.report_count} denúncia(s)</b><p>${esc(x.body)}</p><small>Questão #${x.question_id}</small><div class="comment-actions"><button data-admin-remove="${x.comment_id}" class="danger">Remover comentário</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum comentário denunciado.</p>';
-  $('[data-admin-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Remover este comentário da comunidade?'))return;const {error}=await client.rpc('admin_remove_comment',{p_comment_id:Number(b.dataset.adminRemove)});if(error)return toast('Falha ao remover.','error');toast('Comentário removido.');loadAdmin()});
+  $$('[data-admin-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Remover este comentário da comunidade?'))return;const {error}=await client.rpc('admin_remove_comment',{p_comment_id:Number(b.dataset.adminRemove)});if(error)return toast('Falha ao remover.','error');toast('Comentário removido.');loadAdmin()});
 }
 
 $('#addVideo').onclick=async()=>{
