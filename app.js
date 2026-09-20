@@ -1006,7 +1006,7 @@ async function startStudySession(config) {
     const size=Math.min(config.size||10,fresh.length);
     const queue=fresh.slice(0,size);
     const coreSessionId=await beginNexoSession(config,queue.length);
-    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId};
+    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0};
     $('#sessionSetup').classList.add('hidden');
     $('#studyWorkspace').classList.remove('hidden');
     $('#sessionAreaBadge').textContent=config.area||'Treino';
@@ -1335,6 +1335,84 @@ function buildAnswerExplanation(q,data,selected){
   };
 }
 
+function formatAnswerReactionTime(seconds){
+  const value=Math.max(0,Number(seconds||0));
+  if(value<60)return value+'s';
+  const m=Math.floor(value/60),sec=value%60;
+  return sec?m+'m '+sec+'s':m+' min';
+}
+
+function buildImmediateNexoReaction(q,data,duration){
+  const session=state.session||{};
+  const difficulty=Number(q?.difficulty||0);
+
+  if(data.correct){
+    session.correctStreak=Number(session.correctStreak||0)+1;
+    session.wrongStreak=0;
+  }else{
+    session.wrongStreak=Number(session.wrongStreak||0)+1;
+    session.correctStreak=0;
+  }
+  session.answeredCount=Number(session.answeredCount||0)+1;
+
+  const streak=Number(session.correctStreak||0);
+  const wrongStreak=Number(session.wrongStreak||0);
+  const slow=Number(duration)>=180;
+  const verySlow=Number(duration)>=240;
+  const hard=difficulty>=4;
+
+  let mood='confiante';
+  let title='Boa leitura. Agora vamos consolidar.';
+  let text='Você chegou ao gabarito. O ganho agora é entender qual pista tornou a resposta segura.';
+  let badge='ACERTO';
+
+  if(!data.correct){
+    if(slow||hard){
+      mood='pensativo';
+      title='Vamos destravar o raciocínio.';
+      text=verySlow
+        ? 'Essa questão consumiu bastante tempo e ainda terminou em erro. Vamos simplificar o caminho antes da próxima tentativa.'
+        : hard
+          ? 'Era uma questão exigente. O foco agora é separar a pista central das alternativas que só parecem plausíveis.'
+          : 'O tempo subiu antes da resposta. Vale revisar o método para chegar ao ponto decisivo com menos esforço.';
+      badge=hard?'QUESTÃO DIFÍCIL':'AJUSTE DE TEMPO';
+    }else{
+      mood='acolhedor';
+      title=wrongStreak>=2?'Dois erros não definem sua sessão. Vamos ajustar.':'Essa questão virou material de evolução.';
+      text=wrongStreak>=2
+        ? 'A melhor resposta agora é reduzir a pressa, localizar o comando e reconstruir o raciocínio em etapas.'
+        : 'O erro não encerra a questão: ele mostra exatamente o que vale revisar antes da próxima tentativa.';
+      badge='PONTO DE REVISÃO';
+    }
+  }else if(streak>=3){
+    mood='confiante';
+    title=streak+' acertos seguidos. Seu padrão está ficando consistente.';
+    text='Você não está só acertando: está criando repetição de raciocínio. Use o método desta questão como referência para a próxima.';
+    badge='SEQUÊNCIA '+streak+'×';
+  }else if(slow){
+    mood='pensativo';
+    title='Acertou. Agora vamos ganhar tempo.';
+    text='O raciocínio chegou ao resultado certo, mas passou de 3 minutos. Tente identificar a pista decisiva mais cedo na próxima.';
+    badge='ACERTO · TEMPO ALTO';
+  }else if(hard){
+    mood='confiante';
+    title='Boa. Você segurou uma questão difícil.';
+    text='Acertar uma questão de nível alto é ótimo; agora confirme qual passo tornou sua decisão segura para conseguir repetir o processo.';
+    badge='ACERTO DIFÍCIL';
+  }
+
+  return {
+    mood,
+    image:nexoBustForMood(mood),
+    title,
+    text,
+    badge,
+    streak,
+    wrongStreak,
+    duration:Number(duration||0),
+    difficulty
+  };
+}
 async function submitAnswer(option) {
   if(state.answered||!state.current||state.selectedOption===null)return;
   const confirm=$('#confirmAnswer');
@@ -1372,7 +1450,8 @@ async function submitAnswer(option) {
     return;
   }
 
-  state.lastAnswer=data;
+  const reaction=buildImmediateNexoReaction(state.current,data,duration);
+  state.lastAnswer={...data,duration_seconds:duration,nexo_reaction:reaction};
   const correct=Number(data.correct_option);
   $$('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected');
@@ -1386,9 +1465,18 @@ async function submitAnswer(option) {
   box.className='answer-panel '+(data.correct?'':'wrong');
   box.innerHTML=`
     <div class="answer-hero ${data.correct?'is-correct':'is-wrong'}">
-      <div class="answer-professor">
-        <img src="${data.correct?NEXO_MOOD_IMAGES.confiante:NEXO_MOOD_IMAGES.acolhedor}" alt="Professor Nexo">
-        <div><span>PROFESSOR NEXO</span><h4>${data.correct?'Boa leitura. Agora vamos consolidar.':'Essa questão virou material de evolução.'}</h4><p>${data.correct?'Você chegou ao gabarito. O ganho agora é entender qual pista tornou a resposta segura.':'O erro não encerra a questão: ele mostra exatamente o que vale revisar antes da próxima tentativa.'}</p></div>
+      <div class="answer-professor" data-reaction-mood="${reaction.mood}">
+        <img src="${reaction.image}" data-nexo-family="bust" alt="Professor Nexo">
+        <div>
+          <span>PROFESSOR NEXO</span>
+          <h4>${esc(reaction.title)}</h4>
+          <p>${esc(reaction.text)}</p>
+          <div class="nexo-reaction-meta">
+            <small>${esc(reaction.badge)}</small>
+            <small>⏱ ${formatAnswerReactionTime(duration)}</small>
+            ${reaction.difficulty?'<small>NÍVEL '+reaction.difficulty+'</small>':''}
+          </div>
+        </div>
       </div>
       <div class="answer-verdict">
         <span class="answer-letter">${data.correct?'✓':'×'}</span>
@@ -1433,8 +1521,14 @@ async function submitAnswer(option) {
   }
   $('#askNexoAboutQuestion').onclick=()=>{
     $('#niaPanel').classList.remove('hidden');
-    setNexoMood(data.correct?'confiante':'acolhedor');
-    askNia(data.correct?'Por que eu acertei essa questão? Me ajuda a consolidar o raciocínio.':'Por que eu errei essa questão? Me ajuda a entender sem só repetir o gabarito.');
+    setNexoMood(reaction.mood);
+    askNia(data.correct
+      ? (reaction.mood==='pensativo'
+          ? 'Eu acertei, mas demorei nessa questão. Como eu faria mais rápido sem perder segurança?'
+          : 'Por que eu acertei essa questão? Me ajuda a consolidar o raciocínio.')
+      : (reaction.mood==='pensativo'
+          ? 'Essa questão foi difícil e eu errei. Me ajuda a destravar o raciocínio passo a passo.'
+          : 'Por que eu errei essa questão? Me ajuda a entender sem só repetir o gabarito.'));
   };
   $('#reviewQuestionTopic').onclick=async()=>{
     const q=state.current;
@@ -1452,7 +1546,7 @@ async function submitAnswer(option) {
   $('#openComments').onclick=()=>openQuestionComments(state.current.id);
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
-  setNexoMood(data.correct?'confiante':'acolhedor');
+  setNexoMood(reaction.mood);
   Promise.all([loadDashboard(),loadNexoCore(),loadRecentAttempts()]).catch(err=>console.error('refresh after answer',err));
 }
 
@@ -2740,9 +2834,7 @@ function setNexoMood(mood='feliz'){
   const src=NEXO_MOOD_IMAGES[mood]||NEXO_MOOD_IMAGES.feliz;
   setNexoImage(hero,nexoBustForMood(mood));
   setNexoImage(avatar,src);
-  if(launcher && ['feliz','acolhedor','confiante','animado'].includes(mood)){
-    setNexoImage(launcher,src);
-  }
+  if(launcher)setNexoImage(launcher,src);
 }
 
 function addNiaMessage(text,type){
