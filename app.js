@@ -4234,6 +4234,61 @@ function renderJourneyAchievements(){
   </article>`).join('');
 }
 
+let avatarEditorCategory='appearance';
+
+function avatarEditorGroupForField(field){
+  return ({
+    base:'appearance',skin:'appearance',
+    hair:'hair',hair_color:'hair',
+    outfit:'outfit',
+    accessory:'accessory',
+    frame:'frame',
+    background:'scene',aura:'scene'
+  })[field]||'appearance';
+}
+
+function avatarEditorIconForField(field){
+  return ({
+    base:'◉',skin:'●',hair:'✦',hair_color:'●',
+    outfit:'▰',accessory:'◇',frame:'▣',background:'▦',aura:'✧'
+  })[field]||'•';
+}
+
+function renderAvatarEditorCategory(){
+  const controls=$('#avatarBuilderControls');
+  if(!controls)return;
+
+  $$('[data-avatar-category]',controls).forEach(btn=>{
+    btn.classList.toggle('active',btn.dataset.avatarCategory===avatarEditorCategory);
+  });
+
+  $$('.avatar-option-group',controls).forEach(group=>{
+    const first=group.querySelector('[data-avatar-field]');
+    const category=avatarEditorGroupForField(first?.dataset.avatarField||'base');
+    group.dataset.avatarEditorGroup=category;
+    group.classList.toggle('editor-hidden',category!==avatarEditorCategory);
+  });
+
+  const activeGroups=$$('.avatar-option-group',controls).filter(group=>group.dataset.avatarEditorGroup===avatarEditorCategory);
+  const selected=[];
+  activeGroups.forEach(group=>{
+    const active=group.querySelector('[data-avatar-field].active:not([hidden])');
+    if(active){
+      const label=active.dataset.baseLabel||active.getAttribute('aria-label')||active.textContent||'';
+      selected.push(label.replace(/\s*🔒$/,'').replace(/\s*PLUS$/i,'').trim());
+    }
+  });
+
+  const title=$('#avatarSelectionTitle');
+  const text=$('#avatarSelectionText');
+  const labels={
+    appearance:'Aparência',hair:'Cabelo',outfit:'Roupa',
+    accessory:'Acessórios',frame:'Moldura',scene:'Cenário'
+  };
+  if(title)title.textContent=labels[avatarEditorCategory]||'Personalização';
+  if(text)text.textContent=selected.length?selected.join(' · '):'Escolha uma opção para visualizar.';
+}
+
 function renderAvatarBuilder(){
   const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
   state.avatarDraft=draft;
@@ -4250,6 +4305,8 @@ function renderAvatarBuilder(){
   const level=Number(state.journey?.profile?.level||1);
   $$('[data-avatar-field]').forEach(btn=>{
     const field=btn.dataset.avatarField,value=btn.dataset.avatarValue,itemCode=btn.dataset.avatarItem;
+    btn.dataset.avatarIcon=avatarEditorIconForField(field);
+    btn.dataset.avatarEditorCategory=avatarEditorGroupForField(field);
     const item=itemCode?avatarCatalogItem(itemCode):null;
     const bases=btn.dataset.avatarBases?btn.dataset.avatarBases.split(',').map(x=>x.trim()):null;
     const incompatible=Boolean(bases&&!bases.includes(draft.base));
@@ -4273,6 +4330,7 @@ function renderAvatarBuilder(){
       btn.textContent=locked?(base+(plusLocked?' PLUS':' 🔒')):base;
     }
   });
+  renderAvatarEditorCategory();
 }
 
 function renderNexoJourney(){
@@ -4408,6 +4466,15 @@ $('#avatarBuilderControls')?.addEventListener('click',e=>{
   if(!btn)return;
   e.preventDefault();
   applyAvatarChoice(btn);
+});
+
+$('#avatarBuilderControls')?.addEventListener('click',e=>{
+  const categoryBtn=e.target.closest?.('[data-avatar-category]');
+  if(!categoryBtn)return;
+  e.preventDefault();
+  avatarEditorCategory=categoryBtn.dataset.avatarCategory||'appearance';
+  renderAvatarEditorCategory();
+  categoryBtn.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'});
 });
 
 $('#requestPlusBtn')?.addEventListener('click',async()=>{
