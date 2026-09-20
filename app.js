@@ -46,7 +46,8 @@ const state = {
   pdfCache:new Map(),
   visualCache:new Map(),
   videos:[],
-  assistantIntents:[]
+  assistantIntents:[],
+  core:null
 };
 
 function toast(message, type='info') {
@@ -209,7 +210,7 @@ async function initApp(session) {
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
 
-  await Promise.all([loadQuestionMeta(), loadDashboard(), loadAssistantIntents()]);
+  await Promise.all([loadQuestionMeta(), loadDashboard(), loadNexoCore(), loadAssistantIntents()]);
   fillThemes();
   await loadRecentAttempts();
   renderBank();
@@ -292,6 +293,110 @@ async function loadDashboard() {
   }).join('') : '<p>Resolva algumas questões para descobrir seus pontos de atenção.</p>';
 }
 
+
+async function loadNexoCore(){
+  try{
+    const {data,error}=await client.rpc('get_nexo_core');
+    if(error)throw error;
+    state.core=data||null;
+  }catch(err){
+    console.error('NEXO Core',err);
+    state.core=null;
+  }
+  renderNexoCore();
+  return state.core;
+}
+
+function renderNexoCore(){
+  const core=state.core||{};
+  const rec=core.recommended_action||null;
+  const momentum=core.momentum||{};
+  $$('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
+  $$('[data-core-status]').forEach(el=>el.textContent=rec?'adaptativo':'calibrando');
+  $$('[data-core-title]').forEach(el=>el.textContent=rec
+    ? ((rec.subject||rec.area||'Treino')+' · '+(rec.topic||'revisão direcionada'))
+    : 'Seu próximo melhor passo');
+  $$('[data-core-reason]').forEach(el=>el.textContent=rec
+    ? (rec.reason||'O NEXO encontrou um ponto com boa margem de evolução.')
+    : 'Resolva algumas questões para eu transformar seu desempenho em uma recomendação personalizada.');
+  $$('[data-core-mastery]').forEach(el=>el.textContent=rec?Math.round(Number(rec.mastery||0))+'%':'—');
+  $$('[data-core-priority]').forEach(el=>el.textContent=rec?Math.round(Number(rec.priority||0))+'%':'—');
+  $$('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
+  $$('[data-core-start]').forEach(btn=>{
+    btn.innerHTML=rec
+      ? 'Treinar '+Number(rec.size||6)+' questões <span>→</span>'
+      : 'Começar diagnóstico <span>→</span>';
+    btn.onclick=()=>{
+      if(rec) startCoreRecommendation();
+      else {
+        openPage('questoes');
+        resetSessionUI();
+        toast('Faça uma sessão curta para o NEXO Core calibrar seu perfil.');
+      }
+    };
+  });
+}
+
+async function startCoreRecommendation(){
+  if(!state.core) await loadNexoCore();
+  const rec=state.core?.recommended_action;
+  if(!rec){
+    openPage('questoes');
+    resetSessionUI();
+    toast('Ainda preciso de algumas respostas para montar um treino adaptativo.');
+    return;
+  }
+  openPage('questoes');
+  await startStudySession({
+    mode:'core',
+    area:rec.area||'',
+    subject:rec.subject||'',
+    topic:rec.topic||'',
+    difficulty:'',
+    visualOnly:false,
+    size:Number(rec.size||6)
+  });
+  if(state.session){
+    $('#sessionAreaBadge').textContent='NEXO Core';
+    $('#sessionTitle').textContent=rec.topic||rec.subject||'Treino adaptativo';
+    $('#sessionSubtitle').textContent=rec.reason||'Sessão montada com base no seu desempenho.';
+  }
+}
+
+async function beginNexoSession(config,plannedCount){
+  try{
+    const {data,error}=await client.rpc('start_nexo_session',{
+      p_mode:config.mode||'manual',
+      p_area:config.area||null,
+      p_subject:config.subject||null,
+      p_topic:config.topic||null,
+      p_planned_count:Number(plannedCount||config.size||10)
+    });
+    if(error)throw error;
+    return data||null;
+  }catch(err){
+    console.error('start_nexo_session',err);
+    return null;
+  }
+}
+
+async function closeNexoSession(status='completed',session=state.session){
+  const id=session?.coreSessionId;
+  if(!id)return false;
+  session.coreSessionId=null;
+  try{
+    const {error}=await client.rpc('finish_nexo_session',{
+      p_session_id:id,
+      p_status:status
+    });
+    if(error)throw error;
+    return true;
+  }catch(err){
+    console.error('finish_nexo_session',err);
+    return false;
+  }
+}
+
 async function loadRecentAttempts() {
   const { data, error } = await client.from('question_attempts')
     .select('id,is_correct,created_at,question:questions(area,subject,topic)')
@@ -346,7 +451,9 @@ $('#mobileQuickTen').onclick=()=>{
 };
 
 function resetSessionUI() {
-  state.session=null; state.current=null; state.answered=false;
+  const previous=state.session;
+  if(previous?.coreSessionId) closeNexoSession('abandoned',previous);
+  state.session=null; state.current=null; state.answered=false; state.selectedOption=null; state.lastAnswer=null;
   $('#sessionSetup').classList.remove('hidden');
   $('#studyWorkspace').classList.add('hidden');
   $('#sessionSubtitle').textContent='Escolha uma área e comece uma sessão organizada.';
@@ -385,6 +492,7 @@ $('#startSession').onclick=async()=>{
 async function startStudySession(config) {
   const btn=$('#startSession'); if(btn){btn.disabled=true;btn.textContent='Montando sessão...';}
   try{
+    if(state.session?.coreSessionId) await closeNexoSession('abandoned',state.session);
     const all = await fetchQuestions(config);
     const seen = await getSeenIds();
     let fresh = shuffle(all.filter(x=>!seen.has(Number(x.id))));
@@ -396,7 +504,8 @@ async function startStudySession(config) {
     if(!fresh.length) throw new Error('Nenhuma questão encontrada com esses filtros.');
     const size=Math.min(config.size||10,fresh.length);
     const queue=fresh.slice(0,size);
-    state.session={...config,queue,index:0,size:queue.length,reviewMode};
+    const coreSessionId=await beginNexoSession(config,queue.length);
+    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId};
     $('#sessionSetup').classList.add('hidden');
     $('#studyWorkspace').classList.remove('hidden');
     $('#sessionAreaBadge').textContent=config.area||'Treino';
@@ -411,13 +520,45 @@ async function startStudySession(config) {
 }
 
 async function startAdaptive() {
+  if(!state.core) await loadNexoCore();
+  const rec=state.core?.recommended_action;
+  if(rec){
+    openPage('questoes');
+    await startStudySession({
+      mode:'adaptive',
+      topic:rec.topic||'',
+      subject:rec.subject||'',
+      area:rec.area||'',
+      size:Number(rec.size||8),
+      difficulty:'',
+      visualOnly:false
+    });
+    if(state.session){
+      $('#sessionAreaBadge').textContent='Adaptativo';
+      $('#sessionTitle').textContent=rec.topic||rec.subject||'Treino adaptativo';
+      $('#sessionSubtitle').textContent=rec.reason||'Foco automático definido pelo NEXO Core.';
+    }
+    return;
+  }
+
   if(!state.dashboard) await loadDashboard();
   const weak=state.dashboard?.weak_topics||[];
-  if(!weak.length){openPage('questoes');toast('Resolva algumas questões antes para liberar o treino adaptativo.');return;}
+  if(!weak.length){
+    openPage('questoes');
+    toast('Resolva algumas questões antes para liberar o treino adaptativo.');
+    return;
+  }
   const target=weak[0];
   openPage('questoes');
-  $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
-  await startStudySession({topic:target.topic,size:10,area:'',subject:'',difficulty:'',visualOnly:false});
+  await startStudySession({
+    mode:'adaptive',
+    topic:target.topic,
+    size:8,
+    area:'',
+    subject:'',
+    difficulty:'',
+    visualOnly:false
+  });
   if(state.session){
     $('#sessionAreaBadge').textContent='Adaptativo';
     $('#sessionTitle').textContent=target.topic;
@@ -688,7 +829,8 @@ async function submitAnswer(option) {
     const rpcPromise=client.rpc('submit_answer',{
       p_question_id:Number(state.current.id),
       p_selected_option:Number(option),
-      p_duration_seconds:duration
+      p_duration_seconds:duration,
+      p_session_id:state.session?.coreSessionId||null
     });
     const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout_submit_answer')),15000));
     const result=await Promise.race([rpcPromise,timeoutPromise]);
@@ -746,7 +888,7 @@ async function submitAnswer(option) {
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
   setNexoMood(data.correct?'confiante':'acolhedor');
-  Promise.all([loadDashboard(),loadRecentAttempts()]).catch(err=>console.error('refresh after answer',err));
+  Promise.all([loadDashboard(),loadNexoCore(),loadRecentAttempts()]).catch(err=>console.error('refresh after answer',err));
 }
 
 async function nextQuestion() {
@@ -758,16 +900,27 @@ async function nextQuestion() {
 $('#skipQuestion').onclick=()=>nextQuestion();
 
 function finishSession() {
+  const finished={...(state.session||{})};
+  if(state.session?.coreSessionId) closeNexoSession('completed',state.session);
   $('#sessionProgress').style.width='100%';
-  $('#questionCard').innerHTML=`<div class="empty-state"><span>✓</span><h3>Sessão concluída</h3><p>Você terminou ${state.session?.size||0} questões sem sair do conteúdo escolhido.</p><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px"><button id="newSameSession" class="primary-btn">Nova sessão igual</button><button id="backSetup" class="outline-btn">Trocar conteúdo</button></div></div>`;
+  $('#questionCard').innerHTML=`<div class="empty-state"><span>✓</span><h3>Sessão concluída</h3><p>Você terminou ${finished.size||0} questões. O NEXO Core já incorporou esse resultado ao seu perfil.</p><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px"><button id="newSameSession" class="primary-btn">Nova sessão igual</button><button id="backSetup" class="outline-btn">Trocar conteúdo</button></div></div>`;
   $('#nextQuestionBottom').classList.add('hidden');
-  $('#newSameSession').onclick=()=>startStudySession({...state.session,index:0,queue:undefined});
+  $('#newSameSession').onclick=()=>startStudySession({
+    mode:finished.mode||'manual',
+    area:finished.area||'',
+    subject:finished.subject||'',
+    topic:finished.topic||'',
+    difficulty:finished.difficulty||'',
+    visualOnly:Boolean(finished.visualOnly),
+    size:Number(finished.size||10)
+  });
   $('#backSetup').onclick=()=>resetSessionUI();
+  loadNexoCore().catch(err=>console.error('core after session',err));
 }
 
 $$('[data-sim-area]').forEach(b=>b.onclick=()=>{
   openPage('questoes');setSelectedArea(b.dataset.simArea);
-  startStudySession({area:b.dataset.simArea,subject:'',difficulty:'',visualOnly:false,size:20});
+  startStudySession({mode:'simulado',area:b.dataset.simArea,subject:'',difficulty:'',visualOnly:false,size:20});
 });
 
 async function renderPerformance() {
@@ -1108,6 +1261,32 @@ function nexoQuestionContext(text){
     (hint||'Comece pelo comando: descubra exatamente o que ele pede, volte ao texto/dados e elimine alternativas que não respondem ao recorte.')};
 }
 
+
+async function nexoCoreAssistantContext(text){
+  if(!/(o que (eu )?devo estudar|o que estudar agora|qual (e |é )?meu foco|minha prioridade|minhas dificuldades|onde (eu )?estou pior|meu desempenho|meus resultados|o que voce recomenda estudar|o que você recomenda estudar|nexo core)/i.test(text)) return null;
+  if(!state.core) await loadNexoCore();
+  const core=state.core||{};
+  const rec=core.recommended_action;
+  const overall=core.overall||{};
+  const momentum=core.momentum||{};
+
+  if(!rec){
+    return {
+      mood:'pensativo',
+      text:'O NEXO Core ainda está calibrando seu perfil. Faz algumas questões de pelo menos uma área; depois eu consigo cruzar acertos, erros, tempo e quantidade de tentativas para indicar seu próximo foco.'
+    };
+  }
+
+  return {
+    mood:Number(rec.priority||0)>=65?'serio':'confiante',
+    text:'Pelos seus dados, meu foco recomendado agora é '+(rec.subject||rec.area)+' — '+rec.topic+'.\n\n'+
+      'Domínio estimado: '+Math.round(Number(rec.mastery||0))+'%. Prioridade: '+Math.round(Number(rec.priority||0))+'%. '+
+      'Você respondeu '+Number(momentum.attempts_7d||0)+' questão(ões) nos últimos 7 dias e seu aproveitamento geral está em '+Number(overall.accuracy||0)+'%.\n\n'+
+      (rec.reason||'Esse é o ponto com melhor margem de evolução agora.')+
+      '\n\nEu sugiro uma sessão de '+Number(rec.size||6)+' questões nesse tema. Você pode tocar em “NEXO Core” na tela inicial para começar.'
+  };
+}
+
 async function loadAssistantIntents(){
   try{
     const {data,error}=await client.from('assistant_intents')
@@ -1181,6 +1360,9 @@ async function logAssistantTurn(input,result){
 async function niaAnswer(text){
   const context=nexoQuestionContext(text);
   if(context)return {...context,key:'question_context',category:'question'};
+
+  const coreContext=await nexoCoreAssistantContext(text);
+  if(coreContext)return {...coreContext,key:'nexo_core',category:'adaptive'};
 
   const intent=findAssistantIntent(text);
   if(intent){
