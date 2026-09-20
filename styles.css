@@ -6859,3 +6859,14 @@ body.light .wardrobe-card,body.light .wardrobe-summary span{background:#fff}body
 body.light .mobile-command-center,body.light .command-stats span{background:#fff}
 @media(max-width:900px){.command-layout{grid-template-columns:1fr}}
 @media(max-width:560px){.command-stats span{padding:11px 9px}.command-stats b{font-size:15px}.command-head h3{font-size:16px}}
+
+/* NEXO Full · Academic Mastery */
+.mastery-map-panel{margin:16px 0}.mastery-map{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin-top:12px}
+.mastery-area{padding:15px;border:1px solid var(--line);border-radius:15px;background:linear-gradient(180deg,rgba(13,25,45,.9),rgba(7,15,29,.88))}
+.mastery-area.priority{border-color:rgba(244,130,88,.34)}.mastery-area header{display:flex;justify-content:space-between;gap:8px;align-items:flex-start}.mastery-area header span{font-size:11px;font-weight:800}.mastery-area header b{font-size:8px;color:#9d8fff;letter-spacing:.5px}
+.mastery-score{margin:18px 0 9px}.mastery-score strong{display:block;font-size:28px}.mastery-score small,.mastery-area p{color:var(--muted);font-size:10px}.mastery-track{height:5px;border-radius:10px;background:rgba(255,255,255,.06);overflow:hidden}.mastery-track i{display:block;height:100%;background:linear-gradient(90deg,#7558ff,#36c9ff);border-radius:inherit}
+.mastery-area p{min-height:28px}.mastery-area button{border:0;background:transparent;color:#9d91ff;font-size:10px;font-weight:800;padding:0;cursor:pointer}
+.focus-roadmap{margin-bottom:16px}.focus-roadmap-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:12px}.focus-roadmap-grid article{display:flex;gap:12px;padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(10,20,38,.58)}.focus-roadmap-grid article>span{font-size:18px;font-weight:900;color:#725dff}.focus-roadmap-grid small{display:block;color:#4fd0ff;font-size:9px;font-weight:900}.focus-roadmap-grid b{display:block;margin:4px 0;font-size:12px}.focus-roadmap-grid p{margin:0;color:var(--muted);font-size:10px}
+body.light .mastery-area,body.light .focus-roadmap-grid article{background:#fff}
+@media(max-width:1000px){.mastery-map{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:700px){.mastery-map,.focus-roadmap-grid{grid-template-columns:1fr}.mastery-score{margin:12px 0 8px}.mastery-area p{min-height:0}}
