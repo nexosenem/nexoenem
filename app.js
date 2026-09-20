@@ -80,6 +80,10 @@ const state = {
   visualCache:new Map(),
   videos:[],
   materials:[],
+  contentProgress:new Map(),
+  favorites:new Set(),
+  activeViewer:null,
+  progressSaveTimer:null,
   assistantIntents:[],
   core:null,
   lastSimulationReport:null,
@@ -1934,15 +1938,259 @@ function showEssayResult(text,scores,total){
   addNiaMessage('Corrigi sua redação. Sua prioridade agora é '+shortComps[weak]+' — '+comps[weak]+'. Eu organizei a correção em uma missão de reescrita para você não tentar melhorar tudo ao mesmo tempo.','bot');
 }
 
+function contentKey(type,id){return String(type)+':'+String(id)}
+
+async function loadContentState(type){
+  if(!state.user?.id)return;
+  const [progressRes,favoritesRes]=await Promise.all([
+    client.from('content_progress').select('content_id,progress_seconds,progress_percent,completed,last_opened_at').eq('user_id',state.user.id).eq('content_type',type),
+    client.from('content_favorites').select('content_id').eq('user_id',state.user.id).eq('content_type',type)
+  ]);
+  if(!progressRes.error){
+    for(const row of progressRes.data||[]) state.contentProgress.set(contentKey(type,row.content_id),row);
+  }
+  if(!favoritesRes.error){
+    for(const key of [...state.favorites]) if(key.startsWith(type+':')) state.favorites.delete(key);
+    for(const row of favoritesRes.data||[]) state.favorites.add(contentKey(type,row.content_id));
+  }
+}
+
+function getContentProgress(type,id){
+  return state.contentProgress.get(contentKey(type,id))||{progress_seconds:0,progress_percent:0,completed:false};
+}
+
+function favoriteContent(type,id){return state.favorites.has(contentKey(type,id))}
+
+async function toggleContentFavorite(type,id){
+  if(!state.user?.id)return;
+  const key=contentKey(type,id);
+  if(state.favorites.has(key)){
+    const {error}=await client.from('content_favorites').delete().eq('user_id',state.user.id).eq('content_type',type).eq('content_id',id);
+    if(error)return toast('Não foi possível remover dos favoritos.','error');
+    state.favorites.delete(key);
+  }else{
+    const {error}=await client.from('content_favorites').insert({user_id:state.user.id,content_type:type,content_id:id});
+    if(error)return toast('Não foi possível favoritar.','error');
+    state.favorites.add(key);
+  }
+  if(type==='video')renderVideos();else renderMaterials();
+  updateViewerFavoriteButton();
+}
+
+async function saveContentProgress(type,id,{seconds=0,percent=0,completed=false}={}){
+  if(!state.user?.id||!id)return;
+  const safePercent=Math.max(0,Math.min(100,Number(percent)||0));
+  const row={
+    user_id:state.user.id,
+    content_type:type,
+    content_id:Number(id),
+    progress_seconds:Math.max(0,Math.floor(Number(seconds)||0)),
+    progress_percent:completed?100:Number(safePercent.toFixed(2)),
+    completed:Boolean(completed),
+    last_opened_at:new Date().toISOString(),
+    updated_at:new Date().toISOString()
+  };
+  const {error}=await client.from('content_progress').upsert(row,{onConflict:'user_id,content_type,content_id'});
+  if(error){console.error('content progress',error);return false}
+  state.contentProgress.set(contentKey(type,id),row);
+  return true;
+}
+
+function cloudinaryVideoPoster(url){
+  if(!url||!url.includes('/video/upload/'))return '';
+  try{
+    const withFrame=url.replace('/video/upload/','/video/upload/so_1,q_auto,f_jpg/');
+    return withFrame.replace(/\.[a-zA-Z0-9]+(?:\?.*)?$/,'.jpg');
+  }catch(_){return ''}
+}
+
+function externalEmbedUrl(url=''){
+  try{
+    const u=new URL(url);
+    if(u.hostname.includes('youtube.com')){
+      const id=u.searchParams.get('v');
+      if(id)return 'https://www.youtube.com/embed/'+encodeURIComponent(id);
+      const m=u.pathname.match(/\/shorts\/([^/]+)/);
+      if(m)return 'https://www.youtube.com/embed/'+encodeURIComponent(m[1]);
+    }
+    if(u.hostname==='youtu.be'){
+      const id=u.pathname.split('/').filter(Boolean)[0];
+      if(id)return 'https://www.youtube.com/embed/'+encodeURIComponent(id);
+    }
+    if(u.hostname.includes('vimeo.com')){
+      const id=u.pathname.split('/').filter(Boolean).find(x=>/^\d+$/.test(x));
+      if(id)return 'https://player.vimeo.com/video/'+id;
+    }
+  }catch(_){}
+  return '';
+}
+
+function contentCardProgress(type,id){
+  const p=getContentProgress(type,id);
+  const pct=p.completed?100:Math.round(Number(p.progress_percent||0));
+  return `<div class="content-progress"><span><i style="width:${pct}%"></i></span><small>${p.completed?'Concluído':pct>0?pct+'% concluído':'Ainda não iniciado'}</small></div>`;
+}
+
+function wireContentCards(){
+  $('[data-content-open]').forEach(b=>b.onclick=()=>openContentViewer(b.dataset.contentType,Number(b.dataset.contentOpen)));
+  $('[data-content-fav]').forEach(b=>b.onclick=e=>{e.stopPropagation();toggleContentFavorite(b.dataset.contentType,Number(b.dataset.contentFav))});
+}
+
+async function startContentPractice(item){
+  closeContentViewer();
+  openPage('questoes');
+  await startStudySession({
+    mode:'content',
+    area:item.area||'',
+    subject:item.subject||'',
+    topic:item.topic||'',
+    difficulty:'',
+    visualOnly:false,
+    size:5
+  });
+  if(state.session){
+    $('#sessionAreaBadge').textContent='Revisão';
+    $('#sessionTitle').textContent=item.topic||item.subject||'Treino do conteúdo';
+    $('#sessionSubtitle').textContent='5 questões relacionadas ao conteúdo que você acabou de estudar.';
+  }
+}
+
+function updateViewerFavoriteButton(){
+  const btn=$('#viewerFavorite');
+  const viewer=state.activeViewer;
+  if(!btn||!viewer)return;
+  const fav=favoriteContent(viewer.type,viewer.item.id);
+  btn.textContent=fav?'★ Favoritado':'☆ Favoritar';
+  btn.classList.toggle('active',fav);
+}
+
+async function openContentViewer(type,id){
+  const item=(type==='video'?state.videos:state.materials).find(x=>Number(x.id)===Number(id));
+  if(!item)return toast('Conteúdo não encontrado.','error');
+  const modal=$('#contentViewer');
+  const body=$('#contentViewerBody');
+  const title=$('#contentViewerTitle');
+  const subtitle=$('#contentViewerSubtitle');
+  const speed=$('#viewerSpeedWrap');
+  if(!modal||!body)return;
+
+  state.activeViewer={type,item,lastPersistAt:0};
+  title.textContent=item.title||'Conteúdo';
+  subtitle.textContent=[item.area,item.subject,item.topic].filter(Boolean).join(' · ');
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+
+  const current=getContentProgress(type,id);
+  if(type==='video'){
+    const embed=externalEmbedUrl(item.video_url||'');
+    speed?.classList.toggle('hidden',Boolean(embed));
+    if(embed){
+      body.innerHTML=`<iframe class="content-frame video-frame" src="${esc(embed)}" title="${esc(item.title||'Videoaula')}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
+      await saveContentProgress('video',id,{seconds:current.progress_seconds||0,percent:Math.max(5,Number(current.progress_percent||0)),completed:current.completed});
+    }else{
+      const poster=item.thumbnail_url||cloudinaryVideoPoster(item.video_url||'');
+      body.innerHTML=`<video id="contentVideoPlayer" class="content-video" controls playsinline preload="metadata" ${poster?'poster="'+esc(poster)+'"':''}><source src="${esc(item.video_url||'')}" type="${item.format?'video/'+esc(item.format):''}"></video>`;
+      const player=$('#contentVideoPlayer');
+      player.addEventListener('loadedmetadata',()=>{
+        if(current.progress_seconds>0&&current.progress_seconds<player.duration-5)player.currentTime=current.progress_seconds;
+        const sel=$('#viewerSpeed'); if(sel)player.playbackRate=Number(sel.value||1);
+      });
+      player.addEventListener('timeupdate',()=>{
+        if(!player.duration||!isFinite(player.duration))return;
+        const now=Date.now();
+        const pct=(player.currentTime/player.duration)*100;
+        state.contentProgress.set(contentKey('video',id),{
+          progress_seconds:Math.floor(player.currentTime),
+          progress_percent:pct,
+          completed:pct>=95
+        });
+        if(now-(state.activeViewer?.lastPersistAt||0)>5000){
+          if(state.activeViewer)state.activeViewer.lastPersistAt=now;
+          saveContentProgress('video',id,{seconds:player.currentTime,percent:pct,completed:pct>=95});
+        }
+      });
+      player.addEventListener('ended',async()=>{
+        await saveContentProgress('video',id,{seconds:player.duration||0,percent:100,completed:true});
+        renderVideos();
+        toast('Videoaula concluída.');
+      });
+    }
+  }else{
+    speed?.classList.add('hidden');
+    const isPdf=String(item.format||'').toLowerCase()==='pdf'||/\.pdf(?:\?|$)/i.test(item.file_url||'');
+    body.innerHTML=isPdf
+      ? `<iframe class="content-frame pdf-frame" src="${esc(item.file_url||'')}#toolbar=1&navpanes=0" title="${esc(item.title||'PDF')}"></iframe>`
+      : `<div class="material-image-wrap"><img src="${esc(item.file_url||'')}" alt="${esc(item.title||'Material')}"></div>`;
+    await saveContentProgress('material',id,{seconds:0,percent:Math.max(10,Number(current.progress_percent||0)),completed:current.completed});
+  }
+
+  updateViewerFavoriteButton();
+  const complete=$('#viewerComplete');
+  if(complete)complete.textContent=current.completed?'✓ Concluído':'Marcar como concluído';
+}
+
+async function markViewerComplete(){
+  const viewer=state.activeViewer;if(!viewer)return;
+  let seconds=0;
+  if(viewer.type==='video'){
+    const player=$('#contentVideoPlayer');
+    seconds=Math.floor(player?.duration||player?.currentTime||0);
+  }
+  await saveContentProgress(viewer.type,viewer.item.id,{seconds,percent:100,completed:true});
+  $('#viewerComplete').textContent='✓ Concluído';
+  viewer.type==='video'?renderVideos():renderMaterials();
+  toast('Conteúdo marcado como concluído.');
+}
+
+function closeContentViewer(){
+  const viewer=state.activeViewer;
+  const player=$('#contentVideoPlayer');
+  if(viewer?.type==='video'&&player&&player.duration&&isFinite(player.duration)){
+    const pct=(player.currentTime/player.duration)*100;
+    saveContentProgress('video',viewer.item.id,{seconds:player.currentTime,percent:pct,completed:pct>=95});
+  }
+  const modal=$('#contentViewer');
+  if(modal)modal.classList.add('hidden');
+  const body=$('#contentViewerBody');if(body)body.innerHTML='';
+  document.body.style.overflow='';
+  state.activeViewer=null;
+}
+
+$('#closeContentViewer')?.addEventListener('click',closeContentViewer);
+$('#contentViewer')?.addEventListener('click',e=>{if(e.target===$('#contentViewer'))closeContentViewer()});
+$('#viewerFavorite')?.addEventListener('click',()=>{const v=state.activeViewer;if(v)toggleContentFavorite(v.type,v.item.id)});
+$('#viewerComplete')?.addEventListener('click',markViewerComplete);
+$('#viewerPractice')?.addEventListener('click',()=>{const v=state.activeViewer;if(v)startContentPractice(v.item)});
+$('#viewerSpeed')?.addEventListener('change',e=>{const p=$('#contentVideoPlayer');if(p)p.playbackRate=Number(e.target.value||1)});
+
 async function loadVideos() {
-  const { data,error }=await client.from('videos').select('*').eq('is_published',true).order('created_at',{ascending:false});
+  const {data,error}=await client.from('videos').select('*').eq('is_published',true).order('created_at',{ascending:false});
   if(error){console.error(error);return}
-  state.videos=data||[];renderVideos();
+  state.videos=data||[];
+  await loadContentState('video');
+  renderVideos();
 }
 function renderVideos(){
   const s=$('#videoSearch').value.toLowerCase().trim();
-  const list=state.videos.filter(v=>!s||[v.title,v.area,v.subject,v.topic].join(' ').toLowerCase().includes(s));
-  $('#videoGrid').innerHTML=list.length?list.map(v=>`<article class="panel video-card"><div class="video-thumb">▶</div><div class="video-body"><b>${esc(v.title)}</b><small>${esc([v.area,v.subject,v.topic].filter(Boolean).join(' · '))}</small><a href="${esc(v.video_url||'')}" target="_blank" rel="noopener">Assistir videoaula →</a></div></article>`).join(''):'<article class="panel"><p style="color:var(--muted)">Nenhuma videoaula encontrada.</p></article>';
+  const list=state.videos.filter(v=>!s||[v.title,v.area,v.subject,v.topic,v.description].filter(Boolean).join(' ').toLowerCase().includes(s));
+  $('#videoGrid').innerHTML=list.length?list.map(v=>{
+    const fav=favoriteContent('video',v.id);
+    const poster=v.thumbnail_url||cloudinaryVideoPoster(v.video_url||'');
+    return `<article class="panel video-card content-card">
+      <button class="content-fav ${fav?'active':''}" data-content-fav="${v.id}" data-content-type="video" aria-label="Favoritar">${fav?'★':'☆'}</button>
+      <button class="content-open-area" data-content-open="${v.id}" data-content-type="video">
+        <div class="video-thumb">${poster?'<img src="'+esc(poster)+'" alt="">':'<span>▶</span>'}</div>
+        <div class="video-body">
+          <b>${esc(v.title)}</b>
+          <small>${esc([v.area,v.subject,v.topic].filter(Boolean).join(' · '))}</small>
+          ${v.description?'<p>'+esc(v.description)+'</p>':''}
+          ${contentCardProgress('video',v.id)}
+          <span class="content-cta">Assistir no NEXO →</span>
+        </div>
+      </button>
+    </article>`;
+  }).join(''):'<article class="panel"><p style="color:var(--muted)">Nenhuma videoaula encontrada.</p></article>';
+  wireContentCards();
 }
 $('#videoSearch').addEventListener('input',renderVideos);
 
@@ -1950,6 +2198,7 @@ async function loadMaterials(){
   const {data,error}=await client.from('materials').select('*').eq('is_published',true).order('created_at',{ascending:false});
   if(error){console.error(error);return}
   state.materials=data||[];
+  await loadContentState('material');
   renderMaterials();
 }
 function renderMaterials(){
@@ -1961,8 +2210,22 @@ function renderMaterials(){
     const ext=String(m.format||'').toUpperCase();
     const icon=ext==='PDF'?'PDF':'▧';
     const size=m.bytes?(' · '+(m.bytes/1048576).toFixed(m.bytes>=10485760?0:1)+' MB'):'';
-    return `<article class="panel video-card"><div class="video-thumb">${icon}</div><div class="video-body"><b>${esc(m.title)}</b><small>${esc([m.area,m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>${m.description?'<p>'+esc(m.description)+'</p>':''}<a href="${esc(m.file_url||'')}" target="_blank" rel="noopener">Abrir material →</a></div></article>`;
+    const fav=favoriteContent('material',m.id);
+    return `<article class="panel video-card content-card">
+      <button class="content-fav ${fav?'active':''}" data-content-fav="${m.id}" data-content-type="material" aria-label="Favoritar">${fav?'★':'☆'}</button>
+      <button class="content-open-area" data-content-open="${m.id}" data-content-type="material">
+        <div class="video-thumb"><span>${icon}</span></div>
+        <div class="video-body">
+          <b>${esc(m.title)}</b>
+          <small>${esc([m.area,m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>
+          ${m.description?'<p>'+esc(m.description)+'</p>':''}
+          ${contentCardProgress('material',m.id)}
+          <span class="content-cta">Abrir no NEXO →</span>
+        </div>
+      </button>
+    </article>`;
   }).join(''):'<article class="panel"><p style="color:var(--muted)">Nenhum material publicado ainda.</p></article>';
+  wireContentCards();
 }
 $('#materialSearch')?.addEventListener('input',renderMaterials);
 
@@ -2463,15 +2726,23 @@ $$('[data-outfit]').forEach(b=>b.onclick=()=>applyNexoStyle(b.dataset.outfit,tru
 
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
-  const [profiles,attempts,feedbacks,videos,materials]=await Promise.all([
+  const [profiles,attempts,feedbacks,videosCount,materialsCount,progressRows,videosRows,materialsRows]=await Promise.all([
     client.from('profiles').select('*',{count:'exact',head:true}),
     client.from('question_attempts').select('*',{count:'exact',head:true}),
     client.from('feedback').select('*',{count:'exact',head:true}),
     client.from('videos').select('*',{count:'exact',head:true}),
-    client.from('materials').select('*',{count:'exact',head:true})
+    client.from('materials').select('*',{count:'exact',head:true}),
+    client.from('content_progress').select('content_type,content_id,completed'),
+    client.from('videos').select('id,title,area,subject,topic,is_published,created_at,video_url,cloudinary_public_id').order('created_at',{ascending:false}).limit(100),
+    client.from('materials').select('id,title,area,subject,topic,is_published,created_at,file_url,cloudinary_public_id,format').order('created_at',{ascending:false}).limit(100)
   ]);
+  const totalViews=(progressRows.data||[]).length;
   $('#adminStats').innerHTML=[
-    ['Usuários',profiles.count||0],['Respostas',attempts.count||0],['Feedbacks',feedbacks.count||0],['Videoaulas',videos.count||0],['Materiais',materials.count||0]
+    ['Usuários',profiles.count||0],
+    ['Respostas',attempts.count||0],
+    ['Videoaulas',videosCount.count||0],
+    ['Materiais',materialsCount.count||0],
+    ['Aberturas',totalViews]
   ].map(x=>`<article class="admin-stat"><small>${x[0]}</small><b>${x[1]}</b></article>`).join('');
 
   const {data}=await client.from('feedback').select('id,rating,message,status,created_at,user_id').order('created_at',{ascending:false}).limit(60);
@@ -2480,11 +2751,80 @@ async function loadAdmin(){
   const reports=await client.rpc('get_reported_comments');
   $('#reportedComments').innerHTML=reports.data?.length?reports.data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">!</span><div><b>${esc(x.author_name)} · ${x.report_count} denúncia(s)</b><p>${esc(x.body)}</p><small>Questão #${x.question_id}</small><div class="comment-actions"><button data-admin-remove="${x.comment_id}" class="danger">Remover comentário</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum comentário denunciado.</p>';
   $$('[data-admin-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Remover este comentário da comunidade?'))return;const {error}=await client.rpc('admin_remove_comment',{p_comment_id:Number(b.dataset.adminRemove)});if(error)return toast('Falha ao remover.','error');toast('Comentário removido.');loadAdmin()});
+
+  const counts=new Map();
+  for(const row of progressRows.data||[]){
+    const key=contentKey(row.content_type,row.content_id);
+    const stat=counts.get(key)||{views:0,completed:0};
+    stat.views++;if(row.completed)stat.completed++;
+    counts.set(key,stat);
+  }
+  renderAdminContentList('video',videosRows.data||[],counts);
+  renderAdminContentList('material',materialsRows.data||[],counts);
+}
+
+function renderAdminContentList(type,rows,counts){
+  const target=type==='video'?$('#adminVideoList'):$('#adminMaterialList');
+  if(!target)return;
+  target.innerHTML=rows.length?rows.map(row=>{
+    const stat=counts.get(contentKey(type,row.id))||{views:0,completed:0};
+    return `<div class="admin-content-row">
+      <div><b>${esc(row.title)}</b><small>${esc([row.subject,row.topic].filter(Boolean).join(' · '))}</small><small>${stat.views} abertura(s) · ${stat.completed} conclusão(ões)</small></div>
+      <span class="status-pill ${row.is_published?'published':'draft'}">${row.is_published?'Publicado':'Oculto'}</span>
+      <div class="admin-content-actions">
+        <button data-admin-edit="${type}:${row.id}">Editar</button>
+        <button data-admin-toggle="${type}:${row.id}">${row.is_published?'Ocultar':'Publicar'}</button>
+        <button class="danger" data-admin-delete="${type}:${row.id}">Remover</button>
+      </div>
+    </div>`;
+  }).join(''):'<p style="color:var(--muted)">Nenhum conteúdo cadastrado.</p>';
+  target.querySelectorAll('[data-admin-edit]').forEach(b=>b.onclick=()=>editAdminContent(b.dataset.adminEdit));
+  target.querySelectorAll('[data-admin-toggle]').forEach(b=>b.onclick=()=>toggleAdminContent(b.dataset.adminToggle));
+  target.querySelectorAll('[data-admin-delete]').forEach(b=>b.onclick=()=>deleteAdminContent(b.dataset.adminDelete));
+}
+
+function parseAdminContentKey(value){
+  const [type,id]=String(value||'').split(':');
+  return {type,id:Number(id),table:type==='video'?'videos':'materials'};
+}
+async function editAdminContent(value){
+  const {type,id,table}=parseAdminContentKey(value);
+  const source=(type==='video'?state.videos:state.materials).find(x=>Number(x.id)===id);
+  const fallback=await client.from(table).select('title,subject,topic,area,description').eq('id',id).maybeSingle();
+  const item=source||fallback.data||{};
+  const title=prompt('Título',item.title||'');if(title===null)return;
+  const subject=prompt('Matéria',item.subject||'');if(subject===null)return;
+  const topic=prompt('Tema',item.topic||'');if(topic===null)return;
+  const description=prompt('Descrição',item.description||'');if(description===null)return;
+  const {error}=await client.from(table).update({title:title.trim(),subject:subject.trim(),topic:topic.trim()||null,description:description.trim()||null,updated_at:new Date().toISOString()}).eq('id',id);
+  if(error)return toast('Não foi possível editar.','error');
+  toast('Conteúdo atualizado.');
+  await loadAdmin();
+  if(type==='video')loadVideos();else loadMaterials();
+}
+async function toggleAdminContent(value){
+  const {type,id,table}=parseAdminContentKey(value);
+  const {data,error}=await client.from(table).select('is_published').eq('id',id).single();
+  if(error)return toast('Não foi possível alterar publicação.','error');
+  const {error:updateError}=await client.from(table).update({is_published:!data.is_published,updated_at:new Date().toISOString()}).eq('id',id);
+  if(updateError)return toast('Não foi possível alterar publicação.','error');
+  toast(data.is_published?'Conteúdo ocultado.':'Conteúdo publicado.');
+  await loadAdmin();
+  if(type==='video')loadVideos();else loadMaterials();
+}
+async function deleteAdminContent(value){
+  const {type,id,table}=parseAdminContentKey(value);
+  if(!confirm('Remover este conteúdo do NEXO? O arquivo original continuará no Cloudinary até configurarmos a exclusão assinada.'))return;
+  const {error}=await client.from(table).delete().eq('id',id);
+  if(error)return toast('Não foi possível remover.','error');
+  toast('Removido do NEXO. O arquivo continua no Cloudinary.');
+  await loadAdmin();
+  if(type==='video')loadVideos();else loadMaterials();
 }
 
 $('#addVideo').onclick=async()=>{
   if(state.profile?.role!=='admin')return toast('Acesso restrito.','error');
-  const title=$('#videoTitle').value.trim(),area=$('#videoArea').value,subject=$('#videoSubject').value.trim(),topic=$('#videoTopic').value.trim();
+  const title=$('#videoTitle').value.trim(),area=$('#videoArea').value,subject=$('#videoSubject').value.trim(),topic=$('#videoTopic').value.trim(),description=$('#videoDescription')?.value.trim()||'';
   const external=$('#videoUrl').value.trim(),file=$('#videoFile').files[0];
   if(!title||!subject||(!file&&!/^https?:\/\//i.test(external)))return toast('Preencha título, matéria e um arquivo ou URL válida.','error');
   if(file&&!/^video\//i.test(file.type||''))return toast('Selecione um arquivo de vídeo válido.','error');
@@ -2494,6 +2834,7 @@ $('#addVideo').onclick=async()=>{
   status.textContent=file?'Preparando envio para o Cloudinary...':'Publicando URL externa...';
 
   let video_url=external,storage_path=null;
+  let cloudinary_public_id=null,upload_format=null,upload_bytes=null,upload_duration=null,upload_thumbnail=null;
   try{
     if(file){
       const uploaded=await uploadToCloudinary(file,pct=>{
@@ -2501,16 +2842,26 @@ $('#addVideo').onclick=async()=>{
       });
       video_url=uploaded.secure_url;
       storage_path=`cloudinary:${uploaded.resource_type||'auto'}:${uploaded.public_id}`;
+      cloudinary_public_id=uploaded.public_id||null;
+      upload_format=uploaded.format||null;
+      upload_bytes=Number(uploaded.bytes||file.size||0)||null;
+      upload_duration=Math.round(Number(uploaded.duration||0))||null;
+      upload_thumbnail=uploaded.resource_type==='video'?cloudinaryVideoPoster(uploaded.secure_url):null;
     }
 
     const {error}=await client.from('videos').insert({
-      title,area,subject,topic,video_url,storage_path,
+      title,description:description||null,area,subject,topic,video_url,storage_path,
+      cloudinary_public_id,
+      format:upload_format,
+      bytes:upload_bytes,
+      duration_seconds:upload_duration,
+      thumbnail_url:upload_thumbnail,
       created_by:state.user.id,is_published:true
     });
     if(error)throw error;
 
     status.textContent=file?'Videoaula publicada no Cloudinary com sucesso.':'Videoaula publicada com sucesso.';
-    $('#videoTitle').value=$('#videoSubject').value=$('#videoTopic').value=$('#videoUrl').value='';
+    $('#videoTitle').value=$('#videoSubject').value=$('#videoTopic').value=$('#videoUrl').value='';if($('#videoDescription'))$('#videoDescription').value='';
     $('#videoFile').value='';
     toast('Videoaula publicada.');
     await loadAdmin();
