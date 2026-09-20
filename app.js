@@ -1087,14 +1087,48 @@ $('#focusStart')?.addEventListener('click',async()=>{
   else startFocusMode();
 });
 
-$('#themeToggle').onclick=()=>setTheme(document.body.classList.contains('light')?'dark':'light');
-$('#profileButton').onclick=()=>$('#profileMenu').classList.toggle('hidden');
 const searchBox=$('.search');
-$('#globalSearch').addEventListener('focus',()=>searchBox.classList.add('search-open'));
-searchBox.addEventListener('click',()=>{searchBox.classList.add('search-open');$('#globalSearch').focus()});
-$('#globalSearch').addEventListener('blur',()=>{if(innerWidth<=760&&!$('#globalSearch').value.trim())setTimeout(()=>searchBox.classList.remove('search-open'),120)});
+const globalSearch=$('#globalSearch');
+
+function setMobileSearchOpen(open,{focus=true}={}){
+  if(!searchBox||!globalSearch)return;
+  const shouldOpen=Boolean(open)&&innerWidth<=760;
+  searchBox.classList.toggle('search-open',shouldOpen);
+  searchBox.setAttribute('aria-expanded',String(shouldOpen));
+  if(shouldOpen&&focus){
+    requestAnimationFrame(()=>{
+      try{globalSearch.focus({preventScroll:true})}catch(_){globalSearch.focus()}
+    });
+  }else if(!shouldOpen&&document.activeElement===globalSearch){
+    globalSearch.blur();
+  }
+}
+
+$('#themeToggle').onclick=()=>{
+  setMobileSearchOpen(false,{focus:false});
+  setTheme(document.body.classList.contains('light')?'dark':'light');
+};
+$('#profileButton').onclick=()=>$('#profileMenu').classList.toggle('hidden');
+
+globalSearch.addEventListener('focus',()=>{if(innerWidth<=760)setMobileSearchOpen(true,{focus:false})});
+searchBox.addEventListener('click',e=>{
+  if(innerWidth<=760&&!searchBox.classList.contains('search-open')){
+    e.preventDefault();
+    setMobileSearchOpen(true);
+  }
+});
+globalSearch.addEventListener('keydown',e=>{
+  if(e.key==='Escape'){
+    e.preventDefault();
+    setMobileSearchOpen(false,{focus:false});
+  }
+});
+
 document.addEventListener('click',e=>{
   if(!e.target.closest('#profileButton')&&!e.target.closest('#profileMenu')) $('#profileMenu').classList.add('hidden');
+  if(innerWidth<=760&&searchBox?.classList.contains('search-open')&&!e.target.closest('.search')){
+    setMobileSearchOpen(false,{focus:false});
+  }
 });
 
 const DESKTOP_SIDEBAR_KEY='nexo-desktop-sidebar-collapsed';
@@ -4221,7 +4255,7 @@ function renderBank(){
 }
 $('#bankSearch').addEventListener('input',renderBank);
 $('#bankArea').addEventListener('change',renderBank);
-$('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){openPage('banco');$('#bankSearch').value=e.target.value;renderBank()}});
+$('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){openPage('banco');$('#bankSearch').value=e.target.value;renderBank();setMobileSearchOpen(false,{focus:false})}});
 async function openSingleQuestion(id){
   const {data,error}=await client.from('questions').select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop').eq('id',id).single();
   if(error)return toast('Não foi possível abrir a questão.','error');
