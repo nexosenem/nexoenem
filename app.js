@@ -4475,7 +4475,7 @@ async function loadLearningIntelligence(){
     const {data,error}=await client.from('question_attempts')
       .select('is_correct,duration_seconds,first_selection_seconds,selection_changes,hint_count,created_at,question:questions(area,subject,topic)')
       .order('created_at',{ascending:false})
-      .limit(120);
+      .limit(nexoAccessTier()==='free'?30:120);
     if(error)throw error;
     const attempts=data||[];
     const counts=new Map();
@@ -4505,7 +4505,7 @@ function renderErrorPatternMap(intel=state.learningIntelligence||{}){
     return;
   }
   const max=Math.max(...patterns.map(x=>Number(x.count||0)),1);
-  el.innerHTML=patterns.map((x,index)=>'<article class="error-pattern-row '+(index===0?'primary':'')+'">'+
+  el.innerHTML=(nexoAccessTier()==='free'?'<div class="analysis-depth-note">FREE · análise das últimas 30 respostas · Plus amplia a janela para 120</div>':'<div class="analysis-depth-note plus">PLUS · análise ampliada das últimas 120 respostas</div>')+patterns.map((x,index)=>'<article class="error-pattern-row '+(index===0?'primary':'')+'">'+
     '<span class="error-pattern-icon">'+x.icon+'</span>'+
     '<div><b>'+esc(x.label)+'</b><small>'+esc(x.help)+'</small><i><em style="width:'+Math.round(Number(x.count||0)*100/max)+'%"></em></i></div>'+
     '<strong>'+Number(x.count||0)+'</strong></article>').join('')+
