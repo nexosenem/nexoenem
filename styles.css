@@ -3906,3 +3906,62 @@ body.light .sim-behavior-signal>b{color:#1b293e}
   .mobile-section-head h3{font-size:20px!important}
   .mobile-performance-stats small{font-size:9.5px!important}
 }
+
+
+/* NEXO MOBILE NAV CLEANUP v1
+   No celular, "Mais" da barra inferior é o único acesso ao menu lateral. */
+@media(max-width:760px){
+  #mobileMenu{display:none!important}
+
+  .topbar{
+    position:sticky!important;
+    display:flex!important;
+    justify-content:flex-end!important;
+    align-items:center!important;
+    min-height:64px!important;
+    height:64px!important;
+    padding:8px 12px!important;
+  }
+
+  .topbar .search{
+    position:absolute!important;
+    left:50%!important;
+    top:50%!important;
+    transform:translate(-50%,-50%)!important;
+    margin:0!important;
+    width:44px!important;
+    height:44px!important;
+    flex:0 0 44px!important;
+    z-index:2!important;
+  }
+
+  .topbar .search.search-open{
+    left:12px!important;
+    right:12px!important;
+    top:8px!important;
+    transform:none!important;
+    width:auto!important;
+    height:48px!important;
+    z-index:12!important;
+  }
+
+  .topbar .top-actions{
+    margin-left:auto!important;
+    position:relative!important;
+    z-index:3!important;
+  }
+
+  .topbar .search.search-open + .top-actions{
+    opacity:0!important;
+    pointer-events:none!important;
+  }
+
+  .mobile-bottom #moreMobile{
+    color:#8695ac;
+  }
+
+  .mobile-bottom #moreMobile:active{
+    background:rgba(104,84,225,.12);
+    color:#b5aaff;
+  }
+}
