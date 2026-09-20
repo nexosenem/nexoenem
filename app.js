@@ -1590,6 +1590,8 @@ async function loadEnemRadar({silent=true}={}){
     bindRadarControls();
     refreshRadarSubjectOptions();
     renderEnemRadar();
+    renderMathTrail();
+    renderNexoToday();
     return state.radarTopics;
   }
   try{
@@ -2136,6 +2138,7 @@ function openPage(id) {
   $$('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   toggleMenu(false);
   window.scrollTo({top:0,behavior:'smooth'});
+  if (id==='inicio') { renderNexoToday(); renderMathTrail(); }
   if (id==='desempenho') renderPerformance();
   if (id==='focos') renderFocus();
   if (id==='videoaulas') loadVideos();
@@ -2153,7 +2156,13 @@ function openPage(id) {
   if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
   if (id==='admin') loadAdmin();
 }
-$$('[data-page]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openPage(b.dataset.page)}));
+$('[data-page]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openPage(b.dataset.page)}));
+$('.mobile-hero .primary-btn[data-page="questoes"]')?.addEventListener('click',e=>{
+  const saved=readPersistedStudySession();
+  const partial=(state.materials||[]).map(item=>({item,p:getContentProgress('material',item.id)})).filter(x=>Number(x.p.progress_percent||0)>0&&!x.p.completed).sort((a,b)=>new Date(b.p.last_opened_at||0)-new Date(a.p.last_opened_at||0))[0];
+  if(saved){e.preventDefault();e.stopImmediatePropagation();resumePersistedStudySession()}
+  else if(partial?.item){e.preventDefault();e.stopImmediatePropagation();openPage('materiais');setTimeout(()=>openContentViewer('material',partial.item.id),80)}
+});
 
 async function initApp(session) {
   state.user = session.user;
@@ -2693,7 +2702,13 @@ $$('.subject-card').forEach(b=>b.onclick=()=>{
   setSelectedArea(b.dataset.area);
   $('#sessionSubtitle').textContent='Escolha a matéria e a quantidade. A sessão permanecerá dentro de '+b.dataset.area+'.';
 });
-$('#continueStudy').onclick=()=>openPage('questoes');
+$('#continueStudy').onclick=()=>{
+  const saved=readPersistedStudySession();
+  if(saved)return resumePersistedStudySession();
+  const partial=(state.materials||[]).map(item=>({item,p:getContentProgress('material',item.id)})).filter(x=>Number(x.p.progress_percent||0)>0&&!x.p.completed).sort((a,b)=>new Date(b.p.last_opened_at||0)-new Date(a.p.last_opened_at||0))[0];
+  if(partial?.item){openPage('materiais');return setTimeout(()=>openContentViewer('material',partial.item.id),80)}
+  openPage('questoes');
+};
 $('#changeSession').onclick=()=>resetSessionUI();
 $('#endSession').onclick=()=>resetSessionUI();
 $('#quickVisual').onclick=()=>{
@@ -2724,6 +2739,8 @@ function resetSessionUI() {
   state.session=null; state.current=null; state.answered=false; state.selectedOption=null; state.lastAnswer=null;
   $('#sessionSetup').classList.remove('hidden');
   $('#studyWorkspace').classList.add('hidden');
+  $('#studyBreadcrumb')?.classList.add('hidden');
+  $('#backToContent')?.classList.add('hidden');
   $('#sessionSubtitle').textContent='Escolha uma área e comece uma sessão organizada.';
 }
 
@@ -5441,6 +5458,8 @@ async function loadMaterials({silent=false}={}){
   await loadContentState('material');
   if(!state.radarLoaded)await loadEnemRadar({silent:true});
   renderMaterials();
+  renderNexoToday();
+  renderMathTrail();
   return state.materials;
 }
 
