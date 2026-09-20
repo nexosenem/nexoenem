@@ -9112,7 +9112,7 @@ linear-gradient(135deg,#172343 0%,#12162d 52%,#261642 100%)}
 .material-radar b{font-size:9px;color:#ffd46b}
 .material-radar span{font-size:8.5px;color:var(--muted);text-align:right}
 .nexo-material-card .video-body p{font-size:10px;line-height:1.5;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
-.nexo-material-card .content-cta{margin-top:12px;font-size:12px}
+.nexo-material-card .content-cta{display:flex;align-items:center;justify-content:space-between;width:100%;margin-top:12px;padding:10px 12px;border:1px solid rgba(126,102,255,.28);border-radius:11px;background:linear-gradient(90deg,rgba(82,197,255,.06),rgba(123,88,255,.08));font-size:12px}.nexo-material-card .content-cta:after{content:'→';font-size:15px}.nexo-material-card .content-cta{color:#c0b7ff}
 .content-empty{padding:22px}
 .content-empty p{margin:4px 0 0;color:var(--muted)}
 .viewer-practice-btn{min-width:190px;font-weight:900}
