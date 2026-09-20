@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-67">
+  <link rel="stylesheet" href="./styles.css?v=20260920-68">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -484,25 +484,90 @@
           </div>
         </section>
 
-        <section class="page" id="redacao">
-          <div class="page-head nexo-page-head">
-            <div><span class="eyebrow">REDAÇÃO · PROFESSOR NEXO</span><h2>Laboratório de Redação</h2><p>Escreva, receba uma análise por competência e transforme a correção em uma próxima ação de estudo.</p></div>
-            <div class="page-nexo-mentor"><img class="focus-mascot-img" src="./assets/nexo-family/bust-confiante.avif" alt="Professor Nexo estudando"><span><b>Correção orientada</b><small>competências • observações • próxima versão</small></span></div>
+        <section class="page essay-page-v2" id="redacao">
+          <div class="page-head nexo-page-head essay-page-head">
+            <div>
+              <span class="eyebrow">REDAÇÃO · PROFESSOR NEXO</span>
+              <h2>Redação ENEM, do rascunho à evolução.</h2>
+              <p>Escolha o tema, escreva com foco nas cinco competências e transforme a correção em uma próxima versão melhor.</p>
+            </div>
+            <div class="page-nexo-mentor essay-mentor">
+              <img class="focus-mascot-img" src="./assets/nexo-family/bust-confiante.avif" alt="Professor Nexo estudando">
+              <span><b>Professor Nexo</b><small>estrutura • competências • revisão</small></span>
+            </div>
           </div>
-          <div class="essay-layout">
-            <article class="panel essay-editor">
-              <label>Tema<select id="essayTheme"></select></label>
+
+          <div class="essay-flow-bar" aria-label="Etapas da redação">
+            <span class="active"><i>1</i><b>Tema</b><small>entenda a proposta</small></span>
+            <span><i>2</i><b>Escrita</b><small>construa sua tese</small></span>
+            <span><i>3</i><b>Correção</b><small>5 competências</small></span>
+            <span><i>4</i><b>Reescrita</b><small>melhore a versão</small></span>
+          </div>
+
+          <div class="essay-workspace-v2">
+            <article class="panel essay-editor essay-editor-v2">
+              <div class="essay-editor-heading">
+                <div><span class="eyebrow">01 · PROPOSTA</span><h3>Escolha o tema da sua redação.</h3></div>
+                <span class="essay-enem-chip">MODELO ENEM</span>
+              </div>
+
+              <div class="essay-theme-control">
+                <label>Tema
+                  <select id="essayTheme"></select>
+                </label>
+              </div>
+
               <div id="customThemeFields" class="custom-theme-fields hidden">
                 <label>Tema personalizado<input id="customEssayTheme" class="text-input" maxlength="180" placeholder="Ex.: Os desafios da mobilidade urbana nas grandes cidades"></label>
-                <label>Recorte / instrução (opcional)<textarea id="customEssayPrompt" rows="3" placeholder="Se quiser, escreva o recorte específico que deseja desenvolver."></textarea></label>
+                <label>Recorte / instrução (opcional)<textarea id="customEssayPrompt" rows="3" placeholder="Defina o recorte específico que deseja desenvolver."></textarea></label>
               </div>
-              <div id="essayPrompt" class="essay-prompt"></div>
-              <label>Sua redação<textarea id="essayText" rows="18" placeholder="Digite sua redação aqui..."></textarea></label>
-              <div class="editor-footer"><span id="wordCount">0 palavras</span><button class="primary-btn" id="analyzeEssay">Analisar e salvar</button></div>
+
+              <div id="essayPrompt" class="essay-prompt essay-prompt-v2"></div>
+
+              <div class="essay-writing-head">
+                <div><span class="eyebrow">02 · SUA REDAÇÃO</span><h3>Escreva sem perder a estrutura de vista.</h3></div>
+                <span id="wordCount">0 palavras</span>
+              </div>
+
+              <div class="essay-writing-shell">
+                <textarea id="essayText" rows="20" placeholder="Comece pela introdução: contextualize o tema, apresente sua tese e indique os caminhos da argumentação..."></textarea>
+              </div>
+
+              <div class="essay-structure-check">
+                <span><i>✓</i> Introdução + tese</span>
+                <span><i>✓</i> Desenvolvimento 1</span>
+                <span><i>✓</i> Desenvolvimento 2</span>
+                <span><i>✓</i> Intervenção completa</span>
+              </div>
+
+              <div class="essay-editor-actions">
+                <small>A nota é uma estimativa orientativa para treino. Revise a versão após receber o diagnóstico.</small>
+                <button class="primary-btn" id="analyzeEssay">Corrigir minha redação <span>→</span></button>
+              </div>
             </article>
-            <article class="panel essay-result" id="essayResult">
-              <div class="empty-state"><span>✎</span><h3>Sua análise aparecerá aqui</h3><p>Você verá nota estimada, competências e prioridades de revisão.</p></div>
-            </article>
+
+            <aside class="essay-side-v2">
+              <article class="panel essay-guide-card">
+                <span class="eyebrow">CHECKLIST ENEM</span>
+                <h3>O NEXO vai observar 5 pontos.</h3>
+                <div class="essay-competency-mini">
+                  <span><b>C1</b><small>Norma-padrão</small></span>
+                  <span><b>C2</b><small>Compreensão do tema</small></span>
+                  <span><b>C3</b><small>Argumentação</small></span>
+                  <span><b>C4</b><small>Coesão</small></span>
+                  <span><b>C5</b><small>Intervenção</small></span>
+                </div>
+                <p>Depois da correção, a prioridade mais fraca vira uma ação clara de revisão.</p>
+              </article>
+
+              <article class="panel essay-result essay-result-v2" id="essayResult">
+                <div class="empty-state essay-empty-v2">
+                  <span>✎</span>
+                  <h3>Sua correção aparecerá aqui.</h3>
+                  <p>Nota estimada, competências, pontos fortes e a prioridade da próxima versão.</p>
+                </div>
+              </article>
+            </aside>
           </div>
         </section>
 
@@ -686,9 +751,10 @@
             <div class="avatar-builder">
               <article class="avatar-builder-stage">
                 <div class="journey-avatar-builder-preview" id="avatarBuilderPreview"></div>
-                <div><b id="avatarBuilderTitle">Seu avatar NEXO</b><small>Visual leve, sem imagens pesadas.</small></div>
+                <div><b id="avatarBuilderTitle">Seu avatar NEXO</b><small>Suas mudanças aparecem aqui em tempo real.</small></div>
               </article>
               <article class="avatar-builder-controls" id="avatarBuilderControls">
+                <div class="avatar-editor-dock">
                 <div class="avatar-builder-live">
                   <div class="avatar-builder-mini-preview" id="avatarBuilderMiniPreview"></div>
                   <div><b>Preview ao vivo</b><small id="avatarBuilderStatus">Personagem salvo</small></div>
@@ -708,6 +774,7 @@
                 <div class="avatar-selection-summary">
                   <div><span>EDITANDO</span><b id="avatarSelectionTitle">Looks NEXO</b></div>
                   <small id="avatarSelectionText">Conjuntos prontos para equipar com um toque.</small>
+                </div>
                 </div>
                 <section class="avatar-looks-panel" id="avatarLooksPanel">
                   <div class="avatar-looks-grid" id="avatarLooksGrid"></div>
@@ -867,9 +934,14 @@
                 <button data-store-filter="plus">Plus</button>
                 <button data-store-filter="owned">Adquiridos</button>
               </div>
-              <select id="storeCategory" aria-label="Filtrar categoria da loja">
-                <option value="all">Todas as categorias</option>
-              </select>
+              <div class="store-selects">
+                <select id="storeCollection" aria-label="Filtrar coleção da loja">
+                  <option value="all">Todas as coleções</option>
+                </select>
+                <select id="storeCategory" aria-label="Filtrar categoria da loja">
+                  <option value="all">Todas as categorias</option>
+                </select>
+              </div>
             </div>
             <div id="storeNotice" class="store-notice"></div>
             <div id="journeyStore" class="journey-store-grid"></div>
@@ -904,7 +976,7 @@
             <article class="plan-card plus-card">
               <div class="plus-glow"></div>
               <div class="plan-card-head"><span>NEXO PLUS</span><h3>O ecossistema completo de preparação.</h3><p>Sem limites artificiais para quem quer usar o NEXO como plataforma principal de estudos.</p></div>
-              <div class="plan-price"><b id="plusPriceLabel">Plus</b><small>assinatura premium</small></div>
+              <div class="plan-price"><b id="plusPriceLabel">R$ 9,99</b><small>/ mês</small></div>
               <ul>
                 <li><b>Questões ilimitadas</b><span>Sem limite diário de respostas</span></li>
                 <li><b>NEXO Core ilimitado</b><span>Sessões adaptativas sem limite</span></li>
@@ -914,8 +986,8 @@
                 <li><b>Cosméticos Plus</b><span>Itens exclusivos de avatar e ambiente</span></li>
                 <li><b>Conteúdo premium</b><span>Preparado para videoaulas e PDFs exclusivos</span></li>
               </ul>
-              <button class="primary-btn wide" id="requestPlusBtn">Quero o NEXO Plus <span>→</span></button>
-              <small class="plan-checkout-note">A assinatura será ativada pelo checkout oficial quando o meio de pagamento for conectado.</small>
+              <button class="primary-btn wide" id="requestPlusBtn">Quero o Plus · R$ 9,99/mês <span>→</span></button>
+              <small class="plan-checkout-note">Assinatura mensal. O checkout ainda será conectado; por enquanto este botão registra interesse.</small>
             </article>
           </div>
 
@@ -1373,6 +1445,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-74"></script>
+  <script src="./app.js?v=20260920-75"></script>
 </body>
 </html>
