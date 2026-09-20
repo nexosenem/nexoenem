@@ -1425,6 +1425,7 @@ function openPage(id) {
   if (id==='videoaulas') loadVideos();
   if (id==='materiais') loadMaterials();
   if (id==='banco') renderBank();
+  if (id==='redacao') loadEssayThemeProgress({rerender:true}).catch(()=>{});
   if (id==='feedback') loadMyFeedback();
   if (id==='ranking') loadNexoJourney();
   if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
@@ -1582,6 +1583,7 @@ async function handleSession(session) {
 
   if(!session){
     state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null; state.membership=null;
+    state.completedEssayThemes=new Set(); state.essayThemeProgressLoaded=false;
     initializedSessionUserId=null;
     showLoggedOutShell();
     return;
@@ -3524,7 +3526,7 @@ function renderEssayThemeOptions({keepSelection=true}={}){
   const counter=$('#essayThemeCount');
   if(counter){
     const done=visible.length-remaining.length;
-    counter.textContent=remaining.length+' disponível'+(remaining.length===1?'':'eis')+
+    counter.textContent=remaining.length+' '+(remaining.length===1?'disponível':'disponíveis')+
       ' · '+done+' concluído'+(done===1?'':'s')+
       (axis==='all'?'':' neste eixo');
   }
