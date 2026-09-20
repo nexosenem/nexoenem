@@ -573,11 +573,15 @@
 
               <article class="panel essay-sheet-card">
                 <div>
-                  <span class="eyebrow">FOLHA OFICIAL</span>
+                  <span class="eyebrow">FOLHA ENEM PARA TREINO</span>
                   <h3>Quer escrever no papel?</h3>
-                  <p id="officialEssaySheetNote">Assim que a folha oficial for enviada, ela ficará disponível aqui para impressão.</p>
+                  <p id="officialEssaySheetNote">Modelo A4 com 30 linhas, preparado para impressão em tamanho real.</p>
                 </div>
-                <button id="officialEssaySheetBtn" class="outline-btn wide" type="button" disabled>PDF aguardando envio</button>
+                <div class="essay-sheet-actions">
+                  <button id="officialEssaySheetBtn" class="outline-btn wide" type="button">Abrir PDF em tamanho real ↗</button>
+                  <button id="officialEssayGuideBtn" class="ghost-btn wide" type="button">Ver referência oficial do Inep ↗</button>
+                </div>
+                <small class="essay-sheet-disclaimer">A folha definitiva usada no Enem é personalizada e entregue pelo Inep no dia da prova.</small>
               </article>
 
               <article class="panel essay-result essay-result-v2" id="essayResult">
@@ -1465,6 +1469,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-87"></script>
+  <script src="./app.js?v=20260920-88"></script>
 </body>
 </html>
