@@ -141,6 +141,10 @@ $('#logoutBtn').onclick = async () => {
 
 $('#themeToggle').onclick=()=>setTheme(document.body.classList.contains('light')?'dark':'light');
 $('#profileButton').onclick=()=>$('#profileMenu').classList.toggle('hidden');
+const searchBox=$('.search');
+$('#globalSearch').addEventListener('focus',()=>searchBox.classList.add('search-open'));
+searchBox.addEventListener('click',()=>{searchBox.classList.add('search-open');$('#globalSearch').focus()});
+$('#globalSearch').addEventListener('blur',()=>{if(innerWidth<=760&&!$('#globalSearch').value.trim())setTimeout(()=>searchBox.classList.remove('search-open'),120)});
 document.addEventListener('click',e=>{
   if(!e.target.closest('#profileButton')&&!e.target.closest('#profileMenu')) $('#profileMenu').classList.add('hidden');
 });
@@ -159,7 +163,7 @@ function openPage(id) {
     toast('Essa área é restrita ao administrador.','error'); return;
   }
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));
-  $$('[data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  $('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   toggleMenu(false);
   window.scrollTo({top:0,behavior:'smooth'});
   if (id==='desempenho') renderPerformance();
@@ -239,11 +243,22 @@ async function loadDashboard() {
   $('#answeredCount').textContent=attempts;
   $('#progressDonut').style.background=`conic-gradient(var(--cyan) 0 ${pct}%,#1c2b40 ${pct}% 100%)`;
 
+  $('#mobileProgressPct').textContent=pct+'%';
+  $('#mobileCorrectCount').textContent=correct;
+  $('#mobileWrongCount').textContent=wrong;
+  $('#mobileAnsweredCount').textContent=attempts;
+  $('#mobileProgressDonut').style.background=`conic-gradient(var(--cyan) 0 ${pct}%,#1c2b40 ${pct}% 100%)`;
+
   const weak = state.dashboard.weak_topics || [];
   $('#weaknessBars').innerHTML = weak.length ? weak.slice(0,5).map(x=>{
     const acc = clamp(100-Number(x.error_rate||0),0,100);
     return `<div class="weak-row"><label>${esc(x.topic)}</label><div class="weak-track"><i style="width:${acc}%"></i></div><b>${acc}%</b></div>`;
   }).join('') : '<p style="color:var(--muted);font-size:12px">Resolva algumas questões para o sistema identificar seus pontos de atenção.</p>';
+
+  $('#mobileWeaknessBars').innerHTML = weak.length ? weak.slice(0,3).map(x=>{
+    const acc = clamp(100-Number(x.error_rate||0),0,100);
+    return `<div class="mobile-weak-item"><span>${esc(x.topic)}</span><div class="bar"><i style="width:${acc}%"></i></div><b>${acc}%</b></div>`;
+  }).join('') : '<p>Resolva algumas questões para descobrir seus pontos de atenção.</p>';
 }
 
 async function loadRecentAttempts() {
@@ -251,12 +266,14 @@ async function loadRecentAttempts() {
     .select('id,is_correct,created_at,question:questions(area,subject,topic)')
     .order('created_at',{ascending:false}).limit(5);
   if (error) return console.error(error);
-  $('#recentAttempts').innerHTML = data?.length ? data.map(a=>`
+  const recentHtml = data?.length ? data.map(a=>`
     <div class="recent-item">
       <span class="recent-status ${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span>
       <div><b>${esc(a.question?.subject||'Questão')}</b><small>${esc(a.question?.topic||a.question?.area||'')}</small></div>
       <time>${new Date(a.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})}</time>
     </div>`).join('') : '<p style="color:var(--muted);font-size:12px">Seu histórico aparecerá aqui quando você começar a resolver.</p>';
+  $('#recentAttempts').innerHTML = recentHtml;
+  $('#mobileRecent').innerHTML = recentHtml;
 }
 
 function setSelectedArea(area) {
@@ -285,7 +302,17 @@ $('#quickTen').onclick=()=>{
   openPage('questoes'); resetSessionUI(); $('#sessionSize').value='10';
 };
 $('#adaptiveButton').onclick=()=>startAdaptive();
+$('#mobileAdaptive').onclick=()=>startAdaptive();
 $('#startAdaptiveFocus').onclick=()=>startAdaptive();
+
+$('#mobileQuickVisual').onclick=()=>{
+  openPage('questoes'); resetSessionUI(); $('#visualOnly').checked=true;
+  toast('Modo visual ativado. Agora escolha uma área.');
+};
+$('#mobileQuickTen').onclick=()=>{
+  openPage('questoes'); resetSessionUI(); $('#sessionSize').value='10';
+  toast('Sessão rápida preparada. Escolha uma área.');
+};
 
 function resetSessionUI() {
   state.session=null; state.current=null; state.answered=false;
@@ -395,7 +422,9 @@ async function renderQuestion(q) {
       </div>
       <div class="q-source">ENEM ${esc(q.source_year||'')} · questão ${esc(q.source_question_number||'')}</div>
     </div>
-    ${q.base_text ? `<div class="q-section-title">TEXTO-BASE</div><div class="q-context"><p>${esc(q.base_text)}</p>${q.source_reference?`<span class="q-reference">${esc(q.source_reference)}</span>`:''}</div>` : ''}
+    ${q.base_text ? (innerWidth<=760 && q.base_text.length>850
+      ? `<div class="q-section-title">TEXTO-BASE</div><details class="q-context-details"><summary>Ler texto-base <small>${q.base_text.length>1500?'texto longo':'toque para abrir'}</small></summary><div class="q-context"><p>${esc(q.base_text)}</p>${q.source_reference?`<span class="q-reference">${esc(q.source_reference)}</span>`:''}</div></details>`
+      : `<div class="q-section-title">TEXTO-BASE</div><div class="q-context"><p>${esc(q.base_text)}</p>${q.source_reference?`<span class="q-reference">${esc(q.source_reference)}</span>`:''}</div>`) : ''}
     ${visual ? `<div id="visualWrap" class="visual-wrap"><div class="visual-head"><span>RECURSO VISUAL ORIGINAL</span><span>carregando…</span></div><div id="visualStage" class="visual-stage"><div class="visual-loading"></div></div></div>` : ''}
     <div class="q-section-title">COMANDO</div>
     <div class="q-prompt">${esc(q.prompt)}</div>
@@ -458,7 +487,15 @@ async function renderVisual(q) {
     const stage=$('#visualStage');
     if(!stage) return false;
     stage.innerHTML='';stage.appendChild(canvas);
-    const head=$('#visualWrap .visual-head span:last-child');if(head)head.textContent='INEP · prova original';
+    const head=$('#visualWrap .visual-head span:last-child');if(head)head.textContent=innerWidth<=760?'Toque para ampliar':'INEP · prova original';
+    if(innerWidth<=760){
+      stage.onclick=()=>{
+        const wrap=$('#visualWrap');
+        if(!wrap)return;
+        const zoom=wrap.classList.toggle('visual-zoom');
+        document.body.style.overflow=zoom?'hidden':'';
+      };
+    }
     return true;
   }catch(err){
     console.error('visual',err);
