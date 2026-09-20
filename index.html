@@ -830,6 +830,7 @@
               <label>Arquivo de vídeo<input id="videoFile" type="file" accept="video/mp4,video/webm,video/quicktime"></label>
               <div class="or-divider"><span>ou</span></div>
               <label>URL externa<input id="videoUrl" class="text-input" placeholder="https://..."></label>
+              <label class="admin-plan-toggle"><input id="videoPlusOnly" type="checkbox"><span><b>NEXO Plus</b><small>Disponível apenas para assinantes Plus</small></span></label>
               <button class="primary-btn wide" id="addVideo">Publicar videoaula</button>
               <div id="uploadStatus" class="upload-status hidden"></div>
             </article>
@@ -841,6 +842,7 @@
               <label>Tema<input id="materialTopic" class="text-input" placeholder="Ex.: Circuitos elétricos"></label>
               <label>Descrição<textarea id="materialDescription" rows="3" placeholder="Descrição curta do material"></textarea></label>
               <label>PDF ou imagem<input id="materialFile" type="file" accept=".pdf,application/pdf,image/*"></label>
+              <label class="admin-plan-toggle"><input id="materialPlusOnly" type="checkbox"><span><b>NEXO Plus</b><small>Disponível apenas para assinantes Plus</small></span></label>
               <button class="primary-btn wide" id="addMaterial">Publicar material</button>
               <div id="materialUploadStatus" class="upload-status hidden"></div>
             </article>
@@ -1113,6 +1115,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-48"></script>
+  <script src="./app.js?v=20260920-52"></script>
 </body>
 </html>
