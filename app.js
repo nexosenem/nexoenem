@@ -193,7 +193,10 @@ function updateHomeExperience(){
   const desktopMascot=$('.home-nexo-mascot');
   const mobileMascot=$('.mobile-nexo-stage img');
   if(desktopMascot)setNexoImage(desktopMascot,NEXO_MEDIA_IMAGES.hero);
-  if(mobileMascot)setNexoImage(mobileMascot,NEXO_MEDIA_IMAGES.bust);
+  if(mobileMascot){
+    const homeMood=rec && Number(rec.priority||0)>=65?'pensativo':'confiante';
+    setNexoImage(mobileMascot,nexoBustForMood(homeMood));
+  }
 }
 
 
@@ -289,22 +292,22 @@ function renderOnboardingStep(){
     1:{
       title:'Uma boa meta dá direção.',
       text:'Não precisa acertar o número perfeito. Use uma nota que represente o nível que você quer perseguir e eu ajusto o plano com seus dados reais.',
-      image:'./assets/nexo-family/bust.avif'
+      image:NEXO_MEDIA_IMAGES.bustConfiante
     },
     2:{
       title:'Agora me diga onde aperta mais.',
       text:'Escolha no máximo duas áreas. A primeira vira seu diagnóstico inicial; depois o NEXO Core passa a usar seu desempenho real.',
-      image:'./assets/nexo-family/bust.avif'
+      image:NEXO_MEDIA_IMAGES.bustPensativo
     },
     3:{
       title:'O melhor plano é o que cabe na rotina.',
       text:'Eu prefiro 30 minutos consistentes a duas horas que nunca acontecem. Escolha um tempo que você consegue sustentar.',
-      image:'./assets/nexo-family/bust.avif'
+      image:NEXO_MEDIA_IMAGES.bustAcolhedor
     }
   }[ob.step];
   $('#onboardingMentorTitle').textContent=mentor.title;
   $('#onboardingMentorText').textContent=mentor.text;
-  $('#onboardingMascot').src=mentor.image;
+  setNexoImage($('#onboardingMascot'),mentor.image);
 
   $('#goalScoreValue').textContent=String(ob.goalScore);
   $('#goalScoreRange').value=String(ob.goalScore);
@@ -579,7 +582,7 @@ async function refreshCurrentRole({silent=true}={}){
     state.profile={...(state.profile||{}),...data};
     const isAdmin=data.role==='admin';
 
-    $('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
     if(roleLabel)roleLabel.textContent=isAdmin?'Administrador':'Estudante';
 
@@ -1706,12 +1709,12 @@ async function renderPerformance() {
     heroTitle.textContent='Seu maior ganho agora está em '+(rec.topic||rec.subject||rec.area)+'.';
     heroText.textContent=rec.reason||'O NEXO Core encontrou um conteúdo com boa margem de evolução.';
     heroMetric.textContent=Math.round(Number(rec.mastery||0))+'%';
-    setNexoImage(heroMascot,Number(rec.priority||0)>=65?NEXO_MOOD_IMAGES.pensativo:NEXO_MOOD_IMAGES.confiante);
+    setNexoImage(heroMascot,nexoBustForMood(Number(rec.priority||0)>=65?'pensativo':'confiante'));
   }else{
     heroTitle.textContent='Ainda estou calibrando seu perfil.';
     heroText.textContent='Faça algumas sessões para eu cruzar acertos, erros, tempo e consistência.';
     heroMetric.textContent='—';
-    setNexoImage(heroMascot,NEXO_MOOD_IMAGES.pensativo);
+    setNexoImage(heroMascot,NEXO_MEDIA_IMAGES.bustPensativo);
   }
   $('#performanceCoreStart').onclick=()=>rec?startCoreRecommendation():(openPage('questoes'),resetSessionUI());
 
@@ -2683,7 +2686,7 @@ function initNexoMascotVisuals(){
 
   bindImage($('#nexoLauncherAvatar'),'./assets/nexo-expressions/confiante.avif');
   bindImage($('#nexoAvatarImage'),'./assets/nexo-expressions/confiante.avif');
-  bindImage($('#nexoHeroImage'),'./assets/nexo-family/bust.avif');
+  bindImage($('#nexoHeroImage'),'./assets/nexo-family/bust-confiante.avif');
   $$('[data-nexo-safe-avatar]').forEach(img=>bindImage(img,a.head));
 }
 initNexoMascotVisuals();
@@ -2705,8 +2708,17 @@ const NEXO_MOOD_IMAGES={
 const NEXO_MEDIA_IMAGES={
   avatar:NEXO_MOOD_IMAGES.confiante,
   bust:'./assets/nexo-family/bust.avif',
-  hero:'./assets/nexo-family/hero.avif'
+  hero:'./assets/nexo-family/hero.avif',
+  bustConfiante:'./assets/nexo-family/bust-confiante.avif',
+  bustPensativo:'./assets/nexo-family/bust-pensativo.avif',
+  bustAcolhedor:'./assets/nexo-family/bust-acolhedor.avif'
 };
+
+function nexoBustForMood(mood='confiante'){
+  if(['pensativo','serio','duvida'].includes(mood))return NEXO_MEDIA_IMAGES.bustPensativo;
+  if(['acolhedor','feliz','calmo'].includes(mood))return NEXO_MEDIA_IMAGES.bustAcolhedor;
+  return NEXO_MEDIA_IMAGES.bustConfiante;
+}
 
 function setNexoImage(img,src){
   if(!img)return;
@@ -2726,7 +2738,7 @@ function setNexoMood(mood='feliz'){
   const launcher=$('#nexoLauncherAvatar');
   const hero=$('#nexoHeroImage');
   const src=NEXO_MOOD_IMAGES[mood]||NEXO_MOOD_IMAGES.feliz;
-  setNexoImage(hero,NEXO_MEDIA_IMAGES.bust);
+  setNexoImage(hero,nexoBustForMood(mood));
   setNexoImage(avatar,src);
   if(launcher && ['feliz','acolhedor','confiante','animado'].includes(mood)){
     setNexoImage(launcher,src);
