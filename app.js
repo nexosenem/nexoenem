@@ -106,6 +106,7 @@ const state = {
   core:null,
   journey:null,
   journeyLoading:false,
+  membership:null,
   avatarDraft:null,
   journeyTab:'missions',
   lastSimulationReport:null,
@@ -194,7 +195,7 @@ function renderFocusMode(){
   if(timer)timer.textContent=formatFocusTime(seconds);
   if(ring)ring.style.setProperty('--focus-progress',angle+'deg');
   if(pillText)pillText.textContent=formatFocusTime(seconds);
-  $('[data-focus-minutes]').forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.focusMinutes)===focusModeState.minutes));
+  $$('[data-focus-minutes]').forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.focusMinutes)===focusModeState.minutes));
 
   if(focusModeState.completed){
     if(stateEl)stateEl.textContent='CONCLUÍDO';
@@ -750,7 +751,7 @@ $('#desktopFocusMode')?.addEventListener('click',openFocusMode);
 $('#focusRunningPill')?.addEventListener('click',openFocusMode);
 $('#closeFocusMode')?.addEventListener('click',closeFocusMode);
 $('#focusModeModal')?.addEventListener('click',e=>{if(e.target===$('#focusModeModal'))closeFocusMode()});
-$('[data-focus-minutes]').forEach(btn=>btn.addEventListener('click',()=>setFocusMinutes(Number(btn.dataset.focusMinutes))));
+$$('[data-focus-minutes]').forEach(btn=>btn.addEventListener('click',()=>setFocusMinutes(Number(btn.dataset.focusMinutes))));
 $('#focusReset')?.addEventListener('click',resetFocusMode);
 $('#focusStart')?.addEventListener('click',async()=>{
   const action=$('#focusStart')?.dataset.focusAction||'start';
@@ -778,6 +779,103 @@ $('#mobileMenu')?.addEventListener('click',()=>toggleMenu(true));
 $('#closeMenu')?.addEventListener('click',()=>toggleMenu(false));
 $('#scrim')?.addEventListener('click',()=>toggleMenu(false));
 $('#moreMobile')?.addEventListener('click',()=>toggleMenu(true));
+
+
+function isNexoPlus(){
+  return Boolean(state.membership?.is_plus);
+}
+
+function planUsageReached(kind){
+  const m=state.membership;
+  if(!m||m.is_plus)return false;
+  const usage=m.usage||{},limits=m.limits||{};
+  const map={
+    questions:['questions_today','questions_per_day'],
+    core:['core_sessions_today','core_sessions_per_day'],
+    arena:['arena_entries_week','arena_entries_per_week'],
+    essay:['essay_reviews_week','essay_reviews_per_week']
+  };
+  const keys=map[kind];
+  if(!keys)return false;
+  const used=Number(usage[keys[0]]||0),limit=Number(limits[keys[1]]||0);
+  return limit>=0&&used>=limit;
+}
+
+function planLimitMessage(error){
+  const msg=String(error?.message||error||'');
+  if(msg.includes('nexo_free_daily_question_limit'))return 'Você atingiu as 25 questões de hoje no plano Free. No Plus, as questões são ilimitadas.';
+  if(msg.includes('nexo_free_daily_core_limit'))return 'Você usou as 2 sessões NEXO Core de hoje no Free. O Plus libera sessões ilimitadas.';
+  if(msg.includes('nexo_free_weekly_arena_limit'))return 'Sua entrada gratuita da Arena desta semana já foi usada. O Plus remove esse limite.';
+  if(msg.includes('nexo_free_weekly_essay_limit'))return 'Você já usou a correção de redação desta semana no Free. No Plus, as correções são ilimitadas.';
+  if(msg.includes('nexo_plus_required'))return 'Esse item é exclusivo do NEXO Plus.';
+  return '';
+}
+
+function openNexoPlans(message=''){
+  openPage('planos');
+  if(message)toast(message,'info');
+}
+
+function handlePlanLimitError(error){
+  const message=planLimitMessage(error);
+  if(!message)return false;
+  loadNexoJourney({silent:true}).catch(()=>{});
+  setTimeout(()=>openNexoPlans(message),0);
+  return true;
+}
+
+function setUsageBar(id,value,limit){
+  const el=$(id);
+  if(!el)return;
+  const pct=limit<0?100:clamp(Math.round(Number(value||0)*100/Math.max(1,Number(limit||1))),0,100);
+  el.style.width=pct+'%';
+}
+
+function renderPlanExperience(){
+  const m=state.membership;
+  if(!m)return;
+  const plus=Boolean(m.is_plus),plan=plus?'PLUS':'FREE';
+  document.body.dataset.plan=plus?'plus':'free';
+  if($('#headerPlanBadge'))$('#headerPlanBadge').textContent=plan;
+  if($('#profilePlanLabel'))$('#profilePlanLabel').textContent='Plano '+(plus?'Plus':'Free');
+  if($('#profileRole'))$('#profileRole').textContent=state.profile?.role==='admin'?'Administrador':('Estudante · '+(plus?'Plus':'Free'));
+  if($('#currentPlanChip')){
+    $('#currentPlanChip').textContent='Plano '+(plus?'Plus':'Free');
+    $('#currentPlanChip').classList.toggle('plus',plus);
+  }
+
+  const u=m.usage||{},l=m.limits||{};
+  const fmt=(value,limit)=>plus?Number(value||0)+' · ilimitado':Number(value||0)+' / '+Number(limit||0);
+  if($('#planQuestionsUsage'))$('#planQuestionsUsage').textContent=fmt(u.questions_today,l.questions_per_day);
+  if($('#planCoreUsage'))$('#planCoreUsage').textContent=fmt(u.core_sessions_today,l.core_sessions_per_day);
+  if($('#planEssayUsage'))$('#planEssayUsage').textContent=fmt(u.essay_reviews_week,l.essay_reviews_per_week);
+  if($('#planArenaUsage'))$('#planArenaUsage').textContent=fmt(u.arena_entries_week,l.arena_entries_per_week);
+  setUsageBar('#planQuestionsBar',u.questions_today,l.questions_per_day);
+  setUsageBar('#planCoreBar',u.core_sessions_today,l.core_sessions_per_day);
+  setUsageBar('#planEssayBar',u.essay_reviews_week,l.essay_reviews_per_week);
+  setUsageBar('#planArenaBar',u.arena_entries_week,l.arena_entries_per_week);
+  if($('#planUsageStatus'))$('#planUsageStatus').textContent=plus?'Plus ativo · sem limites de uso':'limites reiniciam automaticamente';
+  const request=$('#requestPlusBtn');
+  if(request){
+    request.disabled=plus;
+    request.innerHTML=plus?'✓ NEXO Plus ativo':'Quero o NEXO Plus <span>→</span>';
+  }
+}
+
+async function loadNexoMembership({silent=true}={}){
+  if(!state.user?.id)return null;
+  try{
+    const {data,error}=await client.rpc('get_nexo_membership');
+    if(error)throw error;
+    state.membership=data||null;
+    renderPlanExperience();
+    return state.membership;
+  }catch(err){
+    console.error('NEXO membership',err);
+    if(!silent)toast('Não foi possível carregar seu plano agora.','error');
+    return null;
+  }
+}
 
 async function refreshCurrentRole({silent=true}={}){
   if(!state.user?.id)return null;
@@ -822,6 +920,7 @@ function openPage(id) {
   if (id==='banco') renderBank();
   if (id==='feedback') loadMyFeedback();
   if (id==='ranking') loadNexoJourney();
+  if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
   if (id==='admin') loadAdmin();
 }
 $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openPage(b.dataset.page)}));
@@ -859,8 +958,8 @@ async function initApp(session) {
   $('#profileName').textContent = name.split(' ')[0];
   $('#menuName').textContent = name;
   $('#menuEmail').textContent = state.user.email || '';
-  $('#profileRole').textContent = state.profile.role === 'admin' ? 'Administrador' : 'Estudante';
-  $('#avatar').textContent = initials(name);
+  $('#profileRole').textContent = state.profile.role === 'admin' ? 'Administrador' : 'Estudante · Free';
+  if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
   $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
   applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
   updateHomeExperience();
@@ -902,7 +1001,7 @@ async function handleSession(session) {
   if (session) {
     await initApp(session);
   } else {
-    state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null;
+    state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null; state.membership=null;
     $('#app').classList.add('hidden');
     $('#authScreen').classList.remove('hidden');
     $('#niaButton')?.classList.add('hidden');
@@ -1125,6 +1224,7 @@ async function beginNexoSession(config,plannedCount){
     return data||null;
   }catch(err){
     console.error('start_nexo_session',err);
+    if(planLimitMessage(err))throw err;
     return null;
   }
 }
@@ -1242,6 +1342,10 @@ $('#startSession').onclick=async()=>{
 async function startStudySession(config) {
   const btn=$('#startSession'); if(btn){btn.disabled=true;btn.textContent='Montando sessão...';}
   try{
+    if(!state.membership)await loadNexoMembership({silent:true});
+    if(planUsageReached('questions'))return openNexoPlans('Você atingiu o limite de questões de hoje no plano Free.');
+    if(config?.mode==='core'&&planUsageReached('core'))return openNexoPlans('Você já usou as 2 sessões NEXO Core disponíveis hoje no Free.');
+    if(config?.mode==='arena'&&planUsageReached('arena'))return openNexoPlans('Você já usou sua entrada gratuita da Arena nesta semana.');
     if(state.session?.coreSessionId) await closeNexoSession('abandoned',state.session);
     const all = await fetchQuestions(config);
     const seen = await getSeenIds();
@@ -1263,7 +1367,8 @@ async function startStudySession(config) {
     $('#sessionSubtitle').textContent=reviewMode?'Modo revisão: você já respondeu todas as questões novas deste filtro.':'Sua sessão está fixa neste conteúdo até você decidir trocar.';
     await showCurrentQuestion();
   }catch(err){
-    console.error(err);logClientError('study_session',err,'session_build');toast(err.message||'Não foi possível montar a sessão.','error');
+    console.error(err);logClientError('study_session',err,'session_build');
+    if(!handlePlanLimitError(err))toast(err.message||'Não foi possível montar a sessão.','error');
   }finally{
     if(btn){btn.disabled=false;btn.innerHTML='Começar sessão <span>→</span>';}
   }
@@ -2168,6 +2273,7 @@ async function submitAnswer(option) {
     if(state.current)startQuestionBehaviorMonitor(state.current,behaviorSnapshot);
     $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
+    if(handlePlanLimitError(error))return;
     const msg=error?.message==='timeout_submit_answer'
       ? 'A correção demorou demais. Tente confirmar novamente.'
       : 'Não foi possível corrigir a resposta. Tente novamente.';
@@ -2689,6 +2795,8 @@ function essayScores(text){
   return scores.map(x=>Math.round(x/20)*20);
 }
 $('#analyzeEssay').onclick=async()=>{
+  if(!state.membership)await loadNexoMembership({silent:true});
+  if(planUsageReached('essay'))return openNexoPlans('Sua correção gratuita de redação desta semana já foi usada.');
   const text=$('#essayText').value.trim();
   if(text.length<250)return toast('Escreva pelo menos 250 caracteres para receber uma análise.','error');
   const analyzeBtn=$('#analyzeEssay');
@@ -2716,7 +2824,13 @@ $('#analyzeEssay').onclick=async()=>{
     feedback
   });
   clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.textContent='Analisar e salvar';
-  if(error){console.error(error);logClientError('essay',error,'essay_save');toast('A análise foi feita, mas não consegui salvar o histórico.','error');}
+  if(error){
+    console.error(error);logClientError('essay',error,'essay_save');
+    if(handlePlanLimitError(error))return;
+    toast('A análise foi feita, mas não consegui salvar o histórico.','error');
+  }else{
+    loadNexoMembership({silent:true});
+  }
   showEssayResult(text,scores,total);
 };
 
@@ -2983,6 +3097,7 @@ function updateViewerFavoriteButton(){
 async function openContentViewer(type,id){
   const item=(type==='video'?state.videos:state.materials).find(x=>Number(x.id)===Number(id));
   if(!item)return toast('Conteúdo não encontrado.','error');
+  if(item.plus_only&&!isNexoPlus())return openNexoPlans('Esse conteúdo faz parte da biblioteca NEXO Plus.');
   const modal=$('#contentViewer');
   const body=$('#contentViewerBody');
   const title=$('#contentViewerTitle');
@@ -3102,6 +3217,7 @@ function renderVideos(){
       <button class="content-open-area" data-content-open="${v.id}" data-content-type="video">
         <div class="video-thumb">${poster?'<img src="'+esc(poster)+'" alt="">':'<span>▶</span>'}</div>
         <div class="video-body">
+          ${v.plus_only?'<span class="plus-content-badge">NEXO PLUS</span>':''}
           ${contentMatchesCore(v)?'<span class="core-content-badge">✦ RECOMENDADO PELO NEXO</span>':''}
           <b>${esc(v.title)}</b>
           <small>${esc([v.area,v.subject,v.topic].filter(Boolean).join(' · '))}</small>
@@ -3142,6 +3258,7 @@ function renderMaterials(){
       <button class="content-open-area" data-content-open="${m.id}" data-content-type="material">
         <div class="video-thumb"><span>${icon}</span></div>
         <div class="video-body">
+          ${m.plus_only?'<span class="plus-content-badge">NEXO PLUS</span>':''}
           ${contentMatchesCore(m)?'<span class="core-content-badge">✦ RECOMENDADO PELO NEXO</span>':''}
           <b>${esc(m.title)}</b>
           <small>${esc([m.area,m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>
@@ -3190,28 +3307,42 @@ $('#sendFeedback').onclick=async()=>{
 
 
 const NEXO_AVATAR_DEFAULT=Object.freeze({
-  skin:'medium',
+  base:'neutral',
+  skin:'tone3',
   hair:'short',
   hair_color:'ink',
   outfit:'purple',
   accessory:'none',
   frame:'basic',
-  background:'grid'
+  background:'grid',
+  aura:'none'
 });
 
 const NEXO_AVATAR_LOCKS=Object.freeze({
   'outfit:cyan':'outfit_cyan',
   'outfit:gold':'outfit_gold',
+  'outfit:focus':'outfit_focus',
+  'outfit:aurora':'outfit_aurora',
   'accessory:headphones':'acc_headphones',
   'accessory:crown':'acc_crown',
+  'accessory:tiara':'acc_tiara',
+  'accessory:star':'acc_star',
   'frame:neon':'frame_neon',
   'frame:cosmic':'frame_cosmic',
+  'frame:diamond':'frame_diamond',
   'background:midnight':'bg_midnight',
-  'background:aurora':'bg_aurora'
+  'background:aurora':'bg_aurora',
+  'background:library':'bg_library',
+  'background:lab':'bg_lab',
+  'aura:blue':'aura_blue',
+  'aura:purple':'aura_purple'
 });
 
 function normalizedAvatar(input={}){
-  return {...NEXO_AVATAR_DEFAULT,...(input||{})};
+  const raw={...(input||{})};
+  const legacySkin={light:'tone1',medium:'tone3',tan:'tone4',deep:'tone6'};
+  if(legacySkin[raw.skin])raw.skin=legacySkin[raw.skin];
+  return {...NEXO_AVATAR_DEFAULT,...raw};
 }
 
 function journeyInventorySet(){
@@ -3223,19 +3354,23 @@ function renderStudentAvatar(target,avatarInput){
   if(!el)return;
   const a=normalizedAvatar(avatarInput);
   const safe={
-    skin:['light','medium','tan','deep'].includes(a.skin)?a.skin:'medium',
-    hair:['short','wave','curly','buzz'].includes(a.hair)?a.hair:'short',
-    hair_color:['ink','brown','blonde','blue'].includes(a.hair_color)?a.hair_color:'ink',
-    outfit:['purple','blue','teal','cyan','gold'].includes(a.outfit)?a.outfit:'purple',
-    accessory:['none','glasses','headphones','crown'].includes(a.accessory)?a.accessory:'none',
-    frame:['basic','neon','cosmic'].includes(a.frame)?a.frame:'basic',
-    background:['grid','midnight','aurora'].includes(a.background)?a.background:'grid'
+    base:['masc','fem','neutral'].includes(a.base)?a.base:'neutral',
+    skin:['tone1','tone2','tone3','tone4','tone5','tone6'].includes(a.skin)?a.skin:'tone3',
+    hair:['short','wave','curly','buzz','long','ponytail','bun','afro','fringe'].includes(a.hair)?a.hair:'short',
+    hair_color:['ink','brown','blonde','blue','purple','pink'].includes(a.hair_color)?a.hair_color:'ink',
+    outfit:['purple','blue','teal','cyan','gold','focus','aurora'].includes(a.outfit)?a.outfit:'purple',
+    accessory:['none','glasses','headphones','crown','tiara','star'].includes(a.accessory)?a.accessory:'none',
+    frame:['basic','neon','cosmic','diamond'].includes(a.frame)?a.frame:'basic',
+    background:['grid','midnight','aurora','library','lab'].includes(a.background)?a.background:'grid',
+    aura:['none','blue','purple'].includes(a.aura)?a.aura:'none'
   };
   el.innerHTML=`
-    <div class="student-avatar-shell frame-${safe.frame} bg-${safe.background}">
+    <div class="student-avatar-shell frame-${safe.frame} bg-${safe.background} aura-${safe.aura}">
       <div class="student-avatar-figure"
-        data-skin="${safe.skin}" data-hair="${safe.hair}" data-hair-color="${safe.hair_color}"
+        data-base="${safe.base}" data-skin="${safe.skin}" data-hair="${safe.hair}" data-hair-color="${safe.hair_color}"
         data-outfit="${safe.outfit}" data-accessory="${safe.accessory}">
+        <span class="av-aura"></span>
+        <span class="av-hair-back"></span>
         <span class="av-body"></span>
         <span class="av-neck"></span>
         <span class="av-head"></span>
@@ -3243,6 +3378,7 @@ function renderStudentAvatar(target,avatarInput){
         <span class="av-hair"></span>
         <span class="av-brow av-brow-left"></span><span class="av-brow av-brow-right"></span>
         <span class="av-eye av-eye-left"></span><span class="av-eye av-eye-right"></span>
+        <span class="av-lash av-lash-left"></span><span class="av-lash av-lash-right"></span>
         <span class="av-nose"></span><span class="av-mouth"></span>
         <span class="av-accessory"></span>
         <span class="av-logo">N</span>
@@ -3270,6 +3406,10 @@ function renderJourneyHome(){
   const pct=clamp(Math.round(Number(p.xp_in_level||0)*100/Math.max(1,Number(p.xp_to_next||180))),0,100);
   renderStudentAvatar($('#mobileJourneyAvatar'),p.avatar);
   renderStudentAvatar($('#desktopJourneyAvatar'),p.avatar);
+  renderStudentAvatar($('#headerJourneyAvatar'),p.avatar);
+  renderStudentAvatar($('#avatar'),p.avatar);
+  if($('#headerJourneyLevel'))$('#headerJourneyLevel').textContent='Nível '+p.level+' · '+(p.league||'Bronze');
+  if($('#headerJourneyCoins'))$('#headerJourneyCoins').innerHTML=Number(p.coins||0).toLocaleString('pt-BR')+' <small>N¢</small>';
   if($('#mobileJourneyLevel'))$('#mobileJourneyLevel').textContent='Nível '+p.level;
   if($('#mobileJourneyLeague'))$('#mobileJourneyLeague').textContent=p.league||'Bronze';
   if($('#mobileJourneyMission'))$('#mobileJourneyMission').textContent=current
@@ -3334,14 +3474,19 @@ function renderJourneyBoards(){
   const j=state.journey||{};
   const render=(rows,target,arena=false)=>{
     const el=$(target);if(!el)return;
-    el.innerHTML=rows?.length?rows.map(row=>{
+    el.innerHTML=rows?.length?rows.map((row,index)=>{
       const mine=String(row.user_id||'')===String(state.user?.id||'');
       return `<div class="journey-rank-row ${mine?'mine':''}">
         <span class="journey-rank-pos">${Number(row.rank_position)<=3?['🥇','🥈','🥉'][Number(row.rank_position)-1]:'#'+row.rank_position}</span>
-        <div><b>${esc(row.full_name)}${mine?' · você':''}</b><small>${arena?Number(row.correct_answers||0)+' acertos na Arena':esc(row.league||'Bronze')}</small></div>
+        <span class="journey-rank-avatar" data-rank-avatar="${index}"></span>
+        <div class="journey-rank-user"><b>${esc(row.full_name)}${mine?' · você':''}${row.plan==='plus'?'<i>NEXO PLUS</i>':''}</b><small>NV. ${Number(row.level||1)} · ${arena?Number(row.correct_answers||0)+' acertos na Arena':esc(row.league||'Bronze')}</small></div>
         <strong>${Number(row.points||0).toLocaleString('pt-BR')}<small> pts</small></strong>
       </div>`;
     }).join(''):'<div class="journey-empty">A competição começa quando os alunos pontuarem nesta semana.</div>';
+    $$('[data-rank-avatar]',el).forEach(node=>{
+      const row=rows[Number(node.dataset.rankAvatar)];
+      renderStudentAvatar(node,row?.avatar);
+    });
   };
   render(j.leaderboard,'#journeyLeagueBoard',false);
   render(j.arena_leaderboard,'#journeyArenaBoard',true);
@@ -3359,34 +3504,40 @@ function renderJourneyStore(){
   const j=state.journey||{};
   const owned=journeyInventorySet();
   const level=Number(j.profile?.level||1);
+  const plus=isNexoPlus();
   const el=$('#journeyStore');if(!el)return;
   const rarityIcon={comum:'•',incomum:'◆',raro:'✦','épico':'✧','lendário':'♕'};
   el.innerHTML=(j.catalog||[]).map(item=>{
     const has=owned.has(item.item_code);
-    const locked=level<Number(item.unlock_level||1);
-    return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''}">
-      <div class="store-item-visual"><span>${rarityIcon[item.rarity]||'✦'}</span><i>${esc(item.category)}</i></div>
-      <div><small>${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
+    const plusLocked=Boolean(item.plus_only&&!plus);
+    const levelLocked=level<Number(item.unlock_level||1);
+    const locked=plusLocked||levelLocked;
+    const status=has?'NO INVENTÁRIO':plusLocked?'NEXO PLUS':levelLocked?'NÍVEL '+item.unlock_level:Number(item.price||0)+' N-Coins';
+    return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''} ${plusLocked?'plus-locked':''}">
+      <div class="store-item-visual"><span>${rarityIcon[item.rarity]||'✦'}</span><i>${item.plus_only?'PLUS · ':''}${esc(item.category)}</i></div>
+      <div><small>${item.plus_only?'NEXO PLUS · ':''}${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
       <div class="store-item-bottom">
-        <span>${has?'NO INVENTÁRIO':locked?'NÍVEL '+item.unlock_level:Number(item.price||0)+' N-Coins'}</span>
-        ${has?'<button disabled>Adquirido</button>':locked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">Comprar</button>`}
+        <span>${status}</span>
+        ${has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">Comprar</button>`}
       </div>
     </article>`;
   }).join('');
 
-  $$('[data-buy-item]').forEach(btn=>btn.onclick=async()=>{
+  $$('[data-open-plus]',el).forEach(btn=>btn.onclick=()=>openNexoPlans('Esse cosmético faz parte da coleção NEXO Plus.'));
+  $$('[data-buy-item]',el).forEach(btn=>btn.onclick=async()=>{
     const code=btn.dataset.buyItem;
     btn.disabled=true;btn.textContent='Comprando...';
     try{
       const {data,error}=await client.rpc('buy_nexo_item',{p_item_code:code});
       if(error)throw error;
-      state.journey=data;
-      renderNexoJourney();
+      state.journey={...(state.journey||{}),...(data||{}),catalog:state.journey?.catalog||[]};
+      await loadNexoJourney({silent:true});
       toast('Item adicionado ao seu inventário.');
       setJourneyTab('store');
     }catch(err){
       console.error('buy Nexo item',err);
       const msg=String(err?.message||'');
+      if(handlePlanLimitError(err))return;
       toast(msg.includes('insufficient')?'N-Coins insuficientes.':msg.includes('level required')?'Seu nível ainda não libera esse item.':'Não foi possível concluir a compra.','error');
       btn.disabled=false;btn.textContent='Comprar';
     }
@@ -3406,15 +3557,19 @@ function renderAvatarBuilder(){
   const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
   state.avatarDraft=draft;
   renderStudentAvatar($('#avatarBuilderPreview'),draft);
-  const owned=journeyInventorySet();
+  const owned=journeyInventorySet(),plus=isNexoPlus();
   $$('[data-avatar-field]').forEach(btn=>{
     const field=btn.dataset.avatarField,value=btn.dataset.avatarValue,item=btn.dataset.avatarItem;
-    const locked=Boolean(item&&!owned.has(item));
+    const plusLocked=btn.dataset.plusStyle==='true'&&!plus;
+    const itemLocked=Boolean(item&&!owned.has(item));
+    const locked=plusLocked||itemLocked;
     btn.classList.toggle('active',draft[field]===value);
     btn.classList.toggle('locked',locked);
+    btn.classList.toggle('plus-locked',plusLocked);
     btn.dataset.locked=locked?'true':'false';
-    const base=btn.textContent.replace(/\s*🔒$/,'');
-    btn.textContent=locked?base+' 🔒':base;
+    const base=(btn.dataset.baseLabel||btn.textContent).replace(/\s*🔒$/,'').replace(/\s*PLUS$/i,'');
+    btn.dataset.baseLabel=base;
+    btn.textContent=locked?(base+(plusLocked?' PLUS':' 🔒')):base;
   });
 }
 
@@ -3450,10 +3605,22 @@ async function loadNexoJourney({silent=false}={}){
   if(state.journeyLoading)return state.journey;
   state.journeyLoading=true;
   try{
-    const {data,error}=await client.rpc('get_nexo_journey');
-    if(error)throw error;
-    state.journey=data||null;
-    state.avatarDraft=normalizedAvatar(data?.profile?.avatar);
+    const [journeyRes,membershipRes,socialRes,catalogRes]=await Promise.all([
+      client.rpc('get_nexo_journey'),
+      client.rpc('get_nexo_membership'),
+      client.rpc('get_nexo_social_ranking'),
+      client.rpc('get_nexo_store_catalog')
+    ]);
+    if(journeyRes.error)throw journeyRes.error;
+    state.journey=journeyRes.data||null;
+    if(!membershipRes.error)state.membership=membershipRes.data||null;
+    if(state.journey&&!socialRes.error&&socialRes.data){
+      state.journey.leaderboard=socialRes.data.weekly||state.journey.leaderboard||[];
+      state.journey.arena_leaderboard=socialRes.data.arena||state.journey.arena_leaderboard||[];
+    }
+    if(state.journey&&!catalogRes.error&&catalogRes.data)state.journey.catalog=catalogRes.data;
+    state.avatarDraft=normalizedAvatar(state.journey?.profile?.avatar);
+    renderPlanExperience();
     renderNexoJourney();
     return state.journey;
   }catch(err){
@@ -3470,6 +3637,8 @@ async function loadRanking(){
 }
 
 async function startNexoArena(){
+  if(!state.membership)await loadNexoMembership({silent:true});
+  if(planUsageReached('arena'))return openNexoPlans('Você já usou sua entrada gratuita da Arena nesta semana.');
   const btn=$('#startNexoArena');
   if(btn){btn.disabled=true;btn.textContent='Montando Arena...';}
   try{
@@ -3501,6 +3670,7 @@ $('#startNexoArena')?.addEventListener('click',startNexoArena);
 
 $$('[data-avatar-field]').forEach(btn=>btn.onclick=()=>{
   if(btn.dataset.locked==='true'){
+    if(btn.classList.contains('plus-locked'))return openNexoPlans('Esse estilo é exclusivo do NEXO Plus.');
     toast('Desbloqueie esse cosmético na Loja NEXO.');
     setJourneyTab('store');
     return;
@@ -3508,6 +3678,22 @@ $$('[data-avatar-field]').forEach(btn=>btn.onclick=()=>{
   state.avatarDraft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
   state.avatarDraft[btn.dataset.avatarField]=btn.dataset.avatarValue;
   renderAvatarBuilder();
+});
+
+$('#requestPlusBtn')?.addEventListener('click',async()=>{
+  if(isNexoPlus())return;
+  const btn=$('#requestPlusBtn');
+  btn.disabled=true;btn.textContent='Registrando interesse...';
+  try{
+    const {error}=await client.rpc('request_nexo_plus',{p_source:'plans_page'});
+    if(error)throw error;
+    toast('Interesse no NEXO Plus registrado. O checkout poderá ser conectado ao próximo passo.');
+    btn.textContent='✓ Interesse registrado';
+  }catch(err){
+    console.error('request plus',err);
+    toast('Não foi possível registrar agora.','error');
+    btn.disabled=false;btn.innerHTML='Quero o NEXO Plus <span>→</span>';
+  }
 });
 
 $('#saveJourneyAvatar')?.addEventListener('click',async()=>{
@@ -3543,16 +3729,21 @@ $('#commentModal').addEventListener('click',e=>{if(e.target===$('#commentModal')
 
 async function loadQuestionComments(questionId){
   $('#questionComments').innerHTML='<div class="comment-empty">Carregando comentários...</div>';
-  const {data,error}=await client.rpc('get_question_comments',{p_question_id:Number(questionId)});
+  const {data,error}=await client.rpc('get_question_comments_v2',{p_question_id:Number(questionId)});
   if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
-  $('#questionComments').innerHTML=data?.length?data.map(c=>`<article class="comment-item">
-    <div class="comment-top"><div class="comment-author"><span class="mini-avatar">${esc((c.author_name||'A')[0])}</span><div class="comment-meta"><b>${esc(c.author_name)}</b><small>${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
+  $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
+    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
   </article>`).join(''):'<div class="comment-empty">Ainda não há comentários. Seja o primeiro a compartilhar uma dúvida ou um jeito de resolver.</div>';
+  $$('[data-comment-avatar]',$('#questionComments')).forEach(node=>{
+    const row=data[Number(node.dataset.commentAvatar)];
+    renderStudentAvatar(node,row?.avatar);
+  });
   $$('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
   $$('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
 }
+
 $('#sendComment').onclick=async()=>{
   const qid=Number($('#commentModal').dataset.questionId),body=$('#commentText').value.trim();
   if(!qid||body.length<2)return toast('Escreva um comentário antes de enviar.','error');
