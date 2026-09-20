@@ -197,6 +197,11 @@ const state = {
   savedQuestions:new Set(),
   weekPlan:null,
   questionReportTarget:null,
+  radarTopics:[],
+  radarSubjects:[],
+  radarYears:[],
+  radarOverview:null,
+  radarLoaded:false,
   onboarding:{
     step:1,
     goalScore:750,
@@ -1490,6 +1495,225 @@ function blockMaintenance(key){
 }
 
 
+
+function radarPriorityMeta(score){
+  const n=Number(score||0);
+  if(n>=80)return {label:'Muito alta',className:'very-high'};
+  if(n>=60)return {label:'Alta',className:'high'};
+  if(n>=40)return {label:'Média',className:'medium'};
+  return {label:'Em observação',className:'watch'};
+}
+
+function radarTrainingTopic(subject,topic){
+  const exact={
+    'Estatística e análise de dados':'Estatística e análise de dados',
+    'Porcentagem e matemática financeira':'Porcentagem e matemática financeira',
+    'Geometria e trigonometria':'Geometria',
+    'Geometria':'Geometria',
+    'Leitura e compreensão':'Leitura e compreensão',
+    'Análise do texto literário':'Literatura e análise do texto literário',
+    'Variação linguística e linguagem':'Variação linguística',
+    'Literatura e análise do texto literário':'Literatura e análise do texto literário',
+    'Linguagens artísticas':'Linguagens artísticas'
+  };
+  if(exact[topic])return exact[topic];
+  if(/funç/i.test(topic||''))return 'Funções e modelagem';
+  const bySubject={
+    'Física':'Fenômenos físicos e energia',
+    'Química':'Transformações químicas e matéria',
+    'Biologia':'Vida, ecologia e saúde',
+    'Geografia':'Espaço geográfico e sociedade',
+    'História':'Processos históricos e cidadania',
+    'Filosofia':'Ética, política e conhecimento',
+    'Sociologia':'Sociedade, trabalho e cidadania',
+    'Literatura':'Literatura e análise do texto literário',
+    'Artes':'Linguagens artísticas',
+    'Português':'Interpretação de texto',
+    'Língua Estrangeira':'Leitura e compreensão'
+  };
+  return bySubject[subject]||'';
+}
+
+function bindRadarControls(){
+  const area=$('#radarArea'),subject=$('#radarSubject'),search=$('#radarSearch');
+  if(area&&!area.dataset.bound){
+    area.dataset.bound='1';
+    area.addEventListener('change',()=>{
+      refreshRadarSubjectOptions();
+      renderEnemRadar();
+    });
+  }
+  if(subject&&!subject.dataset.bound){
+    subject.dataset.bound='1';
+    subject.addEventListener('change',renderEnemRadar);
+  }
+  if(search&&!search.dataset.bound){
+    search.dataset.bound='1';
+    search.addEventListener('input',renderEnemRadar);
+  }
+}
+
+function refreshRadarSubjectOptions(){
+  const area=$('#radarArea')?.value||'';
+  const select=$('#radarSubject');
+  if(!select)return;
+  const previous=select.value;
+  const names=[...new Set((state.radarSubjects||[])
+    .filter(row=>!area||row.area===area)
+    .map(row=>row.subject)
+    .filter(Boolean))]
+    .sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  select.innerHTML='<option value="">Todas as matérias</option>'+names.map(name=>'<option value="'+esc(name)+'">'+esc(name)+'</option>').join('');
+  if(names.includes(previous))select.value=previous;
+}
+
+async function loadEnemRadar({silent=true}={}){
+  if(!state.user?.id)return null;
+  if(state.radarLoaded){
+    bindRadarControls();
+    refreshRadarSubjectOptions();
+    renderEnemRadar();
+    return state.radarTopics;
+  }
+  try{
+    const [topicsRes,subjectsRes,yearsRes,overviewRes]=await Promise.all([
+      client.from('enem_radar_topic_stats').select('area,subject,topic,questions,years_present,first_year,last_year,questions_2021_2025,years_2021_2025,avg_confidence,nexo_priority_score').order('nexo_priority_score',{ascending:false}),
+      client.from('enem_radar_subject_stats').select('area,subject,classified_questions,years_present,questions_2021_2025,avg_confidence').order('classified_questions',{ascending:false}),
+      client.from('enem_radar_year_stats').select('year,total_items,classified_items,review_items,avg_confidence,subjects_mapped').order('year',{ascending:true}),
+      client.from('enem_radar_overview').select('total_items,editions,first_year,last_year,classified_items,review_items,avg_confidence,subjects_mapped,topics_mapped').maybeSingle()
+    ]);
+    const firstError=topicsRes.error||subjectsRes.error||yearsRes.error||overviewRes.error;
+    if(firstError)throw firstError;
+    state.radarTopics=topicsRes.data||[];
+    state.radarSubjects=subjectsRes.data||[];
+    state.radarYears=yearsRes.data||[];
+    state.radarOverview=overviewRes.data||null;
+    state.radarLoaded=true;
+    bindRadarControls();
+    refreshRadarSubjectOptions();
+    renderEnemRadar();
+    return state.radarTopics;
+  }catch(err){
+    console.error('ENEM radar',err);
+    logClientError('enem_radar',err,'radar_load');
+    const list=$('#radarList');
+    if(list)list.innerHTML='<div class="radar-empty"><b>Não foi possível carregar o Radar agora.</b><small>Tente novamente em alguns instantes.</small></div>';
+    if(!silent)toast('Não consegui carregar o Radar ENEM agora.','error');
+    return null;
+  }
+}
+
+function renderEnemRadar(){
+  const overview=state.radarOverview||{};
+  const topics=state.radarTopics||[];
+  const area=$('#radarArea')?.value||'';
+  const subject=$('#radarSubject')?.value||'';
+  const query=($('#radarSearch')?.value||'').trim().toLocaleLowerCase('pt-BR');
+  const fmt=n=>Number(n||0).toLocaleString('pt-BR');
+
+  if($('#radarTotalItems'))$('#radarTotalItems').textContent=fmt(overview.total_items||3060);
+  if($('#radarCoverage'))$('#radarCoverage').textContent=(overview.first_year||2009)+' a '+(overview.last_year||2025)+' · '+(overview.editions||17)+' edições';
+  if($('#radarTopicsMapped'))$('#radarTopicsMapped').textContent=fmt(overview.topics_mapped||topics.length);
+  if($('#radarClassifiedItems'))$('#radarClassifiedItems').textContent=fmt(overview.classified_items||0);
+  if($('#radarReviewItems'))$('#radarReviewItems').textContent=fmt(overview.review_items||0)+' itens em revisão editorial';
+
+  const globalTop=topics[0];
+  if($('#radarTopTopic'))$('#radarTopTopic').textContent=globalTop?.topic||'—';
+  if($('#radarTopTopicMeta'))$('#radarTopTopicMeta').textContent=globalTop
+    ? fmt(globalTop.questions)+' questões · '+globalTop.years_present+'/17 edições'
+    :'calculando incidência';
+
+  if($('#radarQualityNote')){
+    $('#radarQualityNote').textContent=fmt(overview.classified_items||0)+' itens com classificação confiável entram no ranking; '+fmt(overview.review_items||0)+' permanecem em revisão e não distorcem a prioridade.';
+  }
+
+  const filtered=topics.filter(row=>{
+    if(area&&row.area!==area)return false;
+    if(subject&&row.subject!==subject)return false;
+    if(query){
+      const hay=(String(row.topic||'')+' '+String(row.subject||'')+' '+String(row.area||'')).toLocaleLowerCase('pt-BR');
+      if(!hay.includes(query))return false;
+    }
+    return true;
+  });
+
+  if($('#radarResultMeta')){
+    const scope=subject||area||'todas as áreas';
+    $('#radarResultMeta').textContent=filtered.length+' assuntos · '+scope;
+  }
+
+  const list=$('#radarList');
+  if(list){
+    if(!filtered.length){
+      list.innerHTML='<div class="radar-empty"><b>Nenhum assunto encontrado.</b><small>Tente outro filtro ou termo de busca.</small></div>';
+    }else{
+      list.innerHTML=filtered.map((row,index)=>{
+        const score=Math.max(0,Math.min(100,Number(row.nexo_priority_score||0)));
+        const priority=radarPriorityMeta(score);
+        const key=encodeURIComponent([row.area,row.subject,row.topic].join('||'));
+        return '<article class="radar-topic-row">'+
+          '<div class="radar-rank">'+String(index+1).padStart(2,'0')+'</div>'+
+          '<div class="radar-topic-main">'+
+            '<div class="radar-topic-head"><div><span>'+esc(row.subject)+'</span><h3>'+esc(row.topic)+'</h3></div><b class="radar-priority '+priority.className+'">'+priority.label+'</b></div>'+
+            '<div class="radar-topic-stats"><span><b>'+fmt(row.questions)+'</b> questões</span><span><b>'+row.years_present+'/17</b> edições</span><span><b>'+fmt(row.questions_2021_2025)+'</b> desde 2021</span><span>última: <b>'+row.last_year+'</b></span></div>'+
+            '<div class="radar-score-line"><i style="--radar-score:'+score+'%"></i><span>Índice NEXO <b>'+score.toFixed(1)+'</b></span></div>'+
+          '</div>'+
+          '<button class="outline-btn radar-train-btn" data-radar-train="'+key+'">Treinar <span>→</span></button>'+
+        '</article>';
+      }).join('');
+      $('[data-radar-train]',list).forEach(btn=>{
+        btn.onclick=()=>{
+          const key=decodeURIComponent(btn.dataset.radarTrain||'');
+          const row=topics.find(item=>[item.area,item.subject,item.topic].join('||')===key);
+          if(row)startRadarTraining(row);
+        };
+      });
+    }
+  }
+
+  const yearGrid=$('#radarYearGrid');
+  if(yearGrid){
+    yearGrid.innerHTML=(state.radarYears||[]).map(row=>{
+      const classified=Number(row.classified_items||0);
+      const total=Number(row.total_items||180);
+      const pct=total?Math.round((classified/total)*100):0;
+      return '<div class="radar-year-cell" title="'+classified+' de '+total+' itens com classificação confiável"><b>'+row.year+'</b><span>'+pct+'%</span><i style="--year-score:'+pct+'%"></i></div>';
+    }).join('');
+  }
+}
+
+async function startRadarTraining(row){
+  if(!row)return;
+  const preferredTopic=radarTrainingTopic(row.subject,row.topic);
+  const candidates=[
+    {area:row.area||'',subject:row.subject||'',topic:preferredTopic||''},
+    {area:row.area||'',subject:row.subject||'',topic:''},
+    {area:row.area||'',subject:'',topic:''}
+  ];
+  let chosen=null;
+  try{
+    for(const candidate of candidates){
+      const preview=await fetchQuestions(candidate);
+      if(preview.length){chosen=candidate;break;}
+    }
+  }catch(err){
+    console.error('radar training preview',err);
+  }
+  if(!chosen){
+    toast('Ainda não há questões desse recorte no banco de treino.','info');
+    return;
+  }
+  openPage('questoes');
+  resetSessionUI();
+  await startStudySession({...chosen,mode:'radar',size:10,difficulty:'',visualOnly:false});
+  if(state.session){
+    $('#sessionAreaBadge').textContent='Radar ENEM';
+    $('#sessionTitle').textContent=row.topic;
+    $('#sessionSubtitle').textContent='Treino sugerido pelo Radar com base na incidência histórica de 2009 a 2025.';
+  }
+}
+
+
 const NEXO_WEEK_DAYS=['Segunda','Terça','Quarta','Quinta','Sexta','Sábado','Domingo'];
 
 function weekTaskIcon(type){
@@ -1821,7 +2045,8 @@ function maintenanceModuleForPage(id){
     redacao:'essays',
     ranking:'journey',
     videoaulas:'content',
-    materiais:'content'
+    materiais:'content',
+    radar:'content'
   })[id]||null;
 }
 
@@ -1839,6 +2064,7 @@ function openPage(id) {
   if (id==='focos') renderFocus();
   if (id==='videoaulas') loadVideos();
   if (id==='materiais') loadMaterials();
+  if (id==='radar') loadEnemRadar({silent:false});
   if (id==='banco') { renderBank(); renderSavedQuestions(); }
   if (id==='semana') loadNexoWeekPlan({silent:false});
   if (id==='redacao') {
