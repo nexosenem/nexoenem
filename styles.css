@@ -8999,3 +8999,56 @@ body.light .radar-priority.high{color:#126a88}
   .radar-topic-row{grid-template-columns:28px minmax(0,1fr)}
   .radar-topic-head{display:grid}.radar-priority{justify-self:start}
 }
+
+
+/* Radar ENEM · correções de legibilidade mobile */
+.radar-ranking-panel>.panel-title>div{
+  display:grid;
+  gap:4px;
+  min-width:0;
+}
+.radar-ranking-panel>.panel-title>div>b,
+.radar-ranking-panel>.panel-title>div>small{
+  display:block;
+}
+.radar-ranking-panel>.panel-title>div>small{
+  color:var(--muted);
+  font-size:10px;
+  line-height:1.35;
+}
+.radar-train-btn:disabled{
+  opacity:.72;
+  cursor:wait;
+}
+
+@media(max-width:760px){
+  .radar-ranking-panel>.panel-title{
+    align-items:flex-start;
+    gap:10px;
+    padding:16px 14px!important;
+  }
+  .radar-ranking-panel>.panel-title>div{
+    flex:1;
+    gap:5px;
+  }
+  .radar-ranking-panel>.panel-title>div>b{
+    font-size:1.05rem!important;
+    line-height:1.2;
+  }
+  .radar-ranking-panel>.panel-title>div>small{
+    font-size:.78rem!important;
+    line-height:1.35;
+  }
+  .radar-live-dot{
+    flex:0 0 auto;
+    margin-top:1px;
+  }
+  .radar-topic-row{
+    align-items:start;
+  }
+  .radar-train-btn{
+    min-height:44px!important;
+    padding:10px 14px!important;
+    font-size:.92rem!important;
+  }
+}
