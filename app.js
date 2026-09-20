@@ -21,6 +21,39 @@ const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
 
+const CLOUDINARY = Object.freeze({
+  cloudName:'nmhbq6sd',
+  uploadPreset:'nexo_uploads'
+});
+
+function uploadToCloudinary(file,onProgress=()=>{}){
+  return new Promise((resolve,reject)=>{
+    if(!file)return reject(new Error('Nenhum arquivo selecionado.'));
+    const endpoint=`https://api.cloudinary.com/v1_1/${CLOUDINARY.cloudName}/auto/upload`;
+    const form=new FormData();
+    form.append('file',file);
+    form.append('upload_preset',CLOUDINARY.uploadPreset);
+
+    const xhr=new XMLHttpRequest();
+    xhr.open('POST',endpoint,true);
+    xhr.upload.onprogress=e=>{
+      if(e.lengthComputable)onProgress(Math.max(1,Math.min(99,Math.round((e.loaded/e.total)*100))));
+    };
+    xhr.onerror=()=>reject(new Error('Falha de rede ao enviar para o Cloudinary.'));
+    xhr.onload=()=>{
+      let payload={};
+      try{payload=JSON.parse(xhr.responseText||'{}')}catch(_){}
+      if(xhr.status<200||xhr.status>=300||!payload.secure_url){
+        const message=payload?.error?.message||'O Cloudinary recusou o arquivo.';
+        return reject(new Error(message));
+      }
+      onProgress(100);
+      resolve(payload);
+    };
+    xhr.send(form);
+  });
+}
+
 const THEMES = [
   {id:1,axis:'Meio ambiente',title:'Transição energética no Brasil: desafios para um futuro sustentável',prompt:'Discuta caminhos para ampliar a transição energética brasileira de forma socialmente justa e ambientalmente responsável.'},
   {id:2,axis:'Tecnologia e sociedade',title:'Os impactos da inteligência artificial na formação dos jovens brasileiros',prompt:'Analise benefícios e riscos da inteligência artificial na educação e proponha medidas para seu uso responsável.'},
@@ -2431,22 +2464,38 @@ $('#addVideo').onclick=async()=>{
   const title=$('#videoTitle').value.trim(),area=$('#videoArea').value,subject=$('#videoSubject').value.trim(),topic=$('#videoTopic').value.trim();
   const external=$('#videoUrl').value.trim(),file=$('#videoFile').files[0];
   if(!title||!subject||(!file&&!/^https?:\/\//i.test(external)))return toast('Preencha título, matéria e um arquivo ou URL válida.','error');
-  const status=$('#uploadStatus');status.classList.remove('hidden');status.textContent='Enviando videoaula...';
+  if(file&&!/^video\//i.test(file.type||''))return toast('Selecione um arquivo de vídeo válido.','error');
+
+  const status=$('#uploadStatus');
+  status.classList.remove('hidden');
+  status.textContent=file?'Preparando envio para o Cloudinary...':'Publicando URL externa...';
+
   let video_url=external,storage_path=null;
   try{
     if(file){
-      const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'-');
-      storage_path=`${Date.now()}-${safe}`;
-      const {error:upErr}=await client.storage.from('lesson-media').upload(storage_path,file,{cacheControl:'3600',upsert:false,contentType:file.type});
-      if(upErr)throw upErr;
-      video_url=client.storage.from('lesson-media').getPublicUrl(storage_path).data.publicUrl;
+      const uploaded=await uploadToCloudinary(file,pct=>{
+        status.textContent=pct<100?`Enviando ao Cloudinary... ${pct}%`:'Upload concluído. Salvando no NEXO...';
+      });
+      video_url=uploaded.secure_url;
+      storage_path=`cloudinary:${uploaded.resource_type||'auto'}:${uploaded.public_id}`;
     }
-    const {error}=await client.from('videos').insert({title,area,subject,topic,video_url,storage_path,created_by:state.user.id,is_published:true});
+
+    const {error}=await client.from('videos').insert({
+      title,area,subject,topic,video_url,storage_path,
+      created_by:state.user.id,is_published:true
+    });
     if(error)throw error;
-    status.textContent='Videoaula publicada com sucesso.';
-    $('#videoTitle').value=$('#videoSubject').value=$('#videoTopic').value=$('#videoUrl').value='';$('#videoFile').value='';
-    toast('Videoaula publicada.');loadAdmin();
-  }catch(err){console.error(err);status.textContent='Falha no upload/publicação.';toast('Não foi possível publicar a videoaula.','error')}
+
+    status.textContent=file?'Videoaula publicada no Cloudinary com sucesso.':'Videoaula publicada com sucesso.';
+    $('#videoTitle').value=$('#videoSubject').value=$('#videoTopic').value=$('#videoUrl').value='';
+    $('#videoFile').value='';
+    toast('Videoaula publicada.');
+    await loadAdmin();
+  }catch(err){
+    console.error(err);
+    status.textContent='Falha no upload/publicação: '+String(err?.message||err||'erro desconhecido');
+    toast('Não foi possível publicar a videoaula.','error');
+  }
 };
 
 window.addEventListener('resize',()=>{if(innerWidth>760)toggleMenu(false)});
