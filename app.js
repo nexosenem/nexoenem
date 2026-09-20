@@ -2625,7 +2625,7 @@ function renderNexoCore(){
   });
 }
 
-async function startCoreRecommendation(){
+async function startCoreRecommendation(skipGate=false){
   if(blockMaintenance('core'))return;
   if(!state.core) await loadNexoCore();
   const rec=state.core?.recommended_action;
@@ -2634,6 +2634,11 @@ async function startCoreRecommendation(){
     resetSessionUI();
     toast('Ainda preciso de algumas respostas para montar um treino adaptativo.');
     return;
+  }
+  if(!skipGate&&rec.topic){
+    if(!state.materials.length)await loadMaterials({silent:true});
+    const lesson=topicLesson(rec.topic,rec.subject||'Matemática');
+    if(lesson&&showGuidedTraining(lesson,{source:'core',size:Number(rec.size||6)}))return;
   }
   openPage('questoes');
   const learningSignal=rec.learning_signal||'balanced';
@@ -5220,6 +5225,7 @@ async function launchGuidedTrainingNow(){
     const row=(state.radarTopics||[]).find(r=>String(r.topic)===String(pending.item.topic)&&String(r.subject||'')===String(pending.item.subject||''));
     if(row)return startRadarTraining(row,true);
   }
+  if(pending.source==='core')return startCoreRecommendation(true);
   await startContentPractice(pending.item,true,pending.size||5);
 }
 
