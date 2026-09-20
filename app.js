@@ -1591,12 +1591,12 @@ async function loadDashboard() {
   $('#mobileProgressDonut').style.background=`conic-gradient(var(--cyan) 0 ${pct}%,#1c2b40 ${pct}% 100%)`;
 
   const weak = state.dashboard.weak_topics || [];
-  $$('#weaknessBars').innerHTML = weak.length ? weak.slice(0,5).map(x=>{
+  $('#weaknessBars').innerHTML = weak.length ? weak.slice(0,5).map(x=>{
     const acc = clamp(100-Number(x.error_rate||0),0,100);
     return `<div class="weak-row"><label>${esc(x.topic)}</label><div class="weak-track"><i style="width:${acc}%"></i></div><b>${acc}%</b></div>`;
   }).join('') : '<p style="color:var(--muted);font-size:12px">Resolva algumas questões para o sistema identificar seus pontos de atenção.</p>';
 
-  $$('#mobileWeaknessBars').innerHTML = weak.length ? weak.slice(0,3).map(x=>{
+  $('#mobileWeaknessBars').innerHTML = weak.length ? weak.slice(0,3).map(x=>{
     const acc = clamp(100-Number(x.error_rate||0),0,100);
     return `<div class="mobile-weak-item"><span>${esc(x.topic)}</span><div class="bar"><i style="width:${acc}%"></i></div><b>${acc}%</b></div>`;
   }).join('') : '<p>Resolva algumas questões para descobrir seus pontos de atenção.</p>';
@@ -1777,7 +1777,7 @@ function setSelectedArea(area) {
   state.selectedArea = area;
   $$('[data-study-area]').forEach(b=>b.classList.toggle('active',b.dataset.studyArea===area));
   const subjects=[...(state.subjects[area]||[])].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  $$('#sessionSubject').innerHTML='<option value="">Todas da área</option>'+subjects.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  $('#sessionSubject').innerHTML='<option value="">Todas da área</option>'+subjects.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
 }
 
 $$('[data-study-area]').forEach(b=>b.onclick=()=>setSelectedArea(b.dataset.studyArea));
@@ -3281,7 +3281,7 @@ async function renderPerformance() {
   const areas=['Linguagens','Ciências Humanas','Ciências da Natureza','Matemática'];
   renderMasteryMap();
   $('#masteryMapTrain').onclick=()=>rec?startCoreRecommendation():(openPage('questoes'),resetSessionUI());
-  $$('#areaPerformance').innerHTML=areas.map(area=>{
+  $('#areaPerformance').innerHTML=areas.map(area=>{
     const x=map.get(area)||{accuracy:0,attempts:0};
     return `<div class="perf-row"><span>${area}<small>${Number(x.attempts||0)} questões</small></span><div class="perf-track"><i style="width:${Number(x.accuracy||0)}%"></i></div><b>${Number(x.accuracy||0)}%</b></div>`;
   }).join('');
@@ -3301,9 +3301,9 @@ async function renderPerformance() {
     .select('is_correct,duration_seconds,created_at,question:questions(subject,topic)')
     .order('created_at',{ascending:false}).limit(12);
   if(recentError)logClientError('performance',recentError,'recent_attempts');
-  $$('#performanceTimeline').innerHTML=(recent||[]).map(a=>`<div class="timeline-row"><span class="${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span><div><b>${esc(a.question?.subject||'Questão')}</b><small>${esc(a.question?.topic||'')} · ${formatStudyDuration(a.duration_seconds||0)}</small></div><small>${new Date(a.created_at).toLocaleDateString('pt-BR')}</small></div>`).join('')||'<p style="color:var(--muted)">Ainda não há respostas registradas.</p>';
+  $('#performanceTimeline').innerHTML=(recent||[]).map(a=>`<div class="timeline-row"><span class="${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span><div><b>${esc(a.question?.subject||'Questão')}</b><small>${esc(a.question?.topic||'')} · ${formatStudyDuration(a.duration_seconds||0)}</small></div><small>${new Date(a.created_at).toLocaleDateString('pt-BR')}</small></div>`).join('')||'<p style="color:var(--muted)">Ainda não há respostas registradas.</p>';
 
-  $$('#sessionHistory').innerHTML=(sessions||[]).map(item=>{
+  $('#sessionHistory').innerHTML=(sessions||[]).map(item=>{
     const answered=Number(item.answered_count||0),correct=Number(item.correct_count||0);
     const accuracy=answered?Math.round(correct*100/answered):0;
     const label=item.mode==='simulado'?'Simulado':item.mode==='core'?'NEXO Core':item.mode==='adaptive'?'Adaptativo':'Sessão';
@@ -3336,7 +3336,7 @@ async function renderFocus() {
   const weak=coreWeak.length?coreWeak:fallback;
 
   renderFocusRoadmap();
-  $$('#focusGrid').innerHTML=weak.length?weak.map((x,index)=>{
+  $('#focusGrid').innerHTML=weak.length?weak.map((x,index)=>{
     const mastery=Math.round(Number(x.mastery??x.accuracy??0));
     const priority=Math.round(Number(x.priority??(100-mastery)));
     const recommended=index===0;
@@ -3364,8 +3364,8 @@ async function renderFocus() {
 }
 
 function fillThemes() {
-  $$('#essayTheme').innerHTML=THEMES.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+'<option value="custom">✦ Tema personalizado</option>';
-  $$('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
+  $('#essayTheme').innerHTML=THEMES.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+'<option value="custom">✦ Tema personalizado</option>';
+  $('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
   updateEssayPrompt();
   $$('[data-theme]').forEach(b=>b.onclick=()=>{$('#essayTheme').value=b.dataset.theme;updateEssayPrompt();openPage('redacao');$('#essayText').focus()});
 }
@@ -3818,7 +3818,7 @@ function renderVideos(){
   const list=state.videos
     .filter(v=>(!s||[v.title,v.area,v.subject,v.topic,v.description].filter(Boolean).join(' ').toLowerCase().includes(s))&&(!favoritesOnly||favoriteContent('video',v.id)))
     .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a)));
-  $$('#videoGrid').innerHTML=list.length?list.map(v=>{
+  $('#videoGrid').innerHTML=list.length?list.map(v=>{
     const fav=favoriteContent('video',v.id);
     const poster=v.thumbnail_url||cloudinaryVideoPoster(v.video_url||'');
     return `<article class="panel video-card content-card">
@@ -3886,7 +3886,7 @@ $('#materialFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classL
 function renderBank(){
   const search=$('#bankSearch').value.toLowerCase().trim(),area=$('#bankArea').value;
   const list=state.questionMeta.filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search))).slice(0,150);
-  $$('#bankList').innerHTML=list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.media_type?' · ◉ visual':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join('');
+  $('#bankList').innerHTML=list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.media_type?' · ◉ visual':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join('');
   $$('[data-bank]').forEach(b=>b.onclick=()=>openSingleQuestion(Number(b.dataset.bank)));
 }
 $('#bankSearch').addEventListener('input',renderBank);
@@ -3904,7 +3904,7 @@ async function openSingleQuestion(id){
 async function loadMyFeedback(){
   const {data,error}=await client.from('feedback').select('rating,message,status,created_at').order('created_at',{ascending:false}).limit(30);
   if(error)return console.error(error);
-  $$('#feedbackList').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">${initials(state.profile?.full_name||'A').slice(0,1)}</span><div><b>Você <span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleDateString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Você ainda não enviou feedback.</p>';
+  $('#feedbackList').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">${initials(state.profile?.full_name||'A').slice(0,1)}</span><div><b>Você <span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleDateString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Você ainda não enviou feedback.</p>';
 }
 $('#sendFeedback').onclick=async()=>{
   const message=$('#feedbackText').value.trim(),rating=Number($('#feedbackRating').value);
@@ -4090,6 +4090,7 @@ function renderJourneyBoards(){
 }
 
 let wardrobeFilter='all';
+let storeFilter='all';
 function wardrobeItemField(item){
   const raw=String(item?.visual?.field||item?.category||'').trim().toLowerCase();
   const aliases={
@@ -4108,12 +4109,15 @@ function wardrobeCategoryLabel(category){
   return ({hair:'Cabelo',hair_color:'Cor do cabelo',outfit:'Roupa',accessory:'Acessório',frame:'Moldura',background:'Cenário',aura:'Aura'})[field]||String(category||'Item');
 }
 function wardrobeItemState(item,owned,level,plus,ultra){
-  const plusLocked=Boolean(item.plus_only&&!plus&&!ultra);
-  const levelLocked=!ultra&&level<Number(item.unlock_level||1);
-  const autoEligible=Boolean(!plusLocked&&!levelLocked&&(item.grant_mode==='starter'||item.grant_mode==='level'));
-  const has=ultra||owned.has(item.item_code)||autoEligible;
-  const available=!has&&!plusLocked&&!levelLocked;
-  return {has,plusLocked,levelLocked,available,autoEligible};
+  const mode=String(item?.grant_mode||'store');
+  const planAllowed=!item?.plus_only||plus||ultra;
+  const plusLocked=!planAllowed;
+  const levelLocked=!ultra&&level<Number(item?.unlock_level||1);
+  const autoEligible=Boolean(planAllowed&&!levelLocked&&(mode==='starter'||mode==='level'));
+  const permanentOwned=Boolean(owned?.has?.(item?.item_code));
+  const has=Boolean(ultra||permanentOwned||autoEligible);
+  const available=Boolean(mode==='store'&&!has&&!plusLocked&&!levelLocked);
+  return {has,plusLocked,levelLocked,available,autoEligible,permanentOwned,mode};
 }
 function wardrobePreviewAvatar(item,baseAvatar){
   const preview=normalizedAvatar(baseAvatar);
@@ -4128,7 +4132,7 @@ function renderNexoWardrobe(){
   const owned=journeyInventorySet(), level=Number(j.profile?.level||1), plus=isNexoPlus(), ultra=isNexoUltra();
   const baseAvatar=normalizedAvatar(j.profile?.avatar);
   const base=baseAvatar.base||'neutral';
-  const catalog=(j.catalog||[]).filter(item=>ultra||avatarItemCompatibleWithBase(item,base));
+  const catalog=(j.catalog||[]).filter(item=>avatarItemCompatibleWithBase(item,base));
   const categories=[...new Set(catalog.map(x=>x.category).filter(Boolean))].sort((a,b)=>wardrobeCategoryLabel(a).localeCompare(wardrobeCategoryLabel(b),'pt-BR'));
   const categorySelect=$('#wardrobeCategory');
   if(categorySelect){
@@ -4193,59 +4197,134 @@ function renderNexoWardrobe(){
 }
 function renderJourneyStore(){
   const j=state.journey||{};
+  const el=$('#journeyStore');
+  if(!el)return;
+
   const owned=journeyInventorySet();
   const level=Number(j.profile?.level||1);
+  const coins=Number(j.profile?.coins||0);
   const plus=isNexoPlus(),ultra=isNexoUltra();
-  const base=j.profile?.avatar?.base||'neutral';
-  const el=$('#journeyStore');if(!el)return;
-  const rarityIcon={comum:'•',incomum:'◆',raro:'✦','épico':'✧','lendário':'♕'};
-  const collectionLabel=item=>{
-    const bases=Array.isArray(item.compatible_bases)?item.compatible_bases:[];
-    if(bases.length===1&&bases[0]==='fem')return 'COLEÇÃO FEMININA';
-    if(bases.length===1&&bases[0]==='masc')return 'COLEÇÃO MASCULINA';
-    if(bases.length===1&&bases[0]==='neutral')return 'COLEÇÃO NEUTRA';
-    return 'COLEÇÃO NEXO';
-  };
-  const visibleCatalog=(j.catalog||[]).filter(item=>ultra||avatarItemCompatibleWithBase(item,base));
-  el.innerHTML=visibleCatalog.map(item=>{
-    const itemState=wardrobeItemState(item,owned,level,plus,ultra);
-    const has=itemState.has;
-    const plusLocked=itemState.plusLocked;
-    const levelLocked=itemState.levelLocked;
-    const locked=plusLocked||levelLocked;
-    const status=ultra?'ULTRA · LIBERADO'
-      :has?'NO INVENTÁRIO'
-      :plusLocked?'NEXO PLUS'
-      :levelLocked?'LIBERA NO NÍVEL '+item.unlock_level
-      :item.grant_mode==='starter'?'GRÁTIS'
-      :Number(item.price||0)+' N-Coins';
-    return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''} ${plusLocked?'plus-locked':''}">
-      <div class="store-item-visual"><span>${rarityIcon[item.rarity]||'✦'}</span><i>${item.plus_only?'PLUS · ':''}${esc(item.category)}</i></div>
-      <div><small>${item.plus_only?'NEXO PLUS · ':''}${collectionLabel(item)} · ${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
-      <div class="store-item-bottom">
-        <span>${status}</span>
-        ${ultra?'<button disabled>Ultra</button>':has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">${Number(item.price||0)===0?'Resgatar':'Comprar'}</button>`}
-      </div>
-    </article>`;
-  }).join('');
+  const baseAvatar=normalizedAvatar(j.profile?.avatar);
+  const base=baseAvatar.base||'neutral';
 
-  $$('[data-open-plus]',el).forEach(btn=>btn.onclick=()=>openNexoPlans('Esse cosmético faz parte da coleção NEXO Plus.'));
+  if($('#storeCoinBalance'))$('#storeCoinBalance').textContent=coins.toLocaleString('pt-BR')+' N¢';
+
+  // The Store sells only explicit store items.
+  // Starter and level rewards belong to progression / wardrobe, not checkout.
+  const catalog=(j.catalog||[])
+    .filter(item=>String(item.grant_mode||'store')==='store')
+    .filter(item=>avatarItemCompatibleWithBase(item,base));
+
+  const categories=[...new Set(catalog.map(item=>item.category).filter(Boolean))]
+    .sort((a,b)=>wardrobeCategoryLabel(a).localeCompare(wardrobeCategoryLabel(b),'pt-BR'));
+
+  const categorySelect=$('#storeCategory');
+  if(categorySelect){
+    const current=categorySelect.value||'all';
+    categorySelect.innerHTML='<option value="all">Todas as categorias</option>'+
+      categories.map(category=>'<option value="'+esc(category)+'">'+esc(wardrobeCategoryLabel(category))+'</option>').join('');
+    categorySelect.value=categories.includes(current)?current:'all';
+  }
+
+  const stateFor=item=>wardrobeItemState(item,owned,level,plus,ultra);
+  const stats={owned:0,available:0,plus:0,locked:0};
+  catalog.forEach(item=>{
+    const s=stateFor(item);
+    if(s.has)stats.owned++;
+    else if(s.plusLocked)stats.plus++;
+    else if(s.levelLocked)stats.locked++;
+    else stats.available++;
+  });
+
+  if($('#storeSummary')){
+    $('#storeSummary').innerHTML=
+      '<span><b>'+stats.available+'</b><small>à venda</small></span>'+
+      '<span><b>'+stats.owned+'</b><small>adquiridos</small></span>'+
+      '<span><b>'+stats.plus+'</b><small>Plus</small></span>'+
+      '<span><b>'+stats.locked+'</b><small>por nível</small></span>';
+  }
+
+  if($('#storeNotice')){
+    $('#storeNotice').innerHTML=ultra
+      ? '<b>Ultra ativo:</b> todos os cosméticos compatíveis com sua base estão incluídos enquanto o plano estiver ativo.'
+      : '<b>Loja limpa:</b> itens de nível e itens iniciais não aparecem mais como compra. Eles desbloqueiam automaticamente na Jornada.';
+  }
+
+  const selectedCategory=$('#storeCategory')?.value||'all';
+  const filtered=catalog.filter(item=>{
+    const s=stateFor(item);
+    if(selectedCategory!=='all'&&item.category!==selectedCategory)return false;
+    if(storeFilter==='owned')return s.has;
+    if(storeFilter==='plus')return Boolean(item.plus_only);
+    if(storeFilter==='affordable')return s.available&&coins>=Number(item.price||0);
+    return true;
+  }).sort((a,b)=>{
+    const sa=stateFor(a),sb=stateFor(b);
+    const rank=s=>s.available?0:s.plusLocked?1:s.levelLocked?2:3;
+    return rank(sa)-rank(sb)
+      ||Number(a.unlock_level||1)-Number(b.unlock_level||1)
+      ||Number(a.price||0)-Number(b.price||0)
+      ||String(a.name||'').localeCompare(String(b.name||''),'pt-BR');
+  });
+
+  el.innerHTML=filtered.length?filtered.map(item=>{
+    const s=stateFor(item);
+    const price=Number(item.price||0);
+    const affordable=coins>=price;
+    const category=wardrobeCategoryLabel(item.category);
+    const status=ultra?'INCLUÍDO NO ULTRA'
+      :s.permanentOwned?'NO INVENTÁRIO'
+      :s.plusLocked?'EXCLUSIVO PLUS'
+      :s.levelLocked?'LIBERA NO NÍVEL '+Number(item.unlock_level||1)
+      :price===0?'RESGATE GRÁTIS'
+      :price.toLocaleString('pt-BR')+' N¢';
+
+    let action='';
+    if(ultra)action='<button disabled>Incluído</button>';
+    else if(s.permanentOwned)action='<button disabled>Adquirido</button>';
+    else if(s.plusLocked)action='<button data-open-plus>Ver Plus</button>';
+    else if(s.levelLocked)action='<button disabled>Nível '+Number(item.unlock_level||1)+'</button>';
+    else if(!affordable)action='<button disabled>Faltam '+Math.max(0,price-coins).toLocaleString('pt-BR')+' N¢</button>';
+    else action='<button data-buy-item="'+esc(item.item_code)+'">'+(price===0?'Resgatar':'Comprar · '+price.toLocaleString('pt-BR')+' N¢')+'</button>';
+
+    return '<article class="journey-store-item rarity-'+esc(item.rarity)+' '+(s.has?'owned ':'')+(s.plusLocked?'plus-locked ':'')+(s.levelLocked?'level-locked ':'')+'">'+
+      '<div class="store-item-visual"><div class="store-avatar-preview" data-store-preview="'+esc(item.item_code)+'"></div><i>'+esc(category)+'</i></div>'+
+      '<div class="store-item-copy"><small>'+(item.plus_only?'NEXO PLUS · ':'')+esc(String(item.rarity||'comum').toUpperCase())+'</small><h4>'+esc(item.name)+'</h4><p>'+esc(item.description||'Cosmético NEXO')+'</p></div>'+
+      '<div class="store-item-bottom"><span>'+esc(status)+'</span>'+action+'</div>'+
+    '</article>';
+  }).join(''):'<div class="journey-empty">Nenhum item encontrado nesse filtro.</div>';
+
+  $$('[data-store-preview]',el).forEach(node=>{
+    const item=avatarCatalogItem(node.dataset.storePreview);
+    if(item)renderStudentAvatar(node,wardrobePreviewAvatar(item,baseAvatar));
+  });
+
+  $$('[data-open-plus]',el).forEach(btn=>btn.onclick=()=>openNexoPlans('Esse cosmético é exclusivo do NEXO Plus e também está incluído no Ultra.'));
+
   $$('[data-buy-item]',el).forEach(btn=>btn.onclick=async()=>{
     const code=btn.dataset.buyItem;
-    btn.disabled=true;btn.textContent='Comprando...';
+    const item=avatarCatalogItem(code);
+    btn.disabled=true;
+    btn.textContent='Processando...';
+
     try{
-      const {data,error}=await client.rpc('buy_nexo_item',{p_item_code:code});
+      const {error}=await client.rpc('buy_nexo_item',{p_item_code:code});
       if(error)throw error;
-      state.journey={...(state.journey||{}),...(data||{}),catalog:state.journey?.catalog||[]};
+
       await loadNexoJourney({silent:true});
-      toast('Item adicionado ao seu inventário.');
+      toast((Number(item?.price||0)>0?'Compra concluída: ':'Item resgatado: ')+(item?.name||'cosmético')+'.');
       setJourneyTab('store');
     }catch(err){
       console.error('buy Nexo item',err);
-      const msg=String(err?.message||'');
-      if(handlePlanLimitError(err))return;
-      toast(msg.includes('insufficient')?'N-Coins insuficientes.':msg.includes('level required')?'Seu nível ainda não libera esse item.':msg.includes('base_incompatible')?'Esse item pertence a outra coleção de personagem.':'Não foi possível concluir a compra.','error');
-      btn.disabled=false;btn.textContent='Comprar';
+      const msg=String(err?.message||err||'');
+      if(msg.includes('nexo_plus_required'))openNexoPlans('Esse item exige NEXO Plus.');
+      else if(msg.includes('nexo_insufficient_coins'))toast('Você ainda não tem N-Coins suficientes.','error');
+      else if(msg.includes('nexo_level_required'))toast('Seu nível ainda não libera esse item.','error');
+      else if(msg.includes('nexo_avatar_base_incompatible'))toast('Esse item não é compatível com a base atual do personagem.','error');
+      else if(msg.includes('nexo_item_not_for_sale'))toast('Esse item é desbloqueado pela Jornada e não pode ser comprado.','info');
+      else toast('Não foi possível concluir essa compra agora.','error');
+
+      renderJourneyStore();
     }
   });
 }
@@ -4742,8 +4821,10 @@ async function startNexoArena(){
 }
 
 $$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
-$$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
+$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
 $('#wardrobeCategory')?.addEventListener('change',renderNexoWardrobe);
+$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{storeFilter=btn.dataset.storeFilter||'all';$('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderJourneyStore();});
+$('#storeCategory')?.addEventListener('change',renderJourneyStore);
 $$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTabTarget));
 $('#refreshJourney')?.addEventListener('click',()=>loadNexoJourney());
 $('#startNexoArena')?.addEventListener('click',startNexoArena);
@@ -4853,7 +4934,7 @@ async function loadQuestionComments(questionId){
   $('#questionComments').innerHTML='<div class="comment-empty">Carregando comentários...</div>';
   const {data,error}=await client.rpc('get_question_comments_v2',{p_question_id:Number(questionId)});
   if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
-  $$('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
+  $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
     <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.is_mine&&isNexoUltra()?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
@@ -5525,13 +5606,25 @@ async function loadAdminUsers(){
 function renderAdminUsers(){
   const list=$('#adminUserList');
   if(!list)return;
+
   const q=($('#adminUserSearch')?.value||'').trim().toLowerCase();
-  const users=state.adminUsers.filter(u=>!q||[u.full_name,u.email,u.role,u.plan].filter(Boolean).join(' ').toLowerCase().includes(q));
+  const users=state.adminUsers.filter(u=>!q||[u.full_name,u.email,u.role,u.plan,u.access_tier].filter(Boolean).join(' ').toLowerCase().includes(q));
+
   list.innerHTML=users.length?users.map(u=>{
     const isAdmin=u.role==='admin';
     const current=Boolean(u.is_current_user);
-    const plan=['free','plus','ultra'].includes(u.plan)?u.plan:'free';
+    const storedPlan=['free','plus','ultra'].includes(u.plan)?u.plan:'free';
+    const accessTier=['free','plus','ultra'].includes(u.access_tier)?u.access_tier:storedPlan;
+    const expired=Boolean(u.membership_expired);
     const name=u.full_name||u.email?.split('@')[0]||'Usuário';
+
+    let validity='Plano base';
+    if(storedPlan!=='free'){
+      validity=u.current_period_end
+        ? (expired?'Expirou em ':'Válido até ')+new Date(u.current_period_end).toLocaleDateString('pt-BR')
+        : 'Acesso permanente';
+    }
+
     return `<article class="admin-user-row">
       <div class="admin-user-avatar">${esc(initials(name))}</div>
       <div class="admin-user-info">
@@ -5539,8 +5632,9 @@ function renderAdminUsers(){
         <small>${esc(u.email||'Sem e-mail')}</small>
         <div class="admin-access-chips">
           <span class="role-chip ${isAdmin?'admin':'student'}">${isAdmin?'Administrador':'Aluno'}</span>
-          <span class="plan-access-chip ${plan}">Plano ${plan==='ultra'?'Ultra':plan==='plus'?'Plus':'Free'}</span>
+          <span class="plan-access-chip ${accessTier} ${expired?'expired':''}">Acesso ${accessTier==='ultra'?'Ultra':accessTier==='plus'?'Plus':'Free'}</span>
         </div>
+        <em class="admin-plan-validity">${esc(validity)}</em>
       </div>
       <div class="admin-user-access">
         <div class="admin-access-control">
@@ -5556,10 +5650,16 @@ function renderAdminUsers(){
         <div class="admin-access-control">
           <small>PLANO</small>
           <div class="admin-plan-switch" data-user-plan-control="${u.id}">
-            <button class="${plan==='free'?'active':''}" data-set-user-plan="${u.id}" data-plan="free">Free</button>
-            <button class="${plan==='plus'?'active':''}" data-set-user-plan="${u.id}" data-plan="plus">Plus</button>
-            <button class="ultra ${plan==='ultra'?'active':''}" data-set-user-plan="${u.id}" data-plan="ultra">Ultra</button>
+            <button class="${storedPlan==='free'?'active':''}" data-set-user-plan="${u.id}" data-plan="free">Free</button>
+            <button class="${storedPlan==='plus'?'active':''}" data-set-user-plan="${u.id}" data-plan="plus">Plus</button>
+            <button class="ultra ${storedPlan==='ultra'?'active':''}" data-set-user-plan="${u.id}" data-plan="ultra">Ultra</button>
           </div>
+          <select class="admin-plan-duration" data-plan-duration="${u.id}" aria-label="Validade do plano">
+            <option value="30">30 dias</option>
+            <option value="7">7 dias</option>
+            <option value="90">90 dias</option>
+            <option value="permanent">Permanente</option>
+          </select>
         </div>
       </div>
     </article>`;
@@ -5602,20 +5702,31 @@ async function setAdminUserRole(userId,role){
 async function setAdminUserPlan(userId,plan){
   const user=state.adminUsers.find(u=>u.id===userId);
   if(!user||!['free','plus','ultra'].includes(plan))return;
-  if(user.plan===plan)return;
 
   const name=user.full_name||user.email||'esta conta';
   const label=plan==='ultra'?'Ultra':plan==='plus'?'Plus':'Free';
-  if(!confirm('Alterar o plano de '+name+' para NEXO '+label+'?'))return;
+  const durationSelect=document.querySelector('[data-plan-duration="'+userId+'"]');
+  const durationValue=plan==='free'?'permanent':(durationSelect?.value||'30');
+  const durationDays=durationValue==='permanent'?null:Number(durationValue);
+  const validityLabel=plan==='free'
+    ? 'sem acesso premium'
+    : durationDays===null?'permanente':durationDays+' dias';
+
+  if(!confirm('Definir '+name+' como NEXO '+label+' ('+validityLabel+')?'))return;
 
   try{
     const {data,error}=await client.functions.invoke('admin-users',{
-      body:{action:'set_plan',target_user_id:userId,plan}
+      body:{
+        action:'set_plan',
+        target_user_id:userId,
+        plan,
+        duration_days:durationDays
+      }
     });
     if(error)throw error;
     if(data?.error)throw new Error(data.error);
 
-    toast('Plano de '+name+' alterado para '+label+'.');
+    toast('Plano de '+name+' atualizado para '+label+' · '+validityLabel+'.');
 
     if(user.is_current_user){
       await loadNexoMembership({silent:false});
@@ -5624,7 +5735,8 @@ async function setAdminUserPlan(userId,plan){
     await loadAdminUsers();
   }catch(err){
     console.error('set admin plan',err);
-    toast('Não foi possível alterar o plano dessa conta.','error');
+    const msg=String(err?.message||err||'');
+    toast(msg.includes('invalid_duration')?'Validade de plano inválida.':'Não foi possível alterar o plano dessa conta.','error');
   }
 }
 
@@ -5656,10 +5768,10 @@ async function loadAdmin(){
   ].map(x=>`<article class="admin-stat"><small>${x[0]}</small><b>${x[1]}</b></article>`).join('');
 
   const {data}=await client.from('feedback').select('id,rating,message,status,created_at,user_id').order('created_at',{ascending:false}).limit(60);
-  $$('#adminFeedbacks').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">N</span><div><b><span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum feedback recebido.</p>';
+  $('#adminFeedbacks').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">N</span><div><b><span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum feedback recebido.</p>';
 
   const reports=await client.rpc('get_reported_comments');
-  $$('#reportedComments').innerHTML=reports.data?.length?reports.data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">!</span><div><b>${esc(x.author_name)} · ${x.report_count} denúncia(s)</b><p>${esc(x.body)}</p><small>Questão #${x.question_id}</small><div class="comment-actions"><button data-admin-remove="${x.comment_id}" class="danger">Remover comentário</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum comentário denunciado.</p>';
+  $('#reportedComments').innerHTML=reports.data?.length?reports.data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">!</span><div><b>${esc(x.author_name)} · ${x.report_count} denúncia(s)</b><p>${esc(x.body)}</p><small>Questão #${x.question_id}</small><div class="comment-actions"><button data-admin-remove="${x.comment_id}" class="danger">Remover comentário</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum comentário denunciado.</p>';
   $$('[data-admin-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Remover este comentário da comunidade?'))return;const {error}=await client.rpc('admin_remove_comment',{p_comment_id:Number(b.dataset.adminRemove)});if(error)return toast('Falha ao remover.','error');toast('Comentário removido.');loadAdmin()});
 
   const counts=new Map();
