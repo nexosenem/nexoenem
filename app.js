@@ -47,7 +47,8 @@ const state = {
   visualCache:new Map(),
   videos:[],
   assistantIntents:[],
-  core:null
+  core:null,
+  lastSimulationReport:null
 };
 
 function toast(message, type='info') {
@@ -631,7 +632,7 @@ async function startAdaptive() {
 async function showCurrentQuestion() {
   if(!state.session) return;
   if(state.session.index>=state.session.queue.length){
-    finishSession(); return;
+    await finishSession(); return;
   }
   state.current=state.session.queue[state.session.index];
   state.answered=false;state.selectedOption=null;state.lastAnswer=null;state.questionStartedAt=Date.now();
@@ -1025,12 +1026,170 @@ async function nextQuestion() {
 }
 $('#skipQuestion').onclick=()=>nextQuestion();
 
-function finishSession() {
+
+function formatStudyDuration(seconds){
+  const value=Math.max(0,Number(seconds||0));
+  const minutes=Math.floor(value/60);
+  const secs=value%60;
+  if(minutes>=60){
+    const hours=Math.floor(minutes/60);
+    const rest=minutes%60;
+    return hours+'h '+String(rest).padStart(2,'0')+'min';
+  }
+  return minutes?minutes+'min '+String(secs).padStart(2,'0')+'s':secs+'s';
+}
+
+async function getNexoSessionReport(sessionId){
+  if(!sessionId)return null;
+  try{
+    const {data,error}=await client.rpc('get_nexo_session_report',{p_session_id:sessionId});
+    if(error)throw error;
+    return data||null;
+  }catch(err){
+    console.error('session report',err);
+    logClientError('simulation',err,'session_report');
+    return null;
+  }
+}
+
+function simulationPaceCopy(report){
+  const avg=Number(report?.avg_seconds||0);
+  if(!report?.attempts)return 'Ainda não há respostas suficientes para avaliar seu ritmo.';
+  if(avg<=90)return 'Ritmo rápido. Agora confirme se a velocidade não está custando leitura ou precisão.';
+  if(avg<=150)return 'Ritmo equilibrado para uma sessão de treino.';
+  if(avg<=210)return 'Seu tempo médio merece atenção. Tente reconhecer antes quais questões devem ser puladas.';
+  return 'Você está investindo muito tempo por questão. O próximo treino deve priorizar decisão e abandono estratégico.';
+}
+
+function renderSimulationReport(finished,report){
+  state.lastSimulationReport=report||null;
+  const attempts=Number(report?.attempts||0);
+  const correct=Number(report?.correct||0);
+  const accuracy=Number(report?.accuracy||0);
+  const avg=Number(report?.avg_seconds||0);
+  const total=Number(report?.total_seconds||0);
+  const weak=Array.isArray(report?.weak_topics)?report.weak_topics:[];
+  const subjects=Array.isArray(report?.by_subject)?report.by_subject:[];
+  const mood=accuracy>=75?'confiante':accuracy>=55?'serio':'acolhedor';
+  const title=accuracy>=80?'Ótima prova. Agora é lapidar.':accuracy>=65?'Bom desempenho, com pontos claros de evolução.':accuracy>=45?'Seu simulado mostrou exatamente onde atacar.':'Esse resultado é um mapa, não uma sentença.';
+
+  $('#questionCard').innerHTML=`
+    <div class="simulation-report">
+      <section class="sim-report-hero">
+        <div class="sim-report-professor">
+          <img src="${NEXO_MOOD_IMAGES[mood]||NEXO_MOOD_IMAGES.serio}" alt="Professor Nexo">
+          <div><span>RELATÓRIO PÓS-PROVA · PROFESSOR NEXO</span><h3>${title}</h3><p>${simulationPaceCopy(report)}</p></div>
+        </div>
+        <div class="sim-report-score"><small>APROVEITAMENTO</small><b>${accuracy}%</b><span>${correct}/${attempts} acertos</span></div>
+      </section>
+
+      <section class="sim-report-metrics">
+        <article><span>⏱</span><div><b>${formatStudyDuration(total)}</b><small>tempo respondendo</small></div></article>
+        <article><span>≈</span><div><b>${formatStudyDuration(avg)}</b><small>média por questão</small></div></article>
+        <article><span>!</span><div><b>${Number(report?.slow_questions||0)}</b><small>questões acima de 3 min</small></div></article>
+        <article><span>⚡</span><div><b>${Number(report?.fast_correct||0)}</b><small>acertos em até 75s</small></div></article>
+      </section>
+
+      <section class="sim-report-grid">
+        <article class="sim-report-panel">
+          <div class="panel-title"><b>Leitura por matéria</b><small>acertos no simulado</small></div>
+          <div class="sim-subject-list">
+            ${subjects.length?subjects.map(item=>`
+              <div class="sim-subject-row">
+                <span>${esc(item.subject||'Geral')}</span>
+                <div><i style="width:${Number(item.accuracy||0)}%"></i></div>
+                <b>${Number(item.accuracy||0)}%</b>
+              </div>`).join(''):'<p class="sim-empty">Sem dados suficientes nesta sessão.</p>'}
+          </div>
+        </article>
+        <article class="sim-report-panel">
+          <div class="panel-title"><b>Onde você perdeu mais pontos</b><small>prioridade de revisão</small></div>
+          <div class="sim-weak-list">
+            ${weak.length?weak.slice(0,4).map((item,index)=>`
+              <button data-sim-review="${esc(item.topic||'')}" data-sim-review-subject="${esc(item.subject||'')}">
+                <span>${String(index+1).padStart(2,'0')}</span>
+                <div><b>${esc(item.topic||'Tema')}</b><small>${esc(item.subject||'')} · ${Number(item.error_rate||0)}% de erro</small></div>
+                <i>→</i>
+              </button>`).join(''):'<p class="sim-empty">Nenhum tema crítico apareceu nesta sessão.</p>'}
+          </div>
+        </article>
+      </section>
+
+      <section class="sim-report-mission">
+        <div class="sim-mission-copy">
+          <span>✦ PRÓXIMA MISSÃO</span>
+          <h4>${weak[0]?'Revisar '+esc(weak[0].topic):'Consolidar o desempenho'}</h4>
+          <p>${weak[0]?'Comece pelo tema com maior taxa de erro e faça uma sessão curta antes de repetir outro simulado.':'Seu resultado ficou equilibrado. Faça uma revisão curta e avance para um novo bloco de prova.'}</p>
+        </div>
+        <div class="sim-mission-actions">
+          <button id="askNexoSimulation" class="outline-btn">Perguntar ao Professor Nexo</button>
+          <button id="simulationNextMission" class="primary-btn">Treinar recomendação</button>
+        </div>
+      </section>
+
+      <div class="sim-report-footer">
+        <button id="newSameSession" class="outline-btn">Refazer formato</button>
+        <button id="viewPerformanceAfterSim" class="outline-btn">Ver desempenho completo</button>
+        <button id="backSetup" class="ghost-btn">Trocar conteúdo</button>
+      </div>
+    </div>`;
+
+  $$('[data-sim-review]').forEach(btn=>btn.onclick=()=>startStudySession({
+    mode:'review',
+    area:finished.area||'',
+    subject:btn.dataset.simReviewSubject||'',
+    topic:btn.dataset.simReview||'',
+    difficulty:'',
+    visualOnly:false,
+    size:5
+  }));
+
+  $('#askNexoSimulation').onclick=()=>{
+    $('#niaPanel').classList.remove('hidden');
+    setNexoMood(mood);
+    askNia('Analise meu último simulado e me diga o que devo fazer agora.');
+  };
+  $('#simulationNextMission').onclick=()=>weak[0]
+    ? startStudySession({
+        mode:'review',
+        area:finished.area||'',
+        subject:weak[0].subject||'',
+        topic:weak[0].topic||'',
+        difficulty:'',
+        visualOnly:false,
+        size:6
+      })
+    : startCoreRecommendation();
+  $('#newSameSession').onclick=()=>startStudySession({
+    mode:'simulado',
+    area:finished.area||'',
+    subject:finished.subject||'',
+    topic:finished.topic||'',
+    difficulty:finished.difficulty||'',
+    visualOnly:false,
+    size:Number(finished.size||20)
+  });
+  $('#viewPerformanceAfterSim').onclick=()=>openPage('desempenho');
+  $('#backSetup').onclick=()=>resetSessionUI();
+  setNexoMood(mood);
+}
+
+async function finishSession() {
   const finished={...(state.session||{})};
-  if(state.session?.coreSessionId) closeNexoSession('completed',state.session);
+  const reportId=finished.coreSessionId||null;
+  if(state.session?.coreSessionId) await closeNexoSession('completed',state.session);
   $('#sessionProgress').style.width='100%';
-  $('#questionCard').innerHTML=`<div class="empty-state"><span>✓</span><h3>Sessão concluída</h3><p>Você terminou ${finished.size||0} questões. O NEXO Core já incorporou esse resultado ao seu perfil.</p><div style="display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:14px"><button id="newSameSession" class="primary-btn">Nova sessão igual</button><button id="backSetup" class="outline-btn">Trocar conteúdo</button></div></div>`;
   $('#nextQuestionBottom').classList.add('hidden');
+
+  if(finished.mode==='simulado'){
+    $('#questionCard').innerHTML='<div class="question-loading"><div class="pulse-block"></div><div class="pulse-line"></div><div class="pulse-line short"></div></div>';
+    const report=await getNexoSessionReport(reportId);
+    renderSimulationReport(finished,report);
+    loadNexoCore().catch(err=>console.error('core after simulation',err));
+    return;
+  }
+
+  $('#questionCard').innerHTML=`<div class="empty-state session-finish-state"><img src="${NEXO_MOOD_IMAGES.confiante}" alt="Professor Nexo"><span>SESSÃO CONCLUÍDA</span><h3>Mais dados, uma recomendação melhor.</h3><p>Você terminou ${finished.size||0} questões. O NEXO Core já incorporou esse resultado ao seu perfil.</p><div><button id="newSameSession" class="primary-btn">Nova sessão igual</button><button id="backSetup" class="outline-btn">Trocar conteúdo</button></div></div>`;
   $('#newSameSession').onclick=()=>startStudySession({
     mode:finished.mode||'manual',
     area:finished.area||'',
@@ -1044,33 +1203,126 @@ function finishSession() {
   loadNexoCore().catch(err=>console.error('core after session',err));
 }
 
-$$('[data-sim-area]').forEach(b=>b.onclick=()=>{
-  openPage('questoes');setSelectedArea(b.dataset.simArea);
-  startStudySession({mode:'simulado',area:b.dataset.simArea,subject:'',difficulty:'',visualOnly:false,size:20});
+$$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
+  const mode=b.dataset.simMode||'area';
+  if(mode==='adaptive'){
+    if(!state.core)await loadNexoCore();
+    const rec=state.core?.recommended_action;
+    openPage('questoes');
+    await startStudySession({
+      mode:'simulado',
+      area:rec?.area||'',
+      subject:rec?.subject||'',
+      topic:rec?.topic||'',
+      difficulty:'',
+      visualOnly:false,
+      size:20
+    });
+    if(state.session){
+      $('#sessionAreaBadge').textContent='Simulado Core';
+      $('#sessionTitle').textContent=rec?.topic||'Simulado adaptativo';
+      $('#sessionSubtitle').textContent=rec?.reason||'Prova montada para calibrar seu perfil atual.';
+    }
+    return;
+  }
+
+  if(mode==='mixed'){
+    openPage('questoes');
+    await startStudySession({mode:'simulado',area:'',subject:'',difficulty:'',visualOnly:false,size:30});
+    if(state.session){
+      $('#sessionAreaBadge').textContent='Misto ENEM';
+      $('#sessionTitle').textContent='Simulado misto';
+      $('#sessionSubtitle').textContent='30 questões distribuídas entre as áreas disponíveis.';
+    }
+    return;
+  }
+
+  openPage('questoes');
+  setSelectedArea(b.dataset.simArea);
+  await startStudySession({mode:'simulado',area:b.dataset.simArea,subject:'',difficulty:'',visualOnly:false,size:20});
 });
 
 async function renderPerformance() {
-  await loadDashboard();
+  await Promise.all([loadDashboard(),loadNexoCore()]);
   const d=state.dashboard||{attempts:0,correct:0,accuracy:0,by_area:[]};
-  const essaysCount=await client.from('essays').select('*',{count:'exact',head:true});
+  const core=state.core||{};
+  const momentum=core.momentum||{};
+  const rec=core.recommended_action||null;
+  const overall=core.overall||{};
+
+  const {data:sessions,error:sessionError}=await client.from('nexo_study_sessions')
+    .select('id,mode,area,subject,topic,planned_count,answered_count,correct_count,total_duration_seconds,status,started_at,ended_at')
+    .order('started_at',{ascending:false})
+    .limit(6);
+  if(sessionError)logClientError('performance',sessionError,'session_history');
+
   $('#statsGrid').innerHTML=[
-    ['Questões respondidas',d.attempts||0],
-    ['Aproveitamento',(d.accuracy||0)+'%'],
-    ['Acertos',d.correct||0],
-    ['Redações salvas',essaysCount.count||0]
-  ].map(x=>`<article class="stat-card"><small>${x[0]}</small><b>${x[1]}</b></article>`).join('');
+    ['Questões respondidas',d.attempts||0,'histórico total'],
+    ['Aproveitamento',(d.accuracy||0)+'%','média acumulada'],
+    ['Tempo médio',formatStudyDuration(overall.avg_seconds||0),'por questão'],
+    ['Dias ativos',Number(momentum.study_days_7d||0)+'/7','últimos 7 dias']
+  ].map((item,index)=>`<article class="stat-card performance-stat"><span>${String(index+1).padStart(2,'0')}</span><small>${item[0]}</small><b>${item[1]}</b><i>${item[2]}</i></article>`).join('');
+
+  const heroTitle=$('#performanceCoreTitle');
+  const heroText=$('#performanceCoreText');
+  const heroMetric=$('#performanceCoreMetric');
+  const heroMascot=$('#performanceCoreMascot');
+  if(rec){
+    heroTitle.textContent='Seu maior ganho agora está em '+(rec.topic||rec.subject||rec.area)+'.';
+    heroText.textContent=rec.reason||'O NEXO Core encontrou um conteúdo com boa margem de evolução.';
+    heroMetric.textContent=Math.round(Number(rec.mastery||0))+'%';
+    heroMascot.src=Number(rec.priority||0)>=65?NEXO_MOOD_IMAGES.pensativo:NEXO_MOOD_IMAGES.confiante;
+  }else{
+    heroTitle.textContent='Ainda estou calibrando seu perfil.';
+    heroText.textContent='Faça algumas sessões para eu cruzar acertos, erros, tempo e consistência.';
+    heroMetric.textContent='—';
+    heroMascot.src=NEXO_MOOD_IMAGES.pensativo;
+  }
+  $('#performanceCoreStart').onclick=()=>rec?startCoreRecommendation():(openPage('questoes'),resetSessionUI());
 
   const map=new Map((d.by_area||[]).map(x=>[x.area,x]));
   const areas=['Linguagens','Ciências Humanas','Ciências da Natureza','Matemática'];
   $('#areaPerformance').innerHTML=areas.map(area=>{
     const x=map.get(area)||{accuracy:0,attempts:0};
-    return `<div class="perf-row"><span>${area}</span><div class="perf-track"><i style="width:${Number(x.accuracy||0)}%"></i></div><b>${Number(x.accuracy||0)}%</b></div>`;
+    return `<div class="perf-row"><span>${area}<small>${Number(x.attempts||0)} questões</small></span><div class="perf-track"><i style="width:${Number(x.accuracy||0)}%"></i></div><b>${Number(x.accuracy||0)}%</b></div>`;
   }).join('');
 
-  const { data }=await client.from('question_attempts')
-    .select('is_correct,created_at,question:questions(subject,topic)')
+  const attempts7=Number(momentum.attempts_7d||0);
+  const accuracy7=Number(momentum.accuracy_7d||0);
+  const days7=Number(momentum.study_days_7d||0);
+  $('#performanceMomentum').innerHTML=`
+    <div class="momentum-ring" style="--momentum:${Math.min(100,Math.round(days7/7*100))}%"><b>${days7}</b><small>dias ativos</small></div>
+    <div class="momentum-copy">
+      <span><b>${attempts7}</b><small>questões em 7 dias</small></span>
+      <span><b>${accuracy7}%</b><small>aproveitamento recente</small></span>
+      <p>${days7>=5?'Ótima constância. Agora proteja a qualidade das correções.':days7>=3?'Seu ritmo está ganhando consistência. Tente manter contato com o estudo nos próximos dias.':'A maior oportunidade agora é constância: sessões curtas e frequentes tendem a funcionar melhor que picos isolados.'}</p>
+    </div>`;
+
+  const {data:recent,error:recentError}=await client.from('question_attempts')
+    .select('is_correct,duration_seconds,created_at,question:questions(subject,topic)')
     .order('created_at',{ascending:false}).limit(12);
-  $('#performanceTimeline').innerHTML=(data||[]).map(a=>`<div class="timeline-row"><span class="${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span><div><b>${esc(a.question?.subject||'Questão')}</b><small>${esc(a.question?.topic||'')}</small></div><small>${new Date(a.created_at).toLocaleDateString('pt-BR')}</small></div>`).join('')||'<p style="color:var(--muted)">Ainda não há respostas registradas.</p>';
+  if(recentError)logClientError('performance',recentError,'recent_attempts');
+  $('#performanceTimeline').innerHTML=(recent||[]).map(a=>`<div class="timeline-row"><span class="${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span><div><b>${esc(a.question?.subject||'Questão')}</b><small>${esc(a.question?.topic||'')} · ${formatStudyDuration(a.duration_seconds||0)}</small></div><small>${new Date(a.created_at).toLocaleDateString('pt-BR')}</small></div>`).join('')||'<p style="color:var(--muted)">Ainda não há respostas registradas.</p>';
+
+  $('#sessionHistory').innerHTML=(sessions||[]).map(item=>{
+    const answered=Number(item.answered_count||0),correct=Number(item.correct_count||0);
+    const accuracy=answered?Math.round(correct*100/answered):0;
+    const label=item.mode==='simulado'?'Simulado':item.mode==='core'?'NEXO Core':item.mode==='adaptive'?'Adaptativo':'Sessão';
+    return `<button class="session-history-row" data-session-history="${item.id}">
+      <span class="session-type">${label}</span>
+      <div><b>${esc(item.topic||item.subject||item.area||'Treino geral')}</b><small>${answered} respondida(s) · ${formatStudyDuration(item.total_duration_seconds||0)}</small></div>
+      <strong>${accuracy}%</strong>
+    </button>`;
+  }).join('')||'<p style="color:var(--muted)">Suas sessões aparecerão aqui.</p>';
+
+  $$('[data-session-history]').forEach(btn=>btn.onclick=async()=>{
+    const report=await getNexoSessionReport(btn.dataset.sessionHistory);
+    if(!report)return toast('Não encontrei detalhes suficientes dessa sessão.','error');
+    state.lastSimulationReport=report;
+    $('#niaPanel').classList.remove('hidden');
+    setNexoMood(Number(report.accuracy||0)>=70?'confiante':'pensativo');
+    addNiaMessage('Essa sessão teve '+Number(report.accuracy||0)+'% de aproveitamento, com média de '+formatStudyDuration(report.avg_seconds||0)+' por questão. Se quiser, me pergunte “o que revisar desta sessão?”.','bot');
+  });
 }
 
 async function renderFocus() {
@@ -1501,6 +1753,19 @@ function nexoQuestionContext(text){
 }
 
 
+function nexoSimulationContext(text){
+  if(!/(meu (ultimo|último) simulado|analise.*simulado|an[aá]lise.*simulado|o que revisar.*sess[aã]o|resultado.*simulado|como fui.*simulado)/i.test(text))return null;
+  const report=state.lastSimulationReport;
+  if(!report)return {mood:'pensativo',text:'Ainda não tenho um relatório de simulado aberto nesta conversa. Termine um simulado ou toque em uma sessão na tela de Desempenho e me chame de novo.'};
+  const weak=Array.isArray(report.weak_topics)?report.weak_topics:[];
+  const top=weak[0];
+  return {
+    mood:Number(report.accuracy||0)>=70?'confiante':'serio',
+    text:'No seu último relatório, você ficou com '+Number(report.accuracy||0)+'% de aproveitamento ('+Number(report.correct||0)+' de '+Number(report.attempts||0)+'). Seu tempo médio foi '+formatStudyDuration(report.avg_seconds||0)+'.\n\n'+
+      (top?'Meu primeiro foco seria '+top.topic+' ('+(top.subject||'conteúdo')+'), porque apareceu com '+Number(top.error_rate||0)+'% de erro nesta sessão. Faça uma revisão curta e depois 5–6 questões desse tema antes de repetir outro simulado.':'Não apareceu um tema crítico isolado. Nesse caso, eu focaria em manter o ritmo e revisar os erros individualmente.')
+  };
+}
+
 async function nexoCoreAssistantContext(text){
   if(!/(o que (eu )?devo estudar|o que estudar agora|qual (e |é )?meu foco|minha prioridade|minhas dificuldades|onde (eu )?estou pior|meu desempenho|meus resultados|o que voce recomenda estudar|o que você recomenda estudar|nexo core)/i.test(text)) return null;
   if(!state.core) await loadNexoCore();
@@ -1599,6 +1864,9 @@ async function logAssistantTurn(input,result){
 async function niaAnswer(text){
   const context=nexoQuestionContext(text);
   if(context)return {...context,key:'question_context',category:'question'};
+
+  const simulationContext=nexoSimulationContext(text);
+  if(simulationContext)return {...simulationContext,key:'simulation_report',category:'simulation'};
 
   const coreContext=await nexoCoreAssistantContext(text);
   if(coreContext)return {...coreContext,key:'nexo_core',category:'adaptive'};
