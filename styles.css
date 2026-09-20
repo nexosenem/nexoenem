@@ -8688,3 +8688,214 @@ body.light .essay-theme-control select{background:#fff}
   .onboarding-content{padding-top:12px!important}
   .onboarding-progress{margin:10px 0 13px!important}
 }
+
+
+/* =========================================================
+   NEXO FULL PRODUCT v1
+   Semana NEXO · histórico de redação · salvos · reportes
+   ========================================================= */
+
+.nexo-week-card{
+  border:1px solid rgba(111,88,230,.26);
+  background:
+    radial-gradient(circle at 100% 0%,rgba(58,183,232,.09),transparent 36%),
+    linear-gradient(155deg,rgba(12,22,45,.96),rgba(7,15,30,.98));
+  border-radius:20px;
+  padding:17px;
+  overflow:hidden;
+}
+.nexo-week-head{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:9px;
+}
+.nexo-week-head h3{margin:4px 0 0;font-size:18px;line-height:1.1}
+.nexo-week-card>p{color:var(--muted);font-size:10px;line-height:1.5;margin:0 0 12px}
+.nexo-week-progress{
+  min-width:70px;
+  display:grid;
+  justify-items:end;
+  gap:1px;
+  padding:8px 10px;
+  border-radius:13px;
+  border:1px solid rgba(117,92,241,.25);
+  background:rgba(83,61,170,.08)
+}
+.nexo-week-progress b{font-size:14px;color:#b8a9ff}
+.nexo-week-progress small{font-size:6px;color:var(--muted);text-transform:uppercase;letter-spacing:.6px}
+.nexo-week-tasks{display:grid;gap:7px;margin:10px 0 12px}
+.week-mini-task{
+  width:100%;
+  display:grid;
+  grid-template-columns:30px minmax(0,1fr) 18px;
+  align-items:center;
+  gap:9px;
+  padding:9px 10px;
+  border:1px solid rgba(89,108,150,.18);
+  border-radius:12px;
+  background:rgba(255,255,255,.015);
+  color:var(--text);
+  text-align:left;
+  cursor:pointer;
+}
+.week-mini-task>span{
+  width:30px;height:30px;border-radius:9px;
+  display:grid;place-items:center;
+  background:rgba(111,88,230,.12);
+  color:#a895ff;font-weight:900
+}
+.week-mini-task div{min-width:0}
+.week-mini-task b,.week-mini-task small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.week-mini-task b{font-size:9px}
+.week-mini-task small{font-size:7px;color:var(--muted);margin-top:2px}
+.week-mini-task>i{font-style:normal;color:#7e92ab}
+.week-mini-task.today{border-color:rgba(53,183,232,.42);box-shadow:inset 0 0 0 1px rgba(53,183,232,.05)}
+.week-mini-task.done{opacity:.7}
+.week-mini-task.done>span{color:#6de5c1;background:rgba(55,200,160,.1)}
+.week-loading{font-size:8px!important;color:var(--muted)!important;margin:4px 0!important}
+
+.week-full-hero{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:20px;
+  padding:22px;
+  margin-bottom:14px;
+  background:
+    radial-gradient(circle at 90% 10%,rgba(55,183,232,.10),transparent 30%),
+    linear-gradient(150deg,rgba(26,21,66,.72),rgba(6,15,29,.96));
+}
+.week-full-hero h3{font-size:24px;margin:5px 0 8px}
+.week-full-hero p{margin:0;color:var(--muted);max-width:650px;font-size:11px;line-height:1.5}
+.week-full-score{
+  width:112px;height:112px;flex:0 0 112px;border-radius:50%;
+  display:grid;place-items:center;align-content:center;
+  border:1px solid rgba(114,86,237,.45);
+  background:radial-gradient(circle,rgba(106,85,223,.13),rgba(8,16,31,.3))
+}
+.week-full-score b{font-size:26px}
+.week-full-score small{font-size:7px;color:var(--muted);text-align:center;max-width:70px}
+.week-full-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.week-day-card{padding:16px;position:relative;overflow:hidden}
+.week-day-card header{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.week-day-card header span{font-size:8px;color:#9a88ef;font-weight:900;letter-spacing:.6px}
+.week-day-card header b{font-size:7px;color:#72839c}
+.week-day-card.today{border-color:rgba(53,183,232,.42)}
+.week-day-card.done{border-color:rgba(73,199,161,.28)}
+.week-day-main{display:flex;align-items:center;gap:11px;margin:15px 0 11px}
+.week-day-icon{
+  width:43px;height:43px;flex:0 0 43px;border-radius:13px;
+  display:grid;place-items:center;font-size:19px;
+  color:#9e8cff;background:rgba(111,88,230,.10)
+}
+.week-day-main h3{margin:0 0 4px;font-size:16px}
+.week-day-main p{margin:0;color:var(--muted);font-size:9px}
+.week-day-meta{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px}
+.week-day-meta span{font-size:7px;color:#9badc3;padding:5px 8px;border-radius:999px;border:1px solid rgba(83,102,141,.18)}
+.week-day-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.week-day-actions button{min-height:42px;font-size:9px}
+.week-day-actions button:disabled{opacity:.5;cursor:default}
+
+.saved-questions-panel{margin-top:14px}
+.saved-question-list{display:grid;gap:8px}
+.saved-question-row{
+  display:grid;grid-template-columns:32px minmax(0,1fr) auto;gap:10px;align-items:center;
+  padding:11px;border:1px solid rgba(83,101,139,.18);border-radius:12px;background:rgba(255,255,255,.012)
+}
+.saved-question-row>span{width:32px;height:32px;display:grid;place-items:center;border-radius:10px;background:rgba(111,88,230,.1);color:#ad9cff}
+.saved-question-row div{min-width:0}
+.saved-question-row b,.saved-question-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.saved-question-row b{font-size:10px}
+.saved-question-row small{font-size:7px;color:var(--muted);margin-top:2px}
+.saved-question-row button{
+  border:1px solid rgba(111,88,230,.28);background:transparent;color:#b8a9ff;border-radius:10px;padding:8px 10px;font-size:8px;font-weight:800
+}
+
+.post-answer-actions #saveCurrentQuestion.is-saved{
+  border-color:rgba(228,189,76,.45);
+  color:#f0cf69;
+  background:rgba(228,189,76,.07)
+}
+
+.question-issue-sheet{max-width:520px}
+.question-issue-sheet label{display:grid;gap:6px;color:#9badc3;font-size:9px;font-weight:800;margin:10px 0}
+.question-issue-sheet select,.question-issue-sheet textarea{
+  width:100%;border:1px solid var(--line);border-radius:12px;background:#081529;color:var(--text);padding:11px;font:inherit
+}
+.question-issue-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:12px}
+
+.essay-history-card{padding:15px}
+.essay-history-summary{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:9px 0 12px}
+.essay-history-summary span{
+  display:grid;gap:2px;padding:9px;border:1px solid rgba(91,108,145,.17);border-radius:11px;background:rgba(255,255,255,.012)
+}
+.essay-history-summary b{font-size:15px}
+.essay-history-summary small{font-size:6.5px;color:var(--muted);text-transform:uppercase;letter-spacing:.45px}
+.essay-history-list{display:grid;gap:7px;max-height:420px;overflow:auto}
+.essay-history-row{
+  width:100%;display:grid;grid-template-columns:52px minmax(0,1fr) 16px;align-items:center;gap:9px;
+  padding:9px;border:1px solid rgba(83,100,139,.18);border-radius:11px;background:rgba(255,255,255,.012);color:var(--text);text-align:left
+}
+.essay-history-score{
+  width:52px;height:42px;border-radius:10px;display:grid;place-items:center;background:rgba(111,88,230,.10);color:#b5a5ff;font-weight:900
+}
+.essay-history-row div{min-width:0}
+.essay-history-row b,.essay-history-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.essay-history-row b{font-size:9px}
+.essay-history-row small{font-size:6.5px;color:var(--muted);margin-top:2px}
+.essay-history-row i{font-style:normal;color:#73859f}
+
+.resume-study-row{
+  width:100%;display:grid;grid-template-columns:34px minmax(0,1fr) 18px;align-items:center;gap:9px;
+  padding:10px;margin-bottom:8px;border:1px solid rgba(54,181,230,.3);border-radius:12px;
+  background:linear-gradient(90deg,rgba(79,69,182,.08),rgba(42,163,209,.05));color:var(--text);text-align:left
+}
+.resume-study-row>span{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;background:rgba(57,183,232,.10);color:#52c5ef}
+.resume-study-row div{min-width:0}
+.resume-study-row b,.resume-study-row small{display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.resume-study-row b{font-size:9px}
+.resume-study-row small{font-size:7px;color:var(--muted);margin-top:2px}
+.resume-study-row>i{font-style:normal}
+
+.question-issue-admin .comment-actions{margin-top:7px}
+
+body.light .nexo-week-card,
+body.light .week-day-card,
+body.light .saved-question-row,
+body.light .essay-history-row,
+body.light .essay-history-summary span,
+body.light .resume-study-row{
+  background:#fff;
+}
+body.light .question-issue-sheet select,
+body.light .question-issue-sheet textarea{
+  background:#fff;color:#243248
+}
+
+@media(max-width:760px){
+  .nexo-week-card{padding:14px;border-radius:17px}
+  .nexo-week-head h3{font-size:16px}
+  .nexo-week-card>p{font-size:9px}
+  .week-mini-task{grid-template-columns:29px minmax(0,1fr) 16px;padding:8px}
+  .week-mini-task b{font-size:8px}
+  .week-mini-task small{font-size:6.5px}
+  .week-full-hero{padding:15px;align-items:flex-start}
+  .week-full-hero h3{font-size:19px}
+  .week-full-score{width:86px;height:86px;flex-basis:86px}
+  .week-full-score b{font-size:20px}
+  .week-full-grid{grid-template-columns:1fr}
+  .week-day-card{padding:13px}
+  .week-day-actions{grid-template-columns:1fr 1fr}
+  .saved-question-row{grid-template-columns:30px minmax(0,1fr);padding:9px}
+  .saved-question-row button{grid-column:2;justify-self:start}
+  .essay-history-list{max-height:none}
+  .question-issue-actions{display:grid;grid-template-columns:1fr 1fr}
+}
+@media(max-width:420px){
+  .week-full-hero{display:grid;grid-template-columns:1fr auto}
+  .week-full-score{width:74px;height:74px;flex-basis:74px}
+  .week-day-actions{grid-template-columns:1fr}
+  .essay-history-summary{grid-template-columns:repeat(3,1fr)}
+}
