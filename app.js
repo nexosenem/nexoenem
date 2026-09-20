@@ -685,11 +685,29 @@ async function renderQuestion(q) {
     ${visual ? `<div id="visualWrap" class="visual-wrap"><div class="visual-head"><span>RECURSO VISUAL ORIGINAL</span><span>carregando…</span></div><div id="visualStage" class="visual-stage"><div class="visual-loading"></div></div></div>` : ''}
     <div class="q-section-title">COMANDO</div>
     <div class="q-prompt">${esc(q.prompt)}</div>
+    <div class="question-coach">
+      <img src="${NEXO_MOOD_IMAGES.pensativo}" alt="Professor Nexo">
+      <div><b>Professor Nexo</b><small>Se travar, eu te dou uma pista de estratégia sem revelar o gabarito.</small></div>
+      <button id="preAnswerHint" type="button">Pedir pista</button>
+    </div>
+    <div id="preAnswerHintBox" class="pre-answer-hint hidden"></div>
     <div class="q-options">${(q.options||[]).map((opt,i)=>`<button class="q-option" data-option="${i}"><span>${'ABCDE'[i]}</span><b>${esc(opt)}</b></button>`).join('')}</div>
     <div class="confirm-answer-wrap"><small>Selecione uma alternativa. Você poderá conferir antes de enviar.</small><button id="confirmAnswer" class="primary-btn" disabled>Confirmar resposta</button></div>
     <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small></div>`;
 
-  $$('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
+  $('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
+  const preHint=$('#preAnswerHint');
+  if(preHint){
+    preHint.onclick=()=>{
+      const box=$('#preAnswerHintBox');
+      const hint=getQuestionHint(q)||'Leia primeiro o comando e descubra exatamente o que ele pede. Depois volte aos dados do enunciado e elimine alternativas que não respondem ao recorte.';
+      box.innerHTML='<div class="pre-hint-icon">✦</div><div><b>Pista de estratégia</b><p>'+esc(hint)+'</p></div>';
+      box.classList.remove('hidden');
+      preHint.textContent='Pista aberta';
+      preHint.disabled=true;
+      setNexoMood('pensativo');
+    };
+  }
 
   if(visual){
     const ok=await renderVisual(q);
@@ -928,17 +946,44 @@ async function submitAnswer(option) {
   const box=document.createElement('div');
   box.className='answer-panel '+(data.correct?'':'wrong');
   box.innerHTML=`
-    <div class="professor-nexo-inline"><img src="${data.correct?NEXO_MOOD_IMAGES.confiante:NEXO_MOOD_IMAGES.acolhedor}" alt=""><div><b>Professor Nexo</b><small>${data.correct?'Boa! Vamos consolidar o raciocínio.':'Sem problema. Vamos localizar exatamente onde o raciocínio desviou.'}</small></div></div>
-    <div class="answer-title"><span class="answer-letter">${data.correct?'✓':'×'}</span><div><h4>${data.correct?'Resposta correta':'Resposta incorreta'}</h4><small>Gabarito: ${'ABCDE'[correct]}</small></div></div>
-    <div class="answer-reason"><h5>Por que?</h5><p>${esc(detail.summary)}</p></div>
-    <div class="answer-reason"><h5>${data.correct?'O que você acertou':'Onde sua alternativa falha'}</h5><p>${esc(detail.whyWrong)}</p></div>
-    <div class="answer-reason"><h5>Como pensar nesta questão</h5><p>${esc(detail.method)}</p></div>
+    <div class="answer-hero ${data.correct?'is-correct':'is-wrong'}">
+      <div class="answer-professor">
+        <img src="${data.correct?NEXO_MOOD_IMAGES.confiante:NEXO_MOOD_IMAGES.acolhedor}" alt="Professor Nexo">
+        <div><span>PROFESSOR NEXO</span><h4>${data.correct?'Boa leitura. Agora vamos consolidar.':'Essa questão virou material de evolução.'}</h4><p>${data.correct?'Você chegou ao gabarito. O ganho agora é entender qual pista tornou a resposta segura.':'O erro não encerra a questão: ele mostra exatamente o que vale revisar antes da próxima tentativa.'}</p></div>
+      </div>
+      <div class="answer-verdict">
+        <span class="answer-letter">${data.correct?'✓':'×'}</span>
+        <div><small>${data.correct?'ACERTO':'PONTO DE REVISÃO'}</small><b>Gabarito ${'ABCDE'[correct]}</b></div>
+      </div>
+    </div>
+
+    <div class="answer-learning-grid">
+      <article class="learning-block primary-learning">
+        <span>01 · ENTENDA</span>
+        <h5>Por que essa é a resposta?</h5>
+        <p>${esc(detail.summary)}</p>
+      </article>
+      <article class="learning-block">
+        <span>02 · SUA ESCOLHA</span>
+        <h5>${data.correct?'O que você percebeu corretamente':'Onde sua alternativa perde força'}</h5>
+        <p>${esc(detail.whyWrong)}</p>
+      </article>
+      <article class="learning-block">
+        <span>03 · MÉTODO</span>
+        <h5>Como pensar em questões parecidas</h5>
+        <p>${esc(detail.method)}</p>
+      </article>
+    </div>
+
     <div id="hintBox" class="hint-box hidden"></div>
-    <div class="post-answer-actions">
-      ${hint?'<button id="showHint">🐾 Macete do Professor Nexo</button>':''}
+
+    <div class="post-answer-actions premium-actions">
+      ${hint?'<button id="showHint">🐾 Ver macete</button>':''}
+      <button id="askNexoAboutQuestion">✦ Perguntar ao Nexo</button>
+      <button id="reviewQuestionTopic">↻ Treinar este tema</button>
       <button id="openComments">💬 Comentários</button>
       <button id="nextAfterAnswer" class="next-action">Próxima questão →</button>
-    </div>`;
+    </div>`
   $('#questionCard').appendChild(box);
   if(hint){
     $('#showHint').onclick=()=>{
@@ -947,6 +992,24 @@ async function submitAnswer(option) {
       h.innerHTML=`<h4>🐾 Macete do Professor Nexo</h4><p>${esc(hint)}</p>`;
     };
   }
+  $('#askNexoAboutQuestion').onclick=()=>{
+    $('#niaPanel').classList.remove('hidden');
+    setNexoMood(data.correct?'confiante':'acolhedor');
+    askNia(data.correct?'Por que eu acertei essa questão? Me ajuda a consolidar o raciocínio.':'Por que eu errei essa questão? Me ajuda a entender sem só repetir o gabarito.');
+  };
+  $('#reviewQuestionTopic').onclick=async()=>{
+    const q=state.current;
+    if(!q)return;
+    await startStudySession({
+      mode:'review',
+      area:q.area||'',
+      subject:q.subject||'',
+      topic:q.topic||'',
+      difficulty:'',
+      visualOnly:false,
+      size:5
+    });
+  };
   $('#openComments').onclick=()=>openQuestionComments(state.current.id);
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
@@ -1090,6 +1153,9 @@ function essayScores(text){
 $('#analyzeEssay').onclick=async()=>{
   const text=$('#essayText').value.trim();
   if(text.length<250)return toast('Escreva pelo menos 250 caracteres para receber uma análise.','error');
+  const analyzeBtn=$('#analyzeEssay');
+  analyzeBtn.disabled=true;
+  analyzeBtn.textContent='Professor Nexo está lendo...';
   const loader=$('#essayLoader');loader.classList.remove('hidden');
   const msgs=['Avaliando estrutura e repertório.','Analisando coesão e progressão textual.','Verificando argumentação.','Estimando as cinco competências.','Salvando seu histórico.'];let i=0;
   const timer=setInterval(()=>{$('#loaderText').textContent=msgs[++i%msgs.length]},520);
@@ -1097,7 +1163,7 @@ $('#analyzeEssay').onclick=async()=>{
   const scores=essayScores(text),total=scores.reduce((a,b)=>a+b,0);
   const t=getEssayThemeData();
   if($('#essayTheme').value==='custom' && !$('#customEssayTheme').value.trim()){
-    clearInterval(timer);loader.classList.add('hidden');
+    clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.textContent='Analisar e salvar';
     return toast('Escreva o tema personalizado antes de analisar.','error');
   }
   const feedback={
@@ -1111,8 +1177,8 @@ $('#analyzeEssay').onclick=async()=>{
     competencies:{c1:scores[0],c2:scores[1],c3:scores[2],c4:scores[3],c5:scores[4]},
     feedback
   });
-  clearInterval(timer);loader.classList.add('hidden');
-  if(error){console.error(error);toast('A análise foi feita, mas não consegui salvar o histórico.','error');}
+  clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.textContent='Analisar e salvar';
+  if(error){console.error(error);logClientError('essay',error,'essay_save');toast('A análise foi feita, mas não consegui salvar o histórico.','error');}
   showEssayResult(text,scores,total);
 };
 
@@ -1134,29 +1200,111 @@ function buildDetailedEssayReview(text,scores){
 
 function showEssayResult(text,scores,total){
   const comps=['Norma-padrão','Compreensão da proposta','Argumentação','Coesão','Intervenção'];
-  const weak=scores.map((s,i)=>({s,i})).sort((a,b)=>a.s-b.s)[0].i;
+  const shortComps=['C1','C2','C3','C4','C5'];
+  const weak=scores.map((score,index)=>({score,index})).sort((a,b)=>a.score-b.score)[0].index;
+  const best=scores.map((score,index)=>({score,index})).sort((a,b)=>b.score-a.score)[0].index;
   const review=buildDetailedEssayReview(text,scores);
   const tips=[
     'Revise concordância, regência, pontuação e escolha vocabular. Procure períodos longos e veja se podem ser divididos.',
-    'Faça cada parágrafo conversar diretamente com o tema. Evite repertórios que aparecem só como citação e não ajudam a defender a tese.',
-    'Transforme afirmações em raciocínio: apresente a ideia, explique a causa, mostre uma consequência e conecte isso à tese.',
-    'Use conectivos variados e faça retomadas claras. Coesão não é encher o texto de “portanto”; é deixar visível a relação entre as ideias.',
-    'Na intervenção, procure cinco peças: agente, ação, meio/modo, finalidade e detalhamento — sempre respeitando os direitos humanos.'
+    'Faça cada parágrafo conversar diretamente com o tema. Repertório bom precisa ajudar a defender a tese, não apenas aparecer no texto.',
+    'Transforme afirmações em raciocínio: apresente a ideia, explique a causa, mostre consequência e conecte tudo à tese.',
+    'Use conectivos variados e retomadas claras. Coesão é deixar visível a relação entre as ideias, não repetir “portanto”.',
+    'Na intervenção, confira agente, ação, meio/modo, finalidade e detalhamento — sempre respeitando os direitos humanos.'
   ];
   const t=getEssayThemeData();
-  $('#essayResult').innerHTML=`<div class="score-card"><span class="eyebrow">NOTA ESTIMADA</span><div class="score-circle" style="background:conic-gradient(#5f7cff 0 ${total/10}%,#1e2b42 ${total/10}% 100%)"><b>${total}</b></div><p>${review.words} palavras · ${review.paras} parágrafo(s)</p></div>
-    <div class="competencies">${scores.map((s,i)=>`<div class="comp-row"><span>C${i+1}</span><div><i style="width:${s/2}%"></i></div><b>${s}</b></div>`).join('')}</div>
-    <div class="detailed-review">
-      <article class="professor-essay-card"><div class="professor-nexo-inline"><img src="${NEXO_MOOD_IMAGES.pensativo}" alt=""><div><b>Professor Nexo</b><small>Correção orientativa da sua redação</small></div></div><p>Eu li seu texto como um professor de treino: primeiro olho o que já funciona, depois escolho uma prioridade para sua próxima versão. Não tente corrigir tudo de uma vez.</p></article>
-      <article><h4>Observação geral do Professor Nexo</h4><p>Seu texto sobre “${esc(t.title)}” tem uma base reconhecível de dissertação. O principal ponto de evolução agora está na competência C${weak+1} (${comps[weak]}). Em vez de mexer em tudo de uma vez, priorize esse aspecto na próxima versão e depois faça uma segunda revisão focada em clareza e correção gramatical.</p><div class="nia-review-signature">Professor Nexo · análise orientativa do NEXO</div></article>
-      <article><h4>O que está funcionando</h4><p>${scores[3]>=160?'A progressão entre as partes está relativamente bem marcada e há mecanismos de ligação entre ideias.':'Já existe uma linha de raciocínio identificável; com conectivos mais precisos e retomadas melhores, ela ficará mais fácil de acompanhar.'}</p></article>
-      <article><h4>O que eu melhoraria primeiro</h4><p>${tips[weak]}</p></article>
-      <article><h4>Leitura de estrutura</h4><div class="review-checklist">${review.notes.map(n=>`<span><i>✓</i>${esc(n)}</span>`).join('')}</div></article>
-      <article><h4>Plano para reescrever</h4><p>1) releia o tema e escreva sua tese em uma frase; 2) dê uma função para cada parágrafo; 3) em cada argumento, ligue causa e consequência; 4) revise conectivos; 5) finalize conferindo a proposta de intervenção e a norma-padrão.</p></article>
-      <article><h4>Importante</h4><p>Esta análise é uma ferramenta automática de estudo, baseada em regras linguísticas e estruturais. Ela não substitui a correção humana nem a avaliação oficial do ENEM.</p></article>
+  const mood=total>=800?'confiante':total>=600?'serio':'acolhedor';
+  const scoreLabel=total>=900?'Excelente base':total>=800?'Muito competitivo':total>=700?'Boa construção':total>=600?'Em evolução':'Hora de fortalecer a base';
+
+  $('#essayResult').innerHTML=`
+    <div class="essay-correction-shell">
+      <section class="essay-score-hero">
+        <div class="essay-score-copy">
+          <span class="eyebrow">CORREÇÃO ORIENTATIVA · PROFESSOR NEXO</span>
+          <h3>${scoreLabel}</h3>
+          <p>Seu texto sobre “${esc(t.title)}” já foi transformado em um plano de revisão. A prioridade agora é a ${shortComps[weak]}.</p>
+          <div class="essay-meta-chips">
+            <span>${review.words} palavras</span>
+            <span>${review.paras} parágrafo(s)</span>
+            <span>${review.connectors} conectivo(s)</span>
+          </div>
+        </div>
+        <div class="essay-score-side">
+          <img src="${NEXO_MOOD_IMAGES[mood]||NEXO_MOOD_IMAGES.serio}" alt="Professor Nexo">
+          <div class="score-orb" style="--score:${total/10}%"><small>NOTA ESTIMADA</small><b>${total}</b><span>/1000</span></div>
+        </div>
+      </section>
+
+      <section class="essay-competency-grid">
+        ${scores.map((score,index)=>{
+          const status=index===weak?'Prioridade':index===best?'Ponto forte':'Em análise';
+          return `<article class="essay-comp-card ${index===weak?'is-priority':''} ${index===best?'is-strong':''}">
+            <div class="essay-comp-top"><span>${shortComps[index]}</span><small>${status}</small></div>
+            <h4>${comps[index]}</h4>
+            <div class="essay-comp-score"><b>${score}</b><span>/200</span></div>
+            <div class="essay-comp-track"><i style="width:${score/2}%"></i></div>
+          </article>`;
+        }).join('')}
+      </section>
+
+      <section class="essay-priority-card">
+        <div class="essay-priority-prof">
+          <img src="${NEXO_MOOD_IMAGES.pensativo}" alt="Professor Nexo">
+          <div><span>PRÓXIMA MISSÃO</span><h4>Melhorar ${shortComps[weak]} · ${comps[weak]}</h4><p>${esc(tips[weak])}</p></div>
+        </div>
+        <div class="essay-priority-actions">
+          <button id="askNexoEssay" class="outline-btn">Perguntar ao Professor Nexo</button>
+          <button id="rewriteEssay" class="primary-btn">Reescrever agora</button>
+        </div>
+      </section>
+
+      <section class="essay-review-grid">
+        <article>
+          <span class="review-kicker">LEITURA DO PROFESSOR</span>
+          <h4>Visão geral</h4>
+          <p>Seu texto apresenta uma estrutura reconhecível de dissertação-argumentativa. O ganho mais rápido vem de trabalhar primeiro ${shortComps[weak]}, sem tentar corrigir tudo ao mesmo tempo.</p>
+        </article>
+        <article>
+          <span class="review-kicker">PONTO FORTE</span>
+          <h4>${shortComps[best]} · ${comps[best]}</h4>
+          <p>${best===3?'A progressão e os mecanismos de ligação estão entre os aspectos mais fortes desta versão.':best===4?'A proposta de intervenção está entre os elementos mais fortes desta versão.':'Esta competência aparece como seu melhor resultado estimado nesta versão.'}</p>
+        </article>
+        <article class="essay-structure-card">
+          <span class="review-kicker">CHECKLIST DE ESTRUTURA</span>
+          <h4>O que eu observei</h4>
+          <div class="review-checklist">${review.notes.map(note=>`<span><i>✓</i>${esc(note)}</span>`).join('')}</div>
+        </article>
+        <article>
+          <span class="review-kicker">REESCRITA</span>
+          <h4>Plano em 5 passos</h4>
+          <ol class="rewrite-steps">
+            <li>Escreva sua tese em uma frase.</li>
+            <li>Dê uma função clara para cada parágrafo.</li>
+            <li>Ligue causa, consequência e repertório aos argumentos.</li>
+            <li>Revise conectivos e períodos longos.</li>
+            <li>Finalize conferindo a intervenção e a norma-padrão.</li>
+          </ol>
+        </article>
+      </section>
+
+      <footer class="essay-analysis-note">
+        <span>i</span>
+        <p>Esta é uma análise automática de treino. Ela ajuda a orientar sua revisão, mas não substitui uma correção humana nem a avaliação oficial do ENEM.</p>
+      </footer>
     </div>`;
-  setNexoMood(scores[weak]>=160?'confiante':'pensativo');
-  addNiaMessage('Corrigi sua redação. Minha prioridade para sua próxima versão é a C'+(weak+1)+' — '+comps[weak]+'. Veja as observações no painel de correção e, se quiser, me pergunte “como melhorar a C'+(weak+1)+'?”.','bot');
+
+  $('#askNexoEssay').onclick=()=>{
+    $('#niaPanel').classList.remove('hidden');
+    setNexoMood('pensativo');
+    askNia('Como posso melhorar a '+shortComps[weak]+' ('+comps[weak]+') da redação que acabei de escrever?');
+  };
+  $('#rewriteEssay').onclick=()=>{
+    $('#essayText').focus();
+    $('#essayText').scrollIntoView({behavior:'smooth',block:'center'});
+    toast('Reescreva priorizando '+shortComps[weak]+'. O Professor Nexo mantém essa missão como foco.');
+  };
+
+  setNexoMood(mood);
+  addNiaMessage('Corrigi sua redação. Sua prioridade agora é '+shortComps[weak]+' — '+comps[weak]+'. Eu organizei a correção em uma missão de reescrita para você não tentar melhorar tudo ao mesmo tempo.','bot');
 }
 
 async function loadVideos() {
