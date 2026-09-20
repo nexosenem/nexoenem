@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-56">
+  <link rel="stylesheet" href="./styles.css?v=20260920-57">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -932,6 +932,35 @@
                 <div id="nexoHealthErrors" class="health-error-list"><p>Nenhum dado carregado.</p></div>
               </div>
             </div>
+
+            <div class="ops-live-grid">
+              <article><span>ALUNOS ATIVOS</span><b id="opsActiveStudents">—</b><small>últimos 15 minutos</small></article>
+              <article><span>SESSÕES ABERTAS</span><b id="opsOpenSessions">—</b><small>ativas nas últimas 2h</small></article>
+              <article><span>RESPOSTAS / MIN</span><b id="opsResponsesMinute">—</b><small>ritmo dos últimos 15 min</small></article>
+              <article><span>MÓDULOS EM MANUTENÇÃO</span><b id="opsMaintenanceCount">—</b><small>controle seletivo</small></article>
+            </div>
+
+            <div class="ops-chart-grid">
+              <section class="ops-chart-card">
+                <div class="health-section-title"><b>Erros · últimas 6 horas</b><small>blocos de 30 min</small></div>
+                <div id="opsErrorTrend" class="ops-bars"></div>
+              </section>
+              <section class="ops-chart-card">
+                <div class="health-section-title"><b>Respostas · última hora</b><small>blocos de 5 min</small></div>
+                <div id="opsResponseTrend" class="ops-bars"></div>
+              </section>
+            </div>
+
+            <div class="ops-control-grid">
+              <section class="ops-control-card">
+                <div class="health-section-title"><b>Controle de manutenção</b><small>alunos são bloqueados só no módulo escolhido</small></div>
+                <div id="opsMaintenanceModules" class="ops-maintenance-list"><p>Carregando módulos...</p></div>
+              </section>
+              <section class="ops-control-card">
+                <div class="health-section-title"><b>Histórico de incidentes</b><small>erros + ações administrativas</small></div>
+                <div id="opsIncidentList" class="ops-incident-list"><p>Nenhum incidente carregado.</p></div>
+              </section>
+            </div>
           </article>
 
           <div id="cloudinarySecurityStatus" class="cloudinary-security-status checking">Verificando proteção dos uploads...</div>
@@ -1304,6 +1333,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-62"></script>
+  <script src="./app.js?v=20260920-63"></script>
 </body>
 </html>
