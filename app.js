@@ -402,12 +402,24 @@ function updateHomeExperience(){
 
 function renderNexoCommandCenter(){
   const p=state.journey?.profile||{}, rec=state.core?.recommended_action||null;
+  const daily=(state.journey?.missions||[]).filter(m=>m.period==='daily');
+  const dailyDone=daily.filter(m=>m.status==='completed'||m.status==='claimed').length;
+  const dailyPct=daily.length?Math.round(dailyDone*100/daily.length):0;
   $('[data-nexo-command]').forEach(card=>{
     const level=card.querySelector('[data-command-level]'), streak=card.querySelector('[data-command-streak]'), coins=card.querySelector('[data-command-coins]'), next=card.querySelector('[data-command-next]');
+    const dailyCount=card.querySelector('[data-command-daily-count]'),dailyBar=card.querySelector('[data-command-daily-bar]'),dailyLabel=card.querySelector('[data-command-daily-label]'),start=card.querySelector('[data-command-start]');
     if(level)level.textContent='NV. '+Number(p.level||1);
     if(streak)streak.textContent=String(Number(p.streak_days||0));
     if(coins)coins.textContent=Number(p.coins||0).toLocaleString('pt-BR');
     if(next)next.innerHTML=rec?'<b>Próxima missão:</b> '+esc(rec.topic||rec.subject||rec.area||'treino adaptativo')+' · '+Number(rec.size||6)+' questões':'<b>Próxima missão:</b> faça o diagnóstico inicial para calibrar seu plano.';
+    if(dailyCount)dailyCount.textContent=dailyDone+' / '+daily.length;
+    if(dailyBar)dailyBar.style.width=dailyPct+'%';
+    if(dailyLabel)dailyLabel.textContent=daily.length&&dailyDone===daily.length?'Missões do dia concluídas':'Missões de hoje';
+    if(start){
+      start.innerHTML=rec?'Começar missão <span>→</span>':'Fazer diagnóstico <span>→</span>';
+      start.onclick=()=>rec?startCoreRecommendation():(openPage('questoes'),resetSessionUI());
+    }
+    card.classList.toggle('daily-complete',Boolean(daily.length&&dailyDone===daily.length));
   });
 }
 
@@ -3887,7 +3899,7 @@ function renderJourneyStore(){
       <div><small>${item.plus_only?'NEXO PLUS · ':''}${collectionLabel(item)} · ${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
       <div class="store-item-bottom">
         <span>${status}</span>
-        ${ultra?'<button disabled>Ultra</button>':has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked||item.grant_mode==='level'?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">${Number(item.price||0)===0?'Resgatar':'Comprar'}</button>`}
+        ${ultra?'<button disabled>Ultra</button>':has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">${Number(item.price||0)===0?'Resgatar':'Comprar'}</button>`}
       </div>
     </article>`;
   }).join('');
