@@ -5644,3 +5644,43 @@ body[data-plan="ultra"] #headerPlanBadge,
     height:102px!important;
   }
 }
+
+
+/* NEXO FOCUS MASCOT FORCE v3 */
+.focus-mascot-wrap{
+  min-height:170px!important;
+  height:170px!important;
+  overflow:hidden!important;
+}
+.focus-mascot-wrap .focus-mascot-img{
+  display:block!important;
+  width:auto!important;
+  height:168px!important;
+  max-width:88%!important;
+  max-height:168px!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  margin:0 auto!important;
+  transform:none!important;
+}
+@media(max-width:760px){
+  .focus-mascot-wrap{
+    min-height:156px!important;
+    height:156px!important;
+  }
+  .focus-mascot-wrap .focus-mascot-img{
+    height:154px!important;
+    max-height:154px!important;
+    max-width:92%!important;
+  }
+}
+@media(max-width:390px){
+  .focus-mascot-wrap{
+    min-height:142px!important;
+    height:142px!important;
+  }
+  .focus-mascot-wrap .focus-mascot-img{
+    height:140px!important;
+    max-height:140px!important;
+  }
+}
