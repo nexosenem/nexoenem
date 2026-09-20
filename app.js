@@ -4153,7 +4153,7 @@ function renderStudySessionReport(finished,report){
   const avgSeconds=Number(report?.avg_seconds||0)||(attempts?Math.round(totalSeconds/attempts):0);
   const topic=finished.topic||finished.subject||finished.area||'Sessão';
   const learning=topicLearningMeta(topic,finished.subject||'Matemática');
-  const domain=learning.attempts?learning.accuracy:accuracy;
+  const domain=learning.attempts?learning.score:Math.min(70,accuracy);
   const copy=sessionLearningCopy(accuracy,wrong,topic);
   const next=nextRadarTopic(topic,finished.subject||'Matemática');
   const hasContent=Boolean(topicLesson(topic,finished.subject||'Matemática'));
@@ -4996,36 +4996,51 @@ async function loadTopicMastery(){
   try{
     const [{data:attempts,error:attemptError},{data:radarRows,error:radarError}]=await Promise.all([
       client.from('question_attempts')
-        .select('question_id,is_correct,duration_seconds,created_at,question:questions(source_year,source_question_number,area,subject,topic)')
+        .select('question_id,is_correct,duration_seconds,created_at,question:questions(source_year,source_question_number,area,subject,topic,difficulty)')
         .order('created_at',{ascending:false})
-        .limit(500),
+        .limit(700),
       client.from('enem_radar_items')
         .select('year,question_index,area,subject,topic')
-        .eq('area','Matemática')
-        .limit(1000)
+        .limit(4000)
     ]);
     if(attemptError)throw attemptError;
     const radarMap=new Map();
     if(!radarError){
       for(const row of radarRows||[])radarMap.set(String(row.year)+'::'+String(row.question_index),row);
     }
-    const map=new Map();
+    const now=Date.now(),map=new Map();
     for(const a of attempts||[]){
       const q=a.question||{};
       const fine=radarMap.get(String(q.source_year)+'::'+String(q.source_question_number));
       const topic=fine?.topic||q.topic||q.subject||q.area||'Geral';
+      const subject=fine?.subject||q.subject||q.area||'';
       const key=String(topic);
-      const row=map.get(key)||{topic:key,attempts:0,correct:0,totalSeconds:0,lastAt:null};
-      row.attempts++;
-      if(a.is_correct)row.correct++;
-      row.totalSeconds+=Number(a.duration_seconds||0);
+      const row=map.get(key)||{topic:key,subject,attempts:0,correct:0,totalSeconds:0,lastAt:null,weightedCorrect:0,weightTotal:0,difficultyTotal:0};
+      const difficulty=clamp(Number(q.difficulty||2),1,5);
       const at=a.created_at?new Date(a.created_at):null;
+      const ageDays=at?Math.max(0,(now-at.getTime())/86400000):30;
+      const recency=ageDays<=7?1.15:ageDays<=30?1:0.88;
+      const weight=(0.75+difficulty*0.15)*recency;
+      row.attempts++;
+      if(a.is_correct){row.correct++;row.weightedCorrect+=weight}
+      row.weightTotal+=weight;
+      row.difficultyTotal+=difficulty;
+      row.totalSeconds+=Number(a.duration_seconds||0);
       if(at&&(!row.lastAt||at>row.lastAt))row.lastAt=at;
       map.set(key,row);
     }
     for(const row of map.values()){
       row.accuracy=row.attempts?Math.round(row.correct*100/row.attempts):0;
       row.avgSeconds=row.attempts?Math.round(row.totalSeconds/row.attempts):0;
+      row.avgDifficulty=row.attempts?Number((row.difficultyTotal/row.attempts).toFixed(1)):0;
+      // Bayesian prior prevents 1/1 from looking like real mastery.
+      const priorWeight=3,priorRate=.5;
+      const posterior=(row.weightedCorrect+priorWeight*priorRate)/(row.weightTotal+priorWeight);
+      const confidence=1-Math.exp(-row.attempts/6);
+      const paceFactor=row.avgSeconds&&row.avgSeconds>210?.95:1;
+      row.masteryScore=clamp(Math.round(posterior*(.78+.22*confidence)*100*paceFactor),0,100);
+      row.confidence=clamp(Math.round(confidence*100),0,100);
+      row.daysSince=row.lastAt?Math.floor((now-row.lastAt.getTime())/86400000):999;
     }
     state.topicMastery=map;
   }catch(err){
@@ -5051,18 +5066,26 @@ function topicLesson(topic,subject='Matemática'){
 
 function topicLearningMeta(topic,subject='Matemática'){
   const materials=topicMaterials(topic,subject);
-  const mastery=state.topicMastery.get(String(topic))||{attempts:0,accuracy:0,avgSeconds:0,lastAt:null};
+  const mastery=state.topicMastery.get(String(topic))||{attempts:0,accuracy:0,masteryScore:0,confidence:0,avgSeconds:0,lastAt:null,daysSince:999};
   const completed=materials.filter(m=>getContentProgress('material',m.id).completed).length;
   const progress=materials.length
     ? Math.round(materials.reduce((sum,m)=>sum+(getContentProgress('material',m.id).completed?100:Number(getContentProgress('material',m.id).progress_percent||0)),0)/materials.length)
     : 0;
+  const score=mastery.attempts?Number(mastery.masteryScore||0):progress;
+  let intervalDays=1;
+  if(score>=80&&mastery.attempts>=8)intervalDays=7;
+  else if(score>=65&&mastery.attempts>=5)intervalDays=3;
+  const lastLearningAt=mastery.lastAt||materials.map(m=>getContentProgress('material',m.id).last_opened_at).filter(Boolean).map(x=>new Date(x)).sort((a,b)=>b-a)[0]||null;
+  const daysSince=lastLearningAt?Math.floor((Date.now()-new Date(lastLearningAt).getTime())/86400000):999;
+  const reviewDue=Boolean(mastery.attempts>=3&&daysSince>=intervalDays);
   let label='NOVO',key='new';
-  if(mastery.attempts>=5&&mastery.accuracy>=80){label='DOMINADO';key='mastered'}
-  else if(mastery.attempts>=3&&mastery.accuracy<55){label='REVISAR';key='review'}
-  else if(mastery.attempts>=3&&mastery.accuracy>=65){label='CONSOLIDANDO';key='consolidating'}
+  if(reviewDue&&score>=55){label='HORA DE REVISAR';key='review'}
+  else if(mastery.attempts>=8&&score>=80){label='DOMINADO';key='mastered'}
+  else if(mastery.attempts>=5&&score<55){label='REVISAR';key='review'}
+  else if(mastery.attempts>=5&&score>=65){label='CONSOLIDANDO';key='consolidating'}
   else if(mastery.attempts>0){label='EM TREINO';key='training'}
   else if(progress>0||completed>0){label='APRENDENDO';key='learning'}
-  return {...mastery,materials,completed,progress,label,key};
+  return {...mastery,score,materials,completed,progress,label,key,intervalDays,daysSince,reviewDue,lastLearningAt};
 }
 
 function openLibraryTopic(subject,topic){
@@ -5081,14 +5104,12 @@ function openLibraryTopic(subject,topic){
 }
 
 function spacedReviewCandidate(){
-  const now=Date.now();
   const lessons=(state.materials||[]).filter(m=>materialKind(m).key==='lesson');
   return lessons.map(item=>{
-    const p=getContentProgress('material',item.id);
-    const opened=p.last_opened_at?new Date(p.last_opened_at).getTime():0;
-    return {item,p,days:opened?Math.floor((now-opened)/86400000):0};
-  }).filter(x=>x.p.completed&&x.days>=7)
-    .sort((a,b)=>b.days-a.days)[0]||null;
+    const meta=topicLearningMeta(item.topic,item.subject);
+    return {item,meta,days:meta.daysSince};
+  }).filter(x=>x.meta.reviewDue)
+    .sort((a,b)=>(Number(b.meta.score||0)-Number(a.meta.score||0))||(b.days-a.days))[0]||null;
 }
 
 function renderNexoToday(){
@@ -5121,7 +5142,7 @@ function renderNexoToday(){
     action=()=>{openPage('materiais');setTimeout(()=>openContentViewer('material',partial.item.id),100)};actionLabel='Continuar conteúdo →';
   }else if(review){
     title='Hora de revisar '+review.item.topic+'.';
-    text='Faz '+review.days+' dias desde a última abertura. Uma revisão curta agora ajuda a manter o conteúdo ativo.';
+    text='Faz '+review.days+' dia(s) desde o último contato. Seu intervalo atual de revisão é '+review.meta.intervalDays+' dia(s).';
     status='REVISÃO ESPAÇADA';time='3 questões';mood='serio';
     action=()=>startContentPractice(review.item,true,3);actionLabel='Revisar agora →';
   }else if(rec?.topic){
@@ -5158,11 +5179,11 @@ function renderMathTrail(){
   const rows=(state.radarTopics||[]).filter(r=>r.area==='Matemática').sort((a,b)=>Number(b.nexo_priority_score||0)-Number(a.nexo_priority_score||0));
   const html=rows.length?rows.map((row,index)=>{
     const meta=topicLearningMeta(row.topic,row.subject);
-    const score=meta.attempts?meta.accuracy:meta.progress;
+    const score=meta.attempts?meta.score:meta.progress;
     return '<button class="trail-node '+meta.key+'" data-trail-topic="'+encodeURIComponent(row.topic)+'" data-trail-subject="'+encodeURIComponent(row.subject||'Matemática')+'">'+
       '<span class="trail-index">'+String(index+1).padStart(2,'0')+'</span>'+
       '<div class="trail-copy"><small>'+esc(meta.label)+'</small><b>'+esc(row.topic)+'</b><div class="trail-track"><i style="width:'+clamp(score,0,100)+'%"></i></div></div>'+
-      '<div class="trail-score"><b>'+Math.round(score)+'%</b><small>'+(meta.attempts?meta.attempts+' questões':meta.completed+'/'+Math.max(1,meta.materials.length)+' conteúdos')+'</small></div>'+
+      '<div class="trail-score"><b>'+Math.round(score)+'%</b><small>'+(meta.attempts?meta.attempts+' questões · confiança '+meta.confidence+'%':meta.completed+'/'+Math.max(1,meta.materials.length)+' conteúdos')+'</small></div>'+
       '<i class="trail-arrow">→</i></button>';
   }).join(''):'<p class="trail-empty">Carregando sua trilha...</p>';
   roots.forEach(root=>{
