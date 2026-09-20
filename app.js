@@ -1068,6 +1068,57 @@ $('#forgotPassword').onclick=async()=>{
   }
 };
 
+async function exportMyNexoData(){
+  if(!state.user?.id)return;
+  const btn=$('#exportMyData');
+  if(btn){btn.disabled=true;btn.textContent='Preparando exportação...';}
+  try{
+    const uid=state.user.id;
+    const requests={
+      profile:client.from('profiles').select('*').eq('id',uid).maybeSingle(),
+      membership:client.from('nexo_memberships').select('*').eq('user_id',uid).maybeSingle(),
+      attempts:client.from('question_attempts').select('*').eq('user_id',uid).order('created_at',{ascending:true}),
+      essays:client.from('essays').select('*').eq('user_id',uid).order('created_at',{ascending:true}),
+      sessions:client.from('nexo_study_sessions').select('*').eq('user_id',uid).order('started_at',{ascending:true}),
+      skills:client.from('nexo_skill_state').select('*').eq('user_id',uid),
+      saved_questions:client.from('saved_questions').select('*').eq('user_id',uid).order('created_at',{ascending:true}),
+      content_progress:client.from('content_progress').select('*').eq('user_id',uid),
+      favorites:client.from('content_favorites').select('*').eq('user_id',uid),
+      journey:client.from('gamification_profiles').select('*').eq('user_id',uid).maybeSingle(),
+      inventory:client.from('gamification_inventory').select('*').eq('user_id',uid),
+      achievements:client.from('gamification_achievements').select('*').eq('user_id',uid),
+      missions:client.from('gamification_missions').select('*').eq('user_id',uid).order('created_at',{ascending:true}),
+      week_tasks:client.from('nexo_week_tasks').select('*').eq('user_id',uid).order('week_start',{ascending:true})
+    };
+    const entries=await Promise.all(Object.entries(requests).map(async([key,promise])=>{
+      const result=await promise;
+      if(result.error) return [key,{error:result.error.message}];
+      return [key,result.data??null];
+    }));
+    const payload={
+      product:'NEXO ENEM',
+      exported_at:new Date().toISOString(),
+      account:{id:uid,email:state.user.email||null,created_at:state.user.created_at||null},
+      data:Object.fromEntries(entries)
+    };
+    const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json;charset=utf-8'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download='nexo-meus-dados-'+new Date().toISOString().slice(0,10)+'.json';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),1000);
+    $('#profileMenu')?.classList.add('hidden');
+    toast('Seus dados foram exportados.');
+  }catch(err){
+    console.error('data export',err);
+    toast('Não foi possível exportar seus dados agora.','error');
+  }finally{
+    if(btn){btn.disabled=false;btn.textContent='⇩ Exportar meus dados';}
+  }
+}
+$('#exportMyData')?.addEventListener('click',exportMyNexoData);
+
 $('#logoutBtn').onclick = async () => {
   $('#niaButton')?.classList.add('hidden');
   $('#niaPanel')?.classList.add('hidden');
@@ -2017,9 +2068,30 @@ function startAuthBootstrap(){
   if(authBootstrapStarted)return;
   authBootstrapStarted=true;
 
-  client.auth.onAuthStateChange((_event, session) => {
+  client.auth.onAuthStateChange((event, session) => {
     // Mantém o callback síncrono e agenda a inicialização para o próximo tick.
-    setTimeout(() => {
+    setTimeout(async() => {
+      if(event==='PASSWORD_RECOVERY'&&session){
+        try{
+          const password=prompt('Crie sua nova senha do NEXO (mínimo 6 caracteres):','');
+          if(password===null)return handleSession(session).catch(reportSessionError);
+          if(password.length<6){
+            alert('A senha precisa ter pelo menos 6 caracteres.');
+            return;
+          }
+          const confirmPassword=prompt('Digite a nova senha novamente:','');
+          if(confirmPassword!==password){
+            alert('As senhas não coincidem. Abra novamente o link de recuperação para tentar de novo.');
+            return;
+          }
+          const {error}=await client.auth.updateUser({password});
+          if(error)throw error;
+          alert('Senha alterada com sucesso. Você já pode continuar no NEXO.');
+        }catch(err){
+          console.error('password update',err);
+          alert('Não foi possível alterar sua senha agora. Solicite um novo link de recuperação.');
+        }
+      }
       handleSession(session).catch(reportSessionError);
     }, 0);
   });
