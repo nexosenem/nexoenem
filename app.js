@@ -1265,6 +1265,7 @@ function renderPlanExperience(){
   const ultra=tier==='ultra',plus=tier==='plus'||ultra;
   const plan=ultra?'ULTRA':plus?'PLUS':'FREE';
   document.body.dataset.plan=ultra?'ultra':plus?'plus':'free';
+  if(plus||ultra)$('#questionLimitNotice')?.remove();
   if($('#headerPlanBadge'))$('#headerPlanBadge').textContent=plan;
   if($('#profilePlanLabel'))$('#profilePlanLabel').textContent='Plano '+nexoPlanLabel(tier);
   if($('#profileRole'))$('#profileRole').textContent=nexoRolePlanLabel();
