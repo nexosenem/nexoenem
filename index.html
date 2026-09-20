@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-76">
+  <link rel="stylesheet" href="./styles.css?v=20260920-77">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -143,6 +143,7 @@
         <button class="nav-item" data-page="focos"><span>◎</span>Meus Focos</button>
         <button class="nav-item" data-page="videoaulas"><span>▶</span>Videoaulas</button>
         <button class="nav-item" data-page="materiais"><span>▧</span>Materiais PDF</button>
+        <button class="nav-item radar-nav-item" data-page="radar"><span>◉</span>Radar ENEM</button>
         <button class="nav-item week-nav-item" data-page="semana"><span>◫</span>Semana NEXO</button>
         <button class="nav-item" data-page="simulados"><span>▤</span>Simulados</button>
         <button class="nav-item" data-page="banco"><span>▦</span>Banco de Questões</button>
@@ -679,6 +680,68 @@
           <div class="page-head"><div><span class="eyebrow">BIBLIOTECA</span><h2>Materiais de estudo</h2><p>PDFs e imagens publicados pelo administrador, armazenados no Cloudinary.</p></div></div>
           <div class="filter-line content-filter-line"><input id="materialSearch" class="text-input" placeholder="Buscar PDF, matéria ou tema..."><button id="materialFavoritesOnly" class="outline-btn">☆ Favoritos</button></div>
           <div class="video-grid" id="materialGrid"></div>
+        </section>
+
+        <section class="page" id="radar">
+          <div class="page-head nexo-page-head radar-page-head">
+            <div>
+              <span class="eyebrow">NEXO DATA · 2009–2025</span>
+              <h2>Radar ENEM</h2>
+              <p>Veja o que mais se repete nas provas e priorize seu estudo por frequência, recorrência e presença recente.</p>
+            </div>
+            <div class="radar-source-badge"><span>17</span><div><b>edições analisadas</b><small>fonte canônica: Inep</small></div></div>
+          </div>
+
+          <div class="radar-kpis">
+            <article class="panel radar-kpi"><span>QUESTÕES MAPEADAS</span><b id="radarTotalItems">3.060</b><small id="radarCoverage">2009 a 2025</small></article>
+            <article class="panel radar-kpi"><span>ASSUNTOS NO RADAR</span><b id="radarTopicsMapped">—</b><small>taxonomia NEXO</small></article>
+            <article class="panel radar-kpi radar-kpi-hot"><span>MAIOR PRIORIDADE</span><b id="radarTopTopic">Carregando...</b><small id="radarTopTopicMeta">calculando incidência</small></article>
+            <article class="panel radar-kpi"><span>BASE CONFIÁVEL</span><b id="radarClassifiedItems">—</b><small id="radarReviewItems">itens em revisão editorial</small></article>
+          </div>
+
+          <article class="panel radar-controls">
+            <div class="radar-controls-copy">
+              <span class="eyebrow">FILTRAR O MAPA</span>
+              <b>Encontre a prioridade certa para cada matéria</b>
+            </div>
+            <div class="radar-filter-grid">
+              <label><span>Área</span><select id="radarArea"><option value="">Todas as áreas</option><option value="Matemática">Matemática</option><option value="Ciências da Natureza">Ciências da Natureza</option><option value="Ciências Humanas">Ciências Humanas</option><option value="Linguagens">Linguagens</option></select></label>
+              <label><span>Matéria</span><select id="radarSubject"><option value="">Todas as matérias</option></select></label>
+              <label class="radar-search-label"><span>Buscar assunto</span><input id="radarSearch" class="text-input" type="search" placeholder="Ex.: estatística, genética, mecânica..."></label>
+            </div>
+          </article>
+
+          <div class="radar-layout">
+            <article class="panel radar-ranking-panel">
+              <div class="panel-title">
+                <div><b>Prioridades do ENEM</b><small id="radarResultMeta">carregando ranking histórico...</small></div>
+                <span class="radar-live-dot">NEXO INDEX</span>
+              </div>
+              <div id="radarList" class="radar-list">
+                <div class="radar-loading"><span></span><p>Analisando 17 edições do ENEM...</p></div>
+              </div>
+            </article>
+
+            <aside class="radar-side">
+              <article class="panel radar-method-card">
+                <span class="eyebrow">COMO O NEXO PRIORIZA</span>
+                <h3>Não é só contar questões.</h3>
+                <p>O Índice NEXO combina frequência histórica, recorrência entre edições e presença nos últimos cinco anos.</p>
+                <div class="radar-method-bars">
+                  <div><span><b>45%</b> frequência total</span><i style="--w:45%"></i></div>
+                  <div><span><b>20%</b> recorrência anual</span><i style="--w:20%"></i></div>
+                  <div><span><b>25%</b> frequência recente</span><i style="--w:25%"></i></div>
+                  <div><span><b>10%</b> recorrência recente</span><i style="--w:10%"></i></div>
+                </div>
+                <small id="radarQualityNote">Itens com classificação incerta ficam fora do ranking até revisão.</small>
+              </article>
+
+              <article class="panel radar-years-panel">
+                <div class="panel-title"><div><b>Cobertura por edição</b><small>180 posições por ano</small></div><span>2009–2025</span></div>
+                <div id="radarYearGrid" class="radar-year-grid"></div>
+              </article>
+            </aside>
+          </div>
         </section>
 
         <section class="page" id="simulados">
@@ -1544,6 +1607,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-91"></script>
+  <script src="./app.js?v=20260920-92"></script>
 </body>
 </html>
