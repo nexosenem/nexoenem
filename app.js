@@ -646,10 +646,10 @@ function applyExperienceSettings(settings=readExperienceSettings(),save=false){
   document.body.dataset.experience=s.mode;
   document.body.classList.toggle('data-saver',Boolean(s.dataSaver));
   if(save)localStorage.setItem(NEXO_EXPERIENCE_KEY,JSON.stringify(s));
-  $('[data-font-scale]').forEach(b=>b.classList.toggle('active',b.dataset.fontScale===s.font));
-  $('[data-contrast]').forEach(b=>b.classList.toggle('active',b.dataset.contrast===s.contrast));
-  $('[data-motion]').forEach(b=>b.classList.toggle('active',b.dataset.motion===s.motion));
-  $('[data-experience-mode]').forEach(b=>b.classList.toggle('active',b.dataset.experienceMode===s.mode));
+  $$('[data-font-scale]').forEach(b=>b.classList.toggle('active',b.dataset.fontScale===s.font));
+  $$('[data-contrast]').forEach(b=>b.classList.toggle('active',b.dataset.contrast===s.contrast));
+  $$('[data-motion]').forEach(b=>b.classList.toggle('active',b.dataset.motion===s.motion));
+  $$('[data-experience-mode]').forEach(b=>b.classList.toggle('active',b.dataset.experienceMode===s.mode));
   if($('#dataSaverToggle'))$('#dataSaverToggle').checked=Boolean(s.dataSaver);
   return s;
 }
@@ -670,10 +670,10 @@ function closeExperienceSettings(){
 }
 $('#closeExperienceSettings')?.addEventListener('click',closeExperienceSettings);
 $('#experienceSettingsModal')?.addEventListener('click',e=>{if(e.target===$('#experienceSettingsModal'))closeExperienceSettings()});
-$('[data-font-scale]').forEach(b=>b.addEventListener('click',()=>mutateExperience({font:b.dataset.fontScale})));
-$('[data-contrast]').forEach(b=>b.addEventListener('click',()=>mutateExperience({contrast:b.dataset.contrast})));
-$('[data-motion]').forEach(b=>b.addEventListener('click',()=>mutateExperience({motion:b.dataset.motion})));
-$('[data-experience-mode]').forEach(b=>b.addEventListener('click',()=>mutateExperience({mode:b.dataset.experienceMode})));
+$$('[data-font-scale]').forEach(b=>b.addEventListener('click',()=>mutateExperience({font:b.dataset.fontScale})));
+$$('[data-contrast]').forEach(b=>b.addEventListener('click',()=>mutateExperience({contrast:b.dataset.contrast})));
+$$('[data-motion]').forEach(b=>b.addEventListener('click',()=>mutateExperience({motion:b.dataset.motion})));
+$$('[data-experience-mode]').forEach(b=>b.addEventListener('click',()=>mutateExperience({mode:b.dataset.experienceMode})));
 $('#dataSaverToggle')?.addEventListener('change',e=>mutateExperience({dataSaver:Boolean(e.target.checked)}));
 $('#resetExperienceSettings')?.addEventListener('click',()=>{const s=defaultExperienceSettings();applyExperienceSettings(s,true);toast('Experiência restaurada ao padrão.');});
 
@@ -1082,10 +1082,10 @@ function renderOnboardingStep(){
     ? ob.areas.length+' selecionada(s) · '+(ob.areas[0]||'')+' será a primeira prioridade.'
     : 'Escolha pelo menos uma área.';
 
-  $('[data-onboarding-minutes]').forEach(btn=>{
+  $$('[data-onboarding-minutes]').forEach(btn=>{
     btn.classList.toggle('active',Number(btn.dataset.onboardingMinutes)===ob.dailyMinutes);
   });
-  $('[data-onboarding-diagnostic]').forEach(btn=>{
+  $$('[data-onboarding-diagnostic]').forEach(btn=>{
     btn.classList.toggle('active',(btn.dataset.onboardingDiagnostic!=='no')===Boolean(ob.diagnostic));
   });
   updateOnboardingPreview();
@@ -1226,13 +1226,13 @@ $$('[data-onboarding-area]').forEach(btn=>btn.onclick=()=>{
   }
   renderOnboardingStep();
 });
-$('[data-onboarding-minutes]').forEach(btn=>btn.onclick=()=>{
+$$('[data-onboarding-minutes]').forEach(btn=>btn.onclick=()=>{
   state.onboarding.dailyMinutes=Number(btn.dataset.onboardingMinutes);
   renderOnboardingStep();
 });
-$('[data-onboarding-diagnostic]').forEach(btn=>btn.onclick=()=>{
+$$('[data-onboarding-diagnostic]').forEach(btn=>btn.onclick=()=>{
   state.onboarding.diagnostic=btn.dataset.onboardingDiagnostic!=='no';
-  $('[data-onboarding-diagnostic]').forEach(x=>x.classList.toggle('active',x===btn));
+  $$('[data-onboarding-diagnostic]').forEach(x=>x.classList.toggle('active',x===btn));
 });
 $('#onboardingBack').onclick=()=>{
   try{
@@ -2093,7 +2093,7 @@ function renderEnemRadar(){
           }
         };
       });
-      $('[data-radar-train]',list).forEach(btn=>{
+      $$('[data-radar-train]',list).forEach(btn=>{
         btn.onclick=async()=>{
           if(btn.disabled)return;
           const key=decodeURIComponent(btn.dataset.radarTrain||'');
@@ -5048,7 +5048,7 @@ function renderV3Intelligence(){
 
   const radar=buildPersonalRadar().slice(0,6),radarEl=$('#personalRadarList');
   if(radarEl)radarEl.innerHTML=radar.length?radar.map((x,i)=>'<button data-personal-radar-topic="'+encodeURIComponent(x.topic)+'" data-personal-radar-subject="'+encodeURIComponent(x.subject||'')+'"><span>'+String(i+1).padStart(2,'0')+'</span><div><b>'+esc(x.topic)+'</b><small>'+esc(x.subject||x.area||'')+' · domínio '+Math.round(x.student_mastery)+'%'+(x.review_due?' · revisão pendente':'')+'</small></div><strong>'+x.personal_priority+'</strong></button>').join(''):'<p class="learning-empty">Resolva algumas questões para gerar seu Radar Pessoal.</p>';
-  $('[data-personal-radar-topic]',radarEl||document).forEach(btn=>btn.onclick=()=>{
+  $$('[data-personal-radar-topic]',radarEl||document).forEach(btn=>btn.onclick=()=>{
     const topic=decodeURIComponent(btn.dataset.personalRadarTopic||''),subject=decodeURIComponent(btn.dataset.personalRadarSubject||'');
     const lesson=topicLesson(topic,subject);
     lesson?openLibraryTopic(subject,topic):startStudySession({mode:'core',subject,topic,size:5,difficulty:'',visualOnly:false});
@@ -5087,7 +5087,7 @@ function closeRecommendationWhy(){
   $('#recommendationWhyModal')?.classList.add('hidden');
   document.body.style.overflow='';
 }
-$('[data-nexo-why]').forEach(btn=>btn.addEventListener('click',openRecommendationWhy));
+$$('[data-nexo-why]').forEach(btn=>btn.addEventListener('click',openRecommendationWhy));
 $('#closeRecommendationWhy')?.addEventListener('click',closeRecommendationWhy);
 $('#recommendationWhyModal')?.addEventListener('click',e=>{if(e.target===$('#recommendationWhyModal'))closeRecommendationWhy()});
 
@@ -5420,7 +5420,7 @@ function renderEssayCompetencyPlan(){
   if($('#essayPriorityCompetency'))$('#essayPriorityCompetency').textContent=signal?trainer.code+' · '+signal.score+'/200':'primeiro treino';
   el.innerHTML='<div class="essay-comp-trainer-tabs">'+ESSAY_COMPETENCY_TRAINERS.map((x,i)=>'<button data-essay-train-comp="'+i+'" class="'+(i===active?'active':'')+'">'+x.code+'</button>').join('')+'</div>'+
     '<article class="essay-comp-mission"><span>'+trainer.code+' · '+esc(trainer.name)+'</span><h4>Missão de 5 minutos</h4><p>'+esc(trainer.mission)+'</p><div><b>Como conferir:</b> '+esc(trainer.check)+'</div><footer><button id="askNexoCompetency" class="outline-btn">Perguntar ao Nexo</button><button id="focusEssayEditor" class="primary-btn">Levar para meu texto →</button></footer></article>';
-  $('[data-essay-train-comp]',el).forEach(btn=>btn.onclick=()=>activateEssayCompetency(Number(btn.dataset.essayTrainComp)));
+  $$('[data-essay-train-comp]',el).forEach(btn=>btn.onclick=()=>activateEssayCompetency(Number(btn.dataset.essayTrainComp)));
   $('#askNexoCompetency')?.addEventListener('click',()=>openProfessorNexo('Quero treinar '+trainer.code+' ('+trainer.name+'). Me dê um exercício curto usando o tema da minha redação atual.'));
   $('#focusEssayEditor')?.addEventListener('click',()=>{$('#essayText')?.focus();$('#essayText')?.scrollIntoView({behavior:'smooth',block:'center'});toast('Foco ativo: '+trainer.code+' · '+trainer.name);});
 }
@@ -5453,7 +5453,7 @@ function renderEssayRepertoires(){
 function renderEssayArguments(){
   const el=$('#essayArgumentList');if(!el)return;
   el.innerHTML=ESSAY_ARGUMENT_STRUCTURES.map((x,i)=>'<article><span>'+String(i+1).padStart(2,'0')+'</span><div><b>'+esc(x.name)+'</b><p>'+esc(x.template)+'</p><small>'+esc(x.best)+'</small></div><button data-use-argument="'+i+'">Treinar →</button></article>').join('');
-  $('[data-use-argument]',el).forEach(btn=>btn.onclick=()=>{
+  $$('[data-use-argument]',el).forEach(btn=>btn.onclick=()=>{
     const x=ESSAY_ARGUMENT_STRUCTURES[Number(btn.dataset.useArgument)];
     openProfessorNexo('Quero praticar a estrutura '+x.name+'. Tema atual: '+getEssayThemeData().title+'. Crie um exercício para eu preencher, sem escrever a redação por mim.');
   });
@@ -6772,8 +6772,8 @@ function renderStudentAvatar(target,avatarInput){
 
 function setJourneyTab(tab='missions'){
   state.journeyTab=tab;
-  $('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
-  $('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
+  $$('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
+  $$('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
   if(tab==='avatar')renderAvatarBuilder();
   if(tab==='groups')loadStudyGroups({silent:true});
 }
@@ -7875,9 +7875,9 @@ async function loadQuestionComments(questionId){
     const row=data[Number(node.dataset.commentAvatar)];
     renderStudentAvatar(node,row?.avatar);
   });
-  $('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
-  $('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
-  $('[data-helpful-comment]').forEach(b=>b.onclick=async()=>{
+  $$('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
+  $$('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
+  $$('[data-helpful-comment]').forEach(b=>b.onclick=async()=>{
     const {data:vote,error:voteError}=await client.rpc('toggle_comment_helpful',{p_comment_id:Number(b.dataset.helpfulComment)});
     if(voteError)return toast('Não consegui registrar esse voto.','error');
     b.classList.toggle('active',Boolean(vote?.helpful));
