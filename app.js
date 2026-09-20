@@ -55,17 +55,15 @@ function toast(message, type='info') {
   toast.timer = setTimeout(()=>el.classList.add('hidden'), 2900);
 }
 
-function showAuthMessage(message, error=false, canResend=false) {
+function showAuthMessage(message, error=false) {
   const el = $('#authMessage');
   el.textContent = message;
   el.classList.remove('hidden','error');
   if (error) el.classList.add('error');
-  $('#resendConfirm').classList.toggle('hidden', !canResend);
 }
 
 function clearAuthMessage(){
   $('#authMessage').classList.add('hidden');
-  $('#resendConfirm').classList.add('hidden');
 }
 
 function initials(name='NEXO') {
@@ -101,12 +99,7 @@ $('#loginForm').addEventListener('submit', async e => {
   const { error } = await client.auth.signInWithPassword({ email, password });
   btn.disabled = false; btn.innerHTML = 'Entrar <span>→</span>';
   if (error) {
-    const unconfirmed = /not confirmed/i.test(error.message || '');
-    showAuthMessage(
-      unconfirmed ? 'Seu e-mail ainda não foi confirmado. Abra a mensagem enviada pelo NEXO ENEM ou use o botão abaixo para reenviar.' : error.message,
-      true,
-      unconfirmed
-    );
+    showAuthMessage(error.message === 'Invalid login credentials' ? 'E-mail ou senha incorretos.' : error.message, true);
   }
 });
 
@@ -118,30 +111,28 @@ $('#registerForm').addEventListener('submit', async e => {
   const password = $('#registerPassword').value;
   const btn = e.submitter;
   btn.disabled = true; btn.textContent = 'Criando conta...';
-  const { data, error } = await client.auth.signUp({
-    email, password, options:{ data:{ full_name } }
-  });
-  btn.disabled = false; btn.innerHTML = 'Criar conta <span>→</span>';
-  if (error) return showAuthMessage(error.message, true);
-  if (!data.session) {
-    setAuthTab('login');
-    $('#loginEmail').value = email;
-    showAuthMessage('Conta criada. Falta apenas confirmar seu e-mail. Verifique a caixa de entrada e o spam.', false, true);
+
+  try {
+    const res = await fetch(`${SUPABASE_URL}/functions/v1/register-user`, {
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'apikey':SUPABASE_KEY,
+        'Authorization':`Bearer ${SUPABASE_KEY}`
+      },
+      body:JSON.stringify({ email, password, full_name })
+    });
+    const payload = await res.json().catch(()=>({}));
+    if (!res.ok) throw new Error(payload.error || 'Não foi possível criar a conta.');
+
+    const { error } = await client.auth.signInWithPassword({ email, password });
+    if (error) throw error;
+  } catch (err) {
+    showAuthMessage(err.message || 'Não foi possível criar a conta.', true);
+  } finally {
+    btn.disabled = false; btn.innerHTML = 'Criar conta <span>→</span>';
   }
 });
-
-$('#resendConfirm').onclick = async () => {
-  const email = ($('#loginEmail').value || $('#registerEmail').value || '').trim();
-  if (!email) return showAuthMessage('Digite seu e-mail para reenviar a confirmação.', true);
-  const btn = $('#resendConfirm');
-  btn.disabled = true;
-  btn.textContent = 'Reenviando...';
-  const { error } = await client.auth.resend({ type:'signup', email });
-  btn.disabled = false;
-  btn.textContent = 'Reenviar e-mail de confirmação';
-  if (error) return showAuthMessage(error.message, true, true);
-  showAuthMessage('Novo e-mail de confirmação enviado. Confira também a pasta de spam.', false, false);
-};
 
 $('#logoutBtn').onclick = async () => {
   await client.auth.signOut();
