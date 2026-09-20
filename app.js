@@ -897,10 +897,48 @@ document.addEventListener('click',e=>{
   if(!e.target.closest('#profileButton')&&!e.target.closest('#profileMenu')) $('#profileMenu').classList.add('hidden');
 });
 
+const DESKTOP_SIDEBAR_KEY='nexo-desktop-sidebar-collapsed';
+
+function setDesktopSidebarCollapsed(collapsed, persist=true){
+  const shouldCollapse=Boolean(collapsed)&&innerWidth>760;
+  document.body.classList.toggle('sidebar-collapsed',shouldCollapse);
+  const toggle=$('#desktopSidebarToggle');
+  if(toggle){
+    toggle.setAttribute('aria-expanded',String(!shouldCollapse));
+    toggle.setAttribute('aria-label',shouldCollapse?'Expandir menu lateral':'Recolher menu lateral');
+    const icon=toggle.querySelector('span');
+    if(icon)icon.textContent=shouldCollapse?'›':'‹';
+  }
+  if(persist){
+    try{localStorage.setItem(DESKTOP_SIDEBAR_KEY,shouldCollapse?'1':'0')}catch(_){}
+  }
+}
+
+function restoreDesktopSidebar(){
+  if(innerWidth<=760){
+    document.body.classList.remove('sidebar-collapsed');
+    return;
+  }
+  let collapsed=false;
+  try{collapsed=localStorage.getItem(DESKTOP_SIDEBAR_KEY)==='1'}catch(_){}
+  setDesktopSidebarCollapsed(collapsed,false);
+}
+
 function toggleMenu(open) {
   $('#sidebar').classList.toggle('open', open);
   $('#scrim').classList.toggle('hidden', !open);
 }
+$('#desktopSidebarToggle')?.addEventListener('click',()=>{
+  setDesktopSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+});
+window.addEventListener('resize',()=>{
+  if(innerWidth<=760){
+    document.body.classList.remove('sidebar-collapsed');
+  }else{
+    restoreDesktopSidebar();
+  }
+});
+
 $('#mobileMenu')?.addEventListener('click',()=>toggleMenu(true));
 $('#closeMenu')?.addEventListener('click',()=>toggleMenu(false));
 $('#scrim')?.addEventListener('click',()=>toggleMenu(false));
