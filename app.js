@@ -100,6 +100,7 @@ const state = {
   favorites:new Set(),
   activeViewer:null,
   progressSaveTimer:null,
+  adminUsers:[],
   assistantIntents:[],
   core:null,
   lastSimulationReport:null,
@@ -2787,9 +2788,86 @@ async function checkCloudinarySecurityStatus(){
   }
 }
 
+async function loadAdminUsers(){
+  if(state.profile?.role!=='admin')return;
+  const list=$('#adminUserList');
+  if(list)list.innerHTML='<div class="admin-user-empty">Carregando contas...</div>';
+  try{
+    const {data,error}=await client.functions.invoke('admin-users',{body:{action:'list'}});
+    if(error)throw error;
+    if(data?.error)throw new Error(data.error);
+    state.adminUsers=Array.isArray(data?.users)?data.users:[];
+    renderAdminUsers();
+  }catch(err){
+    console.error('admin users',err);
+    if(list)list.innerHTML='<div class="admin-user-empty">Não foi possível carregar as contas.</div>';
+  }
+}
+
+function renderAdminUsers(){
+  const list=$('#adminUserList');
+  if(!list)return;
+  const q=($('#adminUserSearch')?.value||'').trim().toLowerCase();
+  const users=state.adminUsers.filter(u=>!q||[u.full_name,u.email,u.role].filter(Boolean).join(' ').toLowerCase().includes(q));
+  list.innerHTML=users.length?users.map(u=>{
+    const isAdmin=u.role==='admin';
+    const current=Boolean(u.is_current_user);
+    const name=u.full_name||u.email?.split('@')[0]||'Usuário';
+    return `<article class="admin-user-row">
+      <div class="admin-user-avatar">${esc(initials(name))}</div>
+      <div class="admin-user-info">
+        <b>${esc(name)} ${current?'<span class="you-chip">VOCÊ</span>':''}</b>
+        <small>${esc(u.email||'Sem e-mail')}</small>
+        <span class="role-chip ${isAdmin?'admin':'student'}">${isAdmin?'Administrador':'Aluno'}</span>
+      </div>
+      <div class="admin-user-action">
+        ${current
+          ? '<button disabled title="Você não pode remover seu próprio acesso por aqui">Administrador</button>'
+          : isAdmin
+            ? '<button class="danger" data-set-user-role="'+u.id+'" data-role="student">Remover admin</button>'
+            : '<button class="promote" data-set-user-role="'+u.id+'" data-role="admin">Tornar admin</button>'}
+      </div>
+    </article>`;
+  }).join(''):'<div class="admin-user-empty">Nenhuma conta encontrada.</div>';
+
+  list.querySelectorAll('[data-set-user-role]').forEach(btn=>{
+    btn.onclick=()=>setAdminUserRole(btn.dataset.setUserRole,btn.dataset.role);
+  });
+}
+
+async function setAdminUserRole(userId,role){
+  const user=state.adminUsers.find(u=>u.id===userId);
+  if(!user)return;
+  const name=user.full_name||user.email||'esta conta';
+  const promoting=role==='admin';
+  const message=promoting
+    ? 'Dar acesso de administrador para '+name+'? Essa pessoa poderá publicar conteúdo e gerenciar a plataforma.'
+    : 'Remover o acesso de administrador de '+name+'?';
+  if(!confirm(message))return;
+
+  try{
+    const {data,error}=await client.functions.invoke('admin-users',{
+      body:{action:'set_role',target_user_id:userId,role}
+    });
+    if(error)throw error;
+    if(data?.error)throw new Error(data.error);
+    toast(promoting?'Administrador adicionado.':'Acesso de administrador removido.');
+    await loadAdminUsers();
+    await loadAdmin();
+  }catch(err){
+    console.error('set admin role',err);
+    const msg=String(err?.message||err||'');
+    toast(msg.includes('cannot_remove_own_admin')?'Você não pode remover seu próprio acesso.':'Não foi possível alterar o acesso dessa conta.','error');
+  }
+}
+
+$('#adminUserSearch')?.addEventListener('input',renderAdminUsers);
+$('#refreshAdminUsers')?.addEventListener('click',loadAdminUsers);
+
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
   checkCloudinarySecurityStatus();
+  loadAdminUsers();
   const [profiles,attempts,feedbacks,videosCount,materialsCount,progressRows,videosRows,materialsRows]=await Promise.all([
     client.from('profiles').select('*',{count:'exact',head:true}),
     client.from('question_attempts').select('*',{count:'exact',head:true}),
