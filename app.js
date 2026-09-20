@@ -108,6 +108,7 @@ const state = {
   journeyLoading:false,
   membership:null,
   avatarDraft:null,
+  registerBase:'neutral',
   journeyTab:'missions',
   lastSimulationReport:null,
   onboarding:{
@@ -116,7 +117,8 @@ const state = {
     areas:[],
     dailyMinutes:60,
     saving:false,
-    manual:false
+    manual:false,
+    avatar:null
   }
 };
 
@@ -459,6 +461,97 @@ function renderTodayPlan(){
   });
 }
 
+
+function starterAvatarForBase(base='neutral'){
+  const normalized=['masc','fem','neutral'].includes(base)?base:'neutral';
+  if(normalized==='masc')return {...NEXO_AVATAR_DEFAULT,base:'masc',hair:'fade',outfit:'navy'};
+  if(normalized==='fem')return {...NEXO_AVATAR_DEFAULT,base:'fem',hair:'bob',outfit:'lavender'};
+  return {...NEXO_AVATAR_DEFAULT,base:'neutral',hair:'sidecut',outfit:'street'};
+}
+
+function avatarCatalogItem(code){
+  return (state.journey?.catalog||[]).find(item=>item.item_code===code)||null;
+}
+
+function avatarItemCompatibleWithBase(item,base){
+  if(!item)return true;
+  const bases=Array.isArray(item.compatible_bases)?item.compatible_bases:[];
+  return !bases.length||bases.includes(base);
+}
+
+function avatarOptionButton(field,value){
+  return $('[data-avatar-field]').find(btn=>btn.dataset.avatarField===field&&btn.dataset.avatarValue===value)||null;
+}
+
+function avatarValueCompatibleWithBase(field,value,base){
+  const btn=avatarOptionButton(field,value);
+  if(!btn?.dataset.avatarBases)return true;
+  return btn.dataset.avatarBases.split(',').map(x=>x.trim()).filter(Boolean).includes(base);
+}
+
+function normalizeAvatarDraftForBase(draft){
+  const a=normalizedAvatar(draft);
+  const base=a.base;
+  const fallbacks=starterAvatarForBase(base);
+  for(const field of ['hair','outfit','accessory']){
+    if(!avatarValueCompatibleWithBase(field,a[field],base))a[field]=fallbacks[field]||NEXO_AVATAR_DEFAULT[field];
+  }
+  return a;
+}
+
+function starterChoicesForOnboarding(category,base){
+  const inventory=journeyInventorySet();
+  const level=Number(state.journey?.profile?.level||1);
+  return (state.journey?.catalog||[])
+    .filter(item=>item.category===category)
+    .filter(item=>avatarItemCompatibleWithBase(item,base))
+    .filter(item=>!item.plus_only)
+    .filter(item=>item.grant_mode==='starter'||(item.grant_mode==='level'&&level>=Number(item.unlock_level||1)))
+    .filter(item=>item.grant_mode==='starter'||inventory.has(item.item_code))
+    .slice(0,8);
+}
+
+function renderOnboardingAvatar(){
+  const ob=state.onboarding;
+  if(!ob?.avatar)return;
+  ob.avatar=normalizeAvatarDraftForBase(ob.avatar);
+  renderStudentAvatar($('#onboardingAvatarPreview'),ob.avatar);
+
+  $$('[data-onboarding-avatar-field]').forEach(btn=>{
+    btn.classList.toggle('active',ob.avatar[btn.dataset.onboardingAvatarField]===btn.dataset.onboardingAvatarValue);
+  });
+
+  const renderChoices=(target,category)=>{
+    const el=$(target);if(!el)return;
+    const choices=starterChoicesForOnboarding(category,ob.avatar.base);
+    const builtin=category==='hair'
+      ? [
+          {item_code:'builtin_short',name:'Curto',visual:{value:'short'}},
+          {item_code:'builtin_wave',name:'Ondulado',visual:{value:'wave'}},
+          {item_code:'builtin_curly',name:'Cacheado',visual:{value:'curly'}},
+          {item_code:'builtin_afro',name:'Afro',visual:{value:'afro'}}
+        ]
+      : [
+          {item_code:'builtin_purple',name:'Roxo',visual:{value:'purple'}},
+          {item_code:'builtin_blue',name:'Azul',visual:{value:'blue'}},
+          {item_code:'builtin_teal',name:'Verde NEXO',visual:{value:'teal'}}
+        ];
+    const combined=[...builtin,...choices].filter((item,index,arr)=>arr.findIndex(x=>x.visual?.value===item.visual?.value)===index);
+    el.innerHTML=combined.map(item=>{
+      const value=item.visual?.value||'';
+      const active=ob.avatar[category]===value;
+      return '<button type="button" class="'+(active?'active':'')+'" data-onboarding-starter-field="'+category+'" data-onboarding-starter-value="'+esc(value)+'">'+esc(item.name||value)+'</button>';
+    }).join('');
+    $$('[data-onboarding-starter-field]',el).forEach(btn=>btn.onclick=()=>{
+      ob.avatar[btn.dataset.onboardingStarterField]=btn.dataset.onboardingStarterValue;
+      renderOnboardingAvatar();
+    });
+  };
+
+  renderChoices('#onboardingHairChoices','hair');
+  renderChoices('#onboardingOutfitChoices','outfit');
+}
+
 function onboardingMissionSize(minutes){
   const value=Number(minutes||60);
   return value<=30?5:value<=60?8:10;
@@ -478,25 +571,30 @@ function updateOnboardingPreview(){
 function renderOnboardingStep(){
   const ob=state.onboarding;
   $$('[data-onboarding-step]').forEach(section=>section.classList.toggle('hidden',Number(section.dataset.onboardingStep)!==ob.step));
-  $('#onboardingStepLabel').textContent=ob.step+' de 3';
-  $('#onboardingProgress').style.width=(ob.step/3*100)+'%';
+  $('#onboardingStepLabel').textContent=ob.step+' de 4';
+  $('#onboardingProgress').style.width=(ob.step/4*100)+'%';
   $('#onboardingBack').classList.toggle('hidden',ob.step===1);
-  $('#onboardingNext').innerHTML=ob.step===3
+  $('#onboardingNext').innerHTML=ob.step===4
     ? 'Criar meu plano <span>→</span>'
     : 'Continuar <span>→</span>';
 
   const mentor={
     1:{
+      title:'Esse é o seu espaço dentro do NEXO.',
+      text:'Monte seu personagem com os itens gratuitos iniciais. Conforme você estuda, novos cabelos, roupas, acessórios e ambientes aparecem na Jornada.',
+      image:NEXO_MEDIA_IMAGES.bustConfiante
+    },
+    2:{
       title:'Uma boa meta dá direção.',
       text:'Não precisa acertar o número perfeito. Use uma nota que represente o nível que você quer perseguir e eu ajusto o plano com seus dados reais.',
       image:NEXO_MEDIA_IMAGES.bustConfiante
     },
-    2:{
+    3:{
       title:'Agora me diga onde aperta mais.',
       text:'Escolha no máximo duas áreas. A primeira vira seu diagnóstico inicial; depois o NEXO Core passa a usar seu desempenho real.',
       image:NEXO_MEDIA_IMAGES.bustPensativo
     },
-    3:{
+    4:{
       title:'O melhor plano é o que cabe na rotina.',
       text:'Eu prefiro 30 minutos consistentes a duas horas que nunca acontecem. Escolha um tempo que você consegue sustentar.',
       image:NEXO_MEDIA_IMAGES.bustAcolhedor
@@ -505,6 +603,7 @@ function renderOnboardingStep(){
   $('#onboardingMentorTitle').textContent=mentor.title;
   $('#onboardingMentorText').textContent=mentor.text;
   setNexoImage($('#onboardingMascot'),mentor.image);
+  if(ob.step===1)renderOnboardingAvatar();
 
   $('#goalScoreValue').textContent=String(ob.goalScore);
   $('#goalScoreRange').value=String(ob.goalScore);
@@ -535,7 +634,8 @@ function openNexoOnboarding(manual=false){
     areas:Array.isArray(state.profile?.difficult_areas)?[...state.profile.difficult_areas]:[],
     dailyMinutes:Number(state.profile?.daily_minutes||60),
     saving:false,
-    manual:Boolean(manual)
+    manual:Boolean(manual),
+    avatar:normalizedAvatar(state.journey?.profile?.avatar||starterAvatarForBase(state.registerBase||'neutral'))
   };
   $('#nexoOnboarding').classList.remove('hidden');
   document.body.classList.add('onboarding-open');
@@ -565,12 +665,17 @@ async function saveNexoOnboarding(){
 
   const completedAt=new Date().toISOString();
   try{
+    const avatarResult=await client.rpc('save_nexo_avatar',{p_avatar:normalizeAvatarDraftForBase(ob.avatar)});
+    if(avatarResult.error)throw avatarResult.error;
+    if(state.journey?.profile)state.journey.profile.avatar=avatarResult.data;
+    state.avatarDraft=normalizedAvatar(avatarResult.data);
+
     const {error}=await client.from('profiles').update({
       goal_score:ob.goalScore,
       difficult_areas:ob.areas,
       daily_minutes:ob.dailyMinutes,
       onboarding_completed_at:completedAt,
-      onboarding_version:1,
+      onboarding_version:2,
       updated_at:completedAt
     }).eq('id',state.user.id);
     if(error)throw error;
@@ -581,7 +686,7 @@ async function saveNexoOnboarding(){
       difficult_areas:[...ob.areas],
       daily_minutes:ob.dailyMinutes,
       onboarding_completed_at:completedAt,
-      onboarding_version:1
+      onboarding_version:2
     };
 
     closeNexoOnboarding();
@@ -600,6 +705,18 @@ async function saveNexoOnboarding(){
     btn.innerHTML='Criar meu plano <span>→</span>';
   }
 }
+
+$$('[data-onboarding-avatar-field]').forEach(btn=>btn.onclick=()=>{
+  const field=btn.dataset.onboardingAvatarField;
+  const value=btn.dataset.onboardingAvatarValue;
+  state.onboarding.avatar=normalizedAvatar(state.onboarding.avatar||starterAvatarForBase('neutral'));
+  state.onboarding.avatar[field]=value;
+  if(field==='base'){
+    const next=starterAvatarForBase(value);
+    state.onboarding.avatar={...state.onboarding.avatar,base:value,hair:next.hair,outfit:next.outfit,accessory:'none'};
+  }
+  renderOnboardingAvatar();
+});
 
 $('#goalScoreRange').addEventListener('input',e=>{
   state.onboarding.goalScore=Number(e.target.value);
@@ -632,11 +749,11 @@ $('#onboardingBack').onclick=()=>{
   renderOnboardingStep();
 };
 $('#onboardingNext').onclick=async()=>{
-  if(state.onboarding.step===2 && !state.onboarding.areas.length){
+  if(state.onboarding.step===3 && !state.onboarding.areas.length){
     toast('Escolha pelo menos uma área para continuar.','error');
     return;
   }
-  if(state.onboarding.step<3){
+  if(state.onboarding.step<4){
     state.onboarding.step+=1;
     renderOnboardingStep();
     return;
@@ -655,6 +772,12 @@ function setAuthTab(tab) {
 }
 $('#loginTab').onclick=()=>setAuthTab('login');
 $('#registerTab').onclick=()=>setAuthTab('register');
+
+$$('[data-register-base]').forEach(btn=>btn.onclick=()=>{
+  state.registerBase=btn.dataset.registerBase||'neutral';
+  $$('[data-register-base]').forEach(x=>x.classList.toggle('active',x===btn));
+});
+
 
 $('#loginForm').addEventListener('submit', async e => {
   e.preventDefault();
@@ -685,6 +808,8 @@ $('#registerForm').addEventListener('submit', async e => {
   const full_name = $('#registerName').value.trim();
   const email = $('#registerEmail').value.trim();
   const password = $('#registerPassword').value;
+  const avatarBase=state.registerBase||'neutral';
+  localStorage.setItem('nexo-pending-avatar-base',avatarBase);
   const btn = e.submitter;
   btn.disabled = true; btn.textContent = 'Criando conta...';
 
@@ -704,6 +829,7 @@ $('#registerForm').addEventListener('submit', async e => {
     const { error } = await client.auth.signInWithPassword({ email, password });
     if (error) throw error;
   } catch (err) {
+    localStorage.removeItem('nexo-pending-avatar-base');
     showAuthMessage(err.message || 'Não foi possível criar a conta.', true);
   } finally {
     btn.disabled = false; btn.innerHTML = 'Criar minha conta <span>→</span>';
@@ -957,7 +1083,7 @@ async function initApp(session) {
     daily_minutes:null,
     difficult_areas:[],
     onboarding_completed_at:'profile-fallback',
-    onboarding_version:1
+    onboarding_version:2
   };
 
   const name = state.profile.full_name || state.user.email?.split('@')[0] || 'Aluno';
@@ -994,6 +1120,23 @@ async function initApp(session) {
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
   });
+
+  const pendingAvatarBase=localStorage.getItem('nexo-pending-avatar-base');
+  if(needsOnboarding&&pendingAvatarBase){
+    try{
+      const avatarResult=await client.rpc('save_nexo_avatar',{p_avatar:starterAvatarForBase(pendingAvatarBase)});
+      if(!avatarResult.error){
+        if(state.journey?.profile)state.journey.profile.avatar=avatarResult.data;
+        state.avatarDraft=normalizedAvatar(avatarResult.data);
+        state.registerBase=pendingAvatarBase;
+        await loadNexoJourney({silent:true});
+      }
+    }catch(err){
+      console.error('pending registration avatar',err);
+    }finally{
+      localStorage.removeItem('nexo-pending-avatar-base');
+    }
+  }
 
   fillThemes();
   loadRecentAttempts().catch(err=>logClientError('recent_attempts',err,'recent_load'));
@@ -3362,13 +3505,13 @@ function renderStudentAvatar(target,avatarInput){
   const safe={
     base:['masc','fem','neutral'].includes(a.base)?a.base:'neutral',
     skin:['tone1','tone2','tone3','tone4','tone5','tone6'].includes(a.skin)?a.skin:'tone3',
-    hair:['short','wave','curly','buzz','long','ponytail','bun','afro','fringe'].includes(a.hair)?a.hair:'short',
+    hair:['short','wave','curly','buzz','long','ponytail','bun','afro','fringe','braids','locs','fade','quiff','bob','layered','sidecut','wolf','twintails','textured','mohawk','hologram','celestial','onyx','flux'].includes(a.hair)?a.hair:'short',
     hair_color:['ink','brown','blonde','blue','purple','pink'].includes(a.hair_color)?a.hair_color:'ink',
-    outfit:['purple','blue','teal','cyan','gold','focus','aurora'].includes(a.outfit)?a.outfit:'purple',
-    accessory:['none','glasses','headphones','crown','tiara','star'].includes(a.accessory)?a.accessory:'none',
-    frame:['basic','neon','cosmic','diamond'].includes(a.frame)?a.frame:'basic',
-    background:['grid','midnight','aurora','library','lab'].includes(a.background)?a.background:'grid',
-    aura:['none','blue','purple'].includes(a.aura)?a.aura:'none'
+    outfit:['purple','blue','teal','cyan','gold','focus','aurora','black','white','lavender','navy','rose','varsity','street','academy','pastel','urban','celestial','phantom','royal'].includes(a.outfit)?a.outfit:'purple',
+    accessory:['none','glasses','headphones','crown','tiara','star','cap','ribbon','chain','pin','halo','earrings','visor'].includes(a.accessory)?a.accessory:'none',
+    frame:['basic','neon','cosmic','diamond','level','ultraviolet'].includes(a.frame)?a.frame:'basic',
+    background:['grid','midnight','aurora','library','lab','study','skyline'].includes(a.background)?a.background:'grid',
+    aura:['none','blue','purple','gold'].includes(a.aura)?a.aura:'none'
   };
   el.innerHTML=`
     <div class="student-avatar-shell frame-${safe.frame} bg-${safe.background} aura-${safe.aura}">
@@ -3498,13 +3641,19 @@ function renderJourneyStore(){
     const plusLocked=Boolean(item.plus_only&&!plus&&!ultra);
     const levelLocked=!ultra&&level<Number(item.unlock_level||1);
     const locked=plusLocked||levelLocked;
-    const status=ultra?'ULTRA · LIBERADO':has?'NO INVENTÁRIO':plusLocked?'NEXO PLUS':levelLocked?'NÍVEL '+item.unlock_level:Number(item.price||0)+' N-Coins';
+    const status=ultra?'ULTRA · LIBERADO'
+      :has?'NO INVENTÁRIO'
+      :plusLocked?'NEXO PLUS'
+      :item.grant_mode==='level'?'LIBERA NO NÍVEL '+item.unlock_level
+      :levelLocked?'NÍVEL '+item.unlock_level
+      :item.grant_mode==='starter'?'GRÁTIS'
+      :Number(item.price||0)+' N-Coins';
     return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''} ${plusLocked?'plus-locked':''}">
       <div class="store-item-visual"><span>${rarityIcon[item.rarity]||'✦'}</span><i>${item.plus_only?'PLUS · ':''}${esc(item.category)}</i></div>
       <div><small>${item.plus_only?'NEXO PLUS · ':''}${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
       <div class="store-item-bottom">
         <span>${status}</span>
-        ${ultra?'<button disabled>Ultra</button>':has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">Comprar</button>`}
+        ${ultra?'<button disabled>Ultra</button>':has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked||item.grant_mode==='level'?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">${Number(item.price||0)===0?'Resgatar':'Comprar'}</button>`}
       </div>
     </article>`;
   }).join('');
@@ -3544,12 +3693,21 @@ function renderAvatarBuilder(){
   state.avatarDraft=draft;
   renderStudentAvatar($('#avatarBuilderPreview'),draft);
   const owned=journeyInventorySet(),plus=isNexoPlus(),ultra=isNexoUltra();
+  const level=Number(state.journey?.profile?.level||1);
   $$('[data-avatar-field]').forEach(btn=>{
-    const field=btn.dataset.avatarField,value=btn.dataset.avatarValue,item=btn.dataset.avatarItem;
+    const field=btn.dataset.avatarField,value=btn.dataset.avatarValue,itemCode=btn.dataset.avatarItem;
+    const item=itemCode?avatarCatalogItem(itemCode):null;
+    const bases=btn.dataset.avatarBases?btn.dataset.avatarBases.split(',').map(x=>x.trim()):null;
+    const incompatible=Boolean(bases&&!bases.includes(draft.base));
     const plusLocked=btn.dataset.plusStyle==='true'&&!plus&&!ultra;
-    const itemLocked=Boolean(item&&!owned.has(item)&&!ultra);
+    const autoEligible=Boolean(item&&avatarItemCompatibleWithBase(item,draft.base)&&(
+      item.grant_mode==='starter'&&(!item.plus_only||plus||ultra)
+      || item.grant_mode==='level'&&level>=Number(item.unlock_level||1)&&(!item.plus_only||plus||ultra)
+    ));
+    const itemLocked=Boolean(itemCode&&!owned.has(itemCode)&&!autoEligible&&!ultra);
     const locked=plusLocked||itemLocked;
-    btn.classList.toggle('active',draft[field]===value);
+    btn.hidden=incompatible;
+    btn.classList.toggle('active',!incompatible&&draft[field]===value);
     btn.classList.toggle('locked',locked);
     btn.classList.toggle('plus-locked',plusLocked);
     btn.dataset.locked=locked?'true':'false';
@@ -3665,6 +3823,11 @@ $$('[data-avatar-field]').forEach(btn=>btn.onclick=()=>{
   }
   state.avatarDraft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
   state.avatarDraft[btn.dataset.avatarField]=btn.dataset.avatarValue;
+  if(btn.dataset.avatarField==='base'){
+    const starter=starterAvatarForBase(btn.dataset.avatarValue);
+    state.avatarDraft={...state.avatarDraft,base:starter.base,hair:starter.hair,outfit:starter.outfit,accessory:'none'};
+  }
+  state.avatarDraft=normalizeAvatarDraftForBase(state.avatarDraft);
   renderAvatarBuilder();
 });
 
