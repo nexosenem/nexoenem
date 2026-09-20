@@ -679,22 +679,39 @@ async function submitAnswer(option) {
   const confirm=$('#confirmAnswer');
   if(confirm){confirm.disabled=true;confirm.textContent='Corrigindo...';}
   state.answered=true;
-  $$$('.q-option',$('#questionCard')).forEach(b=>b.disabled=true);
+  $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=true);
   const duration=Math.max(1,Math.round((Date.now()-state.questionStartedAt)/1000));
-  const { data, error } = await client.rpc('submit_answer',{
-    p_question_id:Number(state.current.id),
-    p_selected_option:Number(option),
-    p_duration_seconds:duration
-  });
-  if(error){
+
+  let data;
+  try{
+    const rpcPromise=client.rpc('submit_answer',{
+      p_question_id:Number(state.current.id),
+      p_selected_option:Number(option),
+      p_duration_seconds:duration
+    });
+    const timeoutPromise=new Promise((_,reject)=>setTimeout(()=>reject(new Error('timeout_submit_answer')),15000));
+    const result=await Promise.race([rpcPromise,timeoutPromise]);
+
+    if(result?.error) throw result.error;
+    data=result?.data;
+    if(!data || data.correct_option===undefined || data.correct_option===null){
+      throw new Error('Resposta de correção inválida.');
+    }
+  }catch(error){
+    console.error('submit_answer',error);
     state.answered=false;
-    $$$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
+    $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
-    toast('Não foi possível registrar a resposta.','error');console.error(error);return;
+    const msg=error?.message==='timeout_submit_answer'
+      ? 'A correção demorou demais. Tente confirmar novamente.'
+      : 'Não foi possível corrigir a resposta. Tente novamente.';
+    toast(msg,'error');
+    return;
   }
+
   state.lastAnswer=data;
   const correct=Number(data.correct_option);
-  $$$('.q-option',$('#questionCard')).forEach((b,i)=>{
+  $$('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected');
     if(i===correct)b.classList.add('correct');
     else if(i===option)b.classList.add('wrong');
@@ -726,7 +743,7 @@ async function submitAnswer(option) {
   $('#openComments').onclick=()=>openQuestionComments(state.current.id);
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
-  await Promise.all([loadDashboard(),loadRecentAttempts()]);
+  Promise.all([loadDashboard(),loadRecentAttempts()]).catch(err=>console.error('refresh after answer',err));
 }
 
 async function nextQuestion() {
