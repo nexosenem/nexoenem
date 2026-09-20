@@ -135,13 +135,73 @@ function updateHomeExperience(){
     ? 'próximo foco: '+(rec.topic||rec.subject||rec.area||'treino adaptativo')
     : 'analisando seu próximo foco';
 
-  const heroMascots=$$('.home-nexo-mascot, .mobile-nexo-stage img');
-  const heroSrc=rec && Number(rec.priority||0)>=65
-    ? './assets/nexo-expressions/pensativo.webp'
-    : './assets/nexo-expressions/confiante.webp';
-  heroMascots.forEach(img=>{if(img.getAttribute('src')!==heroSrc)img.src=heroSrc});
+  const heroMascots=$('.home-nexo-mascot, .mobile-nexo-stage img');
+  const heroSrc=window.NEXO_MASCOT_ASSETS?.head||NEXO_BASE_MASCOT;
+  heroMascots.forEach(img=>{if(heroSrc && img.getAttribute('src')!==heroSrc)img.src=heroSrc});
 }
 
+
+
+function buildTodayPlan(){
+  const core=state.core||{};
+  const rec=core.recommended_action||null;
+  const profile=state.profile||{};
+  const minutes=Math.max(20,Number(profile.daily_minutes||core.profile?.daily_minutes||45));
+  const focus=rec?.topic||rec?.subject||rec?.area||'diagnóstico inicial';
+  const area=rec?.area||profile.difficult_areas?.[0]||'ENEM';
+  const count=Number(rec?.size||(minutes<=30?5:minutes<=60?8:10));
+
+  let blocks;
+  if(minutes<=30){
+    blocks=[
+      {icon:'01',title:'Aquecimento',detail:'Releia seu foco e entre no ritmo.',time:5},
+      {icon:'02',title:'Questões foco',detail:count+' questões · '+focus,time:20},
+      {icon:'03',title:'Revisão Nexo',detail:'Corrija os erros e veja os macetes.',time:5}
+    ];
+  }else if(minutes<=60){
+    blocks=[
+      {icon:'01',title:'Aquecimento',detail:'Meta do dia + leitura estratégica.',time:5},
+      {icon:'02',title:'Sessão principal',detail:count+' questões · '+focus,time:Math.max(25,minutes-20)},
+      {icon:'03',title:'Revisão Nexo',detail:'Erros, método e próximo passo.',time:10},
+      {icon:'04',title:'Fechamento',detail:'Atualizar seu NEXO Core.',time:5}
+    ];
+  }else{
+    const main=Math.max(35,Math.min(55,minutes-35));
+    blocks=[
+      {icon:'01',title:'Aquecimento',detail:'Ative foco e estratégia.',time:10},
+      {icon:'02',title:'Questões foco',detail:count+' questões · '+focus,time:main},
+      {icon:'03',title:'Correção guiada',detail:'Entenda erros e padrões.',time:15},
+      {icon:'04',title:'Aprofundamento',detail:'Revisão curta do conteúdo.',time:10}
+    ];
+  }
+  return {minutes,focus,area,count,blocks};
+}
+
+function renderTodayPlan(){
+  const plan=buildTodayPlan();
+  $$('[data-today-plan]').forEach(card=>{
+    const total=card.querySelector('[data-today-total]');
+    const summary=card.querySelector('[data-today-summary]');
+    const blocks=card.querySelector('[data-today-blocks]');
+    const start=card.querySelector('[data-today-start]');
+    if(total)total.textContent=String(plan.minutes);
+    if(summary)summary.textContent='Foco de hoje: '+plan.area+' · '+plan.focus+'. Uma rotina pensada para caber no seu tempo disponível.';
+    if(blocks)blocks.innerHTML=plan.blocks.map(item=>`
+      <article class="today-plan-block">
+        <span>${item.icon}</span>
+        <div><b>${esc(item.title)}</b><small>${esc(item.detail)}</small></div>
+        <strong>${item.time} min</strong>
+      </article>`).join('');
+    if(start)start.onclick=()=>{
+      if(state.core?.recommended_action)startCoreRecommendation();
+      else{
+        openPage('questoes');
+        resetSessionUI();
+        toast('Comece pelo diagnóstico para o NEXO Core calibrar seu plano.');
+      }
+    };
+  });
+}
 
 function onboardingMissionSize(minutes){
   const value=Number(minutes||60);
@@ -658,11 +718,12 @@ function renderNexoCore(){
     ? (Number(rec.priority||0)>=70?'pensativo':Number(rec.mastery||0)>=70?'confiante':'serio')
     : 'pensativo';
   const coreSrc=NEXO_MOOD_IMAGES?.[coreMood]||'./assets/nexo-expressions/pensativo.webp';
-  $$$('[data-core-avatar]').forEach(img=>{
+  $$('[data-core-avatar]').forEach(img=>{
     if(img.getAttribute('src')!==coreSrc)img.src=coreSrc;
   });
   updateHomeExperience();
-  $$$('[data-core-start]').forEach(btn=>{
+  renderTodayPlan();
+  $$('[data-core-start]').forEach(btn=>{
     btn.innerHTML=initial
       ? 'Iniciar diagnóstico · '+Number(rec.size||6)+' questões <span>→</span>'
       : rec
@@ -975,7 +1036,7 @@ async function renderQuestion(q) {
     <div class="confirm-answer-wrap"><small>Selecione uma alternativa. Você poderá conferir antes de enviar.</small><button id="confirmAnswer" class="primary-btn" disabled>Confirmar resposta</button></div>
     <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small></div>`;
 
-  $$$('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
+  $$('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
   const preHint=$('#preAnswerHint');
   if(preHint){
     preHint.onclick=()=>{
@@ -2228,20 +2289,22 @@ function initNexoMascotVisuals(){
   bindImage($('#nexoLauncherAvatar'),a.head);
   bindImage($('#nexoAvatarImage'),a.head);
   bindImage($('#nexoHeroImage'),a.head);
+  $$('[data-nexo-safe-avatar]').forEach(img=>bindImage(img,a.head));
 }
 initNexoMascotVisuals();
 
+const NEXO_BASE_MASCOT=window.NEXO_MASCOT_ASSETS?.head||'';
 const NEXO_MOOD_IMAGES={
-  feliz:'./assets/nexo-expressions/feliz.webp',
-  serio:'./assets/nexo-expressions/serio.webp',
-  confiante:'./assets/nexo-expressions/confiante.webp',
-  duvida:'./assets/nexo-expressions/pensativo.webp',
-  surpresa:'./assets/nexo-expressions/feliz.webp',
-  pensativo:'./assets/nexo-expressions/pensativo.webp',
-  acolhedor:'./assets/nexo-expressions/acolhedor.webp',
-  calmo:'./assets/nexo-expressions/acolhedor.webp',
-  animado:'./assets/nexo-expressions/confiante.webp',
-  motivado:'./assets/nexo-expressions/confiante.webp'
+  feliz:NEXO_BASE_MASCOT,
+  serio:NEXO_BASE_MASCOT,
+  confiante:NEXO_BASE_MASCOT,
+  duvida:NEXO_BASE_MASCOT,
+  surpresa:NEXO_BASE_MASCOT,
+  pensativo:NEXO_BASE_MASCOT,
+  acolhedor:NEXO_BASE_MASCOT,
+  calmo:NEXO_BASE_MASCOT,
+  animado:NEXO_BASE_MASCOT,
+  motivado:NEXO_BASE_MASCOT
 };
 
 function setNexoMood(mood='feliz'){
