@@ -4908,16 +4908,16 @@ async function startNexoArena(){
   }
 }
 
-$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
-$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{
+$$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
+$$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{
   wardrobeFilter=btn.dataset.wardrobeFilter||'owned';
-  $('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));
+  $$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));
   renderNexoWardrobe();
 });
 $('#wardrobeCategory')?.addEventListener('change',renderNexoWardrobe);
-$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{
+$$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{
   storeFilter=btn.dataset.storeFilter||'all';
-  $('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));
+  $$('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));
   renderJourneyStore();
 });
 $('#storeCategory')?.addEventListener('change',renderJourneyStore);
