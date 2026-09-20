@@ -29,30 +29,25 @@ const CLOUDINARY = Object.freeze({
 async function getCloudinaryUploadAuth(){
   try{
     const {data,error}=await client.functions.invoke('cloudinary-signature',{body:{}});
-    if(error||!data?.signature||!data?.api_key||!data?.timestamp)return null;
+    if(error)throw error;
+    if(!data?.signature||!data?.api_key||!data?.timestamp)throw new Error(data?.error||'Assinatura do Cloudinary indisponível.');
     return data;
   }catch(err){
-    console.warn('Cloudinary signed upload indisponível; usando preset temporário.',err);
-    return null;
+    console.error('Cloudinary signed upload',err);
+    throw new Error('Upload seguro indisponível. Verifique o CLOUDINARY_API_SECRET no Supabase.');
   }
 }
 
 async function uploadToCloudinary(file,onProgress=()=>{}){
   if(!file)throw new Error('Nenhum arquivo selecionado.');
   const auth=await getCloudinaryUploadAuth();
-  const cloudName=auth?.cloud_name||CLOUDINARY.cloudName;
-  const endpoint=`https://api.cloudinary.com/v1_1/${cloudName}/auto/upload`;
+  const endpoint=`https://api.cloudinary.com/v1_1/${auth.cloud_name||CLOUDINARY.cloudName}/auto/upload`;
   const form=new FormData();
   form.append('file',file);
-
-  if(auth){
-    form.append('api_key',String(auth.api_key));
-    form.append('timestamp',String(auth.timestamp));
-    form.append('signature',String(auth.signature));
-    if(auth.folder)form.append('folder',String(auth.folder));
-  }else{
-    form.append('upload_preset',CLOUDINARY.uploadPreset);
-  }
+  form.append('api_key',String(auth.api_key));
+  form.append('timestamp',String(auth.timestamp));
+  form.append('signature',String(auth.signature));
+  if(auth.folder)form.append('folder',String(auth.folder));
 
   return new Promise((resolve,reject)=>{
     const xhr=new XMLHttpRequest();
@@ -2785,7 +2780,7 @@ async function checkCloudinarySecurityStatus(){
     el.textContent='✓ Upload assinado ativo — arquivos protegidos por autenticação de administrador.';
   }else{
     el.className='cloudinary-security-status warning';
-    el.textContent='⚠ Upload assinado aguardando CLOUDINARY_API_SECRET. O site usa o preset temporário até essa configuração.';
+    el.textContent='⚠ Upload assinado indisponível. Confira o CLOUDINARY_API_SECRET no Supabase antes de enviar arquivos.';
   }
 }
 
