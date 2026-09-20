@@ -3351,6 +3351,8 @@ async function submitAnswer(option) {
       ${shortcut?'<button id="showHint">🐾 Ver macete</button>':''}
       <button id="askNexoAboutQuestion">✦ Perguntar ao Nexo</button>
       <button id="reviewQuestionTopic">↻ Treinar este tema</button>
+      <button id="saveCurrentQuestion">☆ Salvar questão</button>
+      <button id="reportCurrentQuestion">⚑ Reportar problema</button>
       <button id="openComments">💬 Comentários</button>
       <button id="nextAfterAnswer" class="next-action">Próxima questão →</button>
     </div>`
@@ -3393,6 +3395,9 @@ async function submitAnswer(option) {
       size:5
     });
   };
+  $('#saveCurrentQuestion').onclick=()=>toggleSavedQuestion(state.current.id);
+  updateCurrentQuestionSaveButton();
+  $('#reportCurrentQuestion').onclick=()=>openQuestionIssueModal(state.current.id);
   $('#openComments').onclick=()=>openQuestionComments(state.current.id);
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
@@ -3402,7 +3407,8 @@ async function submitAnswer(option) {
     loadNexoCore(),
     loadRecentAttempts(),
     loadNexoMembership({silent:true}),
-    loadNexoJourney({silent:true})
+    loadNexoJourney({silent:true}),
+    loadNexoWeekPlan({silent:true})
   ]).catch(err=>console.error('refresh after answer',err));
 }
 
@@ -4104,7 +4110,10 @@ $('#analyzeEssay').onclick=async()=>{
     user_id:state.user.id,theme_title:t.title,essay_text:text,status:'reviewed',
     estimated_score:total,
     competencies:{c1:scores[0],c2:scores[1],c3:scores[2],c4:scores[3],c5:scores[4]},
-    feedback
+    feedback,
+    revision_of:state.essayRevisionOf||null,
+    version_number:currentEssayVersionNumber(),
+    word_count:(text.match(/\S+/g)||[]).length
   });
   clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.textContent='Analisar e salvar';
   if(error){
@@ -4118,6 +4127,9 @@ $('#analyzeEssay').onclick=async()=>{
       renderEssayThemeCards();
     }
     loadNexoMembership({silent:true});
+    loadEssayHistory().catch(()=>{});
+    loadNexoWeekPlan({silent:true}).catch(()=>{});
+    state.essayRevisionOf=null;
   }
   showEssayResult(text,scores,total);
 };
