@@ -589,3 +589,202 @@ body.light .core-metrics b{color:#172238}
   background:rgba(91,68,207,.12)!important
 }
 body.light .focus-card.core-focus{background:linear-gradient(145deg,#f7f4ff,#f8fcff)!important}
+
+
+/* =========================================================
+   NEXO VISUAL SYSTEM v2 — premium adaptive learning surfaces
+   ========================================================= */
+
+:root{
+  --nexo-violet:#7c5cff;
+  --nexo-violet-soft:#aa8cff;
+  --nexo-blue:#438dff;
+  --nexo-cyan:#45dcff;
+  --nexo-ink:#060b16;
+}
+
+/* Home hero: mascot becomes the visual anchor */
+.hero-card{
+  min-height:330px;
+  grid-template-columns:minmax(0,1.05fr) minmax(360px,.95fr);
+  border-color:rgba(94,104,224,.44);
+  background:
+    radial-gradient(600px 290px at 72% 45%,rgba(54,114,255,.20),transparent 58%),
+    radial-gradient(420px 300px at 90% 0%,rgba(122,79,255,.16),transparent 65%),
+    linear-gradient(112deg,#070c19 0%,#091127 53%,#07101f 100%);
+  box-shadow:0 25px 80px rgba(0,0,0,.24),inset 0 1px 0 rgba(255,255,255,.025)
+}
+.hero-card:after{
+  content:"";position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(115deg,transparent 0 56%,rgba(76,103,255,.035) 56% 57%,transparent 57% 100%)
+}
+.hero-copy{padding:34px 38px;display:flex;flex-direction:column;justify-content:center}
+.hero-copy .eyebrow b{color:#57d9ff;font-weight:760}
+.hero-copy h1{font-size:48px;line-height:.99;margin:12px 0 13px;max-width:610px}
+.hero-copy p{font-size:13px;line-height:1.65;max-width:610px}
+.hero-actions{margin-top:2px}
+.hero-actions .primary-btn{background:linear-gradient(90deg,#f9fbff,#dfeaff);box-shadow:0 10px 32px rgba(120,145,255,.14)}
+.hero-actions .outline-btn{backdrop-filter:blur(12px)}
+
+.hero-nexo-art{
+  min-height:330px;
+  isolation:isolate;
+  background:
+    radial-gradient(circle at 52% 42%,rgba(76,157,255,.24),transparent 26%),
+    radial-gradient(circle at 56% 48%,rgba(116,73,255,.18),transparent 46%);
+}
+.hero-nexo-art:before{
+  content:"";position:absolute;width:360px;height:360px;border-radius:50%;
+  left:50%;top:48%;transform:translate(-50%,-50%);
+  border:1px solid rgba(121,105,255,.22);
+  box-shadow:0 0 0 34px rgba(78,113,240,.035),0 0 0 78px rgba(62,191,238,.018);
+  z-index:0
+}
+.hero-nexo-aura{
+  position:absolute;width:280px;height:280px;border-radius:50%;left:50%;top:48%;transform:translate(-50%,-50%);
+  background:radial-gradient(circle,rgba(80,191,255,.19),rgba(101,65,232,.08) 42%,transparent 68%);
+  filter:blur(2px);z-index:0
+}
+.home-nexo-mascot{
+  position:absolute;z-index:2;left:50%;bottom:-11px;transform:translateX(-50%);
+  width:min(320px,78%);height:94%;object-fit:cover;object-position:center 22%;
+  border-radius:34% 34% 20% 20%;
+  filter:drop-shadow(0 22px 38px rgba(0,0,0,.42)) drop-shadow(0 0 28px rgba(86,94,255,.17))
+}
+.hero-nexo-chip{
+  position:absolute;z-index:4;display:grid;gap:1px;padding:8px 10px;border-radius:12px;
+  border:1px solid rgba(121,118,255,.30);background:rgba(6,14,30,.72);
+  backdrop-filter:blur(14px);box-shadow:0 10px 35px rgba(0,0,0,.26)
+}
+.hero-nexo-chip b{font-size:8px;letter-spacing:1.1px;color:#cfc8ff}
+.hero-nexo-chip span{font-size:8px;color:#8392aa}
+.hero-chip-top{right:17px;top:20px}
+.hero-chip-bottom{left:9px;bottom:18px}
+.hero-nexo-art blockquote{
+  right:16px;bottom:18px;z-index:4;font-size:10px;line-height:1.5;color:#dfe7f6;text-align:right;
+  text-shadow:0 2px 12px rgba(0,0,0,.8)
+}
+.hero-nexo-art blockquote:after{display:none}
+
+/* Subject and action cards: reduce visual noise, increase premium feel */
+.subject-card{
+  overflow:hidden;position:relative;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 10px 26px rgba(0,0,0,.10)
+}
+.subject-card:after{
+  content:"";position:absolute;width:110px;height:110px;border-radius:50%;right:-35px;bottom:-48px;
+  border:1px solid rgba(255,255,255,.08);box-shadow:0 0 0 18px rgba(255,255,255,.018);pointer-events:none
+}
+.feature-card{position:relative;overflow:hidden}
+.feature-card:after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:2px;
+  background:linear-gradient(90deg,transparent,var(--nexo-violet),var(--nexo-cyan),transparent);opacity:.34
+}
+
+/* NEXO Core: use the mascot rather than a generic letter icon */
+.core-avatar{
+  overflow:hidden;padding:0;background:#0c1730;
+  border:1px solid rgba(121,101,255,.48);
+}
+.core-avatar img{width:100%;height:100%;display:block;object-fit:cover;object-position:center 30%;border-radius:inherit}
+.nexo-core-card{
+  box-shadow:0 16px 45px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.025)!important
+}
+.nexo-core-card .core-main{align-items:center}
+.nexo-core-card .core-main h3{font-size:14px}
+.nexo-core-card .core-main p{font-size:9.5px}
+.nexo-core-card .primary-btn{
+  background:linear-gradient(90deg,#7258ef,#4b7df0 58%,#35aee3);color:#fff;
+  box-shadow:0 9px 24px rgba(72,91,222,.20)
+}
+
+/* Professor Nexo guidance before a study session */
+.nexo-guide-card{
+  display:grid;grid-template-columns:62px 1fr auto;gap:12px;align-items:center;
+  margin:13px 0 15px;padding:11px 12px;border-radius:14px;
+  border:1px solid rgba(102,86,220,.34);
+  background:
+    radial-gradient(circle at 0% 100%,rgba(106,75,240,.14),transparent 42%),
+    linear-gradient(100deg,rgba(15,26,49,.86),rgba(9,18,34,.68))
+}
+.nexo-guide-card img{
+  width:58px;height:58px;border-radius:15px;object-fit:cover;object-position:center 28%;
+  border:1px solid rgba(122,100,245,.48);box-shadow:0 8px 24px rgba(72,65,180,.20)
+}
+.nexo-guide-card b{display:block;font-size:12px;margin-bottom:2px}
+.nexo-guide-card p{margin:0;color:var(--muted);font-size:10px;line-height:1.48;max-width:660px}
+.nexo-guide-card button{
+  border:1px solid rgba(113,91,237,.52);border-radius:999px;padding:8px 11px;
+  background:rgba(86,66,202,.12);color:#d7d0ff;font-size:9px;white-space:nowrap
+}
+.nexo-guide-card button:hover{background:rgba(100,75,222,.22)}
+
+/* Nexo mentor treatment for Redação and Desempenho */
+.nexo-page-head{align-items:center}
+.page-nexo-mentor{
+  display:flex;align-items:center;gap:9px;min-width:225px;padding:8px 10px;border:1px solid rgba(93,88,190,.31);
+  border-radius:14px;background:linear-gradient(110deg,rgba(80,62,184,.10),rgba(35,129,175,.05))
+}
+.page-nexo-mentor img{
+  width:48px;height:48px;border-radius:13px;object-fit:cover;object-position:center 28%;
+  border:1px solid rgba(114,94,229,.42)
+}
+.page-nexo-mentor span{display:grid;gap:1px}.page-nexo-mentor b{font-size:10px}.page-nexo-mentor small{font-size:8px;color:var(--muted)}
+
+/* Mobile hero: mascot is visible but leaves enough room for the copy */
+@media(max-width:760px){
+  .mobile-hero{
+    min-height:230px;padding:20px;overflow:hidden;
+    background:
+      radial-gradient(circle at 84% 35%,rgba(65,143,255,.24),transparent 33%),
+      radial-gradient(circle at 100% 0%,rgba(117,76,255,.18),transparent 48%),
+      linear-gradient(145deg,#091124,#07101e 70%);
+    border-color:rgba(94,92,216,.42)
+  }
+  .mobile-hero>div:first-child{position:relative;z-index:4}
+  .mobile-hero .eyebrow{font-size:8px;letter-spacing:2.7px}
+  .mobile-hero .eyebrow b{color:#59dbff}
+  .mobile-hero h1{font-size:31px;max-width:70%;margin-top:10px}
+  .mobile-hero p{max-width:61%;font-size:10px;line-height:1.48;margin-bottom:14px}
+  .mobile-nexo-stage{position:absolute;right:-24px;top:0;width:51%;height:100%;z-index:1}
+  .mobile-nexo-stage:before{
+    content:"";position:absolute;width:156px;height:156px;border-radius:50%;right:4px;top:23px;
+    border:1px solid rgba(114,101,255,.25);box-shadow:0 0 0 22px rgba(87,79,221,.025)
+  }
+  .mobile-nexo-stage .nexo-glow{
+    position:absolute;right:2px;top:18px;width:160px;height:170px;border-radius:50%;
+    background:radial-gradient(circle,rgba(57,171,255,.19),rgba(106,72,245,.08) 45%,transparent 70%)
+  }
+  .mobile-nexo-stage img{
+    position:absolute;right:-2px;bottom:-6px;width:154px;height:205px;object-fit:cover;object-position:center 26%;
+    border-radius:45% 45% 23% 23%;filter:drop-shadow(0 15px 28px rgba(0,0,0,.42))
+  }
+  .nexo-float-chip{
+    position:absolute;z-index:2;font-style:normal;font-size:6px;letter-spacing:1px;color:#d5d1ff;
+    padding:4px 6px;border:1px solid rgba(115,101,237,.30);border-radius:999px;background:rgba(5,13,28,.72);
+    backdrop-filter:blur(9px)
+  }
+  .nexo-float-chip.chip-a{right:108px;top:46px}
+  .nexo-float-chip.chip-b{right:8px;bottom:18px}
+  .mobile-core-card{margin-top:10px}
+  .nexo-guide-card{grid-template-columns:48px 1fr;padding:9px}
+  .nexo-guide-card img{width:46px;height:46px;border-radius:12px}
+  .nexo-guide-card button{grid-column:1/-1;width:100%}
+  .page-nexo-mentor{display:none}
+}
+
+@media(min-width:761px) and (max-width:1180px){
+  .hero-card{grid-template-columns:1fr 340px}
+  .hero-copy h1{font-size:42px}
+  .hero-nexo-chip{display:none}
+  .home-nexo-mascot{width:300px}
+}
+
+/* Light mode keeps the same identity without washing the product out */
+body.light .hero-card{
+  background:
+    radial-gradient(540px 260px at 78% 45%,rgba(66,139,255,.20),transparent 60%),
+    linear-gradient(112deg,#111a31,#121c34 55%,#0d1830);
+}
+body.light .nexo-guide-card{background:linear-gradient(100deg,#f7f5ff,#f4faff)}
+body.light .page-nexo-mentor{background:linear-gradient(110deg,#f6f3ff,#f4fbff)}
