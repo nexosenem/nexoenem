@@ -613,6 +613,7 @@
             <button class="active" data-journey-tab="missions">Missões</button>
             <button data-journey-tab="league">Ligas</button>
             <button data-journey-tab="avatar">Avatar</button>
+            <button data-journey-tab="wardrobe">Guarda-roupa</button>
             <button data-journey-tab="store">Loja</button>
             <button data-journey-tab="achievements">Conquistas</button>
           </nav>
@@ -763,6 +764,22 @@
                 <button class="primary-btn wide" id="saveJourneyAvatar">Salvar personagem</button>
               </article>
             </div>
+          </div>
+
+          <div class="journey-panel" data-journey-panel="wardrobe">
+            <div class="journey-section-head wardrobe-head"><div><span class="eyebrow">GUARDA-ROUPA NEXO</span><h3>Sua coleção cresce junto com sua Jornada.</h3></div><p>Veja o que já está disponível, o que você conquistou e quais itens chegam nos próximos níveis ou no Plus.</p></div>
+            <div class="wardrobe-summary" id="wardrobeSummary"></div>
+            <div class="wardrobe-toolbar">
+              <div class="wardrobe-filters" id="wardrobeFilters">
+                <button class="active" data-wardrobe-filter="all">Todos</button>
+                <button data-wardrobe-filter="available">Disponível</button>
+                <button data-wardrobe-filter="owned">Conquistado</button>
+                <button data-wardrobe-filter="level">Por nível</button>
+                <button data-wardrobe-filter="plus">Plus</button>
+              </div>
+              <select id="wardrobeCategory" aria-label="Filtrar categoria"><option value="all">Todas as categorias</option></select>
+            </div>
+            <div id="nexoWardrobe" class="wardrobe-grid"></div>
           </div>
 
           <div class="journey-panel" data-journey-panel="store">
