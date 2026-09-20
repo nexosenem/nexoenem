@@ -4825,7 +4825,17 @@ async function openContentViewer(type,id){
 
   state.activeViewer={type,item,lastPersistAt:0};
   title.textContent=item.title||'Conteúdo';
-  subtitle.textContent=[item.area,item.subject,item.topic].filter(Boolean).join(' · ');
+  const itemKind=type==='material'?materialKind(item):null;
+  const radarMeta=type==='material'?materialRadarMeta(item):null;
+  subtitle.textContent=[
+    itemKind?.label,
+    item.area,
+    item.subject,
+    item.topic,
+    radarMeta?('Prioridade '+radarMeta.score+' · '+radarMeta.questions+' questões'):''
+  ].filter(Boolean).join(' · ');
+  const practiceBtn=$('#viewerPractice');
+  if(practiceBtn)practiceBtn.textContent=type==='material'?'Treinar este assunto →':'Treinar este assunto →';
   modal.classList.remove('hidden');
   document.body.style.overflow='hidden';
 
@@ -4995,38 +5005,104 @@ async function loadMaterials({silent=false}={}){
   }
   state.materials=data||[];
   await loadContentState('material');
+  if(!state.radarLoaded)await loadEnemRadar({silent:true});
   renderMaterials();
   return state.materials;
 }
+
+function materialKind(item){
+  const title=String(item?.title||'');
+  if(/^Aula NEXO/i.test(title))return {key:'lesson',label:'AULA NEXO',cta:'Estudar aula →',icon:'AULA'};
+  if(/Resumo\/PDF|Resumo NEXO|Resumo/i.test(title))return {key:'summary',label:'RESUMO RÁPIDO',cta:'Revisar resumo →',icon:'RESUMO'};
+  return {key:'material',label:'MATERIAL NEXO',cta:'Abrir material →',icon:String(item?.format||'PDF').toUpperCase()};
+}
+
+function materialRadarMeta(item){
+  const row=(state.radarTopics||[]).find(r=>
+    String(r.topic||'').toLocaleLowerCase('pt-BR')===String(item?.topic||'').toLocaleLowerCase('pt-BR') &&
+    (!item?.subject||String(r.subject||'').toLocaleLowerCase('pt-BR')===String(item.subject).toLocaleLowerCase('pt-BR'))
+  );
+  if(!row)return null;
+  return {
+    questions:Number(row.questions||0),
+    years:Number(row.years_present||0),
+    score:Math.round(Number(row.nexo_priority_score||0))
+  };
+}
+
+function materialSequence(item){
+  const m=String(item?.title||'').match(/#(\d+)/);
+  return m?String(m[1]).padStart(2,'0'):'NEXO';
+}
+
 function renderMaterials(){
-  const s=($('#materialSearch')?.value||'').toLowerCase().trim();
+  const s=($('#materialSearch')?.value||'').toLocaleLowerCase('pt-BR').trim();
   const favoritesOnly=$('#materialFavoritesOnly')?.classList.contains('active');
   const list=state.materials
-    .filter(m=>(!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLowerCase().includes(s))&&(!favoritesOnly||favoriteContent('material',m.id)))
-    .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a)));
+    .filter(m=>(!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR').includes(s))&&(!favoritesOnly||favoriteContent('material',m.id)))
+    .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a))||Number(a.id)-Number(b.id));
   const grid=$('#materialGrid');
   if(!grid)return;
-  grid.innerHTML=list.length?list.map(m=>{
-    const ext=String(m.format||'').toUpperCase();
-    const icon=ext==='PDF'?'PDF':'▧';
-    const size=m.bytes?(' · '+(m.bytes/1048576).toFixed(m.bytes>=10485760?0:1)+' MB'):'';
-    const fav=favoriteContent('material',m.id);
-    return `<article class="panel video-card content-card">
-      <button class="content-fav ${fav?'active':''}" data-content-fav="${m.id}" data-content-type="material" aria-label="Favoritar">${fav?'★':'☆'}</button>
-      <button class="content-open-area" data-content-open="${m.id}" data-content-type="material">
-        <div class="video-thumb"><span>${icon}</span></div>
-        <div class="video-body">
-          ${m.plus_only?'<span class="plus-content-badge">NEXO PLUS</span>':''}
-          ${contentMatchesCore(m)?'<span class="core-content-badge">✦ RECOMENDADO PELO NEXO</span>':''}
-          <b>${esc(m.title)}</b>
-          <small>${esc([m.area,m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>
-          ${m.description?'<p>'+esc(m.description)+'</p>':''}
-          ${contentCardProgress('material',m.id)}
-          <span class="content-cta">Abrir no NEXO →</span>
-        </div>
-      </button>
-    </article>`;
-  }).join(''):'<article class="panel"><p style="color:var(--muted)">Nenhum material publicado ainda.</p></article>';
+
+  if(!list.length){
+    grid.innerHTML='<article class="panel content-empty"><b>Nenhum material encontrado.</b><p>Tente outro assunto ou retire o filtro de favoritos.</p></article>';
+    return;
+  }
+
+  const groups=new Map();
+  list.forEach(item=>{
+    const key=[item.area||'Conteúdo',item.subject||'',item.topic||'Materiais'].join('||');
+    if(!groups.has(key))groups.set(key,[]);
+    groups.get(key).push(item);
+  });
+
+  grid.innerHTML=[...groups.entries()].map(([key,items])=>{
+    const first=items[0],radar=materialRadarMeta(first);
+    const groupMeta=radar
+      ? '<span class="content-radar-chip">🔥 Prioridade '+radar.score+' · '+radar.questions+' questões</span><span>'+radar.years+'/17 edições</span>'
+      : '<span>Trilha NEXO</span>';
+    const cards=items.map(m=>{
+      const kind=materialKind(m);
+      const radarMeta=materialRadarMeta(m);
+      const fav=favoriteContent('material',m.id);
+      const seq=materialSequence(m);
+      const size=m.bytes?(' · '+(m.bytes/1048576).toFixed(m.bytes>=10485760?0:1)+' MB'):'';
+      const title=String(m.title||'').replace(/^Aula NEXO #\d+\s*[—-]\s*/i,'').replace(/^Resumo\/PDF NEXO #\d+\s*[—-]\s*/i,'');
+      return `<article class="panel content-card nexo-material-card ${kind.key}">
+        <button class="content-fav ${fav?'active':''}" data-content-fav="${m.id}" data-content-type="material" aria-label="Favoritar">${fav?'★':'☆'}</button>
+        <button class="content-open-area" data-content-open="${m.id}" data-content-type="material">
+          <div class="material-cover ${kind.key}">
+            <div class="material-cover-top"><span>${kind.label}</span><b>#${seq}</b></div>
+            <div class="material-cover-mark"><i></i><i></i><i></i><i></i></div>
+            <div class="material-cover-copy"><small>${esc(m.subject||m.area||'NEXO')}</small><strong>${esc(title||m.topic||m.title)}</strong></div>
+            <div class="material-cover-foot"><span>NEXO ENEM</span><span>${kind.icon}</span></div>
+          </div>
+          <div class="video-body material-card-body">
+            <div class="material-card-badges">
+              <span class="material-type-badge ${kind.key}">${kind.label}</span>
+              ${m.plus_only?'<span class="plus-content-badge">NEXO PLUS</span>':''}
+              ${contentMatchesCore(m)?'<span class="core-content-badge">✦ RECOMENDADO</span>':''}
+            </div>
+            <b class="material-card-title">${esc(m.title)}</b>
+            <small>${esc([m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>
+            ${radarMeta?'<div class="material-radar"><b>🔥 Prioridade '+radarMeta.score+'</b><span>'+radarMeta.questions+' questões no Radar · '+radarMeta.years+'/17 edições</span></div>':''}
+            ${m.description?'<p>'+esc(m.description)+'</p>':''}
+            ${contentCardProgress('material',m.id)}
+            <span class="content-cta">${kind.cta}</span>
+          </div>
+        </button>
+      </article>`;
+    }).join('');
+
+    return `<section class="content-topic-group">
+      <header class="content-topic-head">
+        <div><span class="eyebrow">${esc(first.area||'NEXO CONTEÚDO')}</span><h3>${esc(first.topic||first.subject||'Materiais')}</h3><p>${esc(first.subject||'Conteúdo NEXO')}</p></div>
+        <div class="content-topic-meta">${groupMeta}</div>
+      </header>
+      <div class="content-flow"><span>Aula</span><i>→</i><span>Resumo</span><i>→</i><span>Macetes</span><i>→</i><span>Treino</span></div>
+      <div class="content-topic-cards">${cards}</div>
+    </section>`;
+  }).join('');
   wireContentCards();
 }
 $('#materialSearch')?.addEventListener('input',renderMaterials);
