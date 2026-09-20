@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-38">
+  <link rel="stylesheet" href="./styles.css?v=20260920-39">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -136,10 +136,10 @@
         <button class="nav-item" data-page="temas"><span>▧</span>Temas de Redação</button>
         <button class="nav-item" data-page="feedback"><span>◌</span>Feedback</button>
         <button class="nav-item" data-page="ranking"><span>♕</span>Ranking</button>
+        <button class="nav-item admin-link admin-only hidden" data-page="admin"><span>♛</span>Área do Admin</button>
       </nav>
 
       <div class="sidebar-spacer"></div>
-      <button class="nav-item admin-link admin-only hidden" data-page="admin"><span>♛</span>Área do Admin</button>
       <div class="sidebar-quote">Disciplina hoje,<br><b>resultado amanhã.</b><small>NEXO ENEM</small></div>
     </aside>
 
@@ -163,6 +163,7 @@
         </div>
         <div id="profileMenu" class="profile-menu hidden">
           <div><b id="menuName">Aluno</b><small id="menuEmail"></small></div>
+          <button id="profileAdminShortcut" class="admin-only hidden" data-page="admin">♛ Área do Admin</button>
           <button id="editStudyPlan">✦ Ajustar meu plano</button>
           <button id="logoutBtn">Sair da conta</button>
         </div>
@@ -803,6 +804,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-42"></script>
+  <script src="./app.js?v=20260920-43"></script>
 </body>
 </html>
