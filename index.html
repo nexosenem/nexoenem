@@ -261,6 +261,7 @@
                 <button data-page="simulados"><span>▤</span><div><b>Simulado</b><small>Sessão organizada</small></div></button>
                 <button data-page="redacao"><span>✎</span><div><b>Redação</b><small>Pratique e salve</small></div></button>
                 <button data-page="videoaulas"><span>▶</span><div><b>Videoaulas</b><small>Por matéria e tema</small></div></button>
+                <button id="mobileFocusMode" class="focus-shortcut"><span>◷</span><div><b>Modo Foco</b><small>25 min sem distração</small></div></button>
                 <button data-page="ranking" class="journey-shortcut"><span>♕</span><div><b>NEXO Jornada</b><small>Missões, ligas e avatar</small></div></button>
               </div>
             </section>
@@ -305,7 +306,7 @@
                   <div class="hero-actions">
                     <button class="primary-btn" id="continueStudy">Continuar estudando <b>→</b></button>
                     <button class="outline-btn" data-page="desempenho">▥ Ver meu desempenho</button>
-                  </div>
+                  <button id="desktopFocusMode" class="outline-btn">◷ Modo Foco</button></div>
                 </div>
                 <div class="hero-art hero-nexo-art" aria-hidden="true">
                   <div class="hero-nexo-aura"></div>
@@ -873,6 +874,57 @@
     </nav>
   </div>
 
+  <div id="focusModeModal" class="focus-mode-modal hidden" aria-modal="true" role="dialog">
+    <section class="focus-mode-shell">
+      <header class="focus-mode-head">
+        <div>
+          <span class="eyebrow">NEXO FOCUS</span>
+          <h3>Modo Foco</h3>
+          <p id="focusModeSubtitle">Uma sessão curta, limpa e sem distração.</p>
+        </div>
+        <button id="closeFocusMode" class="icon-btn" aria-label="Fechar modo foco">×</button>
+      </header>
+      <div class="focus-mode-main">
+        <div class="focus-mascot-wrap">
+          <span class="focus-orbit"></span>
+          <img src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Professor Nexo">
+          <small>Professor Nexo</small>
+        </div>
+        <div class="focus-timer-panel">
+          <div id="focusRing" class="focus-ring" style="--focus-progress:0deg">
+            <div class="focus-ring-inner">
+              <b id="focusTimerText">25:00</b>
+              <small id="focusTimerState">PRONTO</small>
+            </div>
+          </div>
+          <div class="focus-presets" id="focusPresets">
+            <button data-focus-minutes="25" class="active">25 min</button>
+            <button data-focus-minutes="45">45 min</button>
+            <button data-focus-minutes="60">60 min</button>
+          </div>
+          <div class="focus-target">
+            <span>FOCO RECOMENDADO</span>
+            <b id="focusTargetTitle">Seu próximo melhor passo</b>
+            <small id="focusTargetReason">O NEXO Core usa seu desempenho para sugerir o conteúdo.</small>
+          </div>
+          <div class="focus-controls">
+            <button id="focusStart" class="primary-btn">Começar foco</button>
+            <button id="focusReset" class="outline-btn hidden">Reiniciar</button>
+          </div>
+        </div>
+      </div>
+      <footer class="focus-mode-footer">
+        <span><b>1.</b> Escolha o tempo</span>
+        <span><b>2.</b> Foque em uma tarefa</span>
+        <span><b>3.</b> Termine com questões</span>
+      </footer>
+    </section>
+  </div>
+
+  <button id="focusRunningPill" class="focus-running-pill hidden" type="button">
+    <span>◷</span><b id="focusRunningText">25:00</b><small>foco</small>
+  </button>
+
   <div id="contentViewer" class="content-viewer hidden" aria-modal="true" role="dialog">
     <section class="content-viewer-shell">
       <header class="content-viewer-head">
@@ -1061,6 +1113,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-51"></script>
+  <script src="./app.js?v=20260920-48"></script>
 </body>
 </html>
