@@ -6846,3 +6846,16 @@ body.light .wardrobe-card,body.light .wardrobe-summary span{background:#fff}body
     display:none!important;
   }
 }
+
+/* NEXO Full Experience · Command Center */
+.nexo-command-center{position:relative;overflow:hidden}
+.nexo-command-center:before{content:"";position:absolute;inset:-60% 55% auto -15%;height:220px;background:radial-gradient(circle,rgba(116,88,255,.18),transparent 66%);pointer-events:none}
+.command-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:14px}.command-head h3{margin:3px 0 0}.command-head>button{border:0;background:transparent;color:#a99cff;font-weight:800;cursor:pointer}
+.command-layout{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(240px,.8fr);gap:12px}
+.command-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}.command-stats span{padding:13px;border:1px solid var(--line);border-radius:13px;background:rgba(10,20,38,.68)}.command-stats b{display:block;font-size:17px}.command-stats small{color:var(--muted);font-size:10px}
+.command-next{display:flex;align-items:center;padding:13px 15px;border:1px solid rgba(112,89,255,.28);border-radius:13px;background:linear-gradient(135deg,rgba(112,89,255,.12),rgba(39,194,255,.06));color:var(--muted);font-size:12px}.command-next b{color:var(--text);margin-right:4px}
+.desktop-command-center{margin:0 0 16px}.mobile-command-center{margin:0 0 14px;padding:16px;border:1px solid var(--line);border-radius:18px;background:linear-gradient(160deg,rgba(15,27,50,.96),rgba(7,15,29,.98))}
+.mobile-command-center .command-next{margin-top:10px}.mobile-command-center .command-head{margin-bottom:10px}
+body.light .mobile-command-center,body.light .command-stats span{background:#fff}
+@media(max-width:900px){.command-layout{grid-template-columns:1fr}}
+@media(max-width:560px){.command-stats span{padding:11px 9px}.command-stats b{font-size:15px}.command-head h3{font-size:16px}}
