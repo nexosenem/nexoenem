@@ -1532,7 +1532,12 @@ function setNexoMood(mood='feliz'){
   if(em)em.textContent=NEXO_EMOTIONS[mood]||'🐾';
   const avatar=$('#nexoAvatarImage');
   const launcher=$('#nexoLauncherAvatar');
+  const hero=$('#nexoHeroImage');
   const src=NEXO_MOOD_IMAGES[mood]||NEXO_MOOD_IMAGES.feliz;
+  if(hero){
+    hero.onerror=()=>{hero.onerror=null;const fallback=window.NEXO_MASCOT_ASSETS?.head;if(fallback)hero.src=fallback};
+    hero.src=src;
+  }
   if(avatar){
     avatar.onerror=()=>{avatar.onerror=null;const fallback=window.NEXO_MASCOT_ASSETS?.head;if(fallback)avatar.src=fallback};
     avatar.src=src;
