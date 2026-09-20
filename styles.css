@@ -7845,10 +7845,14 @@ body.light #storeCollection,body.light #storeCategory{background:#fff}
   color:#a99cf4;background:rgba(97,73,207,.07);font-size:7px;font-weight:900;letter-spacing:.6px
 }
 .essay-theme-control label,.essay-editor-v2>label{display:grid;gap:6px;color:#9aabc1;font-size:8px;font-weight:800}
+.essay-theme-control{display:grid;gap:8px}
+.essay-theme-tools{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:8px;align-items:end}
 .essay-theme-control select{
   width:100%;min-height:44px;border:1px solid var(--line);border-radius:11px;
   background:#081529;color:var(--text);padding:0 11px;font-size:10px
 }
+.essay-random-theme{min-height:44px;white-space:nowrap;padding-inline:13px}
+.essay-theme-count{display:block;color:#687b94;font-size:7px;font-weight:800;letter-spacing:.35px}
 .essay-prompt-v2{
   margin:10px 0 15px;padding:12px 13px;border-radius:12px;
   border:1px solid rgba(76,163,204,.18);
@@ -7983,4 +7987,10 @@ body.light .essay-theme-control select{background:#fff}
 }
 .topbar .profile-avatar-shell>.student-avatar-shell{
   transform:translate(-50%,-50%) scale(.245)!important;
+}
+
+
+@media(max-width:520px){
+  .essay-theme-tools{grid-template-columns:1fr}
+  .essay-random-theme{width:100%}
 }
