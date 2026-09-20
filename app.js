@@ -26,6 +26,31 @@ const CLOUDINARY = Object.freeze({
   uploadPreset:'nexo_uploads'
 });
 
+const NEXO_EMOTIONS=Object.freeze({
+  feliz:'😊',serio:'🎯',confiante:'💪',duvida:'🤔',acolhedor:'💙',animado:'✨'
+});
+const NEXO_BASE_MASCOT=window.NEXO_MASCOT_ASSETS?.head||'';
+const NEXO_MOOD_IMAGES=Object.freeze({
+  feliz:'./assets/nexo-expressions/feliz.avif',
+  serio:'./assets/nexo-expressions/serio.avif',
+  confiante:'./assets/nexo-expressions/confiante.avif',
+  duvida:'./assets/nexo-expressions/pensativo.avif',
+  surpresa:'./assets/nexo-expressions/feliz.avif',
+  pensativo:'./assets/nexo-expressions/pensativo.avif',
+  acolhedor:'./assets/nexo-expressions/acolhedor.avif',
+  calmo:'./assets/nexo-expressions/acolhedor.avif',
+  animado:'./assets/nexo-expressions/confiante.avif',
+  motivado:'./assets/nexo-expressions/confiante.avif'
+});
+const NEXO_MEDIA_IMAGES=Object.freeze({
+  avatar:NEXO_MOOD_IMAGES.confiante,
+  bust:'./assets/nexo-family/bust.avif',
+  hero:'./assets/nexo-family/hero.avif',
+  bustConfiante:'./assets/nexo-family/bust-confiante.avif',
+  bustPensativo:'./assets/nexo-family/bust-pensativo.avif',
+  bustAcolhedor:'./assets/nexo-family/bust-acolhedor.avif'
+});
+
 async function getCloudinaryUploadAuth(){
   try{
     const {data,error}=await client.functions.invoke('cloudinary-signature',{body:{}});
@@ -1233,6 +1258,7 @@ async function initApp(session) {
 }
 
 async function handleSession(session) {
+  if(window.__nexoBootWatchdog){clearTimeout(window.__nexoBootWatchdog);window.__nexoBootWatchdog=null;}
   if (session) {
     await initApp(session);
   } else {
@@ -1250,6 +1276,7 @@ async function handleSession(session) {
 }
 
 function reportSessionError(err) {
+  if(window.__nexoBootWatchdog){clearTimeout(window.__nexoBootWatchdog);window.__nexoBootWatchdog=null;}
   console.error('Falha ao carregar a sessão/app:', err);
   logClientError('auth_session',err,'session_load');
 
@@ -4501,8 +4528,6 @@ async function niaAnswer(text){
   };
 }
 
-const NEXO_EMOTIONS={feliz:'😊',serio:'🎯',confiante:'💪',duvida:'🤔',acolhedor:'💙',animado:'✨'};
-
 function initNexoMascotVisuals(){
   const a=window.NEXO_MASCOT_ASSETS||{};
   const fallback=a.head||'';
@@ -4532,29 +4557,6 @@ function initNexoMascotVisuals(){
   $$('[data-nexo-safe-avatar]').forEach(img=>bindImage(img,a.head));
 }
 initNexoMascotVisuals();
-
-const NEXO_BASE_MASCOT=window.NEXO_MASCOT_ASSETS?.head||'';
-const NEXO_MOOD_IMAGES={
-  feliz:'./assets/nexo-expressions/feliz.avif',
-  serio:'./assets/nexo-expressions/serio.avif',
-  confiante:'./assets/nexo-expressions/confiante.avif',
-  duvida:'./assets/nexo-expressions/pensativo.avif',
-  surpresa:'./assets/nexo-expressions/feliz.avif',
-  pensativo:'./assets/nexo-expressions/pensativo.avif',
-  acolhedor:'./assets/nexo-expressions/acolhedor.avif',
-  calmo:'./assets/nexo-expressions/acolhedor.avif',
-  animado:'./assets/nexo-expressions/confiante.avif',
-  motivado:'./assets/nexo-expressions/confiante.avif'
-};
-
-const NEXO_MEDIA_IMAGES={
-  avatar:NEXO_MOOD_IMAGES.confiante,
-  bust:'./assets/nexo-family/bust.avif',
-  hero:'./assets/nexo-family/hero.avif',
-  bustConfiante:'./assets/nexo-family/bust-confiante.avif',
-  bustPensativo:'./assets/nexo-family/bust-pensativo.avif',
-  bustAcolhedor:'./assets/nexo-family/bust-acolhedor.avif'
-};
 
 function nexoBustForMood(mood='confiante'){
   if(['pensativo','serio','duvida'].includes(mood))return NEXO_MEDIA_IMAGES.bustPensativo;
