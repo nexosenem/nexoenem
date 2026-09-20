@@ -746,7 +746,12 @@ function studyPhaseMeta(){
   const target=new Date('2026-11-08T00:00:00-03:00').getTime();
   const today=new Date();today.setHours(0,0,0,0);
   const days=Math.ceil((target-today.getTime())/86400000);
-  const last=state.lastStudyAt?new Date(state.lastStudyAt).getTime():0;
+  const contentLast=[...state.contentProgress.values()]
+    .map(x=>x?.last_opened_at?new Date(x.last_opened_at).getTime():0)
+    .filter(Boolean)
+    .sort((a,b)=>b-a)[0]||0;
+  const questionLast=state.lastStudyAt?new Date(state.lastStudyAt).getTime():0;
+  const last=Math.max(questionLast,contentLast);
   const inactiveDays=last?Math.max(0,Math.floor((Date.now()-last)/86400000)):0;
   const recovery=Boolean(last&&inactiveDays>=5);
   if(days<=0)return {key:'post',label:'PÓS-PROVA',days,inactiveDays,recovery:false,description:'Feche seu ciclo e preserve seu histórico.'};
@@ -3122,6 +3127,9 @@ async function loadRecentAttempts() {
   $('#recentAttempts').innerHTML = recentHtml;
   $('#mobileRecent').innerHTML = recentHtml;
   decorateResumeStudySession();
+  renderNexoToday();
+  renderTodayPlan();
+  renderNexoWeekPlan();
 }
 
 function setSelectedArea(area) {
@@ -3327,14 +3335,17 @@ async function startStudySession(config) {
     if(state.session?.coreSessionId) await closeNexoSession('abandoned',state.session);
     const all = await fetchQuestions(config);
     const seen = await getSeenIds();
+    const requested=Math.max(1,Number(config.size||10));
     let fresh = shuffle(all.filter(x=>!seen.has(Number(x.id))));
     let reviewMode=false;
-    if(!fresh.length){
-      fresh=shuffle(all);
+    if(fresh.length<requested){
+      const freshIds=new Set(fresh.map(x=>Number(x.id)));
+      const reviewPool=shuffle(all.filter(x=>!freshIds.has(Number(x.id))));
+      fresh=[...fresh,...reviewPool];
       reviewMode=true;
     }
     if(!fresh.length) throw new Error('Nenhuma questão encontrada com esses filtros.');
-    const size=Math.min(config.size||10,fresh.length);
+    const size=Math.min(requested,fresh.length);
     const queue=fresh.slice(0,size);
     const coreSessionId=await beginNexoSession(config,queue.length);
     state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,examStartedAt:config.examMode?Date.now():null,paceAlerts:{},resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
@@ -4383,7 +4394,7 @@ async function submitAnswer(option) {
     <div class="post-answer-actions premium-actions">
       ${shortcut?'<button id="showHint">🐾 Ver macete</button>':''}
       <button id="askNexoAboutQuestion">✦ Perguntar ao Nexo</button>
-      <button id="reviewQuestionTopic">↻ Treinar este tema</button>
+      <button id="reviewQuestionTopic">↻ ${data.correct?'Consolidar tema':'Treinar 3 semelhantes'}</button>
       <button id="saveCurrentQuestion">☆ Salvar questão</button>
       <button id="reportCurrentQuestion">⚑ Reportar problema</button>
       <button id="openComments">💬 Comentários</button>
@@ -4418,15 +4429,23 @@ async function submitAnswer(option) {
   $('#reviewQuestionTopic').onclick=async()=>{
     const q=state.current;
     if(!q)return;
+    const fineTopic=state.session?.radarTopic||q.topic||'';
     await startStudySession({
-      mode:'review',
+      mode:data.correct?'consolidation':'similar_after_error',
       area:q.area||'',
       subject:q.subject||'',
-      topic:q.topic||'',
+      topic:fineTopic,
+      radarTopic:state.session?.radarTopic||'',
+      fallbackTopic:q.topic||fineTopic,
       difficulty:'',
       visualOnly:false,
-      size:5
+      size:data.correct?5:3
     });
+    if(state.session&&!data.correct){
+      $('#sessionAreaBadge').textContent='PONTE DE ERRO';
+      $('#sessionTitle').textContent=fineTopic||q.subject||'Questões semelhantes';
+      $('#sessionSubtitle').textContent='Primeiro resolva 3 questões parecidas. A questão original fica no Caderno de Erros para voltar depois.';
+    }
   };
   $('#saveCurrentQuestion').onclick=()=>toggleSavedQuestion(state.current.id);
   updateCurrentQuestionSaveButton();
