@@ -505,12 +505,12 @@ $$('[data-sim-area]').forEach(b=>b.onclick=()=>{
 async function renderPerformance() {
   await loadDashboard();
   const d=state.dashboard||{attempts:0,correct:0,accuracy:0,by_area:[]};
-  const { data:essays }=await client.from('essays').select('id',{count:'exact'}).limit(1);
+  const essaysCount=await client.from('essays').select('*',{count:'exact',head:true});
   $('#statsGrid').innerHTML=[
     ['Questões respondidas',d.attempts||0],
     ['Aproveitamento',(d.accuracy||0)+'%'],
     ['Acertos',d.correct||0],
-    ['Redações salvas',Array.isArray(essays)?essays.length:0]
+    ['Redações salvas',essaysCount.count||0]
   ].map(x=>`<article class="stat-card"><small>${x[0]}</small><b>${x[1]}</b></article>`).join('');
 
   const map=new Map((d.by_area||[]).map(x=>[x.area,x]));
