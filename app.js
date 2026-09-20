@@ -3753,49 +3753,105 @@ function renderJourneyBoards(){
 }
 
 let wardrobeFilter='all';
+function wardrobeItemField(item){
+  const raw=String(item?.visual?.field||item?.category||'').trim().toLowerCase();
+  const aliases={
+    hair:'hair',cabelo:'hair',
+    hair_color:'hair_color','hair-color':'hair_color','cor do cabelo':'hair_color',cor_cabelo:'hair_color',
+    outfit:'outfit',roupa:'outfit',roupas:'outfit',
+    accessory:'accessory',acessorio:'accessory','acessório':'accessory',acessorios:'accessory','acessórios':'accessory',
+    frame:'frame',moldura:'frame',
+    background:'background',fundo:'background',cenario:'background','cenário':'background',
+    aura:'aura'
+  };
+  return aliases[raw]||raw;
+}
+function wardrobeCategoryLabel(category){
+  const field=wardrobeItemField({category});
+  return ({hair:'Cabelo',hair_color:'Cor do cabelo',outfit:'Roupa',accessory:'Acessório',frame:'Moldura',background:'Cenário',aura:'Aura'})[field]||String(category||'Item');
+}
 function wardrobeItemState(item,owned,level,plus,ultra){
-  const has=ultra||owned.has(item.item_code);
   const plusLocked=Boolean(item.plus_only&&!plus&&!ultra);
   const levelLocked=!ultra&&level<Number(item.unlock_level||1);
-  const available=!has&&!plusLocked&&!levelLocked&&item.grant_mode!=='level';
-  return {has,plusLocked,levelLocked,available};
+  const autoEligible=Boolean(!plusLocked&&!levelLocked&&(item.grant_mode==='starter'||item.grant_mode==='level'));
+  const has=ultra||owned.has(item.item_code)||autoEligible;
+  const available=!has&&!plusLocked&&!levelLocked;
+  return {has,plusLocked,levelLocked,available,autoEligible};
+}
+function wardrobePreviewAvatar(item,baseAvatar){
+  const preview=normalizedAvatar(baseAvatar);
+  const field=wardrobeItemField(item);
+  const value=item?.visual?.value;
+  if(value&&Object.prototype.hasOwnProperty.call(preview,field))preview[field]=value;
+  return normalizeAvatarDraftForBase(preview);
 }
 function renderNexoWardrobe(){
   const j=state.journey||{}, el=$('#nexoWardrobe'), summary=$('#wardrobeSummary');
   if(!el)return;
   const owned=journeyInventorySet(), level=Number(j.profile?.level||1), plus=isNexoPlus(), ultra=isNexoUltra();
-  const base=j.profile?.avatar?.base||'neutral';
-  const category=$('#wardrobeCategory')?.value||'all';
+  const baseAvatar=normalizedAvatar(j.profile?.avatar);
+  const base=baseAvatar.base||'neutral';
   const catalog=(j.catalog||[]).filter(item=>ultra||avatarItemCompatibleWithBase(item,base));
-  const categories=[...new Set(catalog.map(x=>x.category).filter(Boolean))].sort();
+  const categories=[...new Set(catalog.map(x=>x.category).filter(Boolean))].sort((a,b)=>wardrobeCategoryLabel(a).localeCompare(wardrobeCategoryLabel(b),'pt-BR'));
   const categorySelect=$('#wardrobeCategory');
   if(categorySelect){
     const current=categorySelect.value||'all';
-    categorySelect.innerHTML='<option value="all">Todas as categorias</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    categorySelect.innerHTML='<option value="all">Todas as categorias</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(wardrobeCategoryLabel(x))+'</option>').join('');
     categorySelect.value=categories.includes(current)?current:'all';
   }
+
   const counts={owned:0,available:0,level:0,plus:0};
-  catalog.forEach(item=>{const s=wardrobeItemState(item,owned,level,plus,ultra); if(s.has)counts.owned++; else if(s.plusLocked)counts.plus++; else if(s.levelLocked||item.grant_mode==='level')counts.level++; else counts.available++;});
+  catalog.forEach(item=>{
+    const s=wardrobeItemState(item,owned,level,plus,ultra);
+    if(s.has)counts.owned++;
+    else if(s.plusLocked)counts.plus++;
+    else if(s.levelLocked)counts.level++;
+    else counts.available++;
+  });
+  const total=Math.max(1,catalog.length),progress=Math.round(counts.owned*100/total);
   if(summary)summary.innerHTML='<span><b>'+counts.available+'</b><small>Disponível</small></span><span><b>'+counts.owned+'</b><small>Conquistado</small></span><span><b>'+counts.level+'</b><small>Por nível</small></span><span><b>'+counts.plus+'</b><small>Plus</small></span>';
+  if($('#wardrobeProgressLabel'))$('#wardrobeProgressLabel').textContent=progress+'% conquistado · '+counts.owned+'/'+catalog.length+' itens';
+  if($('#wardrobeProgressBar'))$('#wardrobeProgressBar').style.width=progress+'%';
+  const nextLevel=catalog.filter(item=>!wardrobeItemState(item,owned,level,plus,ultra).has&&!item.plus_only&&Number(item.unlock_level||1)>level).sort((a,b)=>Number(a.unlock_level||1)-Number(b.unlock_level||1))[0];
+  if($('#wardrobeNextUnlock'))$('#wardrobeNextUnlock').textContent=nextLevel?'Próximo desbloqueio: '+(nextLevel.name||'novo item')+' no nível '+Number(nextLevel.unlock_level||1)+'.':counts.available?'Você tem itens disponíveis para adicionar à coleção.':'Sua coleção está em dia com seu nível atual.';
+
+  const currentAvatar=normalizedAvatar(j.profile?.avatar);
+  const stateRank=s=>s.has?0:s.available?1:s.levelLocked?2:3;
   const filtered=catalog.filter(item=>{
     const s=wardrobeItemState(item,owned,level,plus,ultra);
     const cat=($('#wardrobeCategory')?.value||'all')==='all'||item.category===$('#wardrobeCategory').value;
-    const match=wardrobeFilter==='all'||(wardrobeFilter==='owned'&&s.has)||(wardrobeFilter==='available'&&s.available)||(wardrobeFilter==='plus'&&s.plusLocked)||(wardrobeFilter==='level'&&!s.has&&!s.plusLocked&&(s.levelLocked||item.grant_mode==='level'));
+    const match=wardrobeFilter==='all'||(wardrobeFilter==='owned'&&s.has)||(wardrobeFilter==='available'&&s.available)||(wardrobeFilter==='plus'&&s.plusLocked)||(wardrobeFilter==='level'&&!s.has&&!s.plusLocked&&s.levelLocked);
     return cat&&match;
+  }).sort((a,b)=>{
+    const sa=wardrobeItemState(a,owned,level,plus,ultra),sb=wardrobeItemState(b,owned,level,plus,ultra);
+    return stateRank(sa)-stateRank(sb)||Number(a.unlock_level||1)-Number(b.unlock_level||1)||String(a.name||'').localeCompare(String(b.name||''),'pt-BR');
   });
+
   el.innerHTML=filtered.length?filtered.map(item=>{
     const s=wardrobeItemState(item,owned,level,plus,ultra);
-    const stateClass=s.has?'owned':s.plusLocked?'plus':(s.levelLocked||item.grant_mode==='level')?'level':'available';
-    const label=s.has?'CONQUISTADO':s.plusLocked?'PLUS':(s.levelLocked||item.grant_mode==='level')?'DESBLOQUEIA NO NÍVEL '+Number(item.unlock_level||1):'DISPONÍVEL';
-    return '<article class="wardrobe-card '+stateClass+'"><div class="wardrobe-card-visual"><span>✦</span><small>'+esc(item.category||'Item')+'</small></div><div class="wardrobe-card-copy"><span class="wardrobe-state">'+label+'</span><h4>'+esc(item.name)+'</h4><p>'+esc(item.description||'Cosmético NEXO')+'</p></div><div class="wardrobe-card-foot"><small>'+esc(String(item.rarity||'comum').toUpperCase())+'</small>'+(s.has?'<button data-wardrobe-equip="'+esc(item.item_code)+'">Usar</button>':s.plusLocked?'<button data-open-plus>Ver Plus</button>':s.available?'<button data-wardrobe-store>Ver na Loja</button>':'<button disabled>Nível '+Number(item.unlock_level||1)+'</button>')+'</div></article>';
+    const field=wardrobeItemField(item),value=item?.visual?.value;
+    const equipped=Boolean(s.has&&value&&currentAvatar[field]===value);
+    const stateClass=equipped?'equipped':s.has?'owned':s.plusLocked?'plus':s.levelLocked?'level':'available';
+    const label=equipped?'USANDO':s.has?'CONQUISTADO':s.plusLocked?'PLUS':s.levelLocked?'DESBLOQUEIA NO NÍVEL '+Number(item.unlock_level||1):'DISPONÍVEL';
+    const action=equipped?'<button disabled>Em uso</button>':s.has?'<button data-wardrobe-equip="'+esc(item.item_code)+'">Usar</button>':s.plusLocked?'<button data-open-plus>Ver Plus</button>':s.available?'<button data-wardrobe-store>Ver na Loja</button>':'<button disabled>Nível '+Number(item.unlock_level||1)+'</button>';
+    return '<article class="wardrobe-card '+stateClass+'"><div class="wardrobe-card-visual"><div class="wardrobe-avatar-preview" data-wardrobe-preview="'+esc(item.item_code)+'"></div><small>'+esc(wardrobeCategoryLabel(item.category))+'</small></div><div class="wardrobe-card-copy"><span class="wardrobe-state">'+label+'</span><h4>'+esc(item.name)+'</h4><p>'+esc(item.description||'Cosmético NEXO')+'</p></div><div class="wardrobe-card-foot"><small>'+esc(String(item.rarity||'comum').toUpperCase())+'</small>'+action+'</div></article>';
   }).join(''):'<div class="journey-empty">Nenhum item nesta categoria.</div>';
-  $('[data-open-plus]',el).forEach(btn=>btn.onclick=()=>openNexoPlans('Esse item faz parte do Guarda-roupa NEXO Plus.'));
-  $('[data-wardrobe-store]',el).forEach(btn=>btn.onclick=()=>setJourneyTab('store'));
-  $('[data-wardrobe-equip]',el).forEach(btn=>btn.onclick=()=>{
-    const item=avatarCatalogItem(btn.dataset.wardrobeEquip); if(!item?.visual?.value)return setJourneyTab('avatar');
+
+  $$('[data-wardrobe-preview]',el).forEach(node=>{
+    const item=avatarCatalogItem(node.dataset.wardrobePreview);
+    renderStudentAvatar(node,wardrobePreviewAvatar(item,baseAvatar));
+  });
+  $$('[data-open-plus]',el).forEach(btn=>btn.onclick=()=>openNexoPlans('Esse item faz parte do Guarda-roupa NEXO Plus.'));
+  $$('[data-wardrobe-store]',el).forEach(btn=>btn.onclick=()=>setJourneyTab('store'));
+  $$('[data-wardrobe-equip]',el).forEach(btn=>btn.onclick=()=>{
+    const item=avatarCatalogItem(btn.dataset.wardrobeEquip), field=wardrobeItemField(item), value=item?.visual?.value;
+    if(!item||!value||!Object.prototype.hasOwnProperty.call(NEXO_AVATAR_DEFAULT,field))return setJourneyTab('avatar');
     state.avatarDraft=normalizedAvatar(state.avatarDraft||j.profile?.avatar);
-    state.avatarDraft[item.category]=item.visual.value;
-    setJourneyTab('avatar'); renderAvatarBuilder(); toast('Item selecionado. Confira no personagem e salve.');
+    state.avatarDraft[field]=value;
+    state.avatarDraft=normalizeAvatarDraftForBase(state.avatarDraft);
+    setJourneyTab('avatar');
+    renderAvatarBuilder();
+    toast('Item selecionado. Confira no personagem e salve.');
   });
 }
 function renderJourneyStore(){
@@ -3815,15 +3871,15 @@ function renderJourneyStore(){
   };
   const visibleCatalog=(j.catalog||[]).filter(item=>ultra||avatarItemCompatibleWithBase(item,base));
   el.innerHTML=visibleCatalog.map(item=>{
-    const has=ultra||owned.has(item.item_code);
-    const plusLocked=Boolean(item.plus_only&&!plus&&!ultra);
-    const levelLocked=!ultra&&level<Number(item.unlock_level||1);
+    const itemState=wardrobeItemState(item,owned,level,plus,ultra);
+    const has=itemState.has;
+    const plusLocked=itemState.plusLocked;
+    const levelLocked=itemState.levelLocked;
     const locked=plusLocked||levelLocked;
     const status=ultra?'ULTRA · LIBERADO'
       :has?'NO INVENTÁRIO'
       :plusLocked?'NEXO PLUS'
-      :item.grant_mode==='level'?'LIBERA NO NÍVEL '+item.unlock_level
-      :levelLocked?'NÍVEL '+item.unlock_level
+      :levelLocked?'LIBERA NO NÍVEL '+item.unlock_level
       :item.grant_mode==='starter'?'GRÁTIS'
       :Number(item.price||0)+' N-Coins';
     return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''} ${plusLocked?'plus-locked':''}">
