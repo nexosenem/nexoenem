@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-4">
+  <link rel="stylesheet" href="./styles.css?v=20260920-5">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -114,6 +114,67 @@
 
       <main>
         <section class="page active" id="inicio">
+          <div class="mobile-home">
+            <article class="mobile-hero">
+              <div>
+                <span class="eyebrow">NEXO ENEM</span>
+                <h1>Seu estudo.<br><span>Mais inteligente.</span></h1>
+                <p>Continue de onde parou ou escolha uma área.</p>
+              </div>
+              <button class="primary-btn" data-page="questoes">Continuar <b>→</b></button>
+              <div class="mobile-hero-orbit" aria-hidden="true"><i></i><b>N</b></div>
+            </article>
+
+            <section class="mobile-section">
+              <div class="mobile-section-head"><div><span class="eyebrow">ÁREAS DO ENEM</span><h3>O que você quer estudar?</h3></div></div>
+              <div class="mobile-subject-grid">
+                <button class="subject-card mobile-subject blue" data-area="Linguagens"><span class="subject-icon">A</span><div><b>Linguagens</b><small>125 questões</small></div></button>
+                <button class="subject-card mobile-subject green" data-area="Ciências Humanas"><span class="subject-icon">◎</span><div><b>Humanas</b><small>125 questões</small></div></button>
+                <button class="subject-card mobile-subject purple" data-area="Ciências da Natureza"><span class="subject-icon">⌬</span><div><b>Natureza</b><small>125 questões</small></div></button>
+                <button class="subject-card mobile-subject orange" data-area="Matemática"><span class="subject-icon">Σ</span><div><b>Matemática</b><small>125 questões</small></div></button>
+              </div>
+            </section>
+
+            <section class="mobile-section">
+              <div class="mobile-section-head"><div><span class="eyebrow">ATALHOS</span><h3>O que você quer fazer?</h3></div></div>
+              <div class="mobile-action-grid">
+                <button id="mobileAdaptive"><span>◎</span><div><b>Treino adaptativo</b><small>Foque nos seus erros</small></div></button>
+                <button data-page="simulados"><span>▤</span><div><b>Simulado</b><small>Sessão organizada</small></div></button>
+                <button data-page="redacao"><span>✎</span><div><b>Redação</b><small>Pratique e salve</small></div></button>
+                <button data-page="videoaulas"><span>▶</span><div><b>Videoaulas</b><small>Por matéria e tema</small></div></button>
+              </div>
+            </section>
+
+            <article class="mobile-study-card">
+              <div class="mobile-section-head"><div><span class="eyebrow">CONTINUAR</span><h3>Estudo rápido</h3></div><button data-page="banco">Banco →</button></div>
+              <div id="mobileRecent" class="mobile-recent"><p>Seu histórico aparecerá aqui quando você começar a resolver.</p></div>
+              <div class="mobile-quick-row">
+                <button id="mobileQuickTen"><b>10</b><span>Sessão rápida<small>10 questões</small></span></button>
+                <button id="mobileQuickVisual"><b>◉</b><span>Modo visual<small>gráficos e mapas</small></span></button>
+              </div>
+            </article>
+
+            <article class="mobile-performance-card">
+              <div class="mobile-section-head"><div><span class="eyebrow">SEU DESEMPENHO</span><h3>Progresso e foco</h3></div><button data-page="desempenho">Detalhes →</button></div>
+              <div class="mobile-performance-main">
+                <div class="donut mobile-donut" id="mobileProgressDonut"><b id="mobileProgressPct">0%</b><small>aproveitamento</small></div>
+                <div class="mobile-performance-stats">
+                  <span><i class="dot cyan"></i><b id="mobileCorrectCount">0</b><small>acertos</small></span>
+                  <span><i class="dot red"></i><b id="mobileWrongCount">0</b><small>erros</small></span>
+                  <span><i class="dot grey"></i><b id="mobileAnsweredCount">0</b><small>respondidas</small></span>
+                </div>
+              </div>
+              <div class="mobile-weak-title"><b>Prioridades agora</b><button data-page="focos">Plano de estudos →</button></div>
+              <div id="mobileWeaknessBars" class="mobile-weak-list"><p>Resolva algumas questões para descobrir seus pontos de atenção.</p></div>
+            </article>
+
+            <article class="mobile-theme-card">
+              <div><span class="eyebrow">TEMA DA SEMANA</span><h3>Transição energética no Brasil</h3><p>Desafios para um futuro sustentável.</p></div>
+              <button class="outline-btn small" data-page="redacao">Praticar →</button>
+              <div class="mobile-theme-art" aria-hidden="true">⌁ ⌁ ⌁</div>
+            </article>
+          </div>
+
           <div class="dashboard-grid">
             <div class="dashboard-main">
               <article class="hero-card">
@@ -352,6 +413,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="./app.js?v=20260920-4"></script>
+  <script src="./app.js?v=20260920-5"></script>
 </body>
 </html>
