@@ -2567,3 +2567,120 @@ body.light .admin-user-row{background:#f7f9fd}
   .sidebar-quote{margin-top:8px;flex:0 0 auto}
   .admin-link{order:99}
 }
+
+
+/* =========================================================
+   PROFESSOR NEXO · LIVE ANSWER REACTIONS v1
+   ========================================================= */
+.answer-professor[data-reaction-mood]{
+  grid-template-columns:72px minmax(0,1fr)!important;
+  align-items:center!important;
+}
+
+.answer-professor[data-reaction-mood] img[data-nexo-family="bust"]{
+  width:68px!important;
+  height:82px!important;
+  object-fit:contain!important;
+  object-position:center top!important;
+  padding:0!important;
+  border-radius:17px!important;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(83,154,255,.14),transparent 58%),
+    rgba(8,17,34,.76)!important;
+  border:1px solid rgba(99,93,214,.24);
+  box-shadow:0 9px 24px rgba(0,0,0,.22);
+}
+
+.answer-professor[data-reaction-mood="confiante"] img{
+  border-color:rgba(71,206,180,.34)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.22),0 0 20px rgba(58,205,182,.08)!important;
+}
+
+.answer-professor[data-reaction-mood="pensativo"] img{
+  border-color:rgba(91,139,239,.34)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.22),0 0 20px rgba(75,136,237,.08)!important;
+}
+
+.answer-professor[data-reaction-mood="acolhedor"] img{
+  border-color:rgba(153,111,235,.34)!important;
+  box-shadow:0 9px 24px rgba(0,0,0,.22),0 0 20px rgba(129,92,221,.08)!important;
+}
+
+.nexo-reaction-meta{
+  display:flex;
+  flex-wrap:wrap;
+  gap:5px;
+  margin-top:7px;
+}
+
+.nexo-reaction-meta small{
+  display:inline-flex!important;
+  align-items:center;
+  min-height:22px;
+  padding:4px 7px;
+  border-radius:999px;
+  border:1px solid rgba(92,104,148,.24);
+  background:rgba(12,23,42,.70);
+  color:#94a4bb!important;
+  font-size:6.8px!important;
+  line-height:1!important;
+  letter-spacing:.7px!important;
+  font-weight:850;
+}
+
+.answer-professor[data-reaction-mood="confiante"] .nexo-reaction-meta small:first-child{
+  border-color:rgba(61,206,164,.26);
+  color:#71dfbd!important;
+  background:rgba(27,111,87,.12);
+}
+
+.answer-professor[data-reaction-mood="pensativo"] .nexo-reaction-meta small:first-child{
+  border-color:rgba(78,134,234,.28);
+  color:#8db9ff!important;
+  background:rgba(44,91,175,.12);
+}
+
+.answer-professor[data-reaction-mood="acolhedor"] .nexo-reaction-meta small:first-child{
+  border-color:rgba(141,103,226,.28);
+  color:#c4afff!important;
+  background:rgba(100,71,183,.12);
+}
+
+body.light .nexo-reaction-meta small{
+  background:#f7f9fd;
+  color:#637187!important;
+}
+
+@media(max-width:760px){
+  .answer-professor[data-reaction-mood]{
+    grid-template-columns:62px minmax(0,1fr)!important;
+    gap:10px!important;
+  }
+
+  .answer-professor[data-reaction-mood] img[data-nexo-family="bust"]{
+    width:58px!important;
+    height:72px!important;
+    border-radius:15px!important;
+  }
+
+  .answer-professor[data-reaction-mood] h4{
+    font-size:13px!important;
+    line-height:1.25!important;
+  }
+
+  .answer-professor[data-reaction-mood] p{
+    font-size:8.8px!important;
+    line-height:1.45!important;
+  }
+
+  .nexo-reaction-meta{
+    gap:4px;
+    margin-top:6px;
+  }
+
+  .nexo-reaction-meta small{
+    min-height:20px;
+    padding:4px 6px;
+    font-size:6.3px!important;
+  }
+}
