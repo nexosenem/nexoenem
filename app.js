@@ -566,7 +566,14 @@ function renderOnboardingAvatar(){
   const ob=state.onboarding;
   if(!ob?.avatar)return;
   ob.avatar=normalizeAvatarDraftForBase(ob.avatar);
-  renderStudentAvatar($('#onboardingAvatarPreview'),ob.avatar);
+  try{
+    renderStudentAvatar($('#onboardingAvatarPreview'),ob.avatar);
+  }catch(err){
+    console.error('onboarding avatar preview',err);
+    logClientError('onboarding',err,'avatar_preview');
+    const preview=$('#onboardingAvatarPreview');
+    if(preview)preview.innerHTML='<div class="onboarding-avatar-fallback"><img src="./assets/nexo-family/bust-confiante.avif" alt="Nexo"></div>';
+  }
 
   $$('[data-onboarding-avatar-field]').forEach(btn=>{
     btn.classList.toggle('active',ob.avatar[btn.dataset.onboardingAvatarField]===btn.dataset.onboardingAvatarValue);
@@ -1222,7 +1229,7 @@ async function refreshCurrentRole({silent=true}={}){
     state.profile={...(state.profile||{}),...data};
     const isAdmin=data.role==='admin';
 
-    $$$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    $('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
     if(roleLabel)roleLabel.textContent=isAdmin?(isNexoUltra()?'Administrador · Ultra':'Administrador'):('Estudante · '+(isNexoPlus()?'Plus':'Free'));
 
@@ -3164,7 +3171,7 @@ async function loadErrorNotebook(){
   state.errorReviewIds=rows.map(x=>Number(x.question_id||x.question?.id)).filter(Boolean);
   el.innerHTML=rows.length?rows.map((item,index)=>{
     const q=item.question||{};
-    return '<article class="error-note-row"><span class="error-note-index">'+String(index+1).padStart(2,'0')+'</span><div><b>'+esc(q.topic||q.subject||'Questão ENEM')+'</b><small>'+esc(q.subject||q.area||'')+(q.source_year?' · ENEM '+esc(q.source_year):'')+(q.source_question_number?' · Q'+esc(q.source_question_number):'')+'</small></div><button data-error-open="'+Number(item.question_id||q.id)+'">Refazer</button><button data-error-topic="'+esc(q.topic||'')+'" data-error-area="'+esc(q.area||'')+'" data-error-subject="'+esc(q.subject||'')+'">Treinar tema</button></article>';
+    return '<article class="error-note-row"><span class="error-note-index">'+String(index+1).padStart(2,'0')+'</span><div><b>'+esc(q.topic||q.subject||'Questão ENEM')+'</b><small>'+esc(q.subject||q.area||'')+(q.source_year?' · ENEM '+esc(q.source_year):'')+(q.source_question_number?' · Q'+esc(q.source_question_number):'')+'</small></div><div class="error-note-actions"><button data-error-open="'+Number(item.question_id||q.id)+'">Refazer</button><button data-error-topic="'+esc(q.topic||'')+'" data-error-area="'+esc(q.area||'')+'" data-error-subject="'+esc(q.subject||'')+'">Treinar tema</button></div></article>';
   }).join(''):'<div class="journey-empty">Nenhum erro recente por aqui. Continue treinando para alimentar sua revisão inteligente.</div>';
   $('[data-error-open]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.errorOpen)));
   $('[data-error-topic]',el).forEach(btn=>btn.onclick=async()=>{
@@ -3965,7 +3972,7 @@ function renderStudentAvatar(target,avatarInput){
 
 function setJourneyTab(tab='missions'){
   state.journeyTab=tab;
-  $$$('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
+  $('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
   $$('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
   if(tab==='avatar')renderAvatarBuilder();
 }
@@ -4757,7 +4764,21 @@ function initNexoMascotVisuals(){
   bindImage($('#nexoLauncherAvatar'),'./assets/nexo-expressions/confiante.avif');
   bindImage($('#nexoAvatarImage'),'./assets/nexo-expressions/confiante.avif');
   bindImage($('#nexoHeroImage'),'./assets/nexo-family/bust-confiante.avif');
-  $$('[data-nexo-safe-avatar]').forEach(img=>bindImage(img,a.head));
+  $('[data-nexo-safe-avatar]').forEach(img=>bindImage(img,'./assets/nexo-family/bust-confiante.avif'));
+
+  const stableFallback='./assets/nexo-family/bust-confiante.avif';
+  $('.focus-mascot-img,[data-nexo-family],#onboardingMascot,#performanceCoreMascot').forEach(img=>{
+    if(!img)return;
+    const original=img.getAttribute('src')||stableFallback;
+    img.onerror=()=>{
+      img.onerror=()=>{
+        if(NEXO_BASE_MASCOT)img.src=NEXO_BASE_MASCOT;
+      };
+      img.src=stableFallback;
+    };
+    if(!img.getAttribute('src'))img.src=stableFallback;
+    else img.src=original;
+  });
 }
 initNexoMascotVisuals();
 
@@ -4832,23 +4853,49 @@ async function askNia(text){
   },delay);
 }
 
-$('#niaButton').onclick=()=>{
-  $('#niaPanel').classList.toggle('hidden');
-  if(!$('#niaPanel').classList.contains('hidden')){
-    const active=$('.page.active')?.id||'inicio';
-    setNexoMood(active==='redacao'?'serio':active==='questoes'?'pensativo':'feliz');
-  }
-};
-$('#openNexoFromMenu')?.addEventListener('click',()=>{
+function openProfessorNexo(prompt=''){
+  const panel=$('#niaPanel');
+  if(!panel)return;
   toggleMenu(false);
-  $('#niaPanel').classList.remove('hidden');
+  panel.classList.remove('hidden');
+  $('#niaButton')?.classList.remove('hidden');
   const active=$('.page.active')?.id||'inicio';
   setNexoMood(active==='redacao'?'serio':active==='questoes'?'pensativo':'feliz');
+  if(prompt){
+    const input=$('#niaInput');
+    if(input)input.value='';
+    askNia(prompt);
+  }else{
+    setTimeout(()=>$('#niaInput')?.focus(),60);
+  }
+}
+
+$('#niaButton')?.addEventListener('click',()=>{
+  const panel=$('#niaPanel');
+  if(!panel)return;
+  if(panel.classList.contains('hidden'))openProfessorNexo();
+  else panel.classList.add('hidden');
 });
-$('#closeNia').onclick=()=>$('#niaPanel').classList.add('hidden');
-$('#niaSend').onclick=()=>{const v=$('#niaInput').value;$('#niaInput').value='';askNia(v)};
-$('#niaInput').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#niaSend').click()}});
-$$('[data-nia]').forEach(b=>b.onclick=()=>askNia(b.dataset.nia));
+$('#openNexoFromMenu')?.addEventListener('click',()=>openProfessorNexo());
+$('#closeNia')?.addEventListener('click',()=>$('#niaPanel')?.classList.add('hidden'));
+$('#niaSend')?.addEventListener('click',()=>{
+  const input=$('#niaInput');
+  const value=input?.value||'';
+  if(input)input.value='';
+  if(value.trim())openProfessorNexo(value);
+});
+$('#niaInput')?.addEventListener('keydown',e=>{
+  if(e.key==='Enter'){
+    e.preventDefault();
+    $('#niaSend')?.click();
+  }
+});
+document.addEventListener('click',e=>{
+  const trigger=e.target.closest?.('[data-nia]');
+  if(!trigger)return;
+  e.preventDefault();
+  openProfessorNexo(trigger.dataset.nia||'');
+});
 
 function normalizeNexoStyle(style){
   const legacy={neon:'classic',street:'competitive'};
