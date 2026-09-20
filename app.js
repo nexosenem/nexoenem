@@ -1498,197 +1498,321 @@ function questionVariant(q,choices,salt=0){
   return choices[Math.abs(hash)%choices.length];
 }
 
+function questionAreaKey(q){
+  const area=String(q?.area||'').toLowerCase();
+  const subject=String(q?.subject||'').toLowerCase();
+  const joined=area+' '+subject;
+  if(/linguagens|portugu|literatura|ingl[eê]s|espanhol|arte|educa[cç][aã]o f[ií]sica/.test(joined))return 'linguagens';
+  if(/humanas|hist[oó]ria|geografia|filosofia|sociologia/.test(joined))return 'humanas';
+  if(/natureza|biologia|qu[ií]mica|f[ií]sica/.test(joined))return 'natureza';
+  if(/matem[aá]tica/.test(joined))return 'matematica';
+  return 'geral';
+}
+
 function getQuestionHint(q){
   const text=questionStudyText(q);
+  const area=questionAreaKey(q);
   const topic=q?.topic||q?.subject||'este conteúdo';
 
-  if(/rua|quarteir|trajeto|percurso|distância de percurso|malha/.test(text)){
+  /* A área vem ANTES das palavras-chave.
+     Assim "função da linguagem" nunca vira "função afim", por exemplo. */
+  if(area==='linguagens'){
+    if(/varia[cç][aã]o lingu[ií]stica|oralidade|escrita|registro|norma|dialeto/.test(text)){
+      return questionVariant(q,[
+        'Observe quem fala, para quem fala e em qual situação. A pista está em perceber como o uso da língua muda conforme contexto, grupo social ou grau de formalidade.',
+        'Compare as marcas de oralidade e escrita presentes no trecho. Não julgue como “certo ou errado”; identifique qual efeito comunicativo aquela escolha produz.',
+        'Procure palavras, construções ou pronúncias que indiquem variedade linguística. Depois relacione essas marcas ao contexto em que a fala aparece.'
+      ],101);
+    }
+    if(/fun[cç][aã]o da linguagem|emissor|receptor|mensagem|canal|c[oó]digo|referente/.test(text)){
+      return questionVariant(q,[
+        'Descubra qual elemento da comunicação recebe mais destaque: emissor, receptor, mensagem, canal, código ou referente. Isso aponta para a função da linguagem.',
+        'Não associe “função” a cálculo. Aqui, pense no objetivo comunicativo predominante do texto: informar, convencer, expressar emoção, manter contato ou falar da própria linguagem.',
+        'Leia o texto perguntando “qual efeito ele quer produzir no leitor?”. A resposta ajuda a identificar a função da linguagem predominante.'
+      ],102);
+    }
+    if(/figura de linguagem|met[aá]fora|meton[ií]mia|ironia|hip[eé]rbole|personifica[cç][aã]o|ant[ií]tese/.test(text)){
+      return questionVariant(q,[
+        'Localize a expressão que foge do sentido literal. Depois observe qual relação de sentido ela cria no contexto.',
+        'Em vez de decorar nomes, pergunte o que aconteceu com o sentido: comparação implícita, exagero, oposição, substituição ou ironia.',
+        'Compare o sentido literal com o efeito produzido pelo trecho. A figura correta precisa explicar essa mudança de sentido.'
+      ],103);
+    }
+    if(/poema|poesia|conto|cr[oô]nica|romance|g[eê]nero|liter[aá]rio|narrador/.test(text)){
+      return questionVariant(q,[
+        'Observe gênero, voz do texto e organização do discurso. A resposta precisa ser sustentada por elementos presentes no próprio texto.',
+        'Se a questão é literária, procure como forma e conteúdo trabalham juntos: narrador, imagens, ritmo, ironia ou ponto de vista.',
+        'Volte ao trecho exato indicado pelo comando e identifique o efeito criado pelo recurso literário, sem depender só do tema geral.'
+      ],104);
+    }
+    if(/publicidade|an[uú]ncio|campanha|cartaz|propaganda|persuas/.test(text)){
+      return questionVariant(q,[
+        'Identifique o público-alvo e o comportamento que a peça tenta provocar. Depois veja quais recursos verbais e visuais ajudam nessa persuasão.',
+        'Separe informação de persuasão: qual escolha de palavra, imagem ou imperativo tenta aproximar o leitor da mensagem?',
+        'Leia texto e imagem como um conjunto. O sentido publicitário costuma nascer da relação entre os dois, não de um elemento isolado.'
+      ],105);
+    }
     return questionVariant(q,[
-      'Olhe para o mapa como uma malha: você só pode andar na horizontal e na vertical. Antes de testar as alternativas, compare quantos quarteirões separam cada ponto dos três destinos.',
-      'A pista está no tipo de deslocamento permitido. Conte passos horizontais e verticais separadamente e procure um cruzamento cuja soma fique igual para os três locais.',
-      'Não use distância em linha reta. Nesta questão, o caminho acompanha as ruas; escolha um candidato e conte os quarteirões até cada destino para ver se as três distâncias coincidem.'
-    ],11);
+      'Leia o verbo do comando — identificar, inferir, explicar, criticar ou comparar. Ele define o tipo de evidência que você deve procurar no texto.',
+      'Volte ao trecho que sustenta a ideia pedida e compare as alternativas com esse trecho, não com sua opinião sobre o assunto.',
+      'Observe quem fala, para quem fala e com qual efeito. Em Linguagens, contexto e intenção comunicativa costumam decidir a questão.'
+    ],106);
   }
 
-  if(/média|mediana|moda|estatíst|frequência/.test(text)){
+  if(area==='humanas'){
+    if(/mapa|territ[oó]rio|migra[cç]|urbaniza[cç]|popula[cç]|clima|relevo|geopol/.test(text)){
+      return questionVariant(q,[
+        'Localize espaço, escala e processo geográfico envolvido. Depois relacione o fenômeno ao território mostrado ou descrito.',
+        'Veja se o comando pede causa, consequência ou distribuição espacial. Isso evita escolher uma alternativa verdadeira, mas fora do recorte.',
+        'Em mapas, confira legenda, orientação, escala e período antes de interpretar o fenômeno.'
+      ],111);
+    }
+    if(/filosof|sociolog|cidadania|estado|poder|trabalho|sociedade|cultura/.test(text)){
+      return questionVariant(q,[
+        'Identifique o conceito central e a posição do autor. Depois compare as alternativas com essa ideia, sem extrapolar o texto.',
+        'Procure a relação entre indivíduo, sociedade, poder ou conhecimento que o trecho estabelece. O comando normalmente cobra essa relação.',
+        'Separe o conceito do exemplo usado no texto. A alternativa correta explica a ideia, não apenas repete uma palavra do trecho.'
+      ],112);
+    }
     return questionVariant(q,[
-      'Primeiro identifique qual medida o comando está pedindo. Se for mediana, ordene os valores; se for média, confira quantos termos realmente entram na soma; se for moda, procure repetição.',
-      'Separe dado de interpretação: veja se a pergunta quer valor central, valor mais frequente ou média aritmética. Só depois faça a conta necessária.',
-      'Antes de calcular, confira se existe peso ou frequência associada aos valores. Isso muda a média e costuma ser a principal armadilha desse tipo de questão.'
-    ],12);
+      'Localize época, espaço, grupo social e processo histórico citado. Depois elimine alternativas incompatíveis com esse contexto.',
+      'Veja se a pergunta quer causa, consequência, característica ou comparação. O tipo de relação pedido é tão importante quanto o conteúdo.',
+      'Use o texto-base como limite: descarte opções anacrônicas, muito gerais ou que atribuam ao autor algo que ele não afirma.'
+    ],113);
   }
 
-  if(/gráfico|tabela|eixo|coluna|linha do gráfico/.test(text)){
+  if(area==='natureza'){
+    if(/circuit|corrente|tens[aã]o|resist|pot[eê]ncia|el[eé]tr/.test(text)){
+      return questionVariant(q,[
+        'Identifique o que está em série e o que está em paralelo antes de usar fórmulas. Depois marque quais grandezas são iguais em cada trecho.',
+        'Comece pelas unidades e pelo que o circuito pede: corrente, tensão, resistência ou potência. Isso indica qual relação física usar.',
+        'Desenhe mentalmente o caminho da corrente. Saber onde ela se divide ou permanece igual costuma resolver metade da questão.'
+      ],121);
+    }
+    if(/ph|[aá]cid|base|concentra|mol|rea[cç][aã]o|oxida|redu[cç]|estequi/.test(text)){
+      return questionVariant(q,[
+        'Separe quantidade de matéria, concentração e proporção estequiométrica. A unidade mostra qual etapa deve vir primeiro.',
+        'Confira conservação de átomos e de carga antes de calcular. Se a reação não estiver balanceada, a conta seguinte ficará errada.',
+        'Identifique reagente, produto e proporção molar antes de mexer nos números. Isso evita usar dados que não conversam entre si.'
+      ],122);
+    }
+    if(/gen[eé]tica|dna|rna|c[eé]lula|ecologia|evolu[cç]|fisiologia|enzima/.test(text)){
+      return questionVariant(q,[
+        'Identifique o processo biológico central e acompanhe a sequência causa → mecanismo → consequência.',
+        'Separe estrutura de função: descubra qual componente biológico está sendo citado e qual papel ele exerce naquele processo.',
+        'Procure no enunciado o nível de organização envolvido — molécula, célula, organismo, população ou ecossistema — antes de comparar as opções.'
+      ],123);
+    }
     return questionVariant(q,[
-      'Leia título, unidade e escala dos eixos antes de olhar as alternativas. Depois localize apenas o trecho do gráfico que responde ao comando.',
-      'A informação decisiva costuma estar na escala. Confira se os valores são absolutos, percentuais ou acumulados antes de comparar as alternativas.',
-      'Não tente interpretar o gráfico inteiro de uma vez. Marque mentalmente o intervalo pedido e compare tendência, crescimento ou queda somente nesse trecho.'
-    ],13);
+      'Liste as grandezas, condições ou variáveis do fenômeno e identifique o princípio científico que liga esses dados.',
+      'Antes da fórmula, pense no sentido físico, químico ou biológico do processo: o que deveria aumentar, diminuir ou permanecer constante?',
+      'Pergunte qual variável foi alterada e qual resposta do sistema está sendo observada. Isso ajuda a separar causa de consequência.'
+    ],124);
   }
 
-  if(/porcent|percentual|desconto|acréscimo|taxa/.test(text)){
+  if(area==='matematica'){
+    if(/rua|quarteir|trajeto|percurso|dist[aâ]ncia de percurso|malha/.test(text)){
+      return questionVariant(q,[
+        'Olhe para o mapa como uma malha: conte deslocamentos horizontais e verticais separadamente antes de comparar os caminhos.',
+        'A pista está no tipo de percurso permitido. Conte quarteirões em cada direção e procure o ponto que satisfaz todas as distâncias pedidas.',
+        'Não use distância em linha reta quando o trajeto acompanha ruas. Conte os blocos percorridos em cada direção.'
+      ],131);
+    }
+    if(/m[eé]dia|mediana|moda|estat[ií]st|frequ[eê]ncia/.test(text)){
+      return questionVariant(q,[
+        'Primeiro identifique qual medida está sendo pedida: média, mediana, moda ou frequência. Cada uma exige um procedimento diferente.',
+        'Antes de calcular, confira se existe peso ou frequência associada aos valores. Isso muda a média.',
+        'Se for mediana, ordene os dados; se for média, confira todos os termos; se for moda, procure repetição.'
+      ],132);
+    }
+    if(/porcent|percentual|desconto|acr[eé]scimo|taxa/.test(text)){
+      return questionVariant(q,[
+        'Descubra qual valor representa 100% antes de calcular. O erro mais comum é aplicar a taxa sobre a base errada.',
+        'Veja se há variações sucessivas. Quando a base muda, os percentuais não devem ser simplesmente somados.',
+        'Transforme o percentual em uma relação com o total e confira se o comando pede valor final, diferença ou taxa.'
+      ],133);
+    }
+    if(/probabil|chance|sorteio|aleat|possibilidades/.test(text)){
+      return questionVariant(q,[
+        'Defina primeiro os casos possíveis e depois os favoráveis. Só então monte a probabilidade.',
+        'Veja se existe reposição ou dependência entre os eventos. Isso altera as probabilidades de cada etapa.',
+        'Confira se o comando pede “e”, “ou”, “pelo menos um” ou o complementar do evento.'
+      ],134);
+    }
+    if(/fun[cç][aã]o|afim|quadr[aá]t|par[aá]bola|coeficiente|equa[cç][aã]o/.test(text)){
+      return questionVariant(q,[
+        'Traduza as grandezas para uma relação entre variáveis. Depois identifique quais dados permitem determinar a expressão.',
+        'Se houver gráfico, procure intercepto, crescimento e pontos conhecidos antes de substituir números.',
+        'Confira o que a incógnita representa e mantenha as unidades junto dela ao montar a equação.'
+      ],135);
+    }
+    if(/geometr|[aá]rea|volume|per[ií]metro|tri[aâ]ng|c[ií]rculo|quadrado|ret[aâ]ng/.test(text)){
+      return questionVariant(q,[
+        'Marque só as medidas necessárias e diferencie área, perímetro e volume antes de escolher a fórmula.',
+        'Procure decompor a figura em formas simples. Muitas questões ficam menores quando você calcula apenas a parte relevante.',
+        'Confira a unidade esperada: comprimento, área e volume têm dimensões diferentes.'
+      ],136);
+    }
+    if(/gr[aá]fico|tabela|eixo|coluna/.test(text)){
+      return questionVariant(q,[
+        'Leia título, unidade e escala dos eixos antes de comparar valores.',
+        'Marque apenas o intervalo pedido no comando e observe tendência, crescimento ou queda nesse trecho.',
+        'Confira se os dados são absolutos, percentuais ou acumulados antes de fazer qualquer conta.'
+      ],137);
+    }
     return questionVariant(q,[
-      'Descubra qual é a base de 100% antes de calcular. O erro mais comum é aplicar a porcentagem sobre o valor errado.',
-      'Veja se há uma ou duas variações sucessivas. Quando a base muda, somar os percentuais diretamente pode dar uma resposta errada.',
-      'Transforme o percentual em uma parte do total e confira se o comando pede valor final, diferença ou apenas a taxa.'
-    ],14);
-  }
-
-  if(/probabil|chance|sorteio|aleat|possibilidades/.test(text)){
-    return questionVariant(q,[
-      'Defina primeiro o conjunto de casos possíveis e, separadamente, os casos favoráveis. Só depois monte a razão.',
-      'Veja se os eventos são independentes, dependentes ou sem reposição. Essa palavra muda totalmente a contagem.',
-      'Antes de multiplicar probabilidades, confira se a pergunta é sobre “e”, “ou” ou o complementar do evento.'
-    ],15);
-  }
-
-  if(/função|afim|quadrát|parábola|reta|coeficiente|equação/.test(text)){
-    return questionVariant(q,[
-      'Traduza o que varia no enunciado para x e y. Depois procure a relação entre essas grandezas antes de substituir números.',
-      'Se houver gráfico ou reta, procure primeiro intercepto, crescimento e pontos conhecidos. Eles costumam revelar a expressão sem precisar testar tudo.',
-      'Confira o que a incógnita representa e mantenha as unidades junto dela. Isso ajuda a montar a equação correta e elimina alternativas incompatíveis.'
-    ],16);
-  }
-
-  if(/geometr|área|volume|perímetro|triâng|círculo|quadrado|retâng/.test(text)){
-    return questionVariant(q,[
-      'Marque na figura apenas as medidas que entram no que foi pedido. Diferencie área, perímetro e volume antes de escolher a fórmula.',
-      'Procure decompor a figura em formas simples. Muitas questões do ENEM ficam bem menores quando você calcula só a parte que muda.',
-      'Confira as unidades do resultado: comprimento, área e volume têm dimensões diferentes e isso já elimina várias alternativas.'
-    ],17);
-  }
-
-  if(q?.area==='Ciências da Natureza'){
-    if(/circuit|corrente|tensão|resist|potência|elétr/.test(text)) return questionVariant(q,[
-      'Identifique o que está em série e o que está em paralelo antes de usar qualquer fórmula. Depois marque quais grandezas são iguais em cada trecho.',
-      'Comece pelas unidades e pelo que o circuito pede: corrente, tensão, resistência ou potência. Isso indica qual relação física é necessária.'
-    ],21);
-    if(/energia|calor|temperatura|movimento|velocidade|força|pressão/.test(text)) return questionVariant(q,[
-      'Liste as grandezas dadas, suas unidades e o que o comando quer. Depois procure qual princípio físico liga exatamente essas grandezas.',
-      'Antes da fórmula, pense no sentido físico: o valor deveria aumentar, diminuir ou permanecer constante? Essa previsão ajuda a eliminar opções.'
-    ],22);
-    if(/ph|ácid|base|concentra|mol|reação|oxida|redu/.test(text)) return questionVariant(q,[
-      'Separe o que é quantidade de matéria, concentração e proporção estequiométrica. A unidade costuma mostrar qual etapa vem primeiro.',
-      'Confira conservação de átomos e de carga antes de calcular. Se a reação não estiver balanceada, qualquer conta seguinte ficará errada.'
-    ],23);
-    return questionVariant(q,[
-      'Procure a relação de causa e efeito descrita no fenômeno. A alternativa correta precisa respeitar o mecanismo científico apresentado no enunciado.',
-      'Use as unidades, o sentido do processo e as condições do experimento como filtro antes de partir para cálculos.',
-      'Pergunte qual variável foi alterada e qual resposta do sistema está sendo observada. Isso costuma separar causa de consequência.'
-    ],24);
-  }
-
-  if(q?.area==='Linguagens'){
-    return questionVariant(q,[
-      'Leia o verbo do comando — identificar, inferir, explicar, criticar, comparar. Ele diz exatamente que tipo de evidência você precisa buscar no texto.',
-      'Volte ao trecho que sustenta a ideia pedida e compare as alternativas com esse trecho, não com sua opinião sobre o tema.',
-      'Observe quem fala, para quem fala e com qual efeito. Em Linguagens, a intenção e o contexto costumam ser mais importantes que uma palavra isolada.'
-    ],31);
-  }
-
-  if(q?.area==='Ciências Humanas'){
-    return questionVariant(q,[
-      'Localize quatro coisas antes de responder: época, espaço, grupo social e conceito central. Depois elimine alternativas que não cabem nesse contexto.',
-      'Veja se o comando pede causa, consequência, característica ou interpretação. Alternativas verdadeiras em geral podem estar erradas para o recorte da pergunta.',
-      'Use o texto-base como limite: descarte opções anacrônicas, muito gerais ou que atribuem ao autor algo que ele não afirma.'
-    ],41);
+      'Transforme o enunciado em relações matemáticas simples e identifique exatamente qual grandeza o comando quer encontrar.',
+      'Faça uma estimativa antes da conta completa. Ela ajuda a detectar resultados incompatíveis com a ordem de grandeza.',
+      'Use unidades e condições do problema para eliminar alternativas antes de fazer todas as contas.'
+    ],138);
   }
 
   return questionVariant(q,[
-    'Leia o comando novamente e destaque mentalmente o que precisa ser encontrado. Depois volte apenas aos dados que respondem a esse recorte.',
-    'Antes de escolher, tente explicar em uma frase o que a questão está pedindo. Use essa frase para eliminar alternativas que respondem outra coisa.',
-    'Procure a condição principal do enunciado e teste as opções contra ela. Não aceite uma alternativa só porque ela parece relacionada ao tema.'
-  ],51)+` Tema da questão: ${topic}.`;
+    'Leia o comando novamente e destaque mentalmente o que precisa ser encontrado.',
+    'Procure a condição principal do enunciado e teste as alternativas contra ela.',
+    'Antes de escolher, resuma em uma frase o que a questão está pedindo.'
+  ],151)+` Tema da questão: ${topic}.`;
 }
 
 function getQuestionShortcut(q){
   const text=questionStudyText(q);
+  const area=questionAreaKey(q);
 
-  if(/rua|quarteir|trajeto|percurso|distância de percurso|malha/.test(text)){
+  if(area==='linguagens'){
+    if(/varia[cç][aã]o lingu[ií]stica|oralidade|escrita|registro|norma|dialeto/.test(text)){
+      return questionVariant(q,[
+        'Macete: não trate variedade linguística como erro. Compare contexto + interlocutor + grau de formalidade para eliminar alternativas preconceituosas ou normativas demais.',
+        'Atalho: circule mentalmente as marcas de fala, região ou grupo social. A alternativa correta costuma explicar a adequação daquela variedade à situação.',
+        'Se aparecer oposição entre norma-padrão e fala real, pergunte primeiro “o texto está avaliando correção ou adequação comunicativa?”. No ENEM, essa diferença é decisiva.'
+      ],201);
+    }
+    if(/fun[cç][aã]o da linguagem|emissor|receptor|mensagem|canal|c[oó]digo|referente/.test(text)){
+      return questionVariant(q,[
+        'Macete: associe o foco da mensagem ao elemento dominante — emissor = emotiva, receptor = conativa, referente = referencial, mensagem = poética, canal = fática, código = metalinguística.',
+        'Atalho: pergunte “o texto quer informar, convencer, expressar, manter contato ou falar da própria linguagem?”. Isso reduz rapidamente as opções.',
+        'Não escolha pela presença de uma característica isolada. Procure a função predominante no texto inteiro.'
+      ],202);
+    }
+    if(/figura de linguagem|met[aá]fora|meton[ií]mia|ironia|hip[eé]rbole|personifica[cç][aã]o|ant[ií]tese/.test(text)){
+      return questionVariant(q,[
+        'Macete: traduza a expressão para o sentido literal. A diferença entre o literal e o sentido produzido revela a figura.',
+        'Atalho: comparação implícita → metáfora; exagero → hipérbole; oposição → antítese; troca por relação de proximidade → metonímia.',
+        'Se houver ironia, compare o que foi dito com o contexto: o efeito costuma surgir porque o sentido pretendido é diferente do literal.'
+      ],203);
+    }
+    if(/poema|poesia|conto|cr[oô]nica|romance|g[eê]nero|liter[aá]rio|narrador/.test(text)){
+      return questionVariant(q,[
+        'Macete: em Literatura, não responda só pelo tema. Procure o recurso formal que produz o efeito pedido — narrador, imagem, ritmo, contraste ou ponto de vista.',
+        'Atalho: quando duas opções parecem possíveis, volte ao trecho e escolha a que consegue ser provada por uma marca textual concreta.',
+        'Identifique primeiro quem fala e de onde fala. Isso costuma resolver questões de narrador, eu lírico e ponto de vista sem releitura completa.'
+      ],204);
+    }
     return questionVariant(q,[
-      'Atalho de prova: em uma malha de ruas, conte |diferença horizontal| + |diferença vertical|. Teste primeiro a alternativa mais central e só continue se as três somas não forem iguais.',
-      'Macete: transforme cada cruzamento em coordenadas. Como só há movimentos horizontal e vertical, a distância é a soma das diferenças entre as duas coordenadas.',
-      'Para ganhar tempo, não desenhe todos os caminhos. Conte blocos na horizontal + blocos na vertical para cada destino e compare as três somas.'
-    ],61);
+      'Macete: compare o verbo do comando com o núcleo de cada alternativa. Elimine as que respondem outra coisa, mesmo falando do mesmo tema.',
+      'Atalho: desconfie de termos absolutos como “sempre”, “somente” e “exclusivamente” quando o texto é mais nuançado.',
+      'Em interpretação, dê preferência à alternativa que pode ser sustentada por uma passagem do texto, sem precisar inventar informação externa.'
+    ],206);
   }
 
-  if(/média|mediana|moda|estatíst|frequência/.test(text)){
+  if(area==='humanas'){
+    if(/mapa|territ[oó]rio|migra[cç]|urbaniza[cç]|popula[cç]|clima|relevo|geopol/.test(text)){
+      return questionVariant(q,[
+        'Macete: em mapa, leia primeiro legenda + escala + período. Só depois interprete cores, setas ou distribuição espacial.',
+        'Atalho: transforme a pergunta em “onde ocorre, por que ocorre e qual consequência?”. Isso elimina alternativas que misturam escalas.',
+        'Se duas opções parecem corretas, verifique qual delas respeita exatamente o espaço e o período mostrados.'
+      ],211);
+    }
     return questionVariant(q,[
-      'Macete: se as alternativas estão próximas, faça primeiro uma estimativa da média. Se a conta final ficar fora dessa faixa, revise antes de seguir.',
-      'Atalho: para mediana, ordene só até achar o centro; para moda, nem some os valores; para média com frequência, use soma(valor × frequência) ÷ total.',
-      'Em tabela de frequências, trabalhe com produtos valor × frequência e deixe a divisão pelo total para o fim. Evita contas repetidas.'
-    ],62);
+      'Macete: monte uma mini linha do tempo e elimine alternativas anacrônicas antes de analisar as demais.',
+      'Atalho: procure agente + ação + contexto. Se um desses três não combinar com o texto, descarte a opção.',
+      'Quando duas respostas parecem verdadeiras, escolha a que corresponde à relação pedida — causa, consequência, característica ou comparação.'
+    ],212);
   }
 
-  if(/gráfico|tabela|eixo|coluna|linha do gráfico/.test(text)){
+  if(area==='natureza'){
+    if(/circuit|corrente|tens[aã]o|resist|pot[eê]ncia|el[eé]tr/.test(text)){
+      return questionVariant(q,[
+        'Macete: série → mesma corrente; paralelo → mesma tensão. Marque isso no circuito antes de usar qualquer equação.',
+        'Atalho: escolha a fórmula pela grandeza pedida e pelas unidades fornecidas, não pela fórmula que você lembrar primeiro.',
+        'Antes de calcular potência, resistência ou corrente, simplifique o circuito por blocos.'
+      ],221);
+    }
+    if(/ph|[aá]cid|base|concentra|mol|rea[cç][aã]o|oxida|redu[cç]|estequi/.test(text)){
+      return questionVariant(q,[
+        'Macete: balanceie primeiro, transforme os dados em mol e só depois use a proporção da equação.',
+        'Atalho: confira unidades antes de calcular concentração. Litro, mol e massa não podem ser misturados sem conversão.',
+        'Em estequiometria, escreva a proporção dos coeficientes acima dos valores. Isso reduz erros de regra de três.'
+      ],222);
+    }
     return questionVariant(q,[
-      'Macete: antes de calcular, compare visualmente a ordem de grandeza das alternativas com a escala do gráfico. Muitas opções já caem sem conta.',
-      'Atalho de gráfico: marque dois pontos-chave e trabalhe só com a diferença entre eles quando a questão pedir variação.',
-      'Se o gráfico tiver escala irregular ou percentual, anote a unidade ao lado do valor lido. Isso evita a pegadinha mais comum.'
-    ],63);
+      'Macete: faça análise dimensional antes da conta. Se a unidade da alternativa não pode sair dos dados fornecidos, descarte-a.',
+      'Use conservação como atalho quando couber: energia, carga, massa ou quantidade de matéria evitam várias etapas.',
+      'Faça uma previsão qualitativa — aumenta, diminui ou permanece — antes de calcular. Isso elimina resultados fisicamente impossíveis.'
+    ],223);
   }
 
-  if(/porcent|percentual|desconto|acréscimo|taxa/.test(text)){
+  if(area==='matematica'){
+    if(/rua|quarteir|trajeto|percurso|dist[aâ]ncia de percurso|malha/.test(text)){
+      return questionVariant(q,[
+        'Macete: em malha de ruas, distância = blocos horizontais + blocos verticais. Não use a diagonal.',
+        'Atalho: transforme os cruzamentos em coordenadas e some as diferenças absolutas entre elas.',
+        'Teste primeiro o ponto mais central entre os destinos; ele tende a reduzir a quantidade de alternativas que precisam ser verificadas.'
+      ],231);
+    }
+    if(/m[eé]dia|mediana|moda|estat[ií]st|frequ[eê]ncia/.test(text)){
+      return questionVariant(q,[
+        'Atalho: média com frequência = soma(valor × frequência) ÷ total. Para mediana, ordene só até achar o centro; para moda, procure repetição.',
+        'Macete: estime a média antes da conta. Se o resultado final ficar fora da faixa dos dados, revise.',
+        'Em tabela, multiplique valor por frequência linha a linha e deixe a divisão pelo total para o final.'
+      ],232);
+    }
+    if(/porcent|percentual|desconto|acr[eé]scimo|taxa/.test(text)){
+      return questionVariant(q,[
+        'Macete: aumento de p% → ×(1+p/100); desconto de p% → ×(1-p/100). Mudanças sucessivas pedem multiplicação dos fatores.',
+        'Use equivalências rápidas: 50%=1/2, 25%=1/4, 20%=1/5, 10%=1/10 e 5%=1/20.',
+        'Se a questão pede o valor original, monte “final = base × fator” e isole a base.'
+      ],233);
+    }
+    if(/probabil|chance|sorteio|aleat|possibilidades/.test(text)){
+      return questionVariant(q,[
+        'Macete: “pelo menos um” muitas vezes fica mais rápido por 1 − P(nenhum).',
+        'Atalho: eventos independentes permitem multiplicar probabilidades; sem reposição, a chance muda a cada etapa.',
+        'Procure simetria antes de contar caso a caso. Casos equivalentes podem ser agrupados.'
+      ],234);
+    }
+    if(/fun[cç][aã]o|afim|quadr[aá]t|par[aá]bola|coeficiente|equa[cç][aã]o/.test(text)){
+      return questionVariant(q,[
+        'Macete: numa função afim, dois pontos determinam a reta. Calcule Δy/Δx antes de montar a expressão.',
+        'Atalho: use intercepto, crescimento e pontos conhecidos do gráfico antes de testar todas as alternativas.',
+        'Se as opções são expressões, teste um valor simples permitido pelo enunciado para eliminar várias de uma vez.'
+      ],235);
+    }
+    if(/geometr|[aá]rea|volume|per[ií]metro|tri[aâ]ng|c[ií]rculo|quadrado|ret[aâ]ng/.test(text)){
+      return questionVariant(q,[
+        'Macete: confira a unidade antes da fórmula — comprimento, área e volume terminam em dimensões diferentes.',
+        'Se a figura é composta, tente “forma maior − recortes” antes de somar várias partes.',
+        'Procure semelhança e proporcionalidade antes de usar fórmulas longas.'
+      ],236);
+    }
+    if(/gr[aá]fico|tabela|eixo|coluna/.test(text)){
+      return questionVariant(q,[
+        'Macete: compare primeiro a ordem de grandeza das alternativas com a escala do gráfico; várias opções podem cair sem conta.',
+        'Atalho: se a pergunta pede variação, use apenas os dois pontos relevantes em vez de analisar o gráfico inteiro.',
+        'Anote a unidade ao lado do valor lido. Escala e percentual são pegadinhas frequentes.'
+      ],237);
+    }
     return questionVariant(q,[
-      'Macete: aumento de p% = multiplicar por (1 + p/100); desconto de p% = multiplicar por (1 - p/100). Em mudanças sucessivas, multiplique os fatores.',
-      'Use equivalências rápidas quando ajudarem: 50%=1/2, 25%=1/4, 20%=1/5, 10%=1/10 e 5%=1/20.',
-      'Se a pergunta pede o valor original, não aplique a porcentagem de novo; monte a relação “valor final = base × fator” e isole a base.'
-    ],64);
-  }
-
-  if(/probabil|chance|sorteio|aleat|possibilidades/.test(text)){
-    return questionVariant(q,[
-      'Macete: quando o evento pedido é trabalhoso, calcule o complementar. “Pelo menos um” muitas vezes vira 1 − P(nenhum).',
-      'Atalho: desenhe uma árvore só quando as etapas mudarem as probabilidades. Se forem independentes, a multiplicação direta costuma bastar.',
-      'Antes de contar caso a caso, veja se há simetria. Resultados equivalentes podem ser agrupados e cortar bastante a conta.'
-    ],65);
-  }
-
-  if(/função|afim|quadrát|parábola|reta|coeficiente|equação/.test(text)){
-    return questionVariant(q,[
-      'Macete: numa função afim, dois pontos já determinam a reta. Calcule a variação de y pela variação de x antes de montar a expressão inteira.',
-      'Atalho: teste interceptos e comportamento do gráfico antes de substituir valores em todas as alternativas.',
-      'Se as alternativas são expressões, use um valor simples permitido pelo enunciado para eliminar várias de uma vez.'
-    ],66);
-  }
-
-  if(/geometr|área|volume|perímetro|triâng|círculo|quadrado|retâng/.test(text)){
-    return questionVariant(q,[
-      'Macete: antes da fórmula, estime a ordem de grandeza e confira a unidade. Uma resposta de área precisa terminar em unidade²; volume, em unidade³.',
-      'Se a figura é composta, calcule “forma maior − recortes” quando isso exigir menos contas do que somar várias partes.',
-      'Procure semelhança e proporcionalidade antes de usar trigonometria ou fórmulas longas; muitas questões do ENEM escondem uma razão simples.'
-    ],67);
-  }
-
-  if(q?.area==='Ciências da Natureza'){
-    return questionVariant(q,[
-      'Macete: faça análise dimensional antes da conta. Se a unidade da alternativa não pode sair das grandezas dadas, ela já está eliminada.',
-      'Use conservação como atalho sempre que couber: energia, carga, massa ou quantidade de matéria podem evitar uma sequência grande de fórmulas.',
-      'Se houver muitas fórmulas possíveis, escolha pela grandeza pedida e pelas unidades dos dados; não pela fórmula que você lembra primeiro.'
-    ],71);
-  }
-
-  if(q?.area==='Linguagens'){
-    return questionVariant(q,[
-      'Macete: desconfie de alternativas que usam termos absolutos como “sempre”, “apenas” ou “exclusivamente” quando o texto é mais nuançado.',
-      'Atalho: compare o verbo do comando com o núcleo de cada alternativa. Elimine as que tratam de outro efeito, mesmo que falem do mesmo tema.',
-      'Em interpretação, prefira a alternativa que pode ser apontada no texto. A que depende de conhecimento externo costuma ser uma distração.'
-    ],72);
-  }
-
-  if(q?.area==='Ciências Humanas'){
-    return questionVariant(q,[
-      'Macete: monte mentalmente uma mini linha do tempo. Alternativas com instituição, ideia ou evento fora do período podem ser eliminadas rápido.',
-      'Atalho: procure primeiro agente + ação + contexto. Se um desses três não combina com o texto, descarte a alternativa.',
-      'Quando duas opções parecem corretas, escolha pela relação pedida no comando — causa, consequência, comparação ou característica — e não só pelo conteúdo verdadeiro.'
-    ],73);
+      'Macete: use as alternativas como ferramenta. Elimine resultados incompatíveis com unidade, sinal ou ordem de grandeza antes da conta completa.',
+      'Atalho: resolva só até obter informação suficiente para separar uma alternativa; não continue uma conta que já decidiu a resposta.',
+      'Faça uma estimativa rápida antes da resolução exata para detectar erro de conta.'
+    ],238);
   }
 
   return questionVariant(q,[
-    'Macete: use as alternativas como ferramenta de verificação. Elimine primeiro as incompatíveis com unidade, contexto ou ordem de grandeza.',
-    'Atalho: resolva apenas até ter informação suficiente para distinguir as alternativas; não continue uma conta que já separou uma única opção.',
-    'Faça uma estimativa rápida antes da resolução completa. Ela funciona como controle para perceber erro de conta ou interpretação.'
-  ],79);
+    'Macete: elimine primeiro as alternativas que contradizem diretamente o comando.',
+    'Atalho: resolva apenas até ter informação suficiente para distinguir as opções.',
+    'Faça uma estimativa rápida ou um resumo do enunciado antes da resolução completa.'
+  ],251);
 }
 
 function buildAnswerExplanation(q,data,selected){
