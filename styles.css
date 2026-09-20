@@ -8268,6 +8268,9 @@ body.light .essay-theme-control select{background:#fff}
 #redacao .essay-sheet-card p{margin:0;color:#8192aa;font-size:7.5px;line-height:1.5}
 #redacao .essay-sheet-card button{min-height:42px;border-radius:11px;font-size:8px}
 #redacao .essay-sheet-card button:disabled{opacity:.5;cursor:not-allowed}
+#redacao .essay-sheet-actions{display:grid;gap:7px}
+#redacao .essay-sheet-actions .wide{width:100%}
+#redacao .essay-sheet-disclaimer{display:block;color:#66778f;font-size:6.8px;line-height:1.45}
 
 @media(max-width:760px){
   #redacao .essay-theme-full-title{
