@@ -219,6 +219,24 @@ const state = {
   }
 };
 
+function nexoHapticsEnabled(){
+  return localStorage.getItem('nexo-haptics')!=='off';
+}
+function nexoHaptic(pattern){
+  if(!nexoHapticsEnabled())return;
+  try{if(navigator.vibrate)navigator.vibrate(pattern)}catch(_){}
+}
+function renderHapticPreference(){
+  const btn=$('#toggleNexoHaptics');
+  if(!btn)return;
+  btn.innerHTML='◉ <span>Feedback tátil: '+(nexoHapticsEnabled()?'ligado':'desligado')+'</span>';
+}
+$('#toggleNexoHaptics')?.addEventListener('click',()=>{
+  localStorage.setItem('nexo-haptics',nexoHapticsEnabled()?'off':'on');
+  renderHapticPreference();
+  if(nexoHapticsEnabled())nexoHaptic([22]);
+});
+
 const NEXO_FOCUS_KEY='nexo-focus-v1';
 const focusModeState={
   minutes:25,
@@ -2209,7 +2227,7 @@ async function initApp(session) {
     $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
   });
   await safeBootStep('estilo',async()=>applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false));
-  await safeBootStep('home',async()=>updateHomeExperience());
+  await safeBootStep('home',async()=>{updateHomeExperience();renderHapticPreference()});
   await safeBootStep('foco',async()=>{
     restoreFocusMode();
     if(focusModeState.running&&!focusModeState.paused)beginFocusInterval();
@@ -3900,7 +3918,7 @@ async function submitAnswer(option) {
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
   setNexoMood(reaction.mood);
-  try{if(navigator.vibrate)navigator.vibrate(data.correct?[24]:[35,35,35])}catch(_){}
+  nexoHaptic(data.correct?[24]:[35,35,35])
   Promise.all([
     loadDashboard(),
     loadNexoCore(),
@@ -4200,7 +4218,7 @@ function renderStudySessionReport(finished,report){
   $('#reportHome')?.addEventListener('click',()=>openPage('inicio'));
   updateStudyNavigation(finished);
   setNexoMood(copy.mood);
-  try{if(navigator.vibrate)navigator.vibrate(accuracy>=80?[30,40,30]:[28])}catch(_){}
+  nexoHaptic(accuracy>=80?[30,40,30]:[28])
 }
 
 async function finishSession() {
