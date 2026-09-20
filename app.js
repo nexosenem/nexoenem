@@ -175,6 +175,8 @@ const state = {
   visualCache:new Map(),
   videos:[],
   materials:[],
+  materialSubject:'',
+  materialOpenTopic:'',
   contentProgress:new Map(),
   favorites:new Set(),
   activeViewer:null,
@@ -4785,13 +4787,14 @@ function wireContentCards(){
 }
 
 async function startContentPractice(item){
+  const trainingTopic=radarTrainingTopic(item?.subject||'',item?.topic||'')||item?.topic||'';
   closeContentViewer();
   openPage('questoes');
   await startStudySession({
     mode:'content',
     area:item.area||'',
     subject:item.subject||'',
-    topic:item.topic||'',
+    topic:trainingTopic,
     difficulty:'',
     visualOnly:false,
     size:5
@@ -5012,9 +5015,10 @@ async function loadMaterials({silent=false}={}){
 
 function materialKind(item){
   const title=String(item?.title||'');
-  if(/^Aula NEXO/i.test(title))return {key:'lesson',label:'AULA NEXO',cta:'Estudar aula →',icon:'AULA'};
-  if(/Resumo\/PDF|Resumo NEXO|Resumo/i.test(title))return {key:'summary',label:'RESUMO RÁPIDO',cta:'Revisar resumo →',icon:'RESUMO'};
-  return {key:'material',label:'MATERIAL NEXO',cta:'Abrir material →',icon:String(item?.format||'PDF').toUpperCase()};
+  if(/^Aula NEXO/i.test(title))return {key:'lesson',label:'AULA NEXO',cta:'Estudar aula →',icon:'AULA',order:1};
+  if(/Resumo\/PDF|Resumo NEXO|Resumo/i.test(title))return {key:'summary',label:'RESUMO',cta:'Revisar resumo →',icon:'RESUMO',order:2};
+  if(/^Macetes NEXO/i.test(title))return {key:'tips',label:'MACETES',cta:'Ver macetes →',icon:'MACETES',order:3};
+  return {key:'material',label:'MATERIAL',cta:'Abrir material →',icon:String(item?.format||'PDF').toUpperCase(),order:9};
 }
 
 function materialRadarMeta(item){
@@ -5036,74 +5040,108 @@ function materialSequence(item){
 }
 
 function renderMaterials(){
-  const s=($('#materialSearch')?.value||'').toLocaleLowerCase('pt-BR').trim();
+  const search=($('#materialSearch')?.value||'').toLocaleLowerCase('pt-BR').trim();
   const favoritesOnly=$('#materialFavoritesOnly')?.classList.contains('active');
-  const list=state.materials
-    .filter(m=>(!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR').includes(s))&&(!favoritesOnly||favoriteContent('material',m.id)))
-    .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a))||Number(a.id)-Number(b.id));
+  const all=state.materials||[];
+  const subjects=[...new Set(all.map(m=>m.subject||m.area).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  if(!state.materialSubject||!subjects.includes(state.materialSubject))state.materialSubject=subjects[0]||'';
+
+  const subjectNav=$('#materialSubjectNav');
+  if(subjectNav){
+    subjectNav.innerHTML=subjects.map(subject=>{
+      const topicCount=new Set(all.filter(m=>(m.subject||m.area)===subject).map(m=>m.topic).filter(Boolean)).size;
+      return '<button class="material-subject-chip '+(state.materialSubject===subject?'active':'')+'" data-material-subject="'+esc(subject)+'"><span>'+esc(subject)+'</span><small>'+topicCount+' assunto'+(topicCount===1?'':'s')+'</small></button>';
+    }).join('');
+    $$('[data-material-subject]',subjectNav).forEach(btn=>btn.onclick=()=>{
+      state.materialSubject=btn.dataset.materialSubject||'';
+      state.materialOpenTopic='';
+      renderMaterials();
+    });
+  }
+
+  const subjectItems=all
+    .filter(m=>(m.subject||m.area)===state.materialSubject)
+    .filter(m=>(!search||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR').includes(search)))
+    .filter(m=>!favoritesOnly||favoriteContent('material',m.id));
+
   const grid=$('#materialGrid');
   if(!grid)return;
+  const meta=$('#materialLibraryMeta');
+  if(meta){
+    const topics=new Set(subjectItems.map(m=>m.topic).filter(Boolean)).size;
+    meta.innerHTML='<b>'+esc(state.materialSubject||'Biblioteca')+'</b><span>'+topics+' assunto'+(topics===1?'':'s')+' · '+subjectItems.length+' material'+(subjectItems.length===1?'':'is')+'</span>';
+  }
 
-  if(!list.length){
-    grid.innerHTML='<article class="panel content-empty"><b>Nenhum material encontrado.</b><p>Tente outro assunto ou retire o filtro de favoritos.</p></article>';
+  if(!subjectItems.length){
+    grid.innerHTML='<article class="panel content-empty"><b>Nenhum conteúdo encontrado em '+esc(state.materialSubject||'esta matéria')+'.</b><p>Tente outro termo ou retire o filtro de favoritos.</p></article>';
     return;
   }
 
   const groups=new Map();
-  list.forEach(item=>{
-    const key=[item.area||'Conteúdo',item.subject||'',item.topic||'Materiais'].join('||');
+  subjectItems.forEach(item=>{
+    const key=[item.subject||item.area||'Conteúdo',item.topic||'Materiais'].join('||');
     if(!groups.has(key))groups.set(key,[]);
     groups.get(key).push(item);
   });
 
-  grid.innerHTML=[...groups.entries()].map(([key,items])=>{
-    const first=items[0],radar=materialRadarMeta(first);
-    const groupMeta=radar
-      ? '<span class="content-radar-chip">🔥 Prioridade '+radar.score+' · '+radar.questions+' questões</span><span>'+radar.years+'/17 edições</span>'
-      : '<span>Trilha NEXO</span>';
-    const cards=items.map(m=>{
-      const kind=materialKind(m);
-      const radarMeta=materialRadarMeta(m);
-      const fav=favoriteContent('material',m.id);
-      const seq=materialSequence(m);
-      const size=m.bytes?(' · '+(m.bytes/1048576).toFixed(m.bytes>=10485760?0:1)+' MB'):'';
-      const title=String(m.title||'').replace(/^Aula NEXO #\d+\s*[—-]\s*/i,'').replace(/^Resumo\/PDF NEXO #\d+\s*[—-]\s*/i,'');
-      return `<article class="panel content-card nexo-material-card ${kind.key}">
+  const orderedGroups=[...groups.entries()].sort((a,b)=>{
+    const ra=materialRadarMeta(a[1][0]),rb=materialRadarMeta(b[1][0]);
+    return Number(rb?.score||0)-Number(ra?.score||0) || String(a[1][0].topic||'').localeCompare(String(b[1][0].topic||''),'pt-BR');
+  });
+  if(!state.materialOpenTopic||!orderedGroups.some(([k])=>k===state.materialOpenTopic))state.materialOpenTopic=orderedGroups[0]?.[0]||'';
+
+  grid.innerHTML=orderedGroups.map(([key,items],index)=>{
+    items.sort((a,b)=>materialKind(a).order-materialKind(b).order||Number(a.id)-Number(b.id));
+    const first=items[0],radar=materialRadarMeta(first),expanded=state.materialOpenTopic===key;
+    const completed=items.filter(m=>getContentProgress('material',m.id).completed).length;
+    const avg=items.length?Math.round(items.reduce((sum,m)=>sum+(getContentProgress('material',m.id).completed?100:Number(getContentProgress('material',m.id).progress_percent||0)),0)/items.length):0;
+    const encoded=encodeURIComponent(key);
+    const seq=materialSequence(first);
+    const radarText=radar?'<span class="content-radar-chip">🔥 Prioridade '+radar.score+'</span><span>'+radar.questions+' questões</span><span>'+radar.years+'/17 edições</span>':'';
+    const resources=items.map(m=>{
+      const kind=materialKind(m),fav=favoriteContent('material',m.id);
+      const p=getContentProgress('material',m.id);
+      return `<article class="content-resource-card ${kind.key}">
         <button class="content-fav ${fav?'active':''}" data-content-fav="${m.id}" data-content-type="material" aria-label="Favoritar">${fav?'★':'☆'}</button>
-        <button class="content-open-area" data-content-open="${m.id}" data-content-type="material">
-          <div class="material-cover ${kind.key}">
-            <div class="material-cover-top"><span>${kind.label}</span><b>#${seq}</b></div>
-            <div class="material-cover-mark"><i></i><i></i><i></i><i></i></div>
-            <div class="material-cover-copy"><small>${esc(m.subject||m.area||'NEXO')}</small><strong>${esc(title||m.topic||m.title)}</strong></div>
-            <div class="material-cover-foot"><span>NEXO ENEM</span><span>${kind.icon}</span></div>
-          </div>
-          <div class="video-body material-card-body">
-            <div class="material-card-badges">
-              <span class="material-type-badge ${kind.key}">${kind.label}</span>
-              ${m.plus_only?'<span class="plus-content-badge">NEXO PLUS</span>':''}
-              ${contentMatchesCore(m)?'<span class="core-content-badge">✦ RECOMENDADO</span>':''}
-            </div>
-            <b class="material-card-title">${esc(m.title)}</b>
-            <small>${esc([m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>
-            ${radarMeta?'<div class="material-radar"><b>🔥 Prioridade '+radarMeta.score+'</b><span>'+radarMeta.questions+' questões no Radar · '+radarMeta.years+'/17 edições</span></div>':''}
-            ${m.description?'<p>'+esc(m.description)+'</p>':''}
+        <button class="content-resource-open" data-content-open="${m.id}" data-content-type="material">
+          <div class="content-resource-icon ${kind.key}"><small>#${materialSequence(m)}</small><b>${kind.icon}</b><i></i></div>
+          <div class="content-resource-copy">
+            <span class="material-type-badge ${kind.key}">${kind.label}</span>
+            <strong>${esc(m.title)}</strong>
+            <small>${esc(m.description||m.topic||'Conteúdo NEXO')}</small>
             ${contentCardProgress('material',m.id)}
-            <span class="content-cta">${kind.cta}</span>
+            <em>${p.completed?'Revisar novamente →':kind.cta}</em>
           </div>
         </button>
       </article>`;
     }).join('');
 
-    return `<section class="content-topic-group">
-      <header class="content-topic-head">
-        <div><span class="eyebrow">${esc(first.area||'NEXO CONTEÚDO')}</span><h3>${esc(first.topic||first.subject||'Materiais')}</h3><p>${esc(first.subject||'Conteúdo NEXO')}</p></div>
-        <div class="content-topic-meta">${groupMeta}</div>
-      </header>
-      <div class="content-flow"><span>Aula</span><i>→</i><span>Resumo</span><i>→</i><span>Macetes</span><i>→</i><span>Treino</span></div>
-      <div class="content-topic-cards">${cards}</div>
+    return `<section class="content-topic-group ${expanded?'open':''}">
+      <button class="content-topic-toggle" data-material-topic-toggle="${encoded}" aria-expanded="${expanded?'true':'false'}">
+        <div class="content-topic-rank">${String(index+1).padStart(2,'0')}</div>
+        <div class="content-topic-name"><span>MATEMÁTICA #${seq}</span><h3>${esc(first.topic||first.subject||'Conteúdo')}</h3><div class="content-topic-meta">${radarText}</div></div>
+        <div class="content-topic-progress"><b>${avg}%</b><small>${completed}/${items.length} conteúdos</small><span><i style="width:${avg}%"></i></span></div>
+        <div class="content-topic-chevron">${expanded?'−':'+'}</div>
+      </button>
+      <div class="content-topic-detail ${expanded?'':'hidden'}">
+        <div class="content-flow"><span>Aula</span><i>→</i><span>Resumo</span><i>→</i><span>Macetes</span><i>→</i><span>Treino</span></div>
+        <div class="content-topic-cards">${resources}</div>
+        <button class="content-topic-train" data-material-train="${encoded}"><span>✓</span><div><b>Treinar este assunto</b><small>5 questões ligadas a ${esc(first.topic||first.subject||'este conteúdo')}</small></div><i>→</i></button>
+      </div>
     </section>`;
   }).join('');
+
   wireContentCards();
+  $$('[data-material-topic-toggle]',grid).forEach(btn=>btn.onclick=()=>{
+    const key=decodeURIComponent(btn.dataset.materialTopicToggle||'');
+    state.materialOpenTopic=state.materialOpenTopic===key?'':key;
+    renderMaterials();
+  });
+  $$('[data-material-train]',grid).forEach(btn=>btn.onclick=()=>{
+    const key=decodeURIComponent(btn.dataset.materialTrain||'');
+    const items=groups.get(key)||[];
+    if(items[0])startContentPractice(items[0]);
+  });
 }
 $('#materialSearch')?.addEventListener('input',renderMaterials);
 $('#materialFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active');renderMaterials()});
