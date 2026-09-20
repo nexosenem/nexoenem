@@ -7,10 +7,12 @@
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="preload" as="image" href="./assets/nexo-family/bust.avif" type="image/avif" media="(max-width:760px)">
+  <link rel="preload" as="image" href="./assets/nexo-family/hero.avif" type="image/avif" media="(min-width:761px)">
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-35">
+  <link rel="stylesheet" href="./styles.css?v=20260920-36">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -178,7 +180,7 @@
               <button class="primary-btn" data-page="questoes">Continuar <b>→</b></button>
               <div class="mobile-nexo-stage" aria-hidden="true">
                 <span class="nexo-glow"></span>
-                <img src="" data-nexo-safe-avatar alt="">
+                <img src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="">
                 <i class="nexo-float-chip chip-a">FOCO</i>
                 <i class="nexo-float-chip chip-b">EVOLUÇÃO</i>
               </div>
@@ -275,7 +277,7 @@
                 </div>
                 <div class="hero-art hero-nexo-art" aria-hidden="true">
                   <div class="hero-nexo-aura"></div>
-                  <img class="home-nexo-mascot" src="" data-nexo-safe-avatar alt="">
+                  <img class="home-nexo-mascot" src="./assets/nexo-family/hero.avif" data-nexo-family="hero" alt="">
                   <div class="hero-nexo-chip hero-chip-top"><b>PROFESSOR NEXO</b><span>estratégia em tempo real</span></div>
                   <div class="hero-nexo-chip hero-chip-bottom"><b>✦ NEXO CORE</b><span id="heroCoreHint">analisando seu próximo foco</span></div>
                   <blockquote>“Disciplina hoje.<br>Liberdade amanhã.”</blockquote>
@@ -381,7 +383,7 @@
           <article id="sessionSetup" class="session-setup panel">
             <div class="setup-title"><div><span class="eyebrow">NOVA SESSÃO</span><h3>O que você quer estudar?</h3></div><span class="setup-chip">sem troca aleatória</span></div>
             <div class="nexo-guide-card">
-              <img src="" data-nexo-safe-avatar alt="Professor Nexo">
+              <img src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Professor Nexo">
               <div><b>Professor Nexo acompanha a sessão</b><p>Eu observo acertos, erros e tempo por questão para atualizar seu NEXO Core e melhorar a próxima recomendação.</p></div>
               <button type="button" data-nia="Qual treino você recomenda para mim?">Perguntar ao Nexo</button>
             </div>
@@ -421,7 +423,7 @@
         <section class="page" id="redacao">
           <div class="page-head nexo-page-head">
             <div><span class="eyebrow">REDAÇÃO · PROFESSOR NEXO</span><h2>Laboratório de Redação</h2><p>Escreva, receba uma análise por competência e transforme a correção em uma próxima ação de estudo.</p></div>
-            <div class="page-nexo-mentor"><img src="" data-nexo-safe-avatar alt="Professor Nexo"><span><b>Correção orientada</b><small>competências • observações • próxima versão</small></span></div>
+            <div class="page-nexo-mentor"><img src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Professor Nexo"><span><b>Correção orientada</b><small>competências • observações • próxima versão</small></span></div>
           </div>
           <div class="essay-layout">
             <article class="panel essay-editor">
@@ -443,7 +445,7 @@
         <section class="page" id="desempenho">
           <div class="page-head nexo-page-head">
             <div><span class="eyebrow">ANÁLISES · NEXO CORE</span><h2>Meu Desempenho</h2><p>Mais do que porcentagens: veja onde você está evoluindo e qual conteúdo merece atenção agora.</p></div>
-            <div class="page-nexo-mentor"><img src="" data-nexo-safe-avatar alt="Professor Nexo"><span><b>Leitura inteligente</b><small>domínio • ritmo • prioridades</small></span></div>
+            <div class="page-nexo-mentor"><img src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Professor Nexo"><span><b>Leitura inteligente</b><small>domínio • ritmo • prioridades</small></span></div>
           </div>
           <article class="panel performance-core-hero" id="performanceCoreHero">
             <div class="performance-core-copy">
@@ -489,7 +491,7 @@
         <section class="page" id="simulados">
           <div class="page-head nexo-page-head">
             <div><span class="eyebrow">SIMULADOS · NEXO CORE</span><h2>Simulados</h2><p>Treine decisão, tempo e resistência. No final, o Professor Nexo transforma seu resultado em um plano de revisão.</p></div>
-            <div class="page-nexo-mentor"><img src="" data-nexo-safe-avatar alt="Professor Nexo"><span><b>Pós-prova inteligente</b><small>ritmo • erros • próximos focos</small></span></div>
+            <div class="page-nexo-mentor"><img src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Professor Nexo"><span><b>Pós-prova inteligente</b><small>ritmo • erros • próximos focos</small></span></div>
           </div>
           <article class="panel simulation-hero">
             <div class="simulation-hero-copy">
@@ -498,7 +500,7 @@
               <p>O NEXO registra tempo por questão, acertos, erros e assunto para entregar um relatório ao fim da sessão.</p>
               <div class="simulation-badges"><span>cronômetro por questão</span><span>relatório pós-prova</span><span>plano de revisão</span></div>
             </div>
-            <div class="simulation-hero-mascot"><img src="" data-nexo-safe-avatar alt="Professor Nexo"><small>Professor Nexo</small></div>
+            <div class="simulation-hero-mascot"><img src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Professor Nexo"><small>Professor Nexo</small></div>
           </article>
           <div class="sim-grid sim-grid-premium">
             <button class="sim-card sim-featured" data-sim-mode="adaptive"><span>✦</span><b>NEXO Core</b><small>20 questões adaptadas ao seu perfil</small><i>Recomendado</i></button>
@@ -643,7 +645,7 @@
     <section class="onboarding-shell">
       <aside class="onboarding-mentor">
         <div class="onboarding-mentor-orbit" aria-hidden="true"></div>
-        <img id="onboardingMascot" src="" data-nexo-safe-avatar alt="Professor Nexo">
+        <img id="onboardingMascot" src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Professor Nexo">
         <div class="onboarding-mentor-copy">
           <span>PROFESSOR NEXO</span>
           <h3 id="onboardingMentorTitle">Vamos montar seu ponto de partida.</h3>
@@ -742,7 +744,7 @@
     </div>
 
     <div class="nexo-welcome">
-      <img id="nexoHeroImage" alt="Nexo, mascote oficial">
+      <img id="nexoHeroImage" src="./assets/nexo-family/bust.avif" data-nexo-family="bust" alt="Nexo, mascote oficial">
       <div>
         <span class="eyebrow">PROFESSOR NEXO</span>
         <b>Questões, redação, estratégia e cabeça no lugar.</b>
@@ -787,6 +789,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-38"></script>
+  <script src="./app.js?v=20260920-39"></script>
 </body>
 </html>
