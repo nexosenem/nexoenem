@@ -3691,6 +3691,52 @@ function renderJourneyBoards(){
   }
 }
 
+let wardrobeFilter='all';
+function wardrobeItemState(item,owned,level,plus,ultra){
+  const has=ultra||owned.has(item.item_code);
+  const plusLocked=Boolean(item.plus_only&&!plus&&!ultra);
+  const levelLocked=!ultra&&level<Number(item.unlock_level||1);
+  const available=!has&&!plusLocked&&!levelLocked&&item.grant_mode!=='level';
+  return {has,plusLocked,levelLocked,available};
+}
+function renderNexoWardrobe(){
+  const j=state.journey||{}, el=$('#nexoWardrobe'), summary=$('#wardrobeSummary');
+  if(!el)return;
+  const owned=journeyInventorySet(), level=Number(j.profile?.level||1), plus=isNexoPlus(), ultra=isNexoUltra();
+  const base=j.profile?.avatar?.base||'neutral';
+  const category=$('#wardrobeCategory')?.value||'all';
+  const catalog=(j.catalog||[]).filter(item=>ultra||avatarItemCompatibleWithBase(item,base));
+  const categories=[...new Set(catalog.map(x=>x.category).filter(Boolean))].sort();
+  const categorySelect=$('#wardrobeCategory');
+  if(categorySelect){
+    const current=categorySelect.value||'all';
+    categorySelect.innerHTML='<option value="all">Todas as categorias</option>'+categories.map(x=>'<option value="'+esc(x)+'">'+esc(x)+'</option>').join('');
+    categorySelect.value=categories.includes(current)?current:'all';
+  }
+  const counts={owned:0,available:0,level:0,plus:0};
+  catalog.forEach(item=>{const s=wardrobeItemState(item,owned,level,plus,ultra); if(s.has)counts.owned++; else if(s.plusLocked)counts.plus++; else if(s.levelLocked||item.grant_mode==='level')counts.level++; else counts.available++;});
+  if(summary)summary.innerHTML='<span><b>'+counts.available+'</b><small>Disponível</small></span><span><b>'+counts.owned+'</b><small>Conquistado</small></span><span><b>'+counts.level+'</b><small>Por nível</small></span><span><b>'+counts.plus+'</b><small>Plus</small></span>';
+  const filtered=catalog.filter(item=>{
+    const s=wardrobeItemState(item,owned,level,plus,ultra);
+    const cat=($('#wardrobeCategory')?.value||'all')==='all'||item.category===$('#wardrobeCategory').value;
+    const match=wardrobeFilter==='all'||(wardrobeFilter==='owned'&&s.has)||(wardrobeFilter==='available'&&s.available)||(wardrobeFilter==='plus'&&s.plusLocked)||(wardrobeFilter==='level'&&!s.has&&!s.plusLocked&&(s.levelLocked||item.grant_mode==='level'));
+    return cat&&match;
+  });
+  el.innerHTML=filtered.length?filtered.map(item=>{
+    const s=wardrobeItemState(item,owned,level,plus,ultra);
+    const stateClass=s.has?'owned':s.plusLocked?'plus':(s.levelLocked||item.grant_mode==='level')?'level':'available';
+    const label=s.has?'CONQUISTADO':s.plusLocked?'PLUS':(s.levelLocked||item.grant_mode==='level')?'DESBLOQUEIA NO NÍVEL '+Number(item.unlock_level||1):'DISPONÍVEL';
+    return '<article class="wardrobe-card '+stateClass+'"><div class="wardrobe-card-visual"><span>✦</span><small>'+esc(item.category||'Item')+'</small></div><div class="wardrobe-card-copy"><span class="wardrobe-state">'+label+'</span><h4>'+esc(item.name)+'</h4><p>'+esc(item.description||'Cosmético NEXO')+'</p></div><div class="wardrobe-card-foot"><small>'+esc(String(item.rarity||'comum').toUpperCase())+'</small>'+(s.has?'<button data-wardrobe-equip="'+esc(item.item_code)+'">Usar</button>':s.plusLocked?'<button data-open-plus>Ver Plus</button>':s.available?'<button data-wardrobe-store>Ver na Loja</button>':'<button disabled>Nível '+Number(item.unlock_level||1)+'</button>')+'</div></article>';
+  }).join(''):'<div class="journey-empty">Nenhum item nesta categoria.</div>';
+  $('[data-open-plus]',el).forEach(btn=>btn.onclick=()=>openNexoPlans('Esse item faz parte do Guarda-roupa NEXO Plus.'));
+  $('[data-wardrobe-store]',el).forEach(btn=>btn.onclick=()=>setJourneyTab('store'));
+  $('[data-wardrobe-equip]',el).forEach(btn=>btn.onclick=()=>{
+    const item=avatarCatalogItem(btn.dataset.wardrobeEquip); if(!item?.visual?.value)return setJourneyTab('avatar');
+    state.avatarDraft=normalizedAvatar(state.avatarDraft||j.profile?.avatar);
+    state.avatarDraft[item.category]=item.visual.value;
+    setJourneyTab('avatar'); renderAvatarBuilder(); toast('Item selecionado. Confira no personagem e salve.');
+  });
+}
 function renderJourneyStore(){
   const j=state.journey||{};
   const owned=journeyInventorySet();
@@ -3812,6 +3858,7 @@ function renderNexoJourney(){
   renderJourneyMissions();
   renderJourneyBoards();
   renderJourneyStore();
+  renderNexoWardrobe();
   renderJourneyAchievements();
   renderAvatarBuilder();
   setJourneyTab(state.journeyTab||'missions');
@@ -3880,7 +3927,9 @@ async function startNexoArena(){
   }
 }
 
-$$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
+$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
+$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
+$('#wardrobeCategory')?.addEventListener('change',renderNexoWardrobe);
 $$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTabTarget));
 $('#refreshJourney')?.addEventListener('click',()=>loadNexoJourney());
 $('#startNexoArena')?.addEventListener('click',startNexoArena);
