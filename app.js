@@ -48,7 +48,15 @@ const state = {
   videos:[],
   assistantIntents:[],
   core:null,
-  lastSimulationReport:null
+  lastSimulationReport:null,
+  onboarding:{
+    step:1,
+    goalScore:750,
+    areas:[],
+    dailyMinutes:60,
+    saving:false,
+    manual:false
+  }
 };
 
 function toast(message, type='info') {
@@ -133,6 +141,193 @@ function updateHomeExperience(){
     : './assets/nexo-expressions/confiante.webp';
   heroMascots.forEach(img=>{if(img.getAttribute('src')!==heroSrc)img.src=heroSrc});
 }
+
+
+function onboardingMissionSize(minutes){
+  const value=Number(minutes||60);
+  return value<=30?5:value<=60?8:10;
+}
+
+function updateOnboardingPreview(){
+  const ob=state.onboarding;
+  const area=ob.areas[0]||'sua área prioritária';
+  const size=onboardingMissionSize(ob.dailyMinutes);
+  const timeLabel=ob.dailyMinutes>=60
+    ? (ob.dailyMinutes===60?'1 hora':ob.dailyMinutes===90?'1h30':'2 horas')
+    : ob.dailyMinutes+' minutos';
+  const text=$('#onboardingPreviewText');
+  if(text)text.textContent='Com '+timeLabel+' por dia, seu primeiro diagnóstico terá cerca de '+size+' questões em '+area+'. Meta atual: '+ob.goalScore+' pontos.';
+}
+
+function renderOnboardingStep(){
+  const ob=state.onboarding;
+  $$('[data-onboarding-step]').forEach(section=>section.classList.toggle('hidden',Number(section.dataset.onboardingStep)!==ob.step));
+  $('#onboardingStepLabel').textContent=ob.step+' de 3';
+  $('#onboardingProgress').style.width=(ob.step/3*100)+'%';
+  $('#onboardingBack').classList.toggle('hidden',ob.step===1);
+  $('#onboardingNext').innerHTML=ob.step===3
+    ? 'Criar meu plano <span>→</span>'
+    : 'Continuar <span>→</span>';
+
+  const mentor={
+    1:{
+      title:'Uma boa meta dá direção.',
+      text:'Não precisa acertar o número perfeito. Use uma nota que represente o nível que você quer perseguir e eu ajusto o plano com seus dados reais.',
+      image:'./assets/nexo-expressions/confiante.webp'
+    },
+    2:{
+      title:'Agora me diga onde aperta mais.',
+      text:'Escolha no máximo duas áreas. A primeira vira seu diagnóstico inicial; depois o NEXO Core passa a usar seu desempenho real.',
+      image:'./assets/nexo-expressions/pensativo.webp'
+    },
+    3:{
+      title:'O melhor plano é o que cabe na rotina.',
+      text:'Eu prefiro 30 minutos consistentes a duas horas que nunca acontecem. Escolha um tempo que você consegue sustentar.',
+      image:'./assets/nexo-expressions/serio.webp'
+    }
+  }[ob.step];
+  $('#onboardingMentorTitle').textContent=mentor.title;
+  $('#onboardingMentorText').textContent=mentor.text;
+  $('#onboardingMascot').src=mentor.image;
+
+  $('#goalScoreValue').textContent=String(ob.goalScore);
+  $('#goalScoreRange').value=String(ob.goalScore);
+  $$('[data-goal-score]').forEach(btn=>{
+    const v=Number(btn.dataset.goalScore);
+    btn.classList.toggle('active',v===ob.goalScore || (v===900 && ob.goalScore>=900));
+  });
+
+  $$('[data-onboarding-area]').forEach(btn=>{
+    const active=ob.areas.includes(btn.dataset.onboardingArea);
+    btn.classList.toggle('active',active);
+    const icon=btn.querySelector('i');
+    if(icon)icon.textContent=active?'✓':'+';
+  });
+  $('#onboardingAreaHint').textContent=ob.areas.length
+    ? ob.areas.length+' selecionada(s) · '+(ob.areas[0]||'')+' será a primeira prioridade.'
+    : 'Escolha pelo menos uma área.';
+
+  $$('[data-onboarding-minutes]').forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.onboardingMinutes)===ob.dailyMinutes));
+  updateOnboardingPreview();
+}
+
+function openNexoOnboarding(manual=false){
+  if(!state.user)return;
+  state.onboarding={
+    step:1,
+    goalScore:Number(state.profile?.goal_score||750),
+    areas:Array.isArray(state.profile?.difficult_areas)?[...state.profile.difficult_areas]:[],
+    dailyMinutes:Number(state.profile?.daily_minutes||60),
+    saving:false,
+    manual:Boolean(manual)
+  };
+  $('#nexoOnboarding').classList.remove('hidden');
+  document.body.classList.add('onboarding-open');
+  $('#niaButton')?.classList.add('hidden');
+  $('#niaPanel')?.classList.add('hidden');
+  $('#profileMenu')?.classList.add('hidden');
+  renderOnboardingStep();
+}
+
+function closeNexoOnboarding(){
+  $('#nexoOnboarding').classList.add('hidden');
+  document.body.classList.remove('onboarding-open');
+  if(state.user)$('#niaButton')?.classList.remove('hidden');
+}
+
+async function saveNexoOnboarding(){
+  const ob=state.onboarding;
+  if(ob.saving)return;
+  if(!ob.areas.length){
+    toast('Escolha pelo menos uma área para o NEXO começar.','error');
+    return;
+  }
+  ob.saving=true;
+  const btn=$('#onboardingNext');
+  btn.disabled=true;
+  btn.textContent='Montando seu plano...';
+
+  const completedAt=new Date().toISOString();
+  try{
+    const {error}=await client.from('profiles').update({
+      goal_score:ob.goalScore,
+      difficult_areas:ob.areas,
+      daily_minutes:ob.dailyMinutes,
+      onboarding_completed_at:completedAt,
+      onboarding_version:1,
+      updated_at:completedAt
+    }).eq('id',state.user.id);
+    if(error)throw error;
+
+    state.profile={
+      ...(state.profile||{}),
+      goal_score:ob.goalScore,
+      difficult_areas:[...ob.areas],
+      daily_minutes:ob.dailyMinutes,
+      onboarding_completed_at:completedAt,
+      onboarding_version:1
+    };
+
+    closeNexoOnboarding();
+    await loadNexoCore();
+    updateHomeExperience();
+    openPage('inicio');
+    setNexoMood('confiante');
+    toast(ob.manual?'Seu plano foi atualizado.':'Seu primeiro plano está pronto.');
+  }catch(err){
+    console.error('onboarding save',err);
+    logClientError('onboarding',err,'onboarding_save');
+    toast('Não consegui salvar seu plano agora. Tente novamente.','error');
+  }finally{
+    ob.saving=false;
+    btn.disabled=false;
+    btn.innerHTML='Criar meu plano <span>→</span>';
+  }
+}
+
+$('#goalScoreRange').addEventListener('input',e=>{
+  state.onboarding.goalScore=Number(e.target.value);
+  renderOnboardingStep();
+});
+$$('[data-goal-score]').forEach(btn=>btn.onclick=()=>{
+  state.onboarding.goalScore=Number(btn.dataset.goalScore);
+  renderOnboardingStep();
+});
+$$('[data-onboarding-area]').forEach(btn=>btn.onclick=()=>{
+  const area=btn.dataset.onboardingArea;
+  const list=state.onboarding.areas;
+  const index=list.indexOf(area);
+  if(index>=0)list.splice(index,1);
+  else{
+    if(list.length>=2){
+      toast('Escolha no máximo duas áreas para manter o plano focado.','error');
+      return;
+    }
+    list.push(area);
+  }
+  renderOnboardingStep();
+});
+$$('[data-onboarding-minutes]').forEach(btn=>btn.onclick=()=>{
+  state.onboarding.dailyMinutes=Number(btn.dataset.onboardingMinutes);
+  renderOnboardingStep();
+});
+$('#onboardingBack').onclick=()=>{
+  state.onboarding.step=Math.max(1,state.onboarding.step-1);
+  renderOnboardingStep();
+};
+$('#onboardingNext').onclick=async()=>{
+  if(state.onboarding.step===2 && !state.onboarding.areas.length){
+    toast('Escolha pelo menos uma área para continuar.','error');
+    return;
+  }
+  if(state.onboarding.step<3){
+    state.onboarding.step+=1;
+    renderOnboardingStep();
+    return;
+  }
+  await saveNexoOnboarding();
+};
+$('#editStudyPlan').onclick=()=>openNexoOnboarding(true);
 
 function setAuthTab(tab) {
   clearAuthMessage();
@@ -229,6 +424,8 @@ $('#forgotPassword').onclick=async()=>{
 $('#logoutBtn').onclick = async () => {
   $('#niaButton')?.classList.add('hidden');
   $('#niaPanel')?.classList.add('hidden');
+  $('#nexoOnboarding')?.classList.add('hidden');
+  document.body.classList.remove('onboarding-open');
   await client.auth.signOut();
   $('#profileMenu').classList.add('hidden');
 };
@@ -276,7 +473,7 @@ async function initApp(session) {
   let profile=null;
   try{
     const result=await client.from('profiles')
-      .select('id,full_name,avatar_url,role,assistant_outfit')
+      .select('id,full_name,avatar_url,role,assistant_outfit,goal_score,daily_minutes,difficult_areas,onboarding_completed_at,onboarding_version')
       .eq('id',state.user.id)
       .maybeSingle();
     if(result.error)throw result.error;
@@ -291,7 +488,12 @@ async function initApp(session) {
     full_name:state.user.user_metadata?.full_name || state.user.email?.split('@')[0] || 'Aluno',
     avatar_url:null,
     role:'student',
-    assistant_outfit:'classic'
+    assistant_outfit:'classic',
+    goal_score:null,
+    daily_minutes:null,
+    difficult_areas:[],
+    onboarding_completed_at:'profile-fallback',
+    onboarding_version:1
   };
 
   const name = state.profile.full_name || state.user.email?.split('@')[0] || 'Aluno';
@@ -307,7 +509,9 @@ async function initApp(session) {
   clearAuthMessage();
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
-  $('#niaButton')?.classList.remove('hidden');
+  $('#niaButton')?.classList.add('hidden');
+
+  const needsOnboarding=!state.profile.onboarding_completed_at;
 
   const results=await Promise.allSettled([
     loadQuestionMeta(),
@@ -326,6 +530,9 @@ async function initApp(session) {
   fillThemes();
   loadRecentAttempts().catch(err=>logClientError('recent_attempts',err,'recent_load'));
   renderBank();
+
+  if(needsOnboarding)openNexoOnboarding(false);
+  else $('#niaButton')?.classList.remove('hidden');
 }
 
 async function handleSession(session) {
@@ -337,6 +544,8 @@ async function handleSession(session) {
     $('#authScreen').classList.remove('hidden');
     $('#niaButton')?.classList.add('hidden');
     $('#niaPanel')?.classList.add('hidden');
+    $('#nexoOnboarding')?.classList.add('hidden');
+    document.body.classList.remove('onboarding-open');
     clearAuthMessage();
   }
   $('#boot').classList.add('fade');
