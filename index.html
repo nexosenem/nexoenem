@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-55">
+  <link rel="stylesheet" href="./styles.css?v=20260920-56">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -894,6 +894,46 @@
           <div class="admin-ultra-strip"><span>◆</span><div><b>NEXO ULTRA · ACESSO ADMINISTRATIVO</b><small>Recursos, conteúdo premium e catálogo de avatar totalmente liberados para administradores.</small></div></div>
           <div class="page-head"><div><span class="eyebrow gold">ADMINISTRAÇÃO · NEXO ULTRA</span><h2>Área do Admin</h2><p>Administradores têm acesso Ultra: sem limites, conteúdo premium e todos os cosméticos liberados.</p></div><div class="admin-ultra-badge">ULTRA</div></div>
           <div class="admin-stats" id="adminStats"></div>
+
+          <article class="panel admin-health-panel">
+            <div class="admin-health-head">
+              <div>
+                <span class="eyebrow gold">NEXO HEALTH MONITOR</span>
+                <h3>Saúde da plataforma</h3>
+                <p>Diagnóstico operacional de autenticação, banco, Core, Jornada, Edge Functions e uploads.</p>
+              </div>
+              <div class="admin-health-actions">
+                <span id="healthOverall" class="health-overall checking"><i></i> Verificando</span>
+                <button id="refreshNexoHealth" class="outline-btn">Atualizar agora</button>
+              </div>
+            </div>
+
+            <div id="nexoHealthGrid" class="admin-health-grid">
+              <article class="health-service checking"><span class="health-dot"></span><div><b>Autenticação</b><small>Aguardando diagnóstico...</small></div><em>—</em></article>
+              <article class="health-service checking"><span class="health-dot"></span><div><b>Banco de dados</b><small>Aguardando diagnóstico...</small></div><em>—</em></article>
+              <article class="health-service checking"><span class="health-dot"></span><div><b>NEXO Core</b><small>Aguardando diagnóstico...</small></div><em>—</em></article>
+              <article class="health-service checking"><span class="health-dot"></span><div><b>NEXO Jornada</b><small>Aguardando diagnóstico...</small></div><em>—</em></article>
+              <article class="health-service checking"><span class="health-dot"></span><div><b>Edge Functions</b><small>Aguardando diagnóstico...</small></div><em>—</em></article>
+              <article class="health-service checking"><span class="health-dot"></span><div><b>Uploads</b><small>Aguardando diagnóstico...</small></div><em>—</em></article>
+            </div>
+
+            <div class="admin-health-lower">
+              <div>
+                <div class="health-section-title"><b>Métricas rápidas</b><small id="healthLastCheck">Ainda não verificado</small></div>
+                <div id="nexoHealthMetrics" class="health-metrics">
+                  <span><b>—</b><small>usuários</small></span>
+                  <span><b>—</b><small>questões</small></span>
+                  <span><b>—</b><small>respostas</small></span>
+                  <span><b>—</b><small>erros / 15 min</small></span>
+                </div>
+              </div>
+              <div>
+                <div class="health-section-title"><b>Erros recentes</b><small>telemetria técnica</small></div>
+                <div id="nexoHealthErrors" class="health-error-list"><p>Nenhum dado carregado.</p></div>
+              </div>
+            </div>
+          </article>
+
           <div id="cloudinarySecurityStatus" class="cloudinary-security-status checking">Verificando proteção dos uploads...</div>
           <div class="admin-grid">
             <article class="panel admin-team-panel">
@@ -1264,6 +1304,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-61"></script>
+  <script src="./app.js?v=20260920-62"></script>
 </body>
 </html>
