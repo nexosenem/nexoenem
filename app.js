@@ -5088,7 +5088,7 @@ function renderMaterials(){
     const ra=materialRadarMeta(a[1][0]),rb=materialRadarMeta(b[1][0]);
     return Number(rb?.score||0)-Number(ra?.score||0) || String(a[1][0].topic||'').localeCompare(String(b[1][0].topic||''),'pt-BR');
   });
-  if(!state.materialOpenTopic||!orderedGroups.some(([k])=>k===state.materialOpenTopic))state.materialOpenTopic=orderedGroups[0]?.[0]||'';
+  if(state.materialOpenTopic!=='__closed__'&&(!state.materialOpenTopic||!orderedGroups.some(([k])=>k===state.materialOpenTopic)))state.materialOpenTopic=orderedGroups[0]?.[0]||'';
 
   grid.innerHTML=orderedGroups.map(([key,items],index)=>{
     items.sort((a,b)=>materialKind(a).order-materialKind(b).order||Number(a.id)-Number(b.id));
@@ -5119,7 +5119,7 @@ function renderMaterials(){
     return `<section class="content-topic-group ${expanded?'open':''}">
       <button class="content-topic-toggle" data-material-topic-toggle="${encoded}" aria-expanded="${expanded?'true':'false'}">
         <div class="content-topic-rank">${String(index+1).padStart(2,'0')}</div>
-        <div class="content-topic-name"><span>MATEMÁTICA #${seq}</span><h3>${esc(first.topic||first.subject||'Conteúdo')}</h3><div class="content-topic-meta">${radarText}</div></div>
+        <div class="content-topic-name"><span>${esc(String(first.subject||first.area||'NEXO').toUpperCase())} #${seq}</span><h3>${esc(first.topic||first.subject||'Conteúdo')}</h3><div class="content-topic-meta">${radarText}</div></div>
         <div class="content-topic-progress"><b>${avg}%</b><small>${completed}/${items.length} conteúdos</small><span><i style="width:${avg}%"></i></span></div>
         <div class="content-topic-chevron">${expanded?'−':'+'}</div>
       </button>
@@ -5134,7 +5134,7 @@ function renderMaterials(){
   wireContentCards();
   $$('[data-material-topic-toggle]',grid).forEach(btn=>btn.onclick=()=>{
     const key=decodeURIComponent(btn.dataset.materialTopicToggle||'');
-    state.materialOpenTopic=state.materialOpenTopic===key?'':key;
+    state.materialOpenTopic=state.materialOpenTopic===key?'__closed__':key;
     renderMaterials();
   });
   $$('[data-material-train]',grid).forEach(btn=>btn.onclick=()=>{
