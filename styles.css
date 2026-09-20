@@ -191,3 +191,20 @@ body.light .hero-card{background:linear-gradient(105deg,#12182b,#151c33);color:#
   .mobile-performance-stats{gap:4px}
   .mobile-performance-stats span{padding:7px 2px}
 }
+
+
+.visual-fallback{
+  min-height:180px;width:100%;display:grid;place-items:center;align-content:center;gap:8px;
+  padding:24px;text-align:center;background:linear-gradient(180deg,#f8fafc,#eef3f8);color:#243247
+}
+.visual-fallback>span{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:#e4e9ff;color:#6d58e8;font-size:21px}
+.visual-fallback b{font-size:14px}.visual-fallback p{max-width:430px;margin:0;color:#66758b;font-size:12px}
+.visual-fallback>div{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:4px}
+.q-media-image{display:block;max-width:100%;height:auto;margin:auto}
+body.light .visual-fallback{background:#f5f8fc;color:#243247}
+
+@media(max-width:760px){
+  .visual-fallback{min-height:150px;padding:18px 14px}
+  .visual-fallback>div{width:100%}
+  .visual-fallback button{flex:1}
+}
