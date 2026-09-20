@@ -326,7 +326,7 @@ body.light .nia-panel{background:rgba(255,255,255,.985)}
   display:grid;grid-template-columns:82px 1fr;gap:11px;align-items:center;padding:10px 13px;
   background:linear-gradient(105deg,rgba(83,58,210,.17),rgba(30,176,227,.06));border-bottom:1px solid var(--line)
 }
-.nexo-welcome img{width:82px;height:94px;object-fit:cover;object-position:42% 18%;border-radius:14px;border:1px solid rgba(91,100,235,.28)}
+.nexo-welcome img{width:82px;height:94px;object-fit:cover;object-position:center 28%;border-radius:14px;border:1px solid rgba(91,100,235,.28);background:#0b1630;display:block;flex-shrink:0}
 .nexo-welcome div{display:grid;gap:4px}.nexo-welcome b{font-size:12px;line-height:1.35}.nexo-welcome small{font-size:9px;color:var(--muted);line-height:1.45}
 .nexo-welcome .eyebrow{font-size:8px}
 
@@ -384,4 +384,9 @@ body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
     width:auto;max-width:100%;max-height:calc(100vh - 90px);object-fit:contain;
     border-radius:10px;background:#fff;box-shadow:0 12px 50px rgba(0,0,0,.45)
   }
+}
+
+@media(max-width:760px){
+  .nexo-welcome{grid-template-columns:68px 1fr;gap:10px}
+  .nexo-welcome img{width:68px;height:82px}
 }
