@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-62">
+  <link rel="stylesheet" href="./styles.css?v=20260920-63">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -694,7 +694,8 @@
                   <div><b>Preview ao vivo</b><small id="avatarBuilderStatus">Personagem salvo</small></div>
                 </div>
                 <div class="avatar-editor-nav" aria-label="Categorias do avatar">
-                  <button class="active" data-avatar-category="base"><i>◉</i><span>Base</span></button>
+                  <button class="active" data-avatar-category="looks"><i>✦</i><span>Looks</span></button>
+                  <button data-avatar-category="base"><i>◉</i><span>Base</span></button>
                   <button data-avatar-category="skin"><i>●</i><span>Pele</span></button>
                   <button data-avatar-category="hair"><i>✦</i><span>Cabelo</span></button>
                   <button data-avatar-category="hair_color"><i>●</i><span>Cor</span></button>
@@ -705,9 +706,12 @@
                   <button data-avatar-category="aura"><i>✧</i><span>Aura</span></button>
                 </div>
                 <div class="avatar-selection-summary">
-                  <div><span>EDITANDO</span><b id="avatarSelectionTitle">Aparência</b></div>
-                  <small id="avatarSelectionText">Escolha uma opção para visualizar.</small>
+                  <div><span>EDITANDO</span><b id="avatarSelectionTitle">Looks NEXO</b></div>
+                  <small id="avatarSelectionText">Conjuntos prontos para equipar com um toque.</small>
                 </div>
+                <section class="avatar-looks-panel" id="avatarLooksPanel">
+                  <div class="avatar-looks-grid" id="avatarLooksGrid"></div>
+                </section>
                 <div class="avatar-option-group avatar-base-group"><span>Estilo do personagem</span><div>
                   <button data-avatar-field="base" data-avatar-value="masc">Masculino</button>
                   <button data-avatar-field="base" data-avatar-value="fem">Feminino</button>
@@ -1352,6 +1356,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-68"></script>
+  <script src="./app.js?v=20260920-69"></script>
 </body>
 </html>
