@@ -813,7 +813,7 @@ function renderNexoCore(){
   const coreMood=rec
     ? (Number(rec.priority||0)>=70?'pensativo':Number(rec.mastery||0)>=70?'confiante':'serio')
     : 'pensativo';
-  const coreSrc=NEXO_MOOD_IMAGES?.[coreMood]||window.NEXO_MASCOT_ASSETS?.head||'';
+  const coreSrc=nexoBustForMood(coreMood);
   $$('[data-core-avatar]').forEach(img=>{
     if(img.getAttribute('src')!==coreSrc)setNexoImage(img,coreSrc);
   });
@@ -1125,7 +1125,7 @@ async function renderQuestion(q) {
     <div class="q-section-title">COMANDO</div>
     <div class="q-prompt">${esc(q.prompt)}</div>
     <div class="question-coach">
-      <img src="${NEXO_MOOD_IMAGES.pensativo}" alt="Professor Nexo">
+      <img src="${NEXO_MEDIA_IMAGES.bustPensativo}" alt="Professor Nexo">
       <div><b>Professor Nexo</b><small>Se travar, eu te dou uma pista de estratégia sem revelar o gabarito.</small></div>
       <button id="preAnswerHint" type="button">Pedir pista</button>
     </div>
@@ -1299,22 +1299,209 @@ async function renderVisual(q) {
   }
 }
 
+function questionStudyText(q){
+  return [q?.subject,q?.topic,q?.base_text,q?.prompt].filter(Boolean).join(' ').toLowerCase();
+}
+
+function questionVariant(q,choices,salt=0){
+  if(!choices?.length)return '';
+  const raw=String(q?.id||'')+'|'+String(q?.source_question_number||'')+'|'+String(q?.prompt||'')+'|'+salt;
+  let hash=0;
+  for(let i=0;i<raw.length;i++)hash=((hash<<5)-hash+raw.charCodeAt(i))|0;
+  return choices[Math.abs(hash)%choices.length];
+}
+
 function getQuestionHint(q){
-  const topic=(q.topic||'').toLowerCase(), subject=(q.subject||'').toLowerCase();
-  if(q.area==='Matemática'){
-    if(/estat|média|mediana|moda/.test(topic)) return 'Macete de prova: antes de fazer contas, organize os valores em ordem. Média = soma ÷ quantidade; mediana = valor central; moda = valor que mais aparece. Muitas alternativas erradas trocam esses três conceitos.';
-    if(/geometr|área|volume|polígono/.test(topic)) return 'Macete de prova: marque no desenho apenas as medidas que realmente entram na fórmula. Faça uma estimativa do tamanho da resposta antes da conta para eliminar alternativas absurdas.';
-    if(/porcent|finance|razão|propor/.test(topic)) return 'Macete de prova: transforme porcentagens comuns em frações mentais: 50%=1/2, 25%=1/4, 20%=1/5, 10%=1/10. Isso costuma cortar bastante tempo de cálculo.';
-    return 'Macete de prova: traduza o enunciado para uma relação matemática antes de calcular. Depois use as alternativas como ferramenta: estime a ordem de grandeza e elimine valores incompatíveis.';
+  const text=questionStudyText(q);
+  const topic=q?.topic||q?.subject||'este conteúdo';
+
+  if(/rua|quarteir|trajeto|percurso|distância de percurso|malha/.test(text)){
+    return questionVariant(q,[
+      'Olhe para o mapa como uma malha: você só pode andar na horizontal e na vertical. Antes de testar as alternativas, compare quantos quarteirões separam cada ponto dos três destinos.',
+      'A pista está no tipo de deslocamento permitido. Conte passos horizontais e verticais separadamente e procure um cruzamento cuja soma fique igual para os três locais.',
+      'Não use distância em linha reta. Nesta questão, o caminho acompanha as ruas; escolha um candidato e conte os quarteirões até cada destino para ver se as três distâncias coincidem.'
+    ],11);
   }
-  if(q.area==='Ciências da Natureza'){
-    if(/físic|energia|fenômenos/.test((subject+' '+topic))) return 'Macete de prova: identifique primeiro as grandezas, unidades e o que varia. Se houver gráfico, observe eixos, inclinação e tendência antes de escolher qualquer fórmula.';
-    if(/quím|transform/.test((subject+' '+topic))) return 'Macete de prova: procure palavras que indiquem transformação, proporção, concentração, pH ou oxirredução. Antes de calcular, confira unidade e conservação de matéria/carga.';
-    if(/biolog|vida|ecolog|saúde/.test((subject+' '+topic))) return 'Macete de prova: em Biologia, tente localizar a relação de causa e efeito. O ENEM costuma cobrar consequência de um processo, não só a definição isolada.';
+
+  if(/média|mediana|moda|estatíst|frequência/.test(text)){
+    return questionVariant(q,[
+      'Primeiro identifique qual medida o comando está pedindo. Se for mediana, ordene os valores; se for média, confira quantos termos realmente entram na soma; se for moda, procure repetição.',
+      'Separe dado de interpretação: veja se a pergunta quer valor central, valor mais frequente ou média aritmética. Só depois faça a conta necessária.',
+      'Antes de calcular, confira se existe peso ou frequência associada aos valores. Isso muda a média e costuma ser a principal armadilha desse tipo de questão.'
+    ],12);
   }
-  if(q.area==='Linguagens') return 'Macete de prova: leia primeiro o comando e descubra exatamente o que ele quer. Depois volte ao texto procurando marcas que sustentem a alternativa — evite escolher só porque a frase “parece bonita”.';
-  if(q.area==='Ciências Humanas') return 'Macete de prova: identifique tempo, espaço, agente social e conceito central. Elimine alternativas anacrônicas ou que generalizam além do que o texto permite.';
-  return null;
+
+  if(/gráfico|tabela|eixo|coluna|linha do gráfico/.test(text)){
+    return questionVariant(q,[
+      'Leia título, unidade e escala dos eixos antes de olhar as alternativas. Depois localize apenas o trecho do gráfico que responde ao comando.',
+      'A informação decisiva costuma estar na escala. Confira se os valores são absolutos, percentuais ou acumulados antes de comparar as alternativas.',
+      'Não tente interpretar o gráfico inteiro de uma vez. Marque mentalmente o intervalo pedido e compare tendência, crescimento ou queda somente nesse trecho.'
+    ],13);
+  }
+
+  if(/porcent|percentual|desconto|acréscimo|taxa/.test(text)){
+    return questionVariant(q,[
+      'Descubra qual é a base de 100% antes de calcular. O erro mais comum é aplicar a porcentagem sobre o valor errado.',
+      'Veja se há uma ou duas variações sucessivas. Quando a base muda, somar os percentuais diretamente pode dar uma resposta errada.',
+      'Transforme o percentual em uma parte do total e confira se o comando pede valor final, diferença ou apenas a taxa.'
+    ],14);
+  }
+
+  if(/probabil|chance|sorteio|aleat|possibilidades/.test(text)){
+    return questionVariant(q,[
+      'Defina primeiro o conjunto de casos possíveis e, separadamente, os casos favoráveis. Só depois monte a razão.',
+      'Veja se os eventos são independentes, dependentes ou sem reposição. Essa palavra muda totalmente a contagem.',
+      'Antes de multiplicar probabilidades, confira se a pergunta é sobre “e”, “ou” ou o complementar do evento.'
+    ],15);
+  }
+
+  if(/função|afim|quadrát|parábola|reta|coeficiente|equação/.test(text)){
+    return questionVariant(q,[
+      'Traduza o que varia no enunciado para x e y. Depois procure a relação entre essas grandezas antes de substituir números.',
+      'Se houver gráfico ou reta, procure primeiro intercepto, crescimento e pontos conhecidos. Eles costumam revelar a expressão sem precisar testar tudo.',
+      'Confira o que a incógnita representa e mantenha as unidades junto dela. Isso ajuda a montar a equação correta e elimina alternativas incompatíveis.'
+    ],16);
+  }
+
+  if(/geometr|área|volume|perímetro|triâng|círculo|quadrado|retâng/.test(text)){
+    return questionVariant(q,[
+      'Marque na figura apenas as medidas que entram no que foi pedido. Diferencie área, perímetro e volume antes de escolher a fórmula.',
+      'Procure decompor a figura em formas simples. Muitas questões do ENEM ficam bem menores quando você calcula só a parte que muda.',
+      'Confira as unidades do resultado: comprimento, área e volume têm dimensões diferentes e isso já elimina várias alternativas.'
+    ],17);
+  }
+
+  if(q?.area==='Ciências da Natureza'){
+    if(/circuit|corrente|tensão|resist|potência|elétr/.test(text)) return questionVariant(q,[
+      'Identifique o que está em série e o que está em paralelo antes de usar qualquer fórmula. Depois marque quais grandezas são iguais em cada trecho.',
+      'Comece pelas unidades e pelo que o circuito pede: corrente, tensão, resistência ou potência. Isso indica qual relação física é necessária.'
+    ],21);
+    if(/energia|calor|temperatura|movimento|velocidade|força|pressão/.test(text)) return questionVariant(q,[
+      'Liste as grandezas dadas, suas unidades e o que o comando quer. Depois procure qual princípio físico liga exatamente essas grandezas.',
+      'Antes da fórmula, pense no sentido físico: o valor deveria aumentar, diminuir ou permanecer constante? Essa previsão ajuda a eliminar opções.'
+    ],22);
+    if(/ph|ácid|base|concentra|mol|reação|oxida|redu/.test(text)) return questionVariant(q,[
+      'Separe o que é quantidade de matéria, concentração e proporção estequiométrica. A unidade costuma mostrar qual etapa vem primeiro.',
+      'Confira conservação de átomos e de carga antes de calcular. Se a reação não estiver balanceada, qualquer conta seguinte ficará errada.'
+    ],23);
+    return questionVariant(q,[
+      'Procure a relação de causa e efeito descrita no fenômeno. A alternativa correta precisa respeitar o mecanismo científico apresentado no enunciado.',
+      'Use as unidades, o sentido do processo e as condições do experimento como filtro antes de partir para cálculos.',
+      'Pergunte qual variável foi alterada e qual resposta do sistema está sendo observada. Isso costuma separar causa de consequência.'
+    ],24);
+  }
+
+  if(q?.area==='Linguagens'){
+    return questionVariant(q,[
+      'Leia o verbo do comando — identificar, inferir, explicar, criticar, comparar. Ele diz exatamente que tipo de evidência você precisa buscar no texto.',
+      'Volte ao trecho que sustenta a ideia pedida e compare as alternativas com esse trecho, não com sua opinião sobre o tema.',
+      'Observe quem fala, para quem fala e com qual efeito. Em Linguagens, a intenção e o contexto costumam ser mais importantes que uma palavra isolada.'
+    ],31);
+  }
+
+  if(q?.area==='Ciências Humanas'){
+    return questionVariant(q,[
+      'Localize quatro coisas antes de responder: época, espaço, grupo social e conceito central. Depois elimine alternativas que não cabem nesse contexto.',
+      'Veja se o comando pede causa, consequência, característica ou interpretação. Alternativas verdadeiras em geral podem estar erradas para o recorte da pergunta.',
+      'Use o texto-base como limite: descarte opções anacrônicas, muito gerais ou que atribuem ao autor algo que ele não afirma.'
+    ],41);
+  }
+
+  return questionVariant(q,[
+    'Leia o comando novamente e destaque mentalmente o que precisa ser encontrado. Depois volte apenas aos dados que respondem a esse recorte.',
+    'Antes de escolher, tente explicar em uma frase o que a questão está pedindo. Use essa frase para eliminar alternativas que respondem outra coisa.',
+    'Procure a condição principal do enunciado e teste as opções contra ela. Não aceite uma alternativa só porque ela parece relacionada ao tema.'
+  ],51)+` Tema da questão: ${topic}.`;
+}
+
+function getQuestionShortcut(q){
+  const text=questionStudyText(q);
+
+  if(/rua|quarteir|trajeto|percurso|distância de percurso|malha/.test(text)){
+    return questionVariant(q,[
+      'Atalho de prova: em uma malha de ruas, conte |diferença horizontal| + |diferença vertical|. Teste primeiro a alternativa mais central e só continue se as três somas não forem iguais.',
+      'Macete: transforme cada cruzamento em coordenadas. Como só há movimentos horizontal e vertical, a distância é a soma das diferenças entre as duas coordenadas.',
+      'Para ganhar tempo, não desenhe todos os caminhos. Conte blocos na horizontal + blocos na vertical para cada destino e compare as três somas.'
+    ],61);
+  }
+
+  if(/média|mediana|moda|estatíst|frequência/.test(text)){
+    return questionVariant(q,[
+      'Macete: se as alternativas estão próximas, faça primeiro uma estimativa da média. Se a conta final ficar fora dessa faixa, revise antes de seguir.',
+      'Atalho: para mediana, ordene só até achar o centro; para moda, nem some os valores; para média com frequência, use soma(valor × frequência) ÷ total.',
+      'Em tabela de frequências, trabalhe com produtos valor × frequência e deixe a divisão pelo total para o fim. Evita contas repetidas.'
+    ],62);
+  }
+
+  if(/gráfico|tabela|eixo|coluna|linha do gráfico/.test(text)){
+    return questionVariant(q,[
+      'Macete: antes de calcular, compare visualmente a ordem de grandeza das alternativas com a escala do gráfico. Muitas opções já caem sem conta.',
+      'Atalho de gráfico: marque dois pontos-chave e trabalhe só com a diferença entre eles quando a questão pedir variação.',
+      'Se o gráfico tiver escala irregular ou percentual, anote a unidade ao lado do valor lido. Isso evita a pegadinha mais comum.'
+    ],63);
+  }
+
+  if(/porcent|percentual|desconto|acréscimo|taxa/.test(text)){
+    return questionVariant(q,[
+      'Macete: aumento de p% = multiplicar por (1 + p/100); desconto de p% = multiplicar por (1 - p/100). Em mudanças sucessivas, multiplique os fatores.',
+      'Use equivalências rápidas quando ajudarem: 50%=1/2, 25%=1/4, 20%=1/5, 10%=1/10 e 5%=1/20.',
+      'Se a pergunta pede o valor original, não aplique a porcentagem de novo; monte a relação “valor final = base × fator” e isole a base.'
+    ],64);
+  }
+
+  if(/probabil|chance|sorteio|aleat|possibilidades/.test(text)){
+    return questionVariant(q,[
+      'Macete: quando o evento pedido é trabalhoso, calcule o complementar. “Pelo menos um” muitas vezes vira 1 − P(nenhum).',
+      'Atalho: desenhe uma árvore só quando as etapas mudarem as probabilidades. Se forem independentes, a multiplicação direta costuma bastar.',
+      'Antes de contar caso a caso, veja se há simetria. Resultados equivalentes podem ser agrupados e cortar bastante a conta.'
+    ],65);
+  }
+
+  if(/função|afim|quadrát|parábola|reta|coeficiente|equação/.test(text)){
+    return questionVariant(q,[
+      'Macete: numa função afim, dois pontos já determinam a reta. Calcule a variação de y pela variação de x antes de montar a expressão inteira.',
+      'Atalho: teste interceptos e comportamento do gráfico antes de substituir valores em todas as alternativas.',
+      'Se as alternativas são expressões, use um valor simples permitido pelo enunciado para eliminar várias de uma vez.'
+    ],66);
+  }
+
+  if(/geometr|área|volume|perímetro|triâng|círculo|quadrado|retâng/.test(text)){
+    return questionVariant(q,[
+      'Macete: antes da fórmula, estime a ordem de grandeza e confira a unidade. Uma resposta de área precisa terminar em unidade²; volume, em unidade³.',
+      'Se a figura é composta, calcule “forma maior − recortes” quando isso exigir menos contas do que somar várias partes.',
+      'Procure semelhança e proporcionalidade antes de usar trigonometria ou fórmulas longas; muitas questões do ENEM escondem uma razão simples.'
+    ],67);
+  }
+
+  if(q?.area==='Ciências da Natureza'){
+    return questionVariant(q,[
+      'Macete: faça análise dimensional antes da conta. Se a unidade da alternativa não pode sair das grandezas dadas, ela já está eliminada.',
+      'Use conservação como atalho sempre que couber: energia, carga, massa ou quantidade de matéria podem evitar uma sequência grande de fórmulas.',
+      'Se houver muitas fórmulas possíveis, escolha pela grandeza pedida e pelas unidades dos dados; não pela fórmula que você lembra primeiro.'
+    ],71);
+  }
+
+  if(q?.area==='Linguagens'){
+    return questionVariant(q,[
+      'Macete: desconfie de alternativas que usam termos absolutos como “sempre”, “apenas” ou “exclusivamente” quando o texto é mais nuançado.',
+      'Atalho: compare o verbo do comando com o núcleo de cada alternativa. Elimine as que tratam de outro efeito, mesmo que falem do mesmo tema.',
+      'Em interpretação, prefira a alternativa que pode ser apontada no texto. A que depende de conhecimento externo costuma ser uma distração.'
+    ],72);
+  }
+
+  if(q?.area==='Ciências Humanas'){
+    return questionVariant(q,[
+      'Macete: monte mentalmente uma mini linha do tempo. Alternativas com instituição, ideia ou evento fora do período podem ser eliminadas rápido.',
+      'Atalho: procure primeiro agente + ação + contexto. Se um desses três não combina com o texto, descarte a alternativa.',
+      'Quando duas opções parecem corretas, escolha pela relação pedida no comando — causa, consequência, comparação ou característica — e não só pelo conteúdo verdadeiro.'
+    ],73);
+  }
+
+  return questionVariant(q,[
+    'Macete: use as alternativas como ferramenta de verificação. Elimine primeiro as incompatíveis com unidade, contexto ou ordem de grandeza.',
+    'Atalho: resolva apenas até ter informação suficiente para distinguir as alternativas; não continue uma conta que já separou uma única opção.',
+    'Faça uma estimativa rápida antes da resolução completa. Ela funciona como controle para perceber erro de conta ou interpretação.'
+  ],79);
 }
 
 function buildAnswerExplanation(q,data,selected){
@@ -1460,7 +1647,7 @@ async function submitAnswer(option) {
   });
   $('.confirm-answer-wrap')?.remove();
   const detail=buildAnswerExplanation(state.current,data,option);
-  const hint=getQuestionHint(state.current);
+  const shortcut=getQuestionShortcut(state.current);
   const box=document.createElement('div');
   box.className='answer-panel '+(data.correct?'':'wrong');
   box.innerHTML=`
@@ -1505,18 +1692,18 @@ async function submitAnswer(option) {
     <div id="hintBox" class="hint-box hidden"></div>
 
     <div class="post-answer-actions premium-actions">
-      ${hint?'<button id="showHint">🐾 Ver macete</button>':''}
+      ${shortcut?'<button id="showHint">🐾 Ver macete</button>':''}
       <button id="askNexoAboutQuestion">✦ Perguntar ao Nexo</button>
       <button id="reviewQuestionTopic">↻ Treinar este tema</button>
       <button id="openComments">💬 Comentários</button>
       <button id="nextAfterAnswer" class="next-action">Próxima questão →</button>
     </div>`
   $('#questionCard').appendChild(box);
-  if(hint){
+  if(shortcut){
     $('#showHint').onclick=()=>{
       const h=$('#hintBox');
       h.classList.toggle('hidden');
-      h.innerHTML=`<h4>🐾 Macete do Professor Nexo</h4><p>${esc(hint)}</p>`;
+      h.innerHTML=`<h4>🐾 Macete do Professor Nexo</h4><p>${esc(shortcut)}</p>`;
     };
   }
   $('#askNexoAboutQuestion').onclick=()=>{
@@ -1609,7 +1796,7 @@ function renderSimulationReport(finished,report){
     <div class="simulation-report">
       <section class="sim-report-hero">
         <div class="sim-report-professor">
-          <img src="${NEXO_MOOD_IMAGES[mood]||NEXO_MOOD_IMAGES.serio}" alt="Professor Nexo">
+          <img src="${nexoBustForMood(mood)}" alt="Professor Nexo">
           <div><span>RELATÓRIO PÓS-PROVA · PROFESSOR NEXO</span><h3>${title}</h3><p>${simulationPaceCopy(report)}</p></div>
         </div>
         <div class="sim-report-score"><small>APROVEITAMENTO</small><b>${accuracy}%</b><span>${correct}/${attempts} acertos</span></div>
@@ -1721,7 +1908,7 @@ async function finishSession() {
     return;
   }
 
-  $('#questionCard').innerHTML=`<div class="empty-state session-finish-state"><img src="${NEXO_MOOD_IMAGES.confiante}" alt="Professor Nexo"><span>SESSÃO CONCLUÍDA</span><h3>Mais dados, uma recomendação melhor.</h3><p>Você terminou ${finished.size||0} questões. O NEXO Core já incorporou esse resultado ao seu perfil.</p><div><button id="newSameSession" class="primary-btn">Nova sessão igual</button><button id="backSetup" class="outline-btn">Trocar conteúdo</button></div></div>`;
+  $('#questionCard').innerHTML=`<div class="empty-state session-finish-state"><img src="${NEXO_MEDIA_IMAGES.bustConfiante}" alt="Professor Nexo"><span>SESSÃO CONCLUÍDA</span><h3>Mais dados, uma recomendação melhor.</h3><p>Você terminou ${finished.size||0} questões. O NEXO Core já incorporou esse resultado ao seu perfil.</p><div><button id="newSameSession" class="primary-btn">Nova sessão igual</button><button id="backSetup" class="outline-btn">Trocar conteúdo</button></div></div>`;
   $('#newSameSession').onclick=()=>startStudySession({
     mode:finished.mode||'manual',
     area:finished.area||'',
@@ -2032,7 +2219,7 @@ function showEssayResult(text,scores,total){
 
       <section class="essay-priority-card">
         <div class="essay-priority-prof">
-          <img src="${NEXO_MOOD_IMAGES.pensativo}" alt="Professor Nexo">
+          <img src="${NEXO_MEDIA_IMAGES.bustPensativo}" alt="Professor Nexo">
           <div><span>PRÓXIMA MISSÃO</span><h4>Melhorar ${shortComps[weak]} · ${comps[weak]}</h4><p>${esc(tips[weak])}</p></div>
         </div>
         <div class="essay-priority-actions">
@@ -2886,6 +3073,12 @@ $('#niaButton').onclick=()=>{
     setNexoMood(active==='redacao'?'serio':active==='questoes'?'pensativo':'feliz');
   }
 };
+$('#openNexoFromMenu')?.addEventListener('click',()=>{
+  toggleMenu(false);
+  $('#niaPanel').classList.remove('hidden');
+  const active=$('.page.active')?.id||'inicio';
+  setNexoMood(active==='redacao'?'serio':active==='questoes'?'pensativo':'feliz');
+});
 $('#closeNia').onclick=()=>$('#niaPanel').classList.add('hidden');
 $('#niaSend').onclick=()=>{const v=$('#niaInput').value;$('#niaInput').value='';askNia(v)};
 $('#niaInput').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#niaSend').click()}});
