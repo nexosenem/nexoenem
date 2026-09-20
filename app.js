@@ -178,6 +178,9 @@ const state = {
   materialSubject:'',
   materialOpenTopic:'',
   contentProgress:new Map(),
+  topicMastery:new Map(),
+  pendingGuidedTraining:null,
+  lastFinishedStudy:null,
   favorites:new Set(),
   activeViewer:null,
   progressSaveTimer:null,
@@ -2089,12 +2092,13 @@ async function resumePersistedStudySession(){
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
     const queue=saved.ids.map(id=>byId.get(Number(id))).filter(Boolean);
     if(!queue.length)throw new Error('session questions unavailable');
-    state.session={...saved,queue,size:queue.length,index:Math.min(Number(saved.index||0),queue.length-1),correctStreak:0,wrongStreak:0,answeredCount:0};
+    state.session={...saved,queue,size:queue.length,index:Math.min(Number(saved.index||0),queue.length-1),correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0}};
     openPage('questoes');
     $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
     $('#sessionAreaBadge').textContent=saved.mode==='core'?'NEXO Core':(saved.area||'Treino');
     $('#sessionTitle').textContent=saved.topic||saved.subject||saved.area||'Sessão retomada';
     $('#sessionSubtitle').textContent='Você voltou exatamente de onde parou.';
+    updateStudyNavigation(state.session);
     await showCurrentQuestion();
     toast('Sessão retomada.');
   }catch(err){
@@ -2213,12 +2217,13 @@ async function initApp(session) {
     loadSystemModules({silent:true}),
     loadVideos({silent:true}),
     loadMaterials({silent:true}),
+    loadTopicMastery(),
     loadSavedQuestions({render:false}),
     loadNexoWeekPlan({silent:true})
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
-      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais','questões salvas','Semana NEXO'];
+      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais','domínio por assunto','questões salvas','Semana NEXO'];
       console.error('bootstrap '+areas[index],result.reason);
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
@@ -2564,6 +2569,8 @@ function renderNexoCore(){
   });
   updateHomeExperience();
   renderTodayPlan();
+  renderNexoToday();
+  renderMathTrail();
   if(state.videos.length)renderVideos();
   if(state.materials.length)renderMaterials();
   $$('[data-core-start]').forEach(btn=>{
@@ -2773,6 +2780,24 @@ $('#startSession').onclick=async()=>{
   });
 };
 
+
+function updateStudyNavigation(config={}){
+  const crumb=$('#studyBreadcrumb');
+  const back=$('#backToContent');
+  const topic=config.topic||config.subject||config.area||'Treino';
+  if(crumb){
+    crumb.classList.toggle('hidden',!state.session);
+    const t=$('[data-study-breadcrumb-topic]',crumb);if(t)t.textContent=topic;
+  }
+  if(back){
+    const hasContent=Boolean(config.topic&&topicLesson(config.topic,config.subject||'Matemática'));
+    back.classList.toggle('hidden',!hasContent);
+    back.onclick=()=>hasContent?openLibraryTopic(config.subject||'Matemática',config.topic):openPage('inicio');
+  }
+}
+$('[data-study-back-home]')?.addEventListener('click',()=>openPage('inicio'));
+$('[data-study-back-library]')?.addEventListener('click',()=>openPage('materiais'));
+
 async function startStudySession(config) {
   if(blockMaintenance('questions'))return;
   if(['core','adaptive'].includes(config?.mode)&&blockMaintenance('core'))return;
@@ -2796,12 +2821,13 @@ async function startStudySession(config) {
     const size=Math.min(config.size||10,fresh.length);
     const queue=fresh.slice(0,size);
     const coreSessionId=await beginNexoSession(config,queue.length);
-    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0};
+    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0}};
     $('#sessionSetup').classList.add('hidden');
     $('#studyWorkspace').classList.remove('hidden');
     $('#sessionAreaBadge').textContent=config.area||'Treino';
     $('#sessionTitle').textContent=config.topic ? config.topic : (config.subject||config.area||'Sessão');
     $('#sessionSubtitle').textContent=reviewMode?'Modo revisão: você já respondeu todas as questões novas deste filtro.':'Sua sessão está fixa neste conteúdo até você decidir trocar.';
+    updateStudyNavigation(state.session);
     persistStudySession();
     await showCurrentQuestion();
   }catch(err){
@@ -3725,6 +3751,15 @@ async function submitAnswer(option) {
   const game=data.gamification||{};
   const previousJourneyLevel=Number(state.journey?.profile?.level||0);
   state.lastAnswer={...data,duration_seconds:duration,first_selection_seconds:firstSelectionSeconds,selection_changes:selectionChanges,hint_count:hintCount,nexo_reaction:reaction};
+  if(state.session){
+    const stats=state.session.resultStats||{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0};
+    stats.totalSeconds+=duration;
+    if(data.correct){stats.correct++;stats.correctIds.push(Number(state.current.id))}
+    else{stats.wrong++;stats.wrongIds.push(Number(state.current.id))}
+    stats.xp+=Number(game.xp_gained||0);
+    stats.coins+=Number(game.coins_gained||0);
+    state.session.resultStats=stats;
+  }
   const correct=Number(data.correct_option);
   $$('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected');
@@ -3840,13 +3875,15 @@ async function submitAnswer(option) {
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
   setNexoMood(reaction.mood);
+  try{if(navigator.vibrate)navigator.vibrate(data.correct?[24]:[35,35,35])}catch(_){}
   Promise.all([
     loadDashboard(),
     loadNexoCore(),
     loadRecentAttempts(),
     loadNexoMembership({silent:true}),
     loadNexoJourney({silent:true}),
-    loadNexoWeekPlan({silent:true})
+    loadNexoWeekPlan({silent:true}),
+    loadTopicMastery()
   ]).catch(err=>console.error('refresh after answer',err));
 }
 
@@ -4784,6 +4821,187 @@ function externalEmbedUrl(url=''){
   return '';
 }
 
+
+async function loadTopicMastery(){
+  if(!state.user?.id)return state.topicMastery;
+  try{
+    const [{data:attempts,error:attemptError},{data:radarRows,error:radarError}]=await Promise.all([
+      client.from('question_attempts')
+        .select('question_id,is_correct,duration_seconds,created_at,question:questions(source_year,source_question_number,area,subject,topic)')
+        .order('created_at',{ascending:false})
+        .limit(500),
+      client.from('enem_radar_items')
+        .select('year,question_index,area,subject,topic')
+        .eq('area','Matemática')
+        .limit(1000)
+    ]);
+    if(attemptError)throw attemptError;
+    const radarMap=new Map();
+    if(!radarError){
+      for(const row of radarRows||[])radarMap.set(String(row.year)+'::'+String(row.question_index),row);
+    }
+    const map=new Map();
+    for(const a of attempts||[]){
+      const q=a.question||{};
+      const fine=radarMap.get(String(q.source_year)+'::'+String(q.source_question_number));
+      const topic=fine?.topic||q.topic||q.subject||q.area||'Geral';
+      const key=String(topic);
+      const row=map.get(key)||{topic:key,attempts:0,correct:0,totalSeconds:0,lastAt:null};
+      row.attempts++;
+      if(a.is_correct)row.correct++;
+      row.totalSeconds+=Number(a.duration_seconds||0);
+      const at=a.created_at?new Date(a.created_at):null;
+      if(at&&(!row.lastAt||at>row.lastAt))row.lastAt=at;
+      map.set(key,row);
+    }
+    for(const row of map.values()){
+      row.accuracy=row.attempts?Math.round(row.correct*100/row.attempts):0;
+      row.avgSeconds=row.attempts?Math.round(row.totalSeconds/row.attempts):0;
+    }
+    state.topicMastery=map;
+  }catch(err){
+    console.error('topic mastery',err);
+    logClientError('learning',err,'topic_mastery');
+  }
+  renderNexoToday();
+  renderMathTrail();
+  if(state.materials.length)renderMaterials();
+  return state.topicMastery;
+}
+
+function topicMaterials(topic,subject='Matemática'){
+  return (state.materials||[]).filter(m=>
+    String(m.topic||'').toLocaleLowerCase('pt-BR')===String(topic||'').toLocaleLowerCase('pt-BR') &&
+    (!subject||!m.subject||String(m.subject).toLocaleLowerCase('pt-BR')===String(subject).toLocaleLowerCase('pt-BR'))
+  );
+}
+
+function topicLesson(topic,subject='Matemática'){
+  return topicMaterials(topic,subject).find(m=>materialKind(m).key==='lesson')||topicMaterials(topic,subject)[0]||null;
+}
+
+function topicLearningMeta(topic,subject='Matemática'){
+  const materials=topicMaterials(topic,subject);
+  const mastery=state.topicMastery.get(String(topic))||{attempts:0,accuracy:0,avgSeconds:0,lastAt:null};
+  const completed=materials.filter(m=>getContentProgress('material',m.id).completed).length;
+  const progress=materials.length
+    ? Math.round(materials.reduce((sum,m)=>sum+(getContentProgress('material',m.id).completed?100:Number(getContentProgress('material',m.id).progress_percent||0)),0)/materials.length)
+    : 0;
+  let label='NOVO',key='new';
+  if(mastery.attempts>=5&&mastery.accuracy>=80){label='DOMINADO';key='mastered'}
+  else if(mastery.attempts>=3&&mastery.accuracy<55){label='REVISAR';key='review'}
+  else if(mastery.attempts>=3&&mastery.accuracy>=65){label='CONSOLIDANDO';key='consolidating'}
+  else if(mastery.attempts>0){label='EM TREINO';key='training'}
+  else if(progress>0||completed>0){label='APRENDENDO';key='learning'}
+  return {...mastery,materials,completed,progress,label,key};
+}
+
+function openLibraryTopic(subject,topic){
+  openPage('materiais');
+  Promise.resolve(loadMaterials({silent:true})).then(()=>{
+    if(subject)state.materialSubject=subject;
+    const key=[subject||'Conteúdo',topic||'Materiais'].join('||');
+    state.materialOpenTopic=key;
+    renderMaterials();
+    setTimeout(()=>{
+      const nodes=$('.content-topic-group');
+      const target=nodes.find(el=>el.querySelector('.content-topic-name h3')?.textContent?.trim()===String(topic||'').trim());
+      target?.scrollIntoView({behavior:'smooth',block:'start'});
+    },80);
+  });
+}
+
+function spacedReviewCandidate(){
+  const now=Date.now();
+  const lessons=(state.materials||[]).filter(m=>materialKind(m).key==='lesson');
+  return lessons.map(item=>{
+    const p=getContentProgress('material',item.id);
+    const opened=p.last_opened_at?new Date(p.last_opened_at).getTime():0;
+    return {item,p,days:opened?Math.floor((now-opened)/86400000):0};
+  }).filter(x=>x.p.completed&&x.days>=7)
+    .sort((a,b)=>b.days-a.days)[0]||null;
+}
+
+function renderNexoToday(){
+  const cards=$('[data-nexo-today]');
+  if(!cards.length)return;
+  const saved=readPersistedStudySession();
+  const partial=(state.materials||[])
+    .map(item=>({item,p:getContentProgress('material',item.id)}))
+    .filter(x=>Number(x.p.progress_percent||0)>0&&!x.p.completed)
+    .sort((a,b)=>new Date(b.p.last_opened_at||0)-new Date(a.p.last_opened_at||0))[0];
+  const review=spacedReviewCandidate();
+  const rec=state.core?.recommended_action||null;
+  const radarMath=(state.radarTopics||[]).filter(r=>r.area==='Matemática').sort((a,b)=>Number(b.nexo_priority_score||0)-Number(a.nexo_priority_score||0));
+  const firstIncomplete=radarMath.find(r=>topicLearningMeta(r.topic,r.subject).key!=='mastered');
+
+  let title='Comece pelo assunto que mais retorna pontos.';
+  let text='O NEXO vai conectar conteúdo, treino e revisão para você não estudar no escuro.';
+  let status='PRÓXIMO PASSO',time='~12 min',mood='pensativo',action=()=>openPage('materiais'),actionLabel='Abrir Biblioteca →';
+
+  if(saved){
+    title='Continue '+(saved.topic||saved.subject||saved.area||'sua sessão')+'.';
+    text='Você tem uma sessão em andamento. Volte exatamente à questão em que parou.';
+    status='CONTINUAR',time=(Math.max(1,Number(saved.size||0)-Number(saved.index||0)))+' questões',mood='confiante';
+    action=()=>resumePersistedStudySession(); actionLabel='Continuar sessão →';
+  }else if(partial?.item){
+    const kind=materialKind(partial.item);
+    title='Continue '+(partial.item.topic||partial.item.title)+'.';
+    text=(kind.label||'Conteúdo')+' está em '+Math.round(Number(partial.p.progress_percent||0))+'%. Termine essa etapa antes do próximo treino.';
+    status='DE ONDE PAROU';time='~6 min';mood='acolhedor';
+    action=()=>{openPage('materiais');setTimeout(()=>openContentViewer('material',partial.item.id),100)};actionLabel='Continuar conteúdo →';
+  }else if(review){
+    title='Hora de revisar '+review.item.topic+'.';
+    text='Faz '+review.days+' dias desde a última abertura. Uma revisão curta agora ajuda a manter o conteúdo ativo.';
+    status='REVISÃO ESPAÇADA';time='3 questões';mood='serio';
+    action=()=>startContentPractice(review.item,true,3);actionLabel='Revisar agora →';
+  }else if(rec?.topic){
+    title=(rec.topic||rec.subject)+' é seu melhor próximo passo.';
+    text=rec.reason||'O NEXO Core encontrou uma boa oportunidade de evolução.';
+    status='RECOMENDADO PELO CORE';time='~10 min';mood=Number(rec.priority||0)>=70?'pensativo':'confiante';
+    action=()=>{
+      const item=topicLesson(rec.topic,rec.subject);
+      item?openLibraryTopic(item.subject,item.topic):startCoreRecommendation();
+    };
+    actionLabel=topicLesson(rec.topic,rec.subject)?'Estudar recomendação →':'Começar recomendação →';
+  }else if(firstIncomplete){
+    const meta=topicLearningMeta(firstIncomplete.topic,firstIncomplete.subject);
+    title='Próximo: '+firstIncomplete.topic+'.';
+    text='Prioridade '+Math.round(Number(firstIncomplete.nexo_priority_score||0))+' no Radar · '+Number(firstIncomplete.questions||0)+' questões mapeadas.';
+    status=meta.label;time='~12 min';mood='pensativo';
+    action=()=>openLibraryTopic(firstIncomplete.subject,firstIncomplete.topic);actionLabel='Começar assunto →';
+  }
+
+  const img=nexoBustForMood(mood);
+  cards.forEach(card=>{
+    const avatar=$('[data-nexo-today-avatar]',card);if(avatar)setNexoImage(avatar,img);
+    const titleEl=$('[data-nexo-today-title]',card);if(titleEl)titleEl.textContent=title;
+    const textEl=$('[data-nexo-today-text]',card);if(textEl)textEl.textContent=text;
+    const statusEl=$('[data-nexo-today-status]',card);if(statusEl)statusEl.textContent=status;
+    const timeEl=$('[data-nexo-today-time]',card);if(timeEl)timeEl.textContent=time;
+    const btn=$('[data-nexo-today-action]',card);if(btn){btn.textContent=actionLabel;btn.onclick=action}
+  });
+}
+
+function renderMathTrail(){
+  const roots=$('[data-math-trail]');
+  if(!roots.length)return;
+  const rows=(state.radarTopics||[]).filter(r=>r.area==='Matemática').sort((a,b)=>Number(b.nexo_priority_score||0)-Number(a.nexo_priority_score||0));
+  const html=rows.length?rows.map((row,index)=>{
+    const meta=topicLearningMeta(row.topic,row.subject);
+    const score=meta.attempts?meta.accuracy:meta.progress;
+    return '<button class="trail-node '+meta.key+'" data-trail-topic="'+encodeURIComponent(row.topic)+'" data-trail-subject="'+encodeURIComponent(row.subject||'Matemática')+'">'+
+      '<span class="trail-index">'+String(index+1).padStart(2,'0')+'</span>'+
+      '<div class="trail-copy"><small>'+esc(meta.label)+'</small><b>'+esc(row.topic)+'</b><div class="trail-track"><i style="width:'+clamp(score,0,100)+'%"></i></div></div>'+
+      '<div class="trail-score"><b>'+Math.round(score)+'%</b><small>'+(meta.attempts?meta.attempts+' questões':meta.completed+'/'+Math.max(1,meta.materials.length)+' conteúdos')+'</small></div>'+
+      '<i class="trail-arrow">→</i></button>';
+  }).join(''):'<p class="trail-empty">Carregando sua trilha...</p>';
+  roots.forEach(root=>{
+    root.innerHTML=html;
+    $('[data-trail-topic]',root).forEach(btn=>btn.onclick=()=>openLibraryTopic(decodeURIComponent(btn.dataset.trailSubject||''),decodeURIComponent(btn.dataset.trailTopic||'')));
+  });
+}
+
 function contentMatchesCore(item){
   const rec=state.core?.recommended_action;
   if(!rec||!item)return false;
@@ -4804,7 +5022,59 @@ function wireContentCards(){
   $$('[data-content-fav]').forEach(b=>b.onclick=e=>{e.stopPropagation();toggleContentFavorite(b.dataset.contentType,Number(b.dataset.contentFav))});
 }
 
-async function startContentPractice(item){
+
+function showGuidedTraining(item,{source='content',size=5}={}){
+  if(!item)return false;
+  const lesson=topicLesson(item.topic,item.subject)||item;
+  const lessonProgress=getContentProgress('material',lesson.id);
+  if(lessonProgress.completed)return false;
+  state.pendingGuidedTraining={item,lesson,source,size};
+  const modal=$('#guidedTrainingModal');
+  if(!modal)return false;
+  const meta=topicLearningMeta(item.topic,item.subject);
+  $('#guidedTrainingTitle').textContent='Antes de treinar '+(item.topic||item.subject||'este assunto')+'.';
+  $('#guidedTrainingText').textContent=meta.attempts
+    ? 'Você já tem '+meta.attempts+' resposta(s) neste assunto e '+meta.accuracy+'% de acerto. Uma revisão curta pode deixar a próxima sessão mais eficiente.'
+    : 'Você ainda não concluiu a Aula NEXO deste assunto. Estudar primeiro dá contexto para as questões e melhora a revisão dos erros.';
+  $('#guidedProfessorImage')&&setNexoImage($('#guidedProfessorImage'),nexoBustForMood(meta.attempts&&meta.accuracy<60?'acolhedor':'pensativo'));
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  return true;
+}
+
+function closeGuidedTraining(){
+  $('#guidedTrainingModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+}
+
+async function launchGuidedTrainingNow(){
+  const pending=state.pendingGuidedTraining;
+  closeGuidedTraining();
+  state.pendingGuidedTraining=null;
+  if(pending?.item)await startContentPractice(pending.item,true,pending.size||5);
+}
+
+async function openGuidedLesson(){
+  const pending=state.pendingGuidedTraining;
+  closeGuidedTraining();
+  state.pendingGuidedTraining=null;
+  if(!pending?.lesson)return;
+  openPage('materiais');
+  await loadMaterials({silent:true});
+  state.materialSubject=pending.lesson.subject||pending.lesson.area||state.materialSubject;
+  state.materialOpenTopic=[pending.lesson.subject||pending.lesson.area||'Conteúdo',pending.lesson.topic||'Materiais'].join('||');
+  renderMaterials();
+  setTimeout(()=>openContentViewer('material',pending.lesson.id),80);
+}
+
+$('#closeGuidedTraining')?.addEventListener('click',()=>{closeGuidedTraining();state.pendingGuidedTraining=null});
+$('#guidedTrainingModal')?.addEventListener('click',e=>{if(e.target===$('#guidedTrainingModal')){closeGuidedTraining();state.pendingGuidedTraining=null}});
+$('#guidedStudyFirst')?.addEventListener('click',openGuidedLesson);
+$('#guidedTestNow')?.addEventListener('click',launchGuidedTrainingNow);
+
+async function startContentPractice(item,skipGate=false,size=5){
+  if(!item)return;
+  if(!skipGate&&showGuidedTraining(item,{source:'content',size}))return;
   const radarTopic=item?.topic||'';
   const fallbackTopic=radarTrainingTopic(item?.subject||'',radarTopic)||radarTopic;
   closeContentViewer();
@@ -4816,9 +5086,10 @@ async function startContentPractice(item){
     topic:radarTopic,
     radarTopic,
     fallbackTopic,
+    sourceContentId:Number(item.id||0)||null,
     difficulty:'',
     visualOnly:false,
-    size:5
+    size:Number(size||5)
   });
   if(state.session){
     $('#sessionAreaBadge').textContent='Revisão';
@@ -4916,6 +5187,8 @@ async function openContentViewer(type,id){
   updateViewerFavoriteButton();
   const complete=$('#viewerComplete');
   if(complete)complete.textContent=current.completed?'✓ Concluído':'Marcar como concluído';
+  const checkpoint=$('#viewerCheckpoint');
+  if(checkpoint)checkpoint.classList.toggle('hidden',!(type==='material'&&materialKind(item).key==='lesson'));
 }
 
 async function markViewerComplete(){
@@ -4928,6 +5201,8 @@ async function markViewerComplete(){
   await saveContentProgress(viewer.type,viewer.item.id,{seconds,percent:100,completed:true});
   $('#viewerComplete').textContent='✓ Concluído';
   viewer.type==='video'?renderVideos():renderMaterials();
+  renderNexoToday();
+  renderMathTrail();
   toast('Conteúdo marcado como concluído.');
 }
 
@@ -4956,6 +5231,10 @@ window.addEventListener('message',e=>{
   if(v?.item)startContentPractice(v.item);
 });
 $('#viewerSpeed')?.addEventListener('change',e=>{const p=$('#contentVideoPlayer');if(p)p.playbackRate=Number(e.target.value||1)});
+$('#viewerCheckpoint')?.addEventListener('click',()=>{
+  const v=state.activeViewer;
+  if(v?.type==='material'&&v.item)startContentPractice(v.item,true,2);
+});
 
 async function loadVideos({silent=false}={}) {
   const grid=$('#videoGrid');
