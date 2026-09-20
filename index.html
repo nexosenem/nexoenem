@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-22">
+  <link rel="stylesheet" href="./styles.css?v=20260920-23">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -119,18 +119,23 @@
           <div class="mobile-home">
             <article class="mobile-hero">
               <div>
-                <span class="eyebrow">NEXO ENEM</span>
+                <span class="eyebrow">NEXO ENEM · <b id="mobileHomeGreeting">SEU PLANO DE HOJE</b></span>
                 <h1>Mais que estudo,<br><span>um novo futuro.</span></h1>
-                <p>Continue de onde parou ou escolha uma área.</p>
+                <p id="mobileHeroSubtitle">Continue de onde parou ou siga a recomendação do NEXO Core.</p>
               </div>
               <button class="primary-btn" data-page="questoes">Continuar <b>→</b></button>
-              <div class="mobile-hero-orbit" aria-hidden="true"><i></i><b>N</b></div>
+              <div class="mobile-nexo-stage" aria-hidden="true">
+                <span class="nexo-glow"></span>
+                <img src="./assets/nexo-expressions/confiante.webp" alt="">
+                <i class="nexo-float-chip chip-a">FOCO</i>
+                <i class="nexo-float-chip chip-b">EVOLUÇÃO</i>
+              </div>
             </article>
 
             <article class="mobile-core-card nexo-core-card core-empty">
               <div class="core-topline"><span>✦ NEXO CORE</span><small data-core-status>calibrando</small></div>
               <div class="core-main">
-                <div class="core-avatar">N</div>
+                <div class="core-avatar"><img data-core-avatar src="./assets/nexo-expressions/pensativo.webp" alt="Professor Nexo"></div>
                 <div>
                   <h3 data-core-title>Seu próximo melhor passo</h3>
                   <p data-core-reason>Resolva algumas questões para eu montar uma recomendação baseada no seu desempenho real.</p>
@@ -198,17 +203,20 @@
             <div class="dashboard-main">
               <article class="hero-card">
                 <div class="hero-copy">
-                  <span class="eyebrow">NEXO ENEM</span>
+                  <span class="eyebrow">NEXO ENEM · <b id="desktopHomeGreeting">SEU PLANO DE HOJE</b></span>
                   <h1>Mais que estudo,<br><span>um novo futuro.</span></h1>
-                  <p><b>500 questões reais</b> dos cadernos ENEM • sessões por matéria • recursos visuais • redação • análises personalizadas.</p>
+                  <p id="desktopHeroSubtitle"><b>500 questões reais</b> dos cadernos ENEM • sessões adaptativas • redação • análises personalizadas pelo NEXO Core.</p>
                   <div class="hero-actions">
                     <button class="primary-btn" id="continueStudy">Continuar estudando <b>→</b></button>
                     <button class="outline-btn" data-page="desempenho">▥ Ver meu desempenho</button>
                   </div>
                 </div>
-                <div class="hero-art" aria-hidden="true">
-                  <div class="planet"></div><div class="portal"></div><div class="student"></div>
-                  <blockquote>“O esforço de hoje<br>é a liberdade de amanhã.”</blockquote>
+                <div class="hero-art hero-nexo-art" aria-hidden="true">
+                  <div class="hero-nexo-aura"></div>
+                  <img class="home-nexo-mascot" src="./assets/nexo-expressions/confiante.webp" alt="">
+                  <div class="hero-nexo-chip hero-chip-top"><b>PROFESSOR NEXO</b><span>estratégia em tempo real</span></div>
+                  <div class="hero-nexo-chip hero-chip-bottom"><b>✦ NEXO CORE</b><span id="heroCoreHint">analisando seu próximo foco</span></div>
+                  <blockquote>“Disciplina hoje.<br>Liberdade amanhã.”</blockquote>
                 </div>
               </article>
 
@@ -269,7 +277,7 @@
               <article class="panel nexo-core-card core-empty">
                 <div class="core-topline"><span>✦ NEXO CORE</span><small data-core-status>calibrando</small></div>
                 <div class="core-main">
-                  <div class="core-avatar">N</div>
+                  <div class="core-avatar"><img data-core-avatar src="./assets/nexo-expressions/pensativo.webp" alt="Professor Nexo"></div>
                   <div>
                     <h3 data-core-title>Seu próximo melhor passo</h3>
                     <p data-core-reason>Resolva algumas questões para eu transformar seus dados em uma recomendação de estudo.</p>
@@ -300,6 +308,11 @@
 
           <article id="sessionSetup" class="session-setup panel">
             <div class="setup-title"><div><span class="eyebrow">NOVA SESSÃO</span><h3>O que você quer estudar?</h3></div><span class="setup-chip">sem troca aleatória</span></div>
+            <div class="nexo-guide-card">
+              <img src="./assets/nexo-expressions/pensativo.webp" alt="Professor Nexo">
+              <div><b>Professor Nexo acompanha a sessão</b><p>Eu observo acertos, erros e tempo por questão para atualizar seu NEXO Core e melhorar a próxima recomendação.</p></div>
+              <button type="button" data-nia="Qual treino você recomenda para mim?">Perguntar ao Nexo</button>
+            </div>
             <div class="study-area-grid" id="studyAreaGrid">
               <button data-study-area="Linguagens"><span>A</span><b>Linguagens</b></button>
               <button data-study-area="Ciências Humanas"><span>◎</span><b>Humanas</b></button>
@@ -334,7 +347,10 @@
         </section>
 
         <section class="page" id="redacao">
-          <div class="page-head"><div><span class="eyebrow">REDAÇÃO</span><h2>Laboratório de Redação</h2><p>Escreva no celular ou computador e mantenha seu histórico salvo.</p></div></div>
+          <div class="page-head nexo-page-head">
+            <div><span class="eyebrow">REDAÇÃO · PROFESSOR NEXO</span><h2>Laboratório de Redação</h2><p>Escreva, receba uma análise por competência e transforme a correção em uma próxima ação de estudo.</p></div>
+            <div class="page-nexo-mentor"><img src="./assets/nexo-expressions/serio.webp" alt="Professor Nexo"><span><b>Correção orientada</b><small>competências • observações • próxima versão</small></span></div>
+          </div>
           <div class="essay-layout">
             <article class="panel essay-editor">
               <label>Tema<select id="essayTheme"></select></label>
@@ -353,7 +369,10 @@
         </section>
 
         <section class="page" id="desempenho">
-          <div class="page-head"><div><span class="eyebrow">ANÁLISES</span><h2>Meu Desempenho</h2><p>Dados sincronizados com sua conta.</p></div></div>
+          <div class="page-head nexo-page-head">
+            <div><span class="eyebrow">ANÁLISES · NEXO CORE</span><h2>Meu Desempenho</h2><p>Mais do que porcentagens: veja onde você está evoluindo e qual conteúdo merece atenção agora.</p></div>
+            <div class="page-nexo-mentor"><img src="./assets/nexo-expressions/confiante.webp" alt="Professor Nexo"><span><b>Leitura inteligente</b><small>domínio • ritmo • prioridades</small></span></div>
+          </div>
           <div class="stats-grid" id="statsGrid"></div>
           <div class="analysis-grid">
             <article class="panel"><h3>Desempenho por área</h3><div id="areaPerformance" class="performance-list"></div></article>
@@ -521,6 +540,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-20"></script>
+  <script src="./app.js?v=20260920-21"></script>
 </body>
 </html>
