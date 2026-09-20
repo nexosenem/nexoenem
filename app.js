@@ -774,6 +774,11 @@ function renderOnboardingStep(){
       title:'O melhor plano é o que cabe na rotina.',
       text:'Eu prefiro 30 minutos consistentes a duas horas que nunca acontecem. Escolha um tempo que você consegue sustentar.',
       image:NEXO_MEDIA_IMAGES.bustAcolhedor
+    },
+    5:{
+      title:'Agora eu posso calibrar seu ponto de partida.',
+      text:'Um diagnóstico curto me ajuda a escolher melhor a dificuldade e os assuntos iniciais. Se preferir, você pode estudar primeiro.',
+      image:NEXO_MEDIA_IMAGES.bustPensativo
     }
   };
   const mentor=mentorMap[Number(ob.step)]||{
@@ -817,6 +822,7 @@ function openNexoOnboarding(manual=false){
     goalScore:Number(state.profile?.goal_score||750),
     areas:Array.isArray(state.profile?.difficult_areas)?[...state.profile.difficult_areas]:[],
     dailyMinutes:Number(state.profile?.daily_minutes||60),
+    diagnostic:true,
     saving:false,
     manual:Boolean(manual),
     avatar:normalizedAvatar(state.journey?.profile?.avatar||starterAvatarForBase(state.registerBase||'neutral'))
@@ -876,9 +882,29 @@ async function saveNexoOnboarding(){
     closeNexoOnboarding();
     await loadNexoCore();
     updateHomeExperience();
-    openPage('inicio');
     setNexoMood('confiante');
-    toast(ob.manual?'Seu plano foi atualizado.':'Seu primeiro plano está pronto.');
+    if(!ob.manual&&ob.diagnostic){
+      const diagnosticSize=onboardingMissionSize(ob.dailyMinutes);
+      openPage('questoes');
+      await startStudySession({
+        mode:'diagnostic',
+        area:ob.areas[0]||'',
+        subject:'',
+        topic:'',
+        difficulty:'',
+        visualOnly:false,
+        size:diagnosticSize
+      });
+      if(state.session){
+        $('#sessionAreaBadge').textContent='DIAGNÓSTICO';
+        $('#sessionTitle').textContent='Calibração inicial';
+        $('#sessionSubtitle').textContent='Não vale nota. Use estas questões para eu conhecer seu ponto de partida.';
+      }
+      toast('Diagnóstico iniciado. Depois eu ajusto sua rota.');
+    }else{
+      openPage('inicio');
+      toast(ob.manual?'Seu plano foi atualizado.':'Seu primeiro plano está pronto.');
+    }
   }catch(err){
     console.error('onboarding save',err);
     logClientError('onboarding',err,'onboarding_save');
@@ -924,9 +950,13 @@ $$('[data-onboarding-area]').forEach(btn=>btn.onclick=()=>{
   }
   renderOnboardingStep();
 });
-$$('[data-onboarding-minutes]').forEach(btn=>btn.onclick=()=>{
+$('[data-onboarding-minutes]').forEach(btn=>btn.onclick=()=>{
   state.onboarding.dailyMinutes=Number(btn.dataset.onboardingMinutes);
   renderOnboardingStep();
+});
+$('[data-onboarding-diagnostic]').forEach(btn=>btn.onclick=()=>{
+  state.onboarding.diagnostic=btn.dataset.onboardingDiagnostic!=='no';
+  $('[data-onboarding-diagnostic]').forEach(x=>x.classList.toggle('active',x===btn));
 });
 $('#onboardingBack').onclick=()=>{
   try{
@@ -3668,7 +3698,8 @@ function formatAnswerReactionTime(seconds){
   return sec?m+'m '+sec+'s':m+' min';
 }
 
-function buildImmediateNexoReaction(q,data,duration){
+function buildImmediateNexoReaction(q,data,duration,behavior={}){
+
   const session=state.session||{};
   const difficulty=Number(q?.difficulty||0);
 
@@ -3686,6 +3717,16 @@ function buildImmediateNexoReaction(q,data,duration){
   const slow=Number(duration)>=180;
   const verySlow=Number(duration)>=240;
   const hard=difficulty>=4;
+  const firstSelection=Number(behavior.firstSelectionSeconds||0);
+  const changes=Number(behavior.selectionChanges||0);
+  const hints=Number(behavior.hintCount||0);
+  const likelyPattern=!data.correct
+    ? (Number(duration)>=180?'tempo'
+      : firstSelection>0&&firstSelection<=12?'pressa'
+      : changes>=2?'indecisão'
+      : hints>0?'apoio'
+      : 'conteúdo')
+    : (Number(duration)>=180?'tempo':'acerto');
 
   let mood='confiante';
   let title='Boa leitura. Agora vamos consolidar.';
@@ -3693,7 +3734,22 @@ function buildImmediateNexoReaction(q,data,duration){
   let badge='ACERTO';
 
   if(!data.correct){
-    if(slow||hard){
+    if(likelyPattern==='pressa'){
+      mood='serio';
+      title='Você decidiu rápido demais para o tamanho da questão.';
+      text='O sinal aqui é de leitura apressada. Na próxima, destaque o comando e só então compare as alternativas.';
+      badge='LEITURA · PRESSA';
+    }else if(likelyPattern==='indecisão'){
+      mood='pensativo';
+      title='Você ficou entre caminhos. Vamos reduzir a indecisão.';
+      text='Houve várias trocas de alternativa. Tente definir primeiro qual evidência do enunciado precisa aparecer na resposta.';
+      badge='DECISÃO';
+    }else if(likelyPattern==='apoio'){
+      mood='acolhedor';
+      title='A pista ajudou, mas o método ainda precisa ficar seu.';
+      text='Use a explicação para reconstruir o raciocínio sem depender da dica na próxima tentativa.';
+      badge='CONSOLIDAR MÉTODO';
+    }else if(slow||hard){
       mood='pensativo';
       title='Vamos destravar o raciocínio.';
       text=verySlow
@@ -3736,7 +3792,8 @@ function buildImmediateNexoReaction(q,data,duration){
     streak,
     wrongStreak,
     duration:Number(duration||0),
-    difficulty
+    difficulty,
+    likelyPattern
   };
 }
 async function submitAnswer(option) {
@@ -3795,7 +3852,9 @@ async function submitAnswer(option) {
     return;
   }
 
-  const reaction=buildImmediateNexoReaction(state.current,data,duration);
+  const reaction=buildImmediateNexoReaction(state.current,data,duration,{
+    firstSelectionSeconds,selectionChanges,hintCount
+  });
   const game=data.gamification||{};
   const previousJourneyLevel=Number(state.journey?.profile?.level||0);
   state.lastAnswer={...data,duration_seconds:duration,first_selection_seconds:firstSelectionSeconds,selection_changes:selectionChanges,hint_count:hintCount,nexo_reaction:reaction};
@@ -4382,13 +4441,118 @@ async function startErrorReview(){
   }
 }
 
+
+function classifyAttemptPattern(a){
+  if(a?.is_correct)return null;
+  const duration=Number(a?.duration_seconds||0);
+  const first=Number(a?.first_selection_seconds||0);
+  const changes=Number(a?.selection_changes||0);
+  const hints=Number(a?.hint_count||0);
+  if(duration>=180)return {key:'time',label:'Tempo alto',icon:'◷',help:'Você chega à resposta tarde ou trava no caminho.'};
+  if(first>0&&first<=12)return {key:'rush',label:'Leitura / pressa',icon:'↯',help:'A primeira decisão veio cedo demais para o enunciado.'};
+  if(changes>=2)return {key:'decision',label:'Indecisão',icon:'⇄',help:'Você alterna entre alternativas antes de confirmar.'};
+  if(hints>0)return {key:'hint',label:'Dependência de pista',icon:'✦',help:'A dica está ajudando mais do que o método consolidado.'};
+  return {key:'content',label:'Conteúdo / método',icon:'▣',help:'O principal sinal é lacuna de conceito ou procedimento.'};
+}
+
+async function loadLearningIntelligence(){
+  if(!state.user?.id)return {patterns:[],attempts:[]};
+  try{
+    const {data,error}=await client.from('question_attempts')
+      .select('is_correct,duration_seconds,first_selection_seconds,selection_changes,hint_count,created_at,question:questions(area,subject,topic)')
+      .order('created_at',{ascending:false})
+      .limit(120);
+    if(error)throw error;
+    const attempts=data||[];
+    const counts=new Map();
+    for(const a of attempts){
+      const pattern=classifyAttemptPattern(a);
+      if(!pattern)continue;
+      const row=counts.get(pattern.key)||{...pattern,count:0};
+      row.count++;counts.set(pattern.key,row);
+    }
+    const patterns=[...counts.values()].sort((a,b)=>b.count-a.count);
+    state.learningIntelligence={patterns,attempts};
+    return state.learningIntelligence;
+  }catch(err){
+    console.error('learning intelligence',err);
+    logClientError('performance',err,'learning_intelligence');
+    return {patterns:[],attempts:[]};
+  }
+}
+
+function renderErrorPatternMap(intel=state.learningIntelligence||{}){
+  const el=$('#errorPatternMap');if(!el)return;
+  const patterns=intel.patterns||[];
+  const total=patterns.reduce((s,x)=>s+Number(x.count||0),0);
+  if($('#errorPatternStatus'))$('#errorPatternStatus').textContent=total?total+' erro'+(total===1?'':'s')+' analisados':'sem dados';
+  if(!patterns.length){
+    el.innerHTML='<p class="learning-empty">Responda algumas questões para eu separar os padrões prováveis dos seus erros.</p>';
+    return;
+  }
+  const max=Math.max(...patterns.map(x=>Number(x.count||0)),1);
+  el.innerHTML=patterns.map((x,index)=>'<article class="error-pattern-row '+(index===0?'primary':'')+'">'+
+    '<span class="error-pattern-icon">'+x.icon+'</span>'+
+    '<div><b>'+esc(x.label)+'</b><small>'+esc(x.help)+'</small><i><em style="width:'+Math.round(Number(x.count||0)*100/max)+'%"></em></i></div>'+
+    '<strong>'+Number(x.count||0)+'</strong></article>').join('')+
+    '<p class="error-pattern-note">Esses padrões são sinais comportamentais estimados a partir de tempo, trocas de alternativa e uso de pistas; não são diagnósticos definitivos.</p>';
+}
+
+function reviewQueueItems(){
+  const lessons=(state.materials||[]).filter(m=>materialKind(m).key==='lesson');
+  return lessons.map(item=>({item,meta:topicLearningMeta(item.topic,item.subject)}))
+    .filter(x=>x.meta.reviewDue||x.meta.key==='review')
+    .sort((a,b)=>Number(b.meta.reviewDue)-Number(a.meta.reviewDue)||Number(a.meta.score||0)-Number(b.meta.score||0))
+    .slice(0,6);
+}
+
+function renderReviewQueue(){
+  const el=$('#reviewQueue');if(!el)return;
+  const items=reviewQueueItems();
+  if($('#reviewQueueCount'))$('#reviewQueueCount').textContent=items.length+' pendente'+(items.length===1?'':'s');
+  if(!items.length){
+    el.innerHTML='<div class="review-queue-empty"><span>✓</span><div><b>Fila limpa por enquanto.</b><small>Quando um assunto precisar voltar, ele aparece aqui.</small></div></div>';
+    return;
+  }
+  el.innerHTML=items.map(({item,meta})=>'<button class="review-queue-item" data-review-topic="'+encodeURIComponent(item.topic)+'" data-review-subject="'+encodeURIComponent(item.subject||'')+'">'+
+    '<span>'+Math.round(Number(meta.score||0))+'%</span><div><b>'+esc(item.topic)+'</b><small>'+esc(meta.label)+' · '+(meta.daysSince<999?meta.daysSince+' dia(s) desde o último contato':'revisão recomendada')+'</small></div><i>→</i></button>').join('');
+  $('[data-review-topic]',el).forEach(btn=>btn.onclick=()=>{
+    const topic=decodeURIComponent(btn.dataset.reviewTopic||'');
+    const subject=decodeURIComponent(btn.dataset.reviewSubject||'');
+    const item=topicLesson(topic,subject);
+    if(item)startContentPractice(item,true,3);
+  });
+}
+
+function renderProfileEvolution(){
+  const el=$('#profileEvolution');if(!el)return;
+  const d=state.dashboard||{},j=state.journey?.profile||{},m=[...state.topicMastery.values()];
+  const mastered=m.filter(x=>Number(x.attempts||0)>=8&&Number(x.masteryScore||0)>=80).length;
+  const consolidating=m.filter(x=>Number(x.masteryScore||0)>=65&&Number(x.attempts||0)>=5).length;
+  const totalMinutes=Math.round(Number(d.total_duration_seconds||0)/60);
+  const accuracy=Number(d.accuracy||0);
+  el.innerHTML=[
+    ['Questões',Number(d.attempts||0),'resolvidas'],
+    ['Acerto',accuracy+'%','histórico'],
+    ['Domínio',mastered,'assunto'+(mastered===1?'':'s')+' dominado'+(mastered===1?'':'s')],
+    ['Consolidando',consolidating,'assunto'+(consolidating===1?'':'s')],
+    ['Sequência',Number(j.streak_days||0)+'d','dias seguidos'],
+    ['Nível',Number(j.level||1),esc(j.title||'Jornada NEXO')],
+    ['Tempo',totalMinutes?totalMinutes+' min':'—','estudo registrado'],
+    ['Liga',esc(j.league||'Bronze'),'Jornada NEXO']
+  ].map((x,i)=>'<article><span>'+String(i+1).padStart(2,'0')+'</span><b>'+x[0]+'</b><strong>'+x[1]+'</strong><small>'+x[2]+'</small></article>').join('');
+}
+
 async function renderPerformance() {
-  await Promise.all([loadDashboard(),loadNexoCore(),loadErrorNotebook()]);
+  const [, , , intel]=await Promise.all([loadDashboard(),loadNexoCore(),loadErrorNotebook(),loadLearningIntelligence(),loadTopicMastery(),loadNexoJourney({silent:true}),loadMaterials({silent:true})]);
   const d=state.dashboard||{attempts:0,correct:0,accuracy:0,by_area:[]};
   const core=state.core||{};
   const momentum=core.momentum||{};
   const rec=core.recommended_action||null;
   const overall=core.overall||{};
+  renderErrorPatternMap(intel);
+  renderReviewQueue();
+  renderProfileEvolution();
 
   const {data:sessions,error:sessionError}=await client.from('nexo_study_sessions')
     .select('id,mode,area,subject,topic,planned_count,answered_count,correct_count,total_duration_seconds,status,started_at,ended_at')
@@ -5580,8 +5744,14 @@ function renderMaterials(){
   if(!grid)return;
   const meta=$('#materialLibraryMeta');
   if(meta){
-    const topics=new Set(subjectItems.map(m=>m.topic).filter(Boolean)).size;
-    meta.innerHTML='<b>'+esc(state.materialSubject||'Biblioteca')+'</b><span>'+topics+' assunto'+(topics===1?'':'s')+' · '+subjectItems.length+' material'+(subjectItems.length===1?'':'is')+'</span>';
+    const topicNames=[...new Set(subjectItems.map(m=>m.topic).filter(Boolean))];
+    const topics=topicNames.length;
+    const learning=topicNames.map(topic=>topicLearningMeta(topic,state.materialSubject));
+    const subjectScore=learning.length?Math.round(learning.reduce((sum,x)=>sum+Number(x.score||x.progress||0),0)/learning.length):0;
+    const mastered=learning.filter(x=>x.key==='mastered').length;
+    const continueTopic=topicNames.find(topic=>topicLearningMeta(topic,state.materialSubject).key!=='mastered')||topicNames[0]||'';
+    meta.innerHTML='<div class="library-course-meta"><div><b>'+esc(state.materialSubject||'Biblioteca')+'</b><span>'+mastered+'/'+topics+' assuntos dominados · '+subjectItems.length+' materiais</span></div><div class="library-course-progress"><i style="width:'+subjectScore+'%"></i></div><strong>'+subjectScore+'%</strong><button data-library-continue="'+encodeURIComponent(continueTopic)+'">Continuar matéria →</button></div>';
+    $('[data-library-continue]',meta)?.addEventListener('click',()=>openLibraryTopic(state.materialSubject,decodeURIComponent($('[data-library-continue]',meta).dataset.libraryContinue||'')));
   }
 
   if(!subjectItems.length){
@@ -6128,8 +6298,52 @@ function renderJourneyStore(){
   });
 }
 
+
+function achievementSeenKey(){
+  return 'nexo-seen-achievements-'+String(state.user?.id||'guest');
+}
+function achievementSeenSet(){
+  try{return new Set(JSON.parse(localStorage.getItem(achievementSeenKey())||'[]'))}catch(_){return new Set()}
+}
+function showAchievementCelebration(a){
+  const modal=$('#achievementCelebration');if(!modal||!a)return;
+  $('#achievementCelebrationName').textContent=a.name||'Nova conquista';
+  $('#achievementCelebrationText').textContent=a.description||'Seu progresso virou um novo marco.';
+  $('#achievementCelebrationReward').textContent='+'+Number(a.reward_xp||0)+' XP · +'+Number(a.reward_coins||0)+' N-Coins';
+  modal.classList.remove('hidden');
+  nexoHaptic([30,45,30,45,55]);
+}
+function celebrateUnlockedAchievements(list=[]){
+  if(!state.user?.id)return;
+  const seen=achievementSeenSet();
+  const unlocked=(list||[]).filter(a=>a.unlocked&&a.code);
+  const fresh=unlocked.filter(a=>!seen.has(a.code));
+  // First load establishes baseline; future unlocks celebrate.
+  const baselineKey=achievementSeenKey()+'-ready';
+  if(!localStorage.getItem(baselineKey)){
+    unlocked.forEach(a=>seen.add(a.code));
+    localStorage.setItem(achievementSeenKey(),JSON.stringify([...seen]));
+    localStorage.setItem(baselineKey,'1');
+    return;
+  }
+  if(!fresh.length)return;
+  fresh.forEach(a=>seen.add(a.code));
+  localStorage.setItem(achievementSeenKey(),JSON.stringify([...seen]));
+  state.achievementQueue=[...(state.achievementQueue||[]),...fresh];
+  if(!$('#achievementCelebration')?.classList.contains('hidden'))return;
+  showAchievementCelebration(state.achievementQueue.shift());
+}
+function closeAchievementCelebration(){
+  $('#achievementCelebration')?.classList.add('hidden');
+  if(state.achievementQueue?.length)setTimeout(()=>showAchievementCelebration(state.achievementQueue.shift()),180);
+}
+$('#closeAchievementCelebration')?.addEventListener('click',closeAchievementCelebration);
+$('#achievementCelebration')?.addEventListener('click',e=>{if(e.target===$('#achievementCelebration'))closeAchievementCelebration()});
+$('#openAchievementJourney')?.addEventListener('click',()=>{closeAchievementCelebration();openPage('ranking');setJourneyTab('achievements')});
+
 function renderJourneyAchievements(){
   const list=state.journey?.achievements||[];
+  celebrateUnlockedAchievements(list);
   const el=$('#journeyAchievements');if(!el)return;
   el.innerHTML=list.map(a=>{
     const hasLook=NEXO_AVATAR_LOOKS.some(look=>look.achievement_code===a.code);
