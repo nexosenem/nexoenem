@@ -6,7 +6,7 @@ Plataforma de estudos conectada a **Cloudflare + GitHub + Supabase**.
 
 - 500 questões reais extraídas dos cadernos ENEM enviados
 - 125 questões em cada grande área
-- 161 questões com recurso visual identificado
+- 104 questões com recurso visual genuíno, revisado e armazenado
 - login e cadastro via Supabase Auth
 - progresso sincronizado por usuário
 - gabaritos privados no banco
@@ -38,7 +38,7 @@ A identidade do proprietário configurada no banco recebe esse papel no cadastro
 
 ## Recursos visuais
 
-As questões visuais guardam a página e o recorte da prova original. O front usa PDF.js e uma Edge Function autenticada (`pdf-proxy`) para renderizar o trecho correspondente. Se um recurso visual não puder ser carregado, a questão é pulada para não deixar um card quebrado.
+As 104 questões com recurso visual genuíno possuem uma imagem WebP revisada armazenada no Supabase. O front carrega essa imagem diretamente; PDF.js e a Edge Function `pdf-proxy` ficam apenas como fallback. Questões sem recurso gráfico verdadeiro são exibidas somente como texto e nenhuma questão avança automaticamente por falha de imagem.
 
 ## Deploy
 
