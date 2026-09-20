@@ -6635,3 +6635,122 @@ body.light .onboarding-avatar-group button{background:#fff;border-color:#dce3ed;
     max-width:1480px!important;
   }
 }
+
+
+/* =========================================================
+   NEXO DESKTOP SIDEBAR FIX v2
+   Toggle real + menu rolável para Feedback/Admin nunca sumirem.
+   ========================================================= */
+@media(min-width:761px){
+  .sidebar{
+    overflow:visible!important;
+  }
+
+  .sidebar .brand{
+    flex:0 0 auto!important;
+  }
+
+  .sidebar .side-nav{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    overflow-y:auto!important;
+    overflow-x:hidden!important;
+    overscroll-behavior:contain!important;
+    scrollbar-width:thin;
+    scrollbar-color:#334766 transparent;
+    padding-right:4px!important;
+    padding-bottom:8px!important;
+  }
+  .sidebar .side-nav::-webkit-scrollbar{
+    width:5px!important;
+  }
+  .sidebar .side-nav::-webkit-scrollbar-thumb{
+    background:#334766!important;
+    border-radius:999px!important;
+  }
+
+  .sidebar .sidebar-spacer{
+    display:none!important;
+  }
+
+  .sidebar .sidebar-quote{
+    flex:0 0 auto!important;
+    margin-top:8px!important;
+    padding:12px 9px!important;
+    font-size:11px!important;
+  }
+  .sidebar .sidebar-quote small{
+    margin-top:7px!important;
+    font-size:7px!important;
+    letter-spacing:2px!important;
+  }
+
+  /* reset forte: evita o botão branco/largo visto no desktop */
+  body #desktopSidebarToggle{
+    all:unset;
+    box-sizing:border-box!important;
+    position:fixed!important;
+    display:grid!important;
+    place-items:center!important;
+    left:calc(var(--sidebar) - 15px)!important;
+    top:84px!important;
+    z-index:100!important;
+    width:30px!important;
+    min-width:30px!important;
+    max-width:30px!important;
+    height:30px!important;
+    min-height:30px!important;
+    max-height:30px!important;
+    margin:0!important;
+    padding:0!important;
+    border:1px solid rgba(111,93,235,.55)!important;
+    border-radius:50%!important;
+    background:#0b1628!important;
+    color:#d9d5ff!important;
+    box-shadow:0 8px 24px rgba(0,0,0,.34)!important;
+    cursor:pointer!important;
+    transition:left .24s ease,transform .18s ease,background .18s ease!important;
+    font:700 20px/1 Inter,system-ui,sans-serif!important;
+  }
+  body.light #desktopSidebarToggle{
+    background:#fff!important;
+    color:#4d47a8!important;
+    border-color:#8f82ee!important;
+  }
+  body #desktopSidebarToggle:hover{
+    transform:scale(1.08)!important;
+    background:#14213a!important;
+  }
+  body #desktopSidebarToggle span{
+    display:block!important;
+    width:auto!important;
+    height:auto!important;
+    border:0!important;
+    color:inherit!important;
+    font-size:20px!important;
+    line-height:1!important;
+    transform:translateY(-1px);
+  }
+
+  body.sidebar-collapsed .side-nav{
+    padding-right:0!important;
+    overflow-x:hidden!important;
+  }
+  body.sidebar-collapsed .nav-item{
+    margin-inline:auto!important;
+  }
+  body.sidebar-collapsed .sidebar-quote{
+    display:none!important;
+  }
+
+  /* o nome completo continua disponível via tooltip nativo */
+  body.sidebar-collapsed .nav-item:hover::after{
+    display:none!important;
+  }
+}
+
+@media(min-width:761px) and (max-height:820px){
+  .sidebar .sidebar-quote{
+    display:none!important;
+  }
+}
