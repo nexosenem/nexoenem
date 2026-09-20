@@ -2161,7 +2161,8 @@ function renderEssayHistory(){
     const scores=essayScoresFromRow(row),weak=scores.indexOf(Math.min(...scores))+1;
     return `<button class="essay-history-row" data-essay-history="${row.id}"><span class="essay-history-score">${Number(row.estimated_score||0)}</span><div><b>${esc(row.theme_title||'Redação')}</b><small>${new Date(row.created_at).toLocaleDateString('pt-BR')} · C${weak} para revisar${Number(row.version_number||1)>1?' · versão '+Number(row.version_number):''}</small></div><i>→</i></button>`;
   }).join(''):'<p style="color:var(--muted)">Seu histórico aparecerá aqui após a primeira correção.</p>';
-  $$('[data-essay-history]',list).forEach(btn=>btn.onclick=()=>openEssayHistory(Number(btn.dataset.essayHistory)));
+  $('[data-essay-history]',list).forEach(btn=>btn.onclick=()=>openEssayHistory(Number(btn.dataset.essayHistory)));
+  renderEssayIntelligenceV5();
 }
 function openEssayHistory(id){
   const row=(state.essayHistory||[]).find(x=>Number(x.id)===Number(id));if(!row)return;
@@ -5309,6 +5310,7 @@ function updateEssayPrompt(){
     full.innerHTML='<span>'+(done?'✓ TEMA CONCLUÍDO':'TEMA SELECIONADO')+'</span><b>'+esc(t.title)+'</b>';
     full.classList.toggle('completed',done);
   }
+  renderEssayRepertoires();
 }
 $('#essayTheme').addEventListener('change',updateEssayPrompt);
 $('#customEssayTheme').addEventListener('input',updateEssayPrompt);
@@ -5522,6 +5524,7 @@ function showEssayResult(text,scores,total){
         </div>
         <div class="essay-priority-actions">
           <button id="askNexoEssay" class="outline-btn">Perguntar ao Professor Nexo</button>
+          <button id="trainEssayWeak" class="outline-btn">Treinar prioridade · 5 min</button>
           <button id="rewriteEssay" class="primary-btn">Reescrever agora</button>
         </div>
       </section>
@@ -5566,12 +5569,19 @@ function showEssayResult(text,scores,total){
     setNexoMood('pensativo');
     askNia('Como posso melhorar a '+shortComps[weak]+' ('+comps[weak]+') da redação que acabei de escrever?');
   };
+  $('#trainEssayWeak')?.addEventListener('click',()=>{
+    state.essayTrainingCompetency=weak;
+    renderEssayIntelligenceV5();
+    $('#essayCompetencyPlan')?.scrollIntoView({behavior:'smooth',block:'center'});
+  });
+  if($('#trainEssayWeak'))$('#trainEssayWeak').textContent='Treinar '+shortComps[weak]+' · 5 min';
   $('#rewriteEssay').onclick=()=>{
     $('#essayText').focus();
     $('#essayText').scrollIntoView({behavior:'smooth',block:'center'});
     toast('Reescreva priorizando '+shortComps[weak]+'. O Professor Nexo mantém essa missão como foco.');
   };
 
+  renderEssayIntelligenceV5();
   setNexoMood(mood);
   addNiaMessage('Corrigi sua redação. Sua prioridade agora é '+shortComps[weak]+' — '+comps[weak]+'. Eu organizei a correção em uma missão de reescrita para você não tentar melhorar tudo ao mesmo tempo.','bot');
 }
@@ -5823,6 +5833,13 @@ function renderNexoToday(){
     text='Faz '+review.days+' dia(s) desde o último contato. Seu intervalo atual de revisão é '+review.meta.intervalDays+' dia(s).';
     status='REVISÃO ESPAÇADA';time='3 questões';mood='serio';
     action=()=>startContentPractice(review.item,true,3);actionLabel='Revisar agora →';
+  }else if(essayPrioritySignal()?.score<120){
+    const essay=essayPrioritySignal();
+    title='Treino rápido de '+essay.trainer.code+' · '+essay.trainer.name+'.';
+    text='Suas redações recentes mostram esta competência como a principal oportunidade de evolução.';
+    status='REDAÇÃO · COMPETÊNCIA';time='~5 min';mood='pensativo';
+    action=()=>{openPage('redacao');state.essayTrainingCompetency=essay.index;renderEssayIntelligenceV5();setTimeout(()=>$('#essayCompetencyPlan')?.scrollIntoView({behavior:'smooth',block:'center'}),80)};
+    actionLabel='Treinar '+essay.trainer.code+' →';
   }else if(rec?.topic){
     title=(rec.topic||rec.subject)+' é seu melhor próximo passo.';
     text=rec.reason||'O NEXO Core encontrou uma boa oportunidade de evolução.';
