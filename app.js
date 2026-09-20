@@ -1418,11 +1418,13 @@ async function initApp(session) {
     loadNexoCore(),
     loadAssistantIntents(),
     loadNexoJourney({silent:true}),
-    loadSystemModules({silent:true})
+    loadSystemModules({silent:true}),
+    loadVideos({silent:true}),
+    loadMaterials({silent:true})
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
-      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos'];
+      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais'];
       console.error('bootstrap '+areas[index],result.reason);
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
@@ -3837,12 +3839,32 @@ $('#viewerComplete')?.addEventListener('click',markViewerComplete);
 $('#viewerPractice')?.addEventListener('click',()=>{const v=state.activeViewer;if(v)startContentPractice(v.item)});
 $('#viewerSpeed')?.addEventListener('change',e=>{const p=$('#contentVideoPlayer');if(p)p.playbackRate=Number(e.target.value||1)});
 
-async function loadVideos() {
-  const {data,error}=await client.from('videos').select('*').eq('is_published',true).order('created_at',{ascending:false});
-  if(error){console.error(error);return}
+async function loadVideos({silent=false}={}) {
+  const grid=$('#videoGrid');
+  if(grid&&!state.videos.length){
+    grid.innerHTML='<article class="panel"><p style="color:var(--muted)">Carregando videoaulas...</p></article>';
+  }
+
+  let result=await client.from('videos').select('*').eq('is_published',true).order('created_at',{ascending:false});
+  if(result.error){
+    // Uma falha momentânea de rede não deve fazer a biblioteca "sumir".
+    await sleep(450);
+    result=await client.from('videos').select('*').eq('is_published',true).order('created_at',{ascending:false});
+  }
+
+  const {data,error}=result;
+  if(error){
+    console.error('load videos',error);
+    logClientError('videos',error,'video_load');
+    if(grid)grid.innerHTML='<article class="panel"><p style="color:var(--muted)">Não consegui carregar as videoaulas agora. Tente novamente em instantes.</p></article>';
+    if(!silent)toast('Não foi possível carregar as videoaulas.','error');
+    return state.videos;
+  }
+
   state.videos=data||[];
   await loadContentState('video');
   renderVideos();
+  return state.videos;
 }
 function renderVideos(){
   const s=$('#videoSearch').value.toLowerCase().trim();
@@ -3874,12 +3896,23 @@ function renderVideos(){
 $('#videoSearch').addEventListener('input',renderVideos);
 $('#videoFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active');renderVideos()});
 
-async function loadMaterials(){
+async function loadMaterials({silent=false}={}){
+  const grid=$('#materialGrid');
+  if(grid&&!state.materials.length){
+    grid.innerHTML='<article class="panel"><p style="color:var(--muted)">Carregando materiais...</p></article>';
+  }
   const {data,error}=await client.from('materials').select('*').eq('is_published',true).order('created_at',{ascending:false});
-  if(error){console.error(error);return}
+  if(error){
+    console.error('load materials',error);
+    logClientError('materials',error,'material_load');
+    if(grid)grid.innerHTML='<article class="panel"><p style="color:var(--muted)">Não consegui carregar os materiais agora.</p></article>';
+    if(!silent)toast('Não foi possível carregar os materiais.','error');
+    return state.materials;
+  }
   state.materials=data||[];
   await loadContentState('material');
   renderMaterials();
+  return state.materials;
 }
 function renderMaterials(){
   const s=($('#materialSearch')?.value||'').toLowerCase().trim();
@@ -4875,10 +4908,18 @@ async function startNexoArena(){
   }
 }
 
-$$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
-$$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
+$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
+$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{
+  wardrobeFilter=btn.dataset.wardrobeFilter||'owned';
+  $('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));
+  renderNexoWardrobe();
+});
 $('#wardrobeCategory')?.addEventListener('change',renderNexoWardrobe);
-$$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{storeFilter=btn.dataset.storeFilter||'all';$('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderJourneyStore();});
+$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{
+  storeFilter=btn.dataset.storeFilter||'all';
+  $('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));
+  renderJourneyStore();
+});
 $('#storeCategory')?.addEventListener('change',renderJourneyStore);
 $('#storeCollection')?.addEventListener('change',renderJourneyStore);
 $$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTabTarget));
