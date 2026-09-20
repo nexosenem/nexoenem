@@ -2528,3 +2528,33 @@ body.light .admin-content-row{background:#f7f9fd}
     max-width:69%!important;
   }
 }
+
+.admin-team-panel{grid-column:1/-1}
+.admin-team-head{display:flex;align-items:flex-start;justify-content:space-between;gap:18px}
+.admin-team-head h3{margin:3px 0 4px;font-size:20px}
+.admin-team-head p{margin:0;color:var(--muted);font-size:11px;max-width:680px;line-height:1.55}
+.admin-team-search{margin:14px 0 10px}
+.admin-user-list{display:grid;gap:8px;max-height:520px;overflow:auto}
+.admin-user-row{display:grid;grid-template-columns:42px minmax(0,1fr) auto;gap:11px;align-items:center;padding:11px;border:1px solid var(--line);border-radius:12px;background:rgba(7,15,28,.42)}
+body.light .admin-user-row{background:#f7f9fd}
+.admin-user-avatar{width:40px;height:40px;border-radius:12px;display:grid;place-items:center;background:linear-gradient(145deg,#314965,#11192b);border:1px solid #536b8f;color:#fff;font-weight:900;font-size:11px}
+.admin-user-info{min-width:0}
+.admin-user-info b{display:flex;align-items:center;gap:7px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.admin-user-info small{display:block;color:var(--muted);margin:2px 0 5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.role-chip,.you-chip{display:inline-flex;width:max-content;align-items:center;border-radius:999px;font-size:8px;font-weight:900;letter-spacing:.6px}
+.role-chip{padding:4px 7px;border:1px solid var(--line)}
+.role-chip.admin{color:#ffd36b;border-color:rgba(216,166,62,.4);background:rgba(216,166,62,.1)}
+.role-chip.student{color:#94a9c7;background:rgba(115,139,175,.08)}
+.you-chip{padding:3px 6px;color:#72e0ff;background:rgba(72,191,224,.1);border:1px solid rgba(72,191,224,.3)}
+.admin-user-action button{border:1px solid var(--line);border-radius:9px;background:transparent;color:var(--text);padding:8px 10px;font-size:10px;white-space:nowrap}
+.admin-user-action .promote{color:#99e6c9;border-color:rgba(70,190,147,.35);background:rgba(70,190,147,.08)}
+.admin-user-action .danger{color:#ff979d;border-color:rgba(218,87,97,.32)}
+.admin-user-action button:disabled{opacity:.55;cursor:not-allowed}
+.admin-user-empty{padding:24px;text-align:center;color:var(--muted);border:1px dashed var(--line);border-radius:11px}
+@media(max-width:760px){
+  .admin-team-head{display:grid}
+  .admin-team-head .outline-btn{width:100%}
+  .admin-user-row{grid-template-columns:40px minmax(0,1fr)}
+  .admin-user-action{grid-column:1/-1}
+  .admin-user-action button{width:100%}
+}
