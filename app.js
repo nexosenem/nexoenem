@@ -2857,6 +2857,31 @@ $$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
   await startStudySession({mode:'simulado',area:b.dataset.simArea,subject:'',difficulty:'',visualOnly:false,size:20});
 });
 
+function renderMasteryMap(){
+  const el=$('#nexoMasteryMap'); if(!el)return;
+  const d=state.dashboard||{}, core=state.core||{};
+  const map=new Map((d.by_area||[]).map(x=>[x.area,x]));
+  const weak=core.weak_skills||[];
+  const areas=['Linguagens','Ciências Humanas','Ciências da Natureza','Matemática'];
+  el.innerHTML=areas.map(area=>{
+    const x=map.get(area)||{}, attempts=Number(x.attempts||0), mastery=clamp(Math.round(Number(x.accuracy||0)),0,100);
+    const priorities=weak.filter(w=>(w.area||'')===area).slice(0,2);
+    const status=attempts<5?'CALIBRANDO':mastery>=75?'FORTE':mastery>=55?'EM EVOLUÇÃO':'PRIORIDADE';
+    return '<article class="mastery-area '+(mastery<55&&attempts>=5?'priority':'')+'"><header><span>'+esc(area)+'</span><b>'+status+'</b></header><div class="mastery-score"><strong>'+mastery+'%</strong><small>domínio estimado</small></div><div class="mastery-track"><i style="width:'+mastery+'%"></i></div><p>'+(priorities.length?'Focos: '+priorities.map(p=>esc(p.topic)).join(' · '):attempts+' questões analisadas')+'</p><button data-mastery-area="'+esc(area)+'">Treinar área →</button></article>';
+  }).join('');
+  $('[data-mastery-area]',el).forEach(btn=>btn.onclick=async()=>{openPage('questoes');setSelectedArea(btn.dataset.masteryArea);await startStudySession({mode:'adaptive',area:btn.dataset.masteryArea,subject:'',topic:'',difficulty:'',visualOnly:false,size:10});});
+}
+function renderFocusRoadmap(){
+  const el=$('#focusRoadmap'); if(!el)return;
+  const weak=state.core?.weak_skills||[];
+  const top=weak.slice(0,3);
+  const label=$('#focusRoadmapLabel'); if(label)label.textContent=top.length?'atualizada pelo NEXO Core':'calibrando';
+  el.innerHTML=top.length?top.map((x,i)=>{
+    const mastery=Math.round(Number(x.mastery??x.accuracy??0));
+    const stage=mastery<45?'RECUPERAR':mastery<65?'CONSOLIDAR':'MANTER';
+    return '<article><span>0'+(i+1)+'</span><div><small>'+stage+'</small><b>'+esc(x.topic||x.subject||x.area||'Foco')+'</b><p>'+mastery+'% de domínio · '+Math.round(Number(x.priority??100-mastery))+'% prioridade</p></div></article>';
+  }).join(''):'<div class="journey-empty">Complete algumas questões para o Core construir sua rota de evolução.</div>';
+}
 async function renderPerformance() {
   await Promise.all([loadDashboard(),loadNexoCore()]);
   const d=state.dashboard||{attempts:0,correct:0,accuracy:0,by_area:[]};
@@ -2897,6 +2922,8 @@ async function renderPerformance() {
 
   const map=new Map((d.by_area||[]).map(x=>[x.area,x]));
   const areas=['Linguagens','Ciências Humanas','Ciências da Natureza','Matemática'];
+  renderMasteryMap();
+  $('#masteryMapTrain').onclick=()=>rec?startCoreRecommendation():(openPage('questoes'),resetSessionUI());
   $('#areaPerformance').innerHTML=areas.map(area=>{
     const x=map.get(area)||{accuracy:0,attempts:0};
     return `<div class="perf-row"><span>${area}<small>${Number(x.attempts||0)} questões</small></span><div class="perf-track"><i style="width:${Number(x.accuracy||0)}%"></i></div><b>${Number(x.accuracy||0)}%</b></div>`;
@@ -2951,6 +2978,7 @@ async function renderFocus() {
   }));
   const weak=coreWeak.length?coreWeak:fallback;
 
+  renderFocusRoadmap();
   $('#focusGrid').innerHTML=weak.length?weak.map((x,index)=>{
     const mastery=Math.round(Number(x.mastery??x.accuracy??0));
     const priority=Math.round(Number(x.priority??(100-mastery)));
