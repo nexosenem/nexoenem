@@ -1256,8 +1256,31 @@ async function loadNexoMembership({silent=true}={}){
     return state.membership;
   }catch(err){
     console.error('NEXO membership',err);
+
+    // Plano e uso são coisas diferentes: se a leitura de contadores falhar,
+    // nunca rebaixe visualmente um Ultra/Plus para Free.
+    try{
+      const {data:fallback,error:fallbackError}=await client.rpc('get_nexo_access_tier');
+      if(fallbackError)throw fallbackError;
+      if(fallback){
+        state.membership={
+          ...(state.membership||{}),
+          ...fallback,
+          usage:state.membership?.usage||{},
+          limits:state.membership?.limits||{},
+          plan:fallback.plan||state.membership?.plan||'free',
+          is_ultra:Boolean(fallback.is_ultra||fallback.plan==='ultra'),
+          is_plus:Boolean(fallback.is_plus||fallback.is_ultra||['plus','ultra'].includes(fallback.plan))
+        };
+        renderPlanExperience();
+        return state.membership;
+      }
+    }catch(fallbackErr){
+      console.error('NEXO access tier fallback',fallbackErr);
+    }
+
     if(!silent)toast('Não foi possível carregar seu plano agora.','error');
-    return null;
+    return state.membership||null;
   }
 }
 
