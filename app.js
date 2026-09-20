@@ -1229,7 +1229,7 @@ async function refreshCurrentRole({silent=true}={}){
     state.profile={...(state.profile||{}),...data};
     const isAdmin=data.role==='admin';
 
-    $('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
     if(roleLabel)roleLabel.textContent=isAdmin?(isNexoUltra()?'Administrador · Ultra':'Administrador'):('Estudante · '+(isNexoPlus()?'Plus':'Free'));
 
@@ -3136,7 +3136,7 @@ function renderMasteryMap(){
     const status=attempts<5?'CALIBRANDO':mastery>=75?'FORTE':mastery>=55?'EM EVOLUÇÃO':'PRIORIDADE';
     return '<article class="mastery-area '+(mastery<55&&attempts>=5?'priority':'')+'"><header><span>'+esc(area)+'</span><b>'+status+'</b></header><div class="mastery-score"><strong>'+mastery+'%</strong><small>domínio estimado</small></div><div class="mastery-track"><i style="width:'+mastery+'%"></i></div><p>'+(priorities.length?'Focos: '+priorities.map(p=>esc(p.topic)).join(' · '):attempts+' questões analisadas')+'</p><button data-mastery-area="'+esc(area)+'">Treinar área →</button></article>';
   }).join('');
-  $('[data-mastery-area]',el).forEach(btn=>btn.onclick=async()=>{openPage('questoes');setSelectedArea(btn.dataset.masteryArea);await startStudySession({mode:'adaptive',area:btn.dataset.masteryArea,subject:'',topic:'',difficulty:'',visualOnly:false,size:10});});
+  $$('[data-mastery-area]',el).forEach(btn=>btn.onclick=async()=>{openPage('questoes');setSelectedArea(btn.dataset.masteryArea);await startStudySession({mode:'adaptive',area:btn.dataset.masteryArea,subject:'',topic:'',difficulty:'',visualOnly:false,size:10});});
 }
 function renderFocusRoadmap(){
   const el=$('#focusRoadmap'); if(!el)return;
@@ -3173,8 +3173,8 @@ async function loadErrorNotebook(){
     const q=item.question||{};
     return '<article class="error-note-row"><span class="error-note-index">'+String(index+1).padStart(2,'0')+'</span><div><b>'+esc(q.topic||q.subject||'Questão ENEM')+'</b><small>'+esc(q.subject||q.area||'')+(q.source_year?' · ENEM '+esc(q.source_year):'')+(q.source_question_number?' · Q'+esc(q.source_question_number):'')+'</small></div><div class="error-note-actions"><button data-error-open="'+Number(item.question_id||q.id)+'">Refazer</button><button data-error-topic="'+esc(q.topic||'')+'" data-error-area="'+esc(q.area||'')+'" data-error-subject="'+esc(q.subject||'')+'">Treinar tema</button></div></article>';
   }).join(''):'<div class="journey-empty">Nenhum erro recente por aqui. Continue treinando para alimentar sua revisão inteligente.</div>';
-  $('[data-error-open]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.errorOpen)));
-  $('[data-error-topic]',el).forEach(btn=>btn.onclick=async()=>{
+  $$('[data-error-open]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.errorOpen)));
+  $$('[data-error-topic]',el).forEach(btn=>btn.onclick=async()=>{
     openPage('questoes');
     await startStudySession({mode:'review_topic',area:btn.dataset.errorArea||'',subject:btn.dataset.errorSubject||'',topic:btn.dataset.errorTopic||'',difficulty:'',visualOnly:false,size:6});
     if(state.session){
@@ -3972,7 +3972,7 @@ function renderStudentAvatar(target,avatarInput){
 
 function setJourneyTab(tab='missions'){
   state.journeyTab=tab;
-  $('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
+  $$('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
   $$('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
   if(tab==='avatar')renderAvatarBuilder();
 }
@@ -4764,10 +4764,10 @@ function initNexoMascotVisuals(){
   bindImage($('#nexoLauncherAvatar'),'./assets/nexo-expressions/confiante.avif');
   bindImage($('#nexoAvatarImage'),'./assets/nexo-expressions/confiante.avif');
   bindImage($('#nexoHeroImage'),'./assets/nexo-family/bust-confiante.avif');
-  $('[data-nexo-safe-avatar]').forEach(img=>bindImage(img,'./assets/nexo-family/bust-confiante.avif'));
+  $$('[data-nexo-safe-avatar]').forEach(img=>bindImage(img,'./assets/nexo-family/bust-confiante.avif'));
 
   const stableFallback='./assets/nexo-family/bust-confiante.avif';
-  $('.focus-mascot-img,[data-nexo-family],#onboardingMascot,#performanceCoreMascot').forEach(img=>{
+  $$('.focus-mascot-img,[data-nexo-family],#onboardingMascot,#performanceCoreMascot').forEach(img=>{
     if(!img)return;
     const original=img.getAttribute('src')||stableFallback;
     img.onerror=()=>{
