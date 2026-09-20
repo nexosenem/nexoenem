@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-7">
+  <link rel="stylesheet" href="./styles.css?v=20260920-8">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -302,6 +302,10 @@
           <div class="essay-layout">
             <article class="panel essay-editor">
               <label>Tema<select id="essayTheme"></select></label>
+              <div id="customThemeFields" class="custom-theme-fields hidden">
+                <label>Tema personalizado<input id="customEssayTheme" class="text-input" maxlength="180" placeholder="Ex.: Os desafios da mobilidade urbana nas grandes cidades"></label>
+                <label>Recorte / instrução (opcional)<textarea id="customEssayPrompt" rows="3" placeholder="Se quiser, escreva o recorte específico que deseja desenvolver."></textarea></label>
+              </div>
               <div id="essayPrompt" class="essay-prompt"></div>
               <label>Sua redação<textarea id="essayText" rows="18" placeholder="Digite sua redação aqui..."></textarea></label>
               <div class="editor-footer"><span id="wordCount">0 palavras</span><button class="primary-btn" id="analyzeEssay">Analisar e salvar</button></div>
@@ -392,6 +396,10 @@
               <h3>Feedbacks recebidos</h3>
               <div id="adminFeedbacks" class="admin-feedbacks"></div>
             </article>
+            <article class="panel admin-reports-panel">
+              <h3>Comentários denunciados</h3>
+              <div id="reportedComments" class="admin-feedbacks"></div>
+            </article>
           </div>
         </section>
       </main>
@@ -406,6 +414,42 @@
     </nav>
   </div>
 
+  <div id="commentModal" class="community-modal hidden" aria-modal="true" role="dialog">
+    <div class="community-sheet">
+      <div class="community-head"><div><span class="eyebrow">COMUNIDADE</span><h3>Comentários da questão</h3></div><button id="closeComments" class="icon-btn">×</button></div>
+      <div id="questionComments" class="question-comments"></div>
+      <div class="comment-compose">
+        <textarea id="commentText" rows="3" maxlength="1200" placeholder="Compartilhe uma dúvida, explicação ou jeito de resolver..."></textarea>
+        <button id="sendComment" class="primary-btn">Comentar</button>
+      </div>
+    </div>
+  </div>
+
+  <button id="niaButton" class="nia-button" aria-label="Abrir NIA"><span>N</span><i></i></button>
+  <aside id="niaPanel" class="nia-panel hidden">
+    <div class="nia-head">
+      <div class="nia-mini-avatar outfit-purple" id="niaAvatar"><span>N</span></div>
+      <div><b>NIA</b><small>Assistente de estudos do NEXO</small></div>
+      <button id="closeNia">×</button>
+    </div>
+    <div class="nia-outfits">
+      <span>Visual:</span>
+      <button data-outfit="purple" class="active">Roxo</button>
+      <button data-outfit="neon">Neon</button>
+      <button data-outfit="academic">Acadêmico</button>
+      <button data-outfit="street">Street</button>
+    </div>
+    <div id="niaMessages" class="nia-messages">
+      <div class="nia-msg bot">Oi! Eu sou a <b>NIA</b>. Posso ajudar com estratégia de prova, redação, organização de estudos e macetes gerais — sem custo de IA.</div>
+    </div>
+    <div class="nia-quick">
+      <button data-nia="Como administrar o tempo no ENEM?">⏱ Tempo de prova</button>
+      <button data-nia="Como começar uma redação?">✎ Redação</button>
+      <button data-nia="Como chutar melhor quando eu não sei?">◎ Estratégia</button>
+    </div>
+    <div class="nia-compose"><input id="niaInput" maxlength="240" placeholder="Pergunte algo..."><button id="niaSend">→</button></div>
+  </aside>
+
   <div id="essayLoader" class="loader hidden">
     <div class="loader-card"><div class="orb-loader"><i></i><i></i><i></i></div><h3>Analisando sua redação...</h3><p id="loaderText">Avaliando estrutura e argumentação.</p></div>
   </div>
@@ -413,6 +457,6 @@
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
-  <script src="./app.js?v=20260920-7"></script>
+  <script src="./app.js?v=20260920-8"></script>
 </body>
 </html>
