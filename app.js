@@ -4228,10 +4228,23 @@ function renderJourneyStore(){
 function renderJourneyAchievements(){
   const list=state.journey?.achievements||[];
   const el=$('#journeyAchievements');if(!el)return;
-  el.innerHTML=list.map(a=>`<article class="journey-achievement ${a.unlocked?'unlocked':'locked'} rarity-${esc(a.rarity)}">
-    <span>${esc(a.icon||'✦')}</span>
-    <div><small>${a.unlocked?'CONQUISTADA':esc(a.rarity).toUpperCase()}</small><h4>${esc(a.name)}</h4><p>${esc(a.description)}</p><em>+${Number(a.reward_xp||0)} XP · +${Number(a.reward_coins||0)} N-Coins</em></div>
-  </article>`).join('');
+  el.innerHTML=list.map(a=>{
+    const hasLook=NEXO_AVATAR_LOOKS.some(look=>look.achievement_code===a.code);
+    return `<article class="journey-achievement ${a.unlocked?'unlocked':'locked'} rarity-${esc(a.rarity)}">
+      <span>${esc(a.icon||'✦')}</span>
+      <div><small>${a.unlocked?'CONQUISTADA':esc(a.rarity).toUpperCase()}</small><h4>${esc(a.name)}</h4><p>${esc(a.description)}</p><em>+${Number(a.reward_xp||0)} XP · +${Number(a.reward_coins||0)} N-Coins${hasLook?' · Look NEXO':''}</em>${hasLook&&a.unlocked?'<button data-achievement-look="'+esc(a.code)+'">Ver Look</button>':''}</div>
+    </article>`;
+  }).join('');
+  $$('[data-achievement-look]',el).forEach(btn=>btn.onclick=()=>{
+    setJourneyTab('avatar');
+    avatarEditorCategory='looks';
+    renderAvatarBuilder();
+    setTimeout(()=>{
+      const look=NEXO_AVATAR_LOOKS.find(x=>x.achievement_code===btn.dataset.achievementLook);
+      const card=look?document.querySelector('[data-avatar-look-card="'+look.code+'"]'):null;
+      card?.scrollIntoView?.({behavior:'smooth',block:'center'});
+    },80);
+  });
 }
 
 const NEXO_AVATAR_LOOKS=Object.freeze([
@@ -4243,6 +4256,54 @@ const NEXO_AVATAR_LOOKS=Object.freeze([
     avatar:{hair:'wave',hair_color:'blue',outfit:'blue',accessory:'glasses',frame:'basic',background:'grid',aura:'none'}
   },
   {
+    code:'first_step',
+    name:'Primeiro Passo',
+    tag:'CONQUISTA',
+    achievement_code:'first_answer',
+    description:'Seu primeiro marco no NEXO. Liberado ao responder a primeira questão.',
+    avatar:{hair:'wave',hair_color:'blue',outfit:'cyan',accessory:'glasses',frame:'basic',background:'grid',aura:'none'}
+  },
+  {
+    code:'autonomy',
+    name:'Autonomia',
+    tag:'CONQUISTA',
+    achievement_code:'autonomy_10',
+    description:'Para quem resolve sem depender de pistas.',
+    avatar:{hair:'short',hair_color:'ink',outfit:'black',accessory:'headphones',frame:'basic',background:'study',aura:'none'}
+  },
+  {
+    code:'pace',
+    name:'Ritmo de Prova',
+    tag:'CONQUISTA',
+    achievement_code:'speed_10',
+    description:'Visual de velocidade para quem acerta sob pressão de tempo.',
+    avatar:{hair:'short',hair_color:'blue',outfit:'focus',accessory:'headphones',frame:'neon',background:'grid',aura:'blue'}
+  },
+  {
+    code:'week_nexo',
+    name:'Semana NEXO',
+    tag:'CONQUISTA',
+    achievement_code:'streak_7',
+    description:'Exclusivo para quem mantém sete dias seguidos de estudo.',
+    avatar:{hair:'wave',hair_color:'purple',outfit:'academy',accessory:'tiara',frame:'level',background:'library',aura:'none'}
+  },
+  {
+    code:'centurion',
+    name:'Centurião',
+    tag:'CONQUISTA',
+    achievement_code:'hundred_correct',
+    description:'Marca visual dos 100 acertos acumulados.',
+    avatar:{hair:'wave',hair_color:'blue',outfit:'cyan',accessory:'headphones',frame:'neon',background:'midnight',aura:'none'}
+  },
+  {
+    code:'veteran',
+    name:'Veterano NEXO',
+    tag:'CONQUISTA',
+    achievement_code:'level_10',
+    description:'Look reservado a quem alcançou o nível 10 da Jornada.',
+    avatar:{hair:'wave',hair_color:'purple',outfit:'focus',accessory:'tiara',frame:'level',background:'midnight',aura:'blue'}
+  },
+  {
     code:'focus',
     name:'Focus Mode',
     tag:'FOCO',
@@ -4252,7 +4313,7 @@ const NEXO_AVATAR_LOOKS=Object.freeze([
   {
     code:'academy',
     name:'NEXO Academy',
-    tag:'CONQUISTA',
+    tag:'JORNADA',
     description:'Visual acadêmico para quem está construindo consistência.',
     avatar:{hair:'wave',hair_color:'brown',outfit:'academy',accessory:'glasses',frame:'level',background:'library',aura:'none'}
   },
@@ -4353,7 +4414,28 @@ function renderAvatarVisualCard(btn,draft){
   btn.dataset.avatarIcon=avatarEditorIconForField(field);
 }
 
+function journeyAchievement(code){
+  return (state.journey?.achievements||[]).find(a=>a.code===code)||null;
+}
+
+function avatarLookAchievementLabel(look){
+  const achievement=look?.achievement_code?journeyAchievement(look.achievement_code):null;
+  return achievement?.name||look?.achievement_code||'Conquista';
+}
+
 function avatarLookStatus(look){
+  if(look?.achievement_code){
+    const achievement=journeyAchievement(look.achievement_code);
+    if(!achievement?.unlocked){
+      return {
+        state:'achievement',
+        label:'CONQUISTA',
+        achievement_code:look.achievement_code,
+        achievement_name:achievement?.name||avatarLookAchievementLabel(look)
+      };
+    }
+  }
+
   const issues=[];
   let levelRequired=0;
   let hasPlus=false;
@@ -4402,10 +4484,19 @@ function renderAvatarLooks(){
 
   grid.innerHTML=NEXO_AVATAR_LOOKS.map(look=>{
     const status=avatarLookStatus(look);
-    const action=status.state==='using'?'Em uso':status.state==='available'?'Equipar':status.label;
+    const achievement=look.achievement_code?journeyAchievement(look.achievement_code):null;
+    const achievementLine=look.achievement_code
+      ? '<em class="avatar-look-achievement '+(achievement?.unlocked?'unlocked':'locked')+'">'+
+          (achievement?.unlocked?'✓ CONQUISTA DESBLOQUEADA':'🔒 '+esc(achievement?.name||avatarLookAchievementLabel(look)))+
+        '</em>'
+      : '';
+    const action=status.state==='using'?'Em uso'
+      :status.state==='available'?'Equipar'
+      :status.state==='achievement'?'Ver conquista'
+      :status.label;
     return '<article class="avatar-look-card '+esc(status.state)+'" data-avatar-look-card="'+esc(look.code)+'">'+
       '<div class="avatar-look-preview" data-avatar-look-preview="'+esc(look.code)+'"></div>'+
-      '<div class="avatar-look-copy"><span>'+esc(look.tag)+'</span><h4>'+esc(look.name)+'</h4><p>'+esc(look.description)+'</p></div>'+
+      '<div class="avatar-look-copy"><span>'+esc(look.tag)+'</span><h4>'+esc(look.name)+'</h4><p>'+esc(look.description)+'</p>'+achievementLine+'</div>'+
       '<div class="avatar-look-foot"><small>'+esc(status.label)+'</small><button data-avatar-look="'+esc(look.code)+'" '+(status.state==='using'?'disabled':'')+'>'+esc(action)+'</button></div>'+
     '</article>';
   }).join('');
@@ -4422,6 +4513,11 @@ function applyAvatarLook(code){
 
   const status=avatarLookStatus(look);
   if(status.state==='using')return;
+  if(status.state==='achievement'){
+    toast('Esse Look libera com a conquista '+avatarLookAchievementLabel(look)+'.');
+    setJourneyTab('achievements');
+    return;
+  }
   if(status.state==='plus')return openNexoPlans('Esse Look faz parte do NEXO Plus.');
   if(status.state==='level')return toast('Esse Look libera por completo no nível '+Number(status.level||1)+'.');
   if(status.state==='store'){
