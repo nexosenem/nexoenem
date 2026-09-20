@@ -104,6 +104,10 @@ const state = {
   adminUsers:[],
   assistantIntents:[],
   core:null,
+  journey:null,
+  journeyLoading:false,
+  avatarDraft:null,
+  journeyTab:'missions',
   lastSimulationReport:null,
   onboarding:{
     step:1,
@@ -611,7 +615,7 @@ function openPage(id) {
   if (id==='materiais') loadMaterials();
   if (id==='banco') renderBank();
   if (id==='feedback') loadMyFeedback();
-  if (id==='ranking') loadRanking();
+  if (id==='ranking') loadNexoJourney();
   if (id==='admin') loadAdmin();
 }
 $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openPage(b.dataset.page)}));
@@ -666,11 +670,12 @@ async function initApp(session) {
     loadQuestionMeta(),
     loadDashboard(),
     loadNexoCore(),
-    loadAssistantIntents()
+    loadAssistantIntents(),
+    loadNexoJourney({silent:true})
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
-      const areas=['questões','dashboard','NEXO Core','Professor Nexo'];
+      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada'];
       console.error('bootstrap '+areas[index],result.reason);
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
@@ -1934,7 +1939,7 @@ async function submitAnswer(option) {
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
   setNexoMood(reaction.mood);
-  Promise.all([loadDashboard(),loadNexoCore(),loadRecentAttempts()]).catch(err=>console.error('refresh after answer',err));
+  Promise.all([loadDashboard(),loadNexoCore(),loadRecentAttempts(),loadNexoJourney({silent:true})]).catch(err=>console.error('refresh after answer',err));
 }
 
 async function nextQuestion() {
@@ -2833,11 +2838,348 @@ $('#sendFeedback').onclick=async()=>{
   $('#feedbackText').value='';toast('Feedback enviado. Obrigado!');loadMyFeedback();
 };
 
-async function loadRanking(){
-  const {data,error}=await client.rpc('get_ranking');
-  if(error){console.error(error);return}
-  $('#rankingList').innerHTML=(data||[]).map(x=>`<div class="rank-row"><span class="rank-pos">#${x.rank_position}</span><b>${esc(x.full_name)}</b><span>${x.correct_answers} acertos</span></div>`).join('')||'<p style="color:var(--muted)">O ranking aparecerá quando houver respostas.</p>';
+
+const NEXO_AVATAR_DEFAULT=Object.freeze({
+  skin:'medium',
+  hair:'short',
+  hair_color:'ink',
+  outfit:'purple',
+  accessory:'none',
+  frame:'basic',
+  background:'grid'
+});
+
+const NEXO_AVATAR_LOCKS=Object.freeze({
+  'outfit:cyan':'outfit_cyan',
+  'outfit:gold':'outfit_gold',
+  'accessory:headphones':'acc_headphones',
+  'accessory:crown':'acc_crown',
+  'frame:neon':'frame_neon',
+  'frame:cosmic':'frame_cosmic',
+  'background:midnight':'bg_midnight',
+  'background:aurora':'bg_aurora'
+});
+
+function normalizedAvatar(input={}){
+  return {...NEXO_AVATAR_DEFAULT,...(input||{})};
 }
+
+function journeyInventorySet(){
+  return new Set((state.journey?.inventory||[]).map(x=>x.item_code));
+}
+
+function renderStudentAvatar(target,avatarInput){
+  const el=typeof target==='string'?$(target):target;
+  if(!el)return;
+  const a=normalizedAvatar(avatarInput);
+  const safe={
+    skin:['light','medium','tan','deep'].includes(a.skin)?a.skin:'medium',
+    hair:['short','wave','curly','buzz'].includes(a.hair)?a.hair:'short',
+    hair_color:['ink','brown','blonde','blue'].includes(a.hair_color)?a.hair_color:'ink',
+    outfit:['purple','blue','teal','cyan','gold'].includes(a.outfit)?a.outfit:'purple',
+    accessory:['none','glasses','headphones','crown'].includes(a.accessory)?a.accessory:'none',
+    frame:['basic','neon','cosmic'].includes(a.frame)?a.frame:'basic',
+    background:['grid','midnight','aurora'].includes(a.background)?a.background:'grid'
+  };
+  el.innerHTML=`
+    <div class="student-avatar-shell frame-${safe.frame} bg-${safe.background}">
+      <div class="student-avatar-figure"
+        data-skin="${safe.skin}" data-hair="${safe.hair}" data-hair-color="${safe.hair_color}"
+        data-outfit="${safe.outfit}" data-accessory="${safe.accessory}">
+        <span class="av-body"></span>
+        <span class="av-neck"></span>
+        <span class="av-head"></span>
+        <span class="av-ear av-ear-left"></span><span class="av-ear av-ear-right"></span>
+        <span class="av-hair"></span>
+        <span class="av-brow av-brow-left"></span><span class="av-brow av-brow-right"></span>
+        <span class="av-eye av-eye-left"></span><span class="av-eye av-eye-right"></span>
+        <span class="av-nose"></span><span class="av-mouth"></span>
+        <span class="av-accessory"></span>
+        <span class="av-logo">N</span>
+      </div>
+    </div>`;
+}
+
+function setJourneyTab(tab='missions'){
+  state.journeyTab=tab;
+  $$('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
+  $$('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
+  if(tab==='avatar')renderAvatarBuilder();
+}
+
+function missionProgressText(m){
+  return Math.min(Number(m.progress||0),Number(m.target||0))+' / '+Number(m.target||0);
+}
+
+function renderJourneyHome(){
+  const j=state.journey;
+  if(!j?.profile)return;
+  const p=j.profile;
+  const missions=j.missions||[];
+  const current=missions.find(x=>x.status==='completed')||missions.find(x=>x.status==='active');
+  const pct=clamp(Math.round(Number(p.xp_in_level||0)*100/Math.max(1,Number(p.xp_to_next||180))),0,100);
+  renderStudentAvatar($('#mobileJourneyAvatar'),p.avatar);
+  renderStudentAvatar($('#desktopJourneyAvatar'),p.avatar);
+  if($('#mobileJourneyLevel'))$('#mobileJourneyLevel').textContent='Nível '+p.level;
+  if($('#mobileJourneyLeague'))$('#mobileJourneyLeague').textContent=p.league||'Bronze';
+  if($('#mobileJourneyMission'))$('#mobileJourneyMission').textContent=current
+    ? (current.status==='completed'?'Recompensa pronta: '+current.title:current.title+' · '+missionProgressText(current))
+    : 'Missões concluídas. Continue sua evolução.';
+  if($('#mobileJourneyXpBar'))$('#mobileJourneyXpBar').style.width=pct+'%';
+  if($('#mobileJourneyCoins'))$('#mobileJourneyCoins').textContent=Number(p.coins||0).toLocaleString('pt-BR');
+  if($('#mobileJourneyStreak'))$('#mobileJourneyStreak').textContent=Number(p.streak_days||0);
+  if($('#desktopJourneyTitle'))$('#desktopJourneyTitle').textContent='Nível '+p.level+' · '+(p.league||'Bronze');
+  if($('#desktopJourneyMission'))$('#desktopJourneyMission').textContent=current
+    ? (current.status==='completed'?'Missão concluída: resgate sua recompensa.':current.title+' · '+missionProgressText(current))
+    : 'Você concluiu as missões disponíveis.';
+  if($('#desktopJourneyXpBar'))$('#desktopJourneyXpBar').style.width=pct+'%';
+  if($('#desktopJourneyCoins'))$('#desktopJourneyCoins').textContent=Number(p.coins||0).toLocaleString('pt-BR');
+  if($('#desktopJourneyStreak'))$('#desktopJourneyStreak').textContent=Number(p.streak_days||0)+'d';
+  if($('#desktopJourneyRank'))$('#desktopJourneyRank').textContent=p.rank_position?'#'+p.rank_position:'—';
+}
+
+function renderJourneyMissions(){
+  const missions=state.journey?.missions||[];
+  const renderList=(items,target)=>{
+    const el=$(target); if(!el)return;
+    el.innerHTML=items.length?items.map(m=>{
+      const pct=clamp(Math.round(Number(m.progress||0)*100/Math.max(1,Number(m.target||1))),0,100);
+      const ready=m.status==='completed';
+      const claimed=m.status==='claimed';
+      return `<article class="journey-mission-card ${ready?'ready':''} ${claimed?'claimed':''}">
+        <div class="journey-mission-icon">${claimed?'✓':ready?'✦':'◎'}</div>
+        <div class="journey-mission-copy">
+          <div><b>${esc(m.title)}</b><span>${missionProgressText(m)}</span></div>
+          <p>${esc(m.description)}</p>
+          <div class="journey-mission-progress"><i style="width:${pct}%"></i></div>
+          <small>+${Number(m.reward_xp||0)} XP · +${Number(m.reward_coins||0)} N-Coins</small>
+        </div>
+        ${ready?`<button data-claim-mission="${m.id}">Resgatar</button>`:claimed?'<em>Resgatado</em>':''}
+      </article>`;
+    }).join(''):'<div class="journey-empty">Nenhuma missão disponível agora.</div>';
+  };
+  renderList(missions.filter(x=>x.period==='daily'),'#journeyDailyMissions');
+  renderList(missions.filter(x=>x.period==='weekly'),'#journeyWeeklyMissions');
+
+  $$('[data-claim-mission]').forEach(btn=>btn.onclick=async()=>{
+    const id=Number(btn.dataset.claimMission);
+    const mission=missions.find(x=>Number(x.id)===id);
+    btn.disabled=true;btn.textContent='Resgatando...';
+    try{
+      const {data,error}=await client.rpc('claim_nexo_mission',{p_mission_id:id});
+      if(error)throw error;
+      state.journey=data;
+      state.avatarDraft=normalizedAvatar(data?.profile?.avatar);
+      renderNexoJourney();
+      toast('Missão resgatada: +'+Number(mission?.reward_xp||0)+' XP e +'+Number(mission?.reward_coins||0)+' N-Coins.');
+    }catch(err){
+      console.error('claim mission',err);
+      toast('Não foi possível resgatar essa missão.','error');
+      btn.disabled=false;btn.textContent='Resgatar';
+    }
+  });
+}
+
+function renderJourneyBoards(){
+  const j=state.journey||{};
+  const render=(rows,target,arena=false)=>{
+    const el=$(target);if(!el)return;
+    el.innerHTML=rows?.length?rows.map(row=>{
+      const mine=String(row.user_id||'')===String(state.user?.id||'');
+      return `<div class="journey-rank-row ${mine?'mine':''}">
+        <span class="journey-rank-pos">${Number(row.rank_position)<=3?['🥇','🥈','🥉'][Number(row.rank_position)-1]:'#'+row.rank_position}</span>
+        <div><b>${esc(row.full_name)}${mine?' · você':''}</b><small>${arena?Number(row.correct_answers||0)+' acertos na Arena':esc(row.league||'Bronze')}</small></div>
+        <strong>${Number(row.points||0).toLocaleString('pt-BR')}<small> pts</small></strong>
+      </div>`;
+    }).join(''):'<div class="journey-empty">A competição começa quando os alunos pontuarem nesta semana.</div>';
+  };
+  render(j.leaderboard,'#journeyLeagueBoard',false);
+  render(j.arena_leaderboard,'#journeyArenaBoard',true);
+
+  const p=j.profile||{};
+  $$('.league-road [data-league]').forEach(x=>x.classList.toggle('active',x.dataset.league===p.league));
+  if($('#journeyWeekLabel')&&j.week_start&&j.week_end){
+    const a=new Date(j.week_start+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+    const b=new Date(j.week_end+'T12:00:00').toLocaleDateString('pt-BR',{day:'2-digit',month:'short'});
+    $('#journeyWeekLabel').textContent=a+' — '+b;
+  }
+}
+
+function renderJourneyStore(){
+  const j=state.journey||{};
+  const owned=journeyInventorySet();
+  const level=Number(j.profile?.level||1);
+  const el=$('#journeyStore');if(!el)return;
+  const rarityIcon={comum:'•',incomum:'◆',raro:'✦','épico':'✧','lendário':'♕'};
+  el.innerHTML=(j.catalog||[]).map(item=>{
+    const has=owned.has(item.item_code);
+    const locked=level<Number(item.unlock_level||1);
+    return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''}">
+      <div class="store-item-visual"><span>${rarityIcon[item.rarity]||'✦'}</span><i>${esc(item.category)}</i></div>
+      <div><small>${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
+      <div class="store-item-bottom">
+        <span>${has?'NO INVENTÁRIO':locked?'NÍVEL '+item.unlock_level:Number(item.price||0)+' N-Coins'}</span>
+        ${has?'<button disabled>Adquirido</button>':locked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">Comprar</button>`}
+      </div>
+    </article>`;
+  }).join('');
+
+  $$('[data-buy-item]').forEach(btn=>btn.onclick=async()=>{
+    const code=btn.dataset.buyItem;
+    btn.disabled=true;btn.textContent='Comprando...';
+    try{
+      const {data,error}=await client.rpc('buy_nexo_item',{p_item_code:code});
+      if(error)throw error;
+      state.journey=data;
+      renderNexoJourney();
+      toast('Item adicionado ao seu inventário.');
+      setJourneyTab('store');
+    }catch(err){
+      console.error('buy Nexo item',err);
+      const msg=String(err?.message||'');
+      toast(msg.includes('insufficient')?'N-Coins insuficientes.':msg.includes('level required')?'Seu nível ainda não libera esse item.':'Não foi possível concluir a compra.','error');
+      btn.disabled=false;btn.textContent='Comprar';
+    }
+  });
+}
+
+function renderJourneyAchievements(){
+  const list=state.journey?.achievements||[];
+  const el=$('#journeyAchievements');if(!el)return;
+  el.innerHTML=list.map(a=>`<article class="journey-achievement ${a.unlocked?'unlocked':'locked'} rarity-${esc(a.rarity)}">
+    <span>${esc(a.icon||'✦')}</span>
+    <div><small>${a.unlocked?'CONQUISTADA':esc(a.rarity).toUpperCase()}</small><h4>${esc(a.name)}</h4><p>${esc(a.description)}</p><em>+${Number(a.reward_xp||0)} XP · +${Number(a.reward_coins||0)} N-Coins</em></div>
+  </article>`).join('');
+}
+
+function renderAvatarBuilder(){
+  const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
+  state.avatarDraft=draft;
+  renderStudentAvatar($('#avatarBuilderPreview'),draft);
+  const owned=journeyInventorySet();
+  $$('[data-avatar-field]').forEach(btn=>{
+    const field=btn.dataset.avatarField,value=btn.dataset.avatarValue,item=btn.dataset.avatarItem;
+    const locked=Boolean(item&&!owned.has(item));
+    btn.classList.toggle('active',draft[field]===value);
+    btn.classList.toggle('locked',locked);
+    btn.dataset.locked=locked?'true':'false';
+    const base=btn.textContent.replace(/\s*🔒$/,'');
+    btn.textContent=locked?base+' 🔒':base;
+  });
+}
+
+function renderNexoJourney(){
+  const j=state.journey;
+  if(!j?.profile)return;
+  const p=j.profile;
+  const name=state.profile?.full_name||state.user?.user_metadata?.full_name||'Aluno NEXO';
+  renderStudentAvatar($('#journeyAvatar'),p.avatar);
+  if($('#journeyPlayerName'))$('#journeyPlayerName').textContent=name;
+  if($('#journeyLevel'))$('#journeyLevel').textContent='Nível '+p.level;
+  if($('#journeyTitle'))$('#journeyTitle').textContent=p.title||'Calouro NEXO';
+  if($('#journeyCoins'))$('#journeyCoins').textContent=Number(p.coins||0).toLocaleString('pt-BR');
+  if($('#journeyStreak'))$('#journeyStreak').textContent=Number(p.streak_days||0);
+  if($('#journeyLeague'))$('#journeyLeague').textContent=p.league||'Bronze';
+  if($('#journeyRank'))$('#journeyRank').textContent=p.rank_position?'#'+p.rank_position:'—';
+  if($('#journeyArenaPoints'))$('#journeyArenaPoints').textContent=Number(p.arena_points||0).toLocaleString('pt-BR');
+  if($('#journeyArenaRank'))$('#journeyArenaRank').textContent=p.arena_rank?'#'+p.arena_rank:'—';
+  const pct=clamp(Math.round(Number(p.xp_in_level||0)*100/Math.max(1,Number(p.xp_to_next||180))),0,100);
+  if($('#journeyLevelBar'))$('#journeyLevelBar').style.width=pct+'%';
+  if($('#journeyLevelText'))$('#journeyLevelText').textContent=Number(p.xp_in_level||0)+' / '+Number(p.xp_to_next||180)+' XP para o próximo nível';
+  renderJourneyHome();
+  renderJourneyMissions();
+  renderJourneyBoards();
+  renderJourneyStore();
+  renderJourneyAchievements();
+  renderAvatarBuilder();
+  setJourneyTab(state.journeyTab||'missions');
+}
+
+async function loadNexoJourney({silent=false}={}){
+  if(!state.user?.id)return null;
+  if(state.journeyLoading)return state.journey;
+  state.journeyLoading=true;
+  try{
+    const {data,error}=await client.rpc('get_nexo_journey');
+    if(error)throw error;
+    state.journey=data||null;
+    state.avatarDraft=normalizedAvatar(data?.profile?.avatar);
+    renderNexoJourney();
+    return state.journey;
+  }catch(err){
+    console.error('NEXO Journey',err);
+    if(!silent)toast('Não foi possível carregar a NEXO Jornada agora.','error');
+    return null;
+  }finally{
+    state.journeyLoading=false;
+  }
+}
+
+async function loadRanking(){
+  return loadNexoJourney();
+}
+
+async function startNexoArena(){
+  const btn=$('#startNexoArena');
+  if(btn){btn.disabled=true;btn.textContent='Montando Arena...';}
+  try{
+    openPage('questoes');
+    resetSessionUI();
+    await startStudySession({
+      mode:'arena',
+      area:'',
+      subject:'',
+      topic:'',
+      difficulty:'',
+      visualOnly:false,
+      size:20
+    });
+    if(state.session){
+      $('#sessionAreaBadge').textContent='ARENA NEXO';
+      $('#sessionTitle').textContent='Desafio semanal';
+      $('#sessionSubtitle').textContent='20 questões mistas. Seus acertos, dificuldade e eficiência valem Pontos NEXO.';
+    }
+  }finally{
+    if(btn){btn.disabled=false;btn.innerHTML='Entrar na Arena <span>→</span>';}
+  }
+}
+
+$$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
+$$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTabTarget));
+$('#refreshJourney')?.addEventListener('click',()=>loadNexoJourney());
+$('#startNexoArena')?.addEventListener('click',startNexoArena);
+
+$$('[data-avatar-field]').forEach(btn=>btn.onclick=()=>{
+  if(btn.dataset.locked==='true'){
+    toast('Desbloqueie esse cosmético na Loja NEXO.');
+    setJourneyTab('store');
+    return;
+  }
+  state.avatarDraft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
+  state.avatarDraft[btn.dataset.avatarField]=btn.dataset.avatarValue;
+  renderAvatarBuilder();
+});
+
+$('#saveJourneyAvatar')?.addEventListener('click',async()=>{
+  const btn=$('#saveJourneyAvatar');
+  if(!state.avatarDraft)return;
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const {data,error}=await client.rpc('save_nexo_avatar',{p_avatar:state.avatarDraft});
+    if(error)throw error;
+    if(state.journey?.profile)state.journey.profile.avatar=data;
+    state.avatarDraft=normalizedAvatar(data);
+    renderNexoJourney();
+    setJourneyTab('avatar');
+    toast('Seu personagem NEXO foi atualizado.');
+  }catch(err){
+    console.error('save avatar',err);
+    toast('Não foi possível salvar o avatar.','error');
+  }finally{
+    btn.disabled=false;btn.textContent='Salvar personagem';
+  }
+});
+
 
 async function openQuestionComments(questionId){
   if(!questionId)return;
