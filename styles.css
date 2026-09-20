@@ -2335,3 +2335,8 @@ body.light .admin-content-row{background:#f7f9fd}
   .admin-content-actions{grid-column:1/-1}
   .admin-content-actions button{flex:1}
 }
+
+.core-content-badge{display:inline-flex;align-items:center;gap:5px;margin-bottom:7px;padding:4px 7px;border-radius:999px;background:rgba(99,82,228,.13);border:1px solid rgba(121,103,241,.32);color:#bcb3ff;font-size:8px;font-weight:900;letter-spacing:.7px}
+.admin-stats{grid-template-columns:repeat(5,1fr)}
+@media(max-width:980px){.admin-stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:520px){.admin-stats{grid-template-columns:1fr}}
