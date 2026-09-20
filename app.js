@@ -3654,8 +3654,10 @@ $('#customEssayPrompt').addEventListener('input',updateEssayPrompt);
 $('#essayText').addEventListener('input',()=>$('#wordCount').textContent=(($('#essayText').value.match(/\S+/g)||[]).length)+' palavras');
 
 const OFFICIAL_ENEM_ESSAY_SHEET={
-  url:'',
-  label:'Folha oficial de redação do ENEM',
+  localUrl:'./assets/folha-redacao-enem-treino-a4.pdf',
+  url:'./assets/folha-redacao-enem-treino-a4.pdf',
+  label:'Folha ENEM para treino - tamanho real',
+  officialReference:'https://www.gov.br/inep/pt-br/centrais-de-conteudo/acervo-linha-editorial/publicacoes-institucionais/avaliacoes-e-exames-da-educacao-basica/a-redacao-do-enem-2026-cartilha-do-a-participante',
   loading:false,
   checked:false
 };
@@ -3687,8 +3689,8 @@ async function updateOfficialEssaySheetAction({refresh=false}={}){
         return isPdf&&essaySheetTitleMatches(row.title);
       });
 
-      OFFICIAL_ENEM_ESSAY_SHEET.url=sheet?.file_url||'';
-      OFFICIAL_ENEM_ESSAY_SHEET.label=sheet?.title||'Folha oficial de redação do ENEM';
+      OFFICIAL_ENEM_ESSAY_SHEET.url=sheet?.file_url||OFFICIAL_ENEM_ESSAY_SHEET.localUrl;
+      OFFICIAL_ENEM_ESSAY_SHEET.label=sheet?.title||'Folha ENEM para treino - tamanho real';
       OFFICIAL_ENEM_ESSAY_SHEET.checked=true;
     }catch(err){
       console.error('official essay sheet',err);
@@ -3699,17 +3701,22 @@ async function updateOfficialEssaySheetAction({refresh=false}={}){
   }
 
   const ready=Boolean(OFFICIAL_ENEM_ESSAY_SHEET.url);
+  const usingUploaded=Boolean(OFFICIAL_ENEM_ESSAY_SHEET.url&&OFFICIAL_ENEM_ESSAY_SHEET.url!==OFFICIAL_ENEM_ESSAY_SHEET.localUrl);
   btn.disabled=!ready;
-  btn.textContent=ready?'Abrir folha oficial para imprimir ↗':'PDF aguardando envio';
-  if(note)note.textContent=ready
-    ?'A folha oficial está disponível. Abra o PDF e use Imprimir no navegador.'
-    :'Envie o PDF nos Materiais com um título contendo “Folha”, “Redação” e “ENEM”; ele será conectado aqui automaticamente.';
+  btn.textContent=usingUploaded?'Abrir folha enviada para imprimir ↗':'Abrir PDF em tamanho real ↗';
+  if(note)note.textContent=usingUploaded
+    ?'A folha enviada está disponível para impressão.'
+    :'Modelo de treino A4 com 30 linhas. Imprima em escala 100%. A folha definitiva do Enem é personalizada e entregue pelo Inep no dia da prova.';
 }
 
 $('#officialEssaySheetBtn')?.addEventListener('click',()=>{
-  const url=OFFICIAL_ENEM_ESSAY_SHEET.url;
-  if(!url)return toast('A folha oficial ainda não foi enviada.');
+  const url=OFFICIAL_ENEM_ESSAY_SHEET.url||OFFICIAL_ENEM_ESSAY_SHEET.localUrl;
+  if(!url)return toast('A folha de treino não está disponível agora.');
   window.open(url,'_blank','noopener,noreferrer');
+});
+
+$('#officialEssayGuideBtn')?.addEventListener('click',()=>{
+  window.open(OFFICIAL_ENEM_ESSAY_SHEET.officialReference,'_blank','noopener,noreferrer');
 });
 
 function essayScores(text){
