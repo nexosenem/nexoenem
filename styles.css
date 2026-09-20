@@ -6878,3 +6878,10 @@ body.light .mastery-area,body.light .focus-roadmap-grid article{background:#fff}
 .wardrobe-card.equipped{border-color:rgba(54,201,255,.55);box-shadow:inset 0 0 0 1px rgba(54,201,255,.08)}.wardrobe-card.equipped .wardrobe-state{background:rgba(54,201,255,.15);color:#67dcff}.wardrobe-card.equipped .wardrobe-card-visual:after{content:"✓";position:absolute;top:10px;right:10px;display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#36c9ff;color:#06101e;font-weight:950}
 body.light .wardrobe-collection-progress{background:linear-gradient(135deg,#f4f1ff,#f3fbff)}body.light .wardrobe-card-visual>small{background:rgba(255,255,255,.78);color:#50627a}
 @media(max-width:700px){.wardrobe-collection-progress{grid-template-columns:1fr;gap:10px}.wardrobe-card-visual{height:140px}}
+
+/* NEXO Full · Daily loop */
+.command-daily{margin-top:10px}.command-daily>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:6px;color:var(--muted);font-size:10px}.command-daily b{color:var(--text);font-size:10px}
+.command-daily-track{height:5px;border-radius:99px;background:rgba(255,255,255,.06);overflow:hidden}.command-daily-track i{display:block;width:0;height:100%;border-radius:inherit;background:linear-gradient(90deg,#7558ff,#36c9ff);transition:width .35s ease}
+.command-start{width:100%;margin-top:10px;border:1px solid rgba(117,88,255,.38);border-radius:11px;background:linear-gradient(135deg,rgba(117,88,255,.18),rgba(54,201,255,.08));color:#dcd8ff;padding:10px 12px;font-weight:850;cursor:pointer}.command-start:hover{border-color:#7558ff}
+.nexo-command-center.daily-complete .command-daily-track i{background:linear-gradient(90deg,#34d6a2,#36c9ff)}.nexo-command-center.daily-complete .command-next{border-color:rgba(52,214,162,.28)}
+body.light .command-start{color:#5142b0;background:linear-gradient(135deg,#f3f0ff,#eefaff)}
