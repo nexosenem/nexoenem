@@ -217,6 +217,18 @@
               </div>
             </article>
 
+            <article class="nexo-today-live mobile-nexo-today" data-nexo-today>
+              <div class="nexo-today-professor">
+                <img data-nexo-today-avatar src="./assets/nexo-family/bust-pensativo.avif" alt="Professor Nexo">
+                <div><span>✦ NEXO HOJE</span><h3 data-nexo-today-title>Preparando seu próximo passo...</h3><p data-nexo-today-text>Estou conectando seu conteúdo, treino e desempenho.</p></div>
+              </div>
+              <div class="nexo-today-meta">
+                <span data-nexo-today-status>CALIBRANDO</span>
+                <span data-nexo-today-time>~10 min</span>
+              </div>
+              <button class="primary-btn full" data-nexo-today-action>Continuar →</button>
+            </article>
+
             <article class="mobile-core-card nexo-core-card core-empty">
               <div class="core-topline"><span>✦ NEXO CORE</span><small data-core-status>calibrando</small></div>
               <div class="core-main">
@@ -243,6 +255,11 @@
               <p data-today-summary>O NEXO Core vai montar uma rotina curta usando seu tempo disponível e seu foco atual.</p>
               <div class="today-plan-blocks" data-today-blocks></div>
               <button class="primary-btn full" data-today-start>Começar plano <span>→</span></button>
+            </article>
+
+            <article class="nexo-learning-trail mobile-learning-trail">
+              <div class="trail-head"><div><span class="eyebrow">TRILHA NEXO · MATEMÁTICA</span><h3>Seu caminho de domínio</h3></div><button data-page="materiais">Biblioteca →</button></div>
+              <div class="nexo-trail-list" data-math-trail></div>
             </article>
 
             <article class="nexo-week-card mobile-week-card" data-nexo-week>
@@ -343,6 +360,18 @@
                 </div>
               </article>
 
+              <article class="panel nexo-today-live desktop-nexo-today" data-nexo-today>
+                <div class="nexo-today-professor">
+                  <img data-nexo-today-avatar src="./assets/nexo-family/bust-pensativo.avif" alt="Professor Nexo">
+                  <div><span>✦ NEXO HOJE · PRÓXIMA MELHOR AÇÃO</span><h3 data-nexo-today-title>Preparando seu próximo passo...</h3><p data-nexo-today-text>Estou conectando seu conteúdo, treino e desempenho.</p></div>
+                </div>
+                <div class="nexo-today-meta">
+                  <span data-nexo-today-status>CALIBRANDO</span>
+                  <span data-nexo-today-time>~10 min</span>
+                </div>
+                <button class="primary-btn" data-nexo-today-action>Continuar →</button>
+              </article>
+
               <article class="panel today-plan-card desktop-today-plan" data-today-plan>
                 <div class="today-plan-head">
                   <div><span class="eyebrow">PLANO DE HOJE · NEXO CORE</span><h3>Seu estudo, já organizado.</h3></div>
@@ -351,6 +380,11 @@
                 <p data-today-summary>O NEXO Core vai montar uma rotina usando seu tempo disponível e seu foco atual.</p>
                 <div class="today-plan-blocks" data-today-blocks></div>
                 <button class="primary-btn" data-today-start>Começar plano <span>→</span></button>
+              </article>
+
+              <article class="panel nexo-learning-trail desktop-learning-trail">
+                <div class="trail-head"><div><span class="eyebrow">TRILHA NEXO · MATEMÁTICA</span><h3>Do primeiro contato ao domínio.</h3></div><button data-page="materiais">Abrir Biblioteca →</button></div>
+                <div class="nexo-trail-list" data-math-trail></div>
               </article>
 
               <article class="panel nexo-week-card desktop-week-card" data-nexo-week>
@@ -463,8 +497,15 @@
 
         <section class="page" id="questoes">
           <div class="page-head question-page-head">
-            <div><span class="eyebrow">SESSÃO DE ESTUDO</span><h2>Resolver Questões</h2><p id="sessionSubtitle">Escolha uma área e comece uma sessão organizada.</p></div>
-            <button class="outline-btn" id="changeSession">Trocar matéria</button>
+            <div>
+              <div id="studyBreadcrumb" class="study-breadcrumb hidden">
+                <button type="button" data-study-back-home>Início</button><i>›</i>
+                <button type="button" data-study-back-library>Biblioteca</button><i>›</i>
+                <span data-study-breadcrumb-topic>Treino</span>
+              </div>
+              <span class="eyebrow">SESSÃO DE ESTUDO</span><h2>Resolver Questões</h2><p id="sessionSubtitle">Escolha uma área e comece uma sessão organizada.</p>
+            </div>
+            <div class="question-head-actions"><button class="outline-btn hidden" id="backToContent">← Voltar ao conteúdo</button><button class="outline-btn" id="changeSession">Trocar matéria</button></div>
           </div>
 
           <article id="sessionSetup" class="session-setup panel">
@@ -1360,8 +1401,25 @@
           </select>
         </label>
         <button id="viewerComplete" class="outline-btn">Marcar como concluído</button>
+        <button id="viewerCheckpoint" class="outline-btn hidden">Checagem rápida · 2 questões</button>
         <button id="viewerPractice" class="primary-btn viewer-practice-btn">Treinar este assunto →</button>
       </footer>
+    </section>
+  </div>
+
+  <div id="guidedTrainingModal" class="guided-training-modal hidden" aria-modal="true" role="dialog">
+    <section class="guided-training-shell">
+      <button id="closeGuidedTraining" class="guided-close" aria-label="Fechar">×</button>
+      <div class="guided-professor">
+        <img id="guidedProfessorImage" src="./assets/nexo-family/bust-pensativo.avif" alt="Professor Nexo">
+        <div><span>PROFESSOR NEXO · ANTES DO TREINO</span><h3 id="guidedTrainingTitle">Vale estudar antes.</h3><p id="guidedTrainingText">Uma revisão curta antes das questões costuma deixar o treino mais útil.</p></div>
+      </div>
+      <div class="guided-route"><span class="active">Aula</span><i>→</i><span>Resumo</span><i>→</i><span>Macetes</span><i>→</i><span>Treino</span></div>
+      <div class="guided-actions">
+        <button id="guidedStudyFirst" class="primary-btn">Estudar primeiro →</button>
+        <button id="guidedTestNow" class="outline-btn">Já domino · testar agora</button>
+      </div>
+      <small>O NEXO recomenda o conteúdo, mas você continua no controle da sua rota.</small>
     </section>
   </div>
 
