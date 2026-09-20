@@ -5179,7 +5179,7 @@ function renderNexoToday(){
 }
 
 function renderMathTrail(){
-  const roots=$('[data-math-trail]');
+  const roots=$$('[data-math-trail]');
   if(!roots.length)return;
   const rows=(state.radarTopics||[]).filter(r=>r.area==='Matemática').sort((a,b)=>Number(b.nexo_priority_score||0)-Number(a.nexo_priority_score||0));
   if(topicMaterials('Raciocínio quantitativo','Matemática').length&&!rows.some(r=>r.topic==='Raciocínio quantitativo')){
@@ -5196,7 +5196,7 @@ function renderMathTrail(){
   }).join(''):'<p class="trail-empty">Carregando sua trilha...</p>';
   roots.forEach(root=>{
     root.innerHTML=html;
-    $('[data-trail-topic]',root).forEach(btn=>btn.onclick=()=>openLibraryTopic(decodeURIComponent(btn.dataset.trailSubject||''),decodeURIComponent(btn.dataset.trailTopic||'')));
+    $$('[data-trail-topic]',root).forEach(btn=>btn.onclick=()=>openLibraryTopic(decodeURIComponent(btn.dataset.trailSubject||''),decodeURIComponent(btn.dataset.trailTopic||'')));
   });
 }
 
