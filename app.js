@@ -1170,8 +1170,33 @@ function openNexoPlans(message=''){
 function handlePlanLimitError(error){
   const message=planLimitMessage(error);
   if(!message)return false;
-  loadNexoJourney({silent:true}).catch(()=>{});
-  setTimeout(()=>openNexoPlans(message),0);
+
+  Promise.all([
+    loadNexoMembership({silent:true}),
+    loadNexoJourney({silent:true})
+  ]).catch(()=>{});
+
+  // Não arranca o aluno da questão e joga direto para a página de planos.
+  // O limite continua existindo, mas a oferta de upgrade passa a ser uma escolha.
+  toast(message,'info');
+
+  if(String(error?.message||error||'').includes('nexo_free_daily_question_limit')){
+    const card=$('#questionCard');
+    if(card&&!$('#questionLimitNotice')){
+      const notice=document.createElement('div');
+      notice.id='questionLimitNotice';
+      notice.className='answer-panel wrong';
+      notice.innerHTML=`
+        <div class="learning-block primary-learning">
+          <span>PLANO FREE</span>
+          <h5>As 10 respostas de hoje foram concluídas.</h5>
+          <p>Você pode continuar lendo e revisando a questão. Para confirmar novas respostas hoje, o NEXO Plus remove o limite diário.</p>
+          <button id="questionLimitPlans" class="outline-btn" type="button">Ver NEXO Plus</button>
+        </div>`;
+      card.appendChild(notice);
+      $('#questionLimitPlans')?.addEventListener('click',()=>openNexoPlans());
+    }
+  }
   return true;
 }
 
@@ -1857,7 +1882,8 @@ async function startStudySession(config) {
   const btn=$('#startSession'); if(btn){btn.disabled=true;btn.textContent='Montando sessão...';}
   try{
     if(!state.membership)await loadNexoMembership({silent:true});
-    if(planUsageReached('questions'))return openNexoPlans('Você atingiu as 10 questões disponíveis hoje no plano Free.');
+    // Abrir/montar uma sessão não consome a cota de questões.
+    // O limite Free é validado somente no submit_answer_v2, ao confirmar uma nova resposta.
     if(config?.mode==='core'&&planUsageReached('core'))return openNexoPlans('Você já usou a sessão NEXO Core disponível hoje no Free.');
     if(config?.mode==='arena'&&planUsageReached('arena'))return openNexoPlans('Você já usou sua entrada gratuita da Arena nesta semana.');
     if(state.session?.coreSessionId) await closeNexoSession('abandoned',state.session);
@@ -2910,7 +2936,13 @@ async function submitAnswer(option) {
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
   setNexoMood(reaction.mood);
-  Promise.all([loadDashboard(),loadNexoCore(),loadRecentAttempts(),loadNexoJourney({silent:true})]).catch(err=>console.error('refresh after answer',err));
+  Promise.all([
+    loadDashboard(),
+    loadNexoCore(),
+    loadRecentAttempts(),
+    loadNexoMembership({silent:true}),
+    loadNexoJourney({silent:true})
+  ]).catch(err=>console.error('refresh after answer',err));
 }
 
 async function nextQuestion() {
