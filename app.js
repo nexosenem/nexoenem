@@ -42,7 +42,7 @@ const state = {
   answered:false,
   questionStartedAt:0,
   pdfCache:new Map(),
-  brokenVisual:new Set(),
+  visualCache:new Map(),
   videos:[]
 };
 
@@ -356,10 +356,10 @@ async function startStudySession(config) {
   try{
     const all = await fetchQuestions(config);
     const seen = await getSeenIds();
-    let fresh = shuffle(all.filter(x=>!seen.has(Number(x.id))&&!state.brokenVisual.has(Number(x.id))));
+    let fresh = shuffle(all.filter(x=>!seen.has(Number(x.id))));
     let reviewMode=false;
     if(!fresh.length){
-      fresh=shuffle(all.filter(x=>!state.brokenVisual.has(Number(x.id))));
+      fresh=shuffle(all);
       reviewMode=true;
     }
     if(!fresh.length) throw new Error('Nenhuma questão encontrada com esses filtros.');
@@ -416,7 +416,7 @@ function localMediaPath(q){
 
 async function renderQuestion(q) {
   const card=$('#questionCard');
-  const visual = q.media_type && (localMediaPath(q) || (q.source_pdf_url && q.source_page && q.media_crop));
+  const visual = Boolean(q.media_type);
   card.innerHTML=`
     <div class="q-top">
       <div class="q-tags">
@@ -457,10 +457,8 @@ function bindVisualZoom(stage){
   };
 }
 
-function loadLocalVisual(q){
+function mountVisualImage(q, src){
   return new Promise(resolve=>{
-    const path=localMediaPath(q);
-    if(!path) return resolve(false);
     const img=new Image();
     img.decoding='async';
     img.onload=()=>{
@@ -476,12 +474,35 @@ function loadLocalVisual(q){
       resolve(true);
     };
     img.onerror=()=>resolve(false);
-    img.src=path;
+    img.src=src;
   });
 }
 
+async function loadStoredVisual(q){
+  try{
+    const id=Number(q.id);
+    if(state.visualCache.has(id)){
+      return mountVisualImage(q,state.visualCache.get(id));
+    }
+    const {data,error}=await client.from('question_media')
+      .select('data_uri')
+      .eq('question_id',id)
+      .maybeSingle();
+    if(error || !data?.data_uri) return false;
+    state.visualCache.set(id,data.data_uri);
+    return mountVisualImage(q,data.data_uri);
+  }catch(err){
+    console.error('stored visual',err);
+    return false;
+  }
+}
+
+function loadLocalVisual(q){
+  const path=localMediaPath(q);
+  return path ? mountVisualImage(q,path) : Promise.resolve(false);
+}
+
 function showVisualFallback(q){
-  state.brokenVisual.add(Number(q.id));
   const stage=$('#visualStage');
   const head=$('#visualWrap .visual-head span:last-child');
   if(head) head.textContent='falha ao carregar';
@@ -524,6 +545,7 @@ async function getPdf(url) {
 
 async function renderVisual(q) {
   try{
+    if(await loadStoredVisual(q)) return true;
     if(await loadLocalVisual(q)) return true;
     if(!q.source_pdf_url || !q.source_page || !q.media_crop) return false;
     const pdf=await getPdf(q.source_pdf_url);
