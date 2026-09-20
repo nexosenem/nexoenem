@@ -1251,7 +1251,7 @@ async function refreshCurrentRole({silent=true}={}){
     const isAdmin=data.role==='admin';
     renderPlanExperience();
 
-    $('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
     if(roleLabel)roleLabel.textContent=nexoRolePlanLabel();
 
@@ -4115,7 +4115,7 @@ function wardrobeItemState(item,owned,level,plus,ultra){
   const levelLocked=!ultra&&level<Number(item?.unlock_level||1);
   const autoEligible=Boolean(planAllowed&&!levelLocked&&(mode==='starter'||mode==='level'));
   const permanentOwned=Boolean(owned?.has?.(item?.item_code));
-  const has=Boolean(ultra||permanentOwned||autoEligible);
+  const has=Boolean(ultra||(planAllowed&&(permanentOwned||autoEligible)));
   const available=Boolean(mode==='store'&&!has&&!plusLocked&&!levelLocked);
   return {has,plusLocked,levelLocked,available,autoEligible,permanentOwned,mode};
 }
@@ -4273,16 +4273,16 @@ function renderJourneyStore(){
     const affordable=coins>=price;
     const category=wardrobeCategoryLabel(item.category);
     const status=ultra?'INCLUÍDO NO ULTRA'
-      :s.permanentOwned?'NO INVENTÁRIO'
       :s.plusLocked?'EXCLUSIVO PLUS'
+      :s.permanentOwned?'NO INVENTÁRIO'
       :s.levelLocked?'LIBERA NO NÍVEL '+Number(item.unlock_level||1)
       :price===0?'RESGATE GRÁTIS'
       :price.toLocaleString('pt-BR')+' N¢';
 
     let action='';
     if(ultra)action='<button disabled>Incluído</button>';
-    else if(s.permanentOwned)action='<button disabled>Adquirido</button>';
     else if(s.plusLocked)action='<button data-open-plus>Ver Plus</button>';
+    else if(s.permanentOwned)action='<button disabled>Adquirido</button>';
     else if(s.levelLocked)action='<button disabled>Nível '+Number(item.unlock_level||1)+'</button>';
     else if(!affordable)action='<button disabled>Faltam '+Math.max(0,price-coins).toLocaleString('pt-BR')+' N¢</button>';
     else action='<button data-buy-item="'+esc(item.item_code)+'">'+(price===0?'Resgatar':'Comprar · '+price.toLocaleString('pt-BR')+' N¢')+'</button>';
@@ -4821,9 +4821,9 @@ async function startNexoArena(){
 }
 
 $$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
-$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
+$$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
 $('#wardrobeCategory')?.addEventListener('change',renderNexoWardrobe);
-$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{storeFilter=btn.dataset.storeFilter||'all';$('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderJourneyStore();});
+$$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{storeFilter=btn.dataset.storeFilter||'all';$('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderJourneyStore();});
 $('#storeCategory')?.addEventListener('change',renderJourneyStore);
 $$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTabTarget));
 $('#refreshJourney')?.addEventListener('click',()=>loadNexoJourney());
