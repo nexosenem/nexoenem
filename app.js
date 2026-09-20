@@ -190,6 +190,8 @@ const state = {
   registerBase:'neutral',
   journeyTab:'missions',
   lastSimulationReport:null,
+  completedEssayThemes:new Set(),
+  essayThemeProgressLoaded:false,
   onboarding:{
     step:1,
     goalScore:750,
@@ -1523,7 +1525,11 @@ async function initApp(session) {
     }
   }
 
-  await safeBootStep('temas',async()=>fillThemes());
+  await safeBootStep('temas',async()=>{
+    await loadEssayThemeProgress({rerender:false});
+    fillThemes();
+    updateOfficialEssaySheetAction();
+  });
   loadRecentAttempts().catch(err=>logClientError('recent_attempts',err,'recent_load'));
   await safeBootStep('banco',async()=>renderBank());
 
@@ -3473,23 +3479,81 @@ async function renderFocus() {
   });
 }
 
+function essayThemeCompleted(theme){
+  return Boolean(theme?.title&&state.completedEssayThemes?.has?.(theme.title));
+}
+
+async function loadEssayThemeProgress({rerender=true}={}){
+  if(!state.user?.id)return state.completedEssayThemes;
+  try{
+    const {data,error}=await client.from('essays')
+      .select('theme_title,status')
+      .eq('user_id',state.user.id)
+      .eq('status','reviewed')
+      .order('created_at',{ascending:false});
+    if(error)throw error;
+    state.completedEssayThemes=new Set((data||[]).map(row=>String(row.theme_title||'').trim()).filter(Boolean));
+    state.essayThemeProgressLoaded=true;
+    if(rerender)fillThemes();
+    return state.completedEssayThemes;
+  }catch(err){
+    console.error('essay theme progress',err);
+    state.essayThemeProgressLoaded=true;
+    return state.completedEssayThemes;
+  }
+}
+
 function renderEssayThemeOptions({keepSelection=true}={}){
   const themeSelect=$('#essayTheme');
   if(!themeSelect)return;
   const axis=$('#essayAxis')?.value||'all';
   const previous=keepSelection?themeSelect.value:'';
   const visible=axis==='all'?THEMES:THEMES.filter(t=>t.axis===axis);
+  const remaining=visible.filter(t=>!essayThemeCompleted(t));
 
-  themeSelect.innerHTML=visible.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+
-    '<option value="custom">✦ Tema personalizado</option>';
+  themeSelect.innerHTML=visible.map(t=>{
+    const done=essayThemeCompleted(t);
+    return `<option value="${t.id}" ${done?'disabled':''}>${done?'✓ Concluído · ':''}${esc(t.title)}</option>`;
+  }).join('')+'<option value="custom">✦ Tema personalizado</option>';
 
   if(previous==='custom')themeSelect.value='custom';
   else if(previous&&visible.some(t=>String(t.id)===String(previous)))themeSelect.value=previous;
-  else if(visible[0])themeSelect.value=String(visible[0].id);
+  else if(remaining[0])themeSelect.value=String(remaining[0].id);
+  else themeSelect.value='custom';
 
   const counter=$('#essayThemeCount');
-  if(counter)counter.textContent=visible.length+' tema'+(visible.length===1?'':'s')+(axis==='all'?' disponíveis':' neste eixo');
+  if(counter){
+    const done=visible.length-remaining.length;
+    counter.textContent=remaining.length+' disponível'+(remaining.length===1?'':'eis')+
+      ' · '+done+' concluído'+(done===1?'':'s')+
+      (axis==='all'?'':' neste eixo');
+  }
   updateEssayPrompt();
+}
+
+function renderEssayThemeCards(){
+  const grid=$('#themesGrid');
+  if(!grid)return;
+  grid.innerHTML=THEMES.map(t=>{
+    const done=essayThemeCompleted(t);
+    return `<article class="theme-card ${done?'theme-completed':''}">
+      <span class="axis">${esc(t.axis.toUpperCase())}</span>
+      <h3>${esc(t.title)}</h3>
+      <p>${esc(t.prompt)}</p>
+      <button class="outline-btn small" data-theme="${t.id}" ${done?'disabled':''}>${done?'✓ Tema concluído':'Praticar tema →'}</button>
+    </article>`;
+  }).join('');
+
+  $$('[data-theme]',grid).forEach(b=>b.onclick=()=>{
+    const t=THEMES.find(x=>String(x.id)===String(b.dataset.theme));
+    if(!t||essayThemeCompleted(t))return;
+    if($('#essayAxis'))$('#essayAxis').value=t.axis;
+    renderEssayThemeOptions({keepSelection:false});
+    $('#essayTheme').value=b.dataset.theme;
+    updateEssayPrompt();
+    openPage('redacao');
+    $('#essayText').focus();
+  });
 }
 
 function fillThemes() {
@@ -3507,8 +3571,14 @@ function fillThemes() {
   const randomBtn=$('#randomEssayTheme');
   if(randomBtn)randomBtn.onclick=()=>{
     const axis=$('#essayAxis')?.value||'all';
-    const pool=axis==='all'?THEMES:THEMES.filter(t=>t.axis===axis);
-    if(!pool.length)return;
+    const axisPool=axis==='all'?THEMES:THEMES.filter(t=>t.axis===axis);
+    const pool=axisPool.filter(t=>!essayThemeCompleted(t));
+    if(!pool.length){
+      toast(axis==='all'
+        ?'Você já concluiu todos os temas disponíveis. Use um tema personalizado.'
+        :'Você já concluiu todos os temas deste eixo. Escolha outro eixo.');
+      return;
+    }
     const current=Number($('#essayTheme').value);
     const choices=pool.length>1?pool.filter(t=>t.id!==current):pool;
     const picked=choices[Math.floor(Math.random()*choices.length)]||pool[0];
@@ -3517,16 +3587,7 @@ function fillThemes() {
     randomBtn.animate?.([{transform:'scale(.97)'},{transform:'scale(1)'}],{duration:180});
   };
 
-  $('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
-  $$('[data-theme]').forEach(b=>b.onclick=()=>{
-    const t=THEMES.find(x=>String(x.id)===String(b.dataset.theme));
-    if(t&&$('#essayAxis'))$('#essayAxis').value=t.axis;
-    renderEssayThemeOptions({keepSelection:false});
-    $('#essayTheme').value=b.dataset.theme;
-    updateEssayPrompt();
-    openPage('redacao');
-    $('#essayText').focus();
-  });
+  renderEssayThemeCards();
 }
 function getEssayThemeData(){
   if($('#essayTheme').value==='custom'){
@@ -3540,12 +3601,41 @@ function updateEssayPrompt(){
   const custom=$('#essayTheme').value==='custom';
   $('#customThemeFields').classList.toggle('hidden',!custom);
   const t=getEssayThemeData();
+  const done=!custom&&essayThemeCompleted(t);
   $('#essayPrompt').innerHTML=`<b>Proposta:</b> ${esc(t.prompt)}`;
+  const full=$('#essayThemeFullTitle');
+  if(full){
+    full.innerHTML='<span>'+(done?'✓ TEMA CONCLUÍDO':'TEMA SELECIONADO')+'</span><b>'+esc(t.title)+'</b>';
+    full.classList.toggle('completed',done);
+  }
 }
 $('#essayTheme').addEventListener('change',updateEssayPrompt);
 $('#customEssayTheme').addEventListener('input',updateEssayPrompt);
 $('#customEssayPrompt').addEventListener('input',updateEssayPrompt);
 $('#essayText').addEventListener('input',()=>$('#wordCount').textContent=(($('#essayText').value.match(/\S+/g)||[]).length)+' palavras');
+
+const OFFICIAL_ENEM_ESSAY_SHEET={
+  url:'',
+  label:'Folha oficial de redação do ENEM'
+};
+
+function updateOfficialEssaySheetAction(){
+  const btn=$('#officialEssaySheetBtn');
+  const note=$('#officialEssaySheetNote');
+  if(!btn)return;
+  const ready=Boolean(OFFICIAL_ENEM_ESSAY_SHEET.url);
+  btn.disabled=!ready;
+  btn.textContent=ready?'Abrir PDF para imprimir ↗':'PDF aguardando envio';
+  if(note)note.textContent=ready
+    ?'Abra o PDF oficial e use a opção Imprimir do navegador.'
+    :'Assim que a folha oficial for enviada, ela ficará disponível aqui para impressão.';
+}
+
+$('#officialEssaySheetBtn')?.addEventListener('click',()=>{
+  const url=OFFICIAL_ENEM_ESSAY_SHEET.url;
+  if(!url)return toast('A folha oficial ainda não foi enviada.');
+  window.open(url,'_blank','noopener,noreferrer');
+});
 
 function essayScores(text){
   const words=text.match(/\S+/g)||[],count=words.length,paras=text.split(/\n\s*\n/).filter(x=>x.trim()).length;
@@ -3566,6 +3656,10 @@ $('#analyzeEssay').onclick=async()=>{
   if(!state.membership)await loadNexoMembership({silent:true});
   if(planUsageReached('essay'))return openNexoPlans('Sua correção gratuita de redação deste mês já foi usada.');
   const text=$('#essayText').value.trim();
+  const selectedTheme=getEssayThemeData();
+  if($('#essayTheme').value!=='custom'&&essayThemeCompleted(selectedTheme)){
+    return toast('Esse tema já foi concluído. Escolha ou sorteie um tema novo.','info');
+  }
   if(text.length<250)return toast('Escreva pelo menos 250 caracteres para receber uma análise.','error');
   const analyzeBtn=$('#analyzeEssay');
   analyzeBtn.disabled=true;
@@ -3597,6 +3691,11 @@ $('#analyzeEssay').onclick=async()=>{
     if(handlePlanLimitError(error))return;
     toast('A análise foi feita, mas não consegui salvar o histórico.','error');
   }else{
+    if($('#essayTheme').value!=='custom'){
+      state.completedEssayThemes.add(t.title);
+      renderEssayThemeOptions({keepSelection:true});
+      renderEssayThemeCards();
+    }
     loadNexoMembership({silent:true});
   }
   showEssayResult(text,scores,total);
