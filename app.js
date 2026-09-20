@@ -164,7 +164,7 @@ $('#loginForm').addEventListener('submit', async e => {
     showAuthMessage('Não foi possível entrar agora. Verifique sua conexão e tente novamente.', true);
   } finally {
     btn.disabled = false;
-    btn.innerHTML = 'Entrar <span>→</span>';
+    btn.innerHTML = 'Entrar no NEXO <span>→</span>';
   }
 });
 
@@ -195,7 +195,7 @@ $('#registerForm').addEventListener('submit', async e => {
   } catch (err) {
     showAuthMessage(err.message || 'Não foi possível criar a conta.', true);
   } finally {
-    btn.disabled = false; btn.innerHTML = 'Criar conta <span>→</span>';
+    btn.disabled = false; btn.innerHTML = 'Criar minha conta <span>→</span>';
   }
 });
 
