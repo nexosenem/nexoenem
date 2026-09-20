@@ -293,6 +293,7 @@ const state = {
   recommendationExplanation:null,
   featureFlags:new Map(),
   globalSearchItems:[],
+  lastStudyAt:null,
   examTimer:null,
   pendingGuidedTraining:null,
   lastFinishedStudy:null,
@@ -740,17 +741,76 @@ function renderNexoCommandCenter(){
   });
 }
 
+
+function studyPhaseMeta(){
+  const target=new Date('2026-11-08T00:00:00-03:00').getTime();
+  const today=new Date();today.setHours(0,0,0,0);
+  const days=Math.ceil((target-today.getTime())/86400000);
+  const last=state.lastStudyAt?new Date(state.lastStudyAt).getTime():0;
+  const inactiveDays=last?Math.max(0,Math.floor((Date.now()-last)/86400000)):0;
+  const recovery=Boolean(last&&inactiveDays>=5);
+  if(days<=0)return {key:'post',label:'PÓS-PROVA',days,inactiveDays,recovery:false,description:'Feche seu ciclo e preserve seu histórico.'};
+  if(days<=7)return {key:'eve',label:'VÉSPERA',days,inactiveDays,recovery,description:'Revisar, proteger confiança e evitar conteúdo novo pesado.'};
+  if(days<=21)return {key:'final',label:'RETA FINAL',days,inactiveDays,recovery,description:'Revisão, erros e simulados dominam o plano.'};
+  if(days<=50)return {key:'consolidate',label:'CONSOLIDAÇÃO',days,inactiveDays,recovery,description:'Menos abertura de frentes e mais retenção.'};
+  return {key:'learn',label:'CONSTRUÇÃO',days,inactiveDays,recovery,description:'Aprender, praticar e criar base para revisões futuras.'};
+}
+
+async function startRecoverySession(){
+  const top=buildPersonalRadar()[0]||state.core?.recommended_action||null;
+  const topic=top?.topic||'',subject=top?.subject||'',area=top?.area||state.profile?.difficult_areas?.[0]||'';
+  const lesson=topic?topicLesson(topic,subject):null;
+  if(lesson){
+    openLibraryTopic(subject,topic);
+    toast('Retomada leve: revise o assunto antes de fazer uma sessão curta.');
+    return;
+  }
+  openPage('questoes');
+  await startStudySession({mode:'recovery',area,subject,topic,radarTopic:topic||'',difficulty:'',visualOnly:false,size:5});
+  if(state.session){
+    $('#sessionAreaBadge').textContent='RETOMADA';
+    $('#sessionTitle').textContent=topic||subject||area||'Sessão de retomada';
+    $('#sessionSubtitle').textContent='Só 5 questões. O objetivo é recuperar ritmo, não compensar dias perdidos de uma vez.';
+  }
+}
+
 function buildTodayPlan(){
   const core=state.core||{};
   const rec=core.recommended_action||null;
   const profile=state.profile||{};
+  const phase=studyPhaseMeta();
   const minutes=Math.max(20,Number(profile.daily_minutes||core.profile?.daily_minutes||45));
   const focus=rec?.topic||rec?.subject||rec?.area||'diagnóstico inicial';
   const area=rec?.area||profile.difficult_areas?.[0]||'ENEM';
-  const count=Number(rec?.size||(minutes<=30?5:minutes<=60?8:10));
+  const baseCount=Number(rec?.size||(minutes<=30?5:minutes<=60?8:10));
+  const count=phase.recovery?5:phase.key==='eve'?Math.min(5,baseCount):baseCount;
 
   let blocks;
-  if(minutes<=30){
+  if(phase.recovery){
+    blocks=[
+      {icon:'01',title:'Retomar sem culpa',detail:'Releia um resumo do último foco.',time:5},
+      {icon:'02',title:'Sessão curta',detail:'5 questões · '+focus,time:15},
+      {icon:'03',title:'Fechar lacuna',detail:'Revise apenas os erros de hoje.',time:10}
+    ];
+  }else if(phase.key==='eve'){
+    blocks=[
+      {icon:'01',title:'Revisão ultrarrápida',detail:'Fórmulas, conceitos e erros recorrentes.',time:10},
+      {icon:'02',title:'Sprint de prova',detail:count+' questões · decisão e confiança',time:15},
+      {icon:'03',title:'Encerrar cedo',detail:'Nada de abrir conteúdo pesado agora.',time:5}
+    ];
+  }else if(phase.key==='final'){
+    blocks=[
+      {icon:'01',title:'Fila de revisão',detail:'Ataque o que está vencendo na memória.',time:10},
+      {icon:'02',title:'Questões foco',detail:count+' questões · '+focus,time:Math.max(20,minutes-25)},
+      {icon:'03',title:'Correção estratégica',detail:'Erros + tempo + decisão de prova.',time:15}
+    ];
+  }else if(phase.key==='consolidate'){
+    blocks=[
+      {icon:'01',title:'Revisão espaçada',detail:'Proteja o que já aprendeu.',time:10},
+      {icon:'02',title:'Sessão principal',detail:count+' questões · '+focus,time:Math.max(25,minutes-25)},
+      {icon:'03',title:'Consolidação',detail:'Volte ao ponto fraco detectado.',time:15}
+    ];
+  }else if(minutes<=30){
     blocks=[
       {icon:'01',title:'Aquecimento',detail:'Releia seu foco e entre no ritmo.',time:5},
       {icon:'02',title:'Questões foco',detail:count+' questões · '+focus,time:20},
@@ -772,7 +832,7 @@ function buildTodayPlan(){
       {icon:'04',title:'Aprofundamento',detail:'Revisão curta do conteúdo.',time:10}
     ];
   }
-  return {minutes,focus,area,count,blocks};
+  return {minutes,focus,area,count,blocks,phase};
 }
 
 function renderTodayPlan(){
@@ -784,7 +844,7 @@ function renderTodayPlan(){
     const blocks=card.querySelector('[data-today-blocks]');
     const start=card.querySelector('[data-today-start]');
     if(total)total.textContent=String(plan.minutes);
-    if(summary)summary.textContent='Foco de hoje: '+plan.area+' · '+plan.focus+'. Uma rotina pensada para caber no seu tempo disponível.';
+    if(summary)summary.textContent=plan.phase.label+' · '+(plan.phase.days>0?plan.phase.days+' dias para o 1º dia · ':'')+(plan.phase.recovery?'retomada leve após '+plan.phase.inactiveDays+' dias sem registro.':'foco: '+plan.area+' · '+plan.focus+'.');
     if(blocks)blocks.innerHTML=plan.blocks.map(item=>`
       <article class="today-plan-block">
         <span>${item.icon}</span>
@@ -792,6 +852,12 @@ function renderTodayPlan(){
         <strong>${item.time} min</strong>
       </article>`).join('');
     if(start)start.onclick=()=>{
+      if(plan.phase.recovery)return startRecoverySession();
+      if(plan.phase.key==='eve'){
+        openPage('simulados');
+        setTimeout(()=>document.querySelector('[data-sim-mode="sprint"]')?.click(),60);
+        return;
+      }
       if(state.core?.recommended_action)startCoreRecommendation();
       else{
         openPage('questoes');
@@ -2146,7 +2212,7 @@ function renderNexoWeekPlan(){
   });
   if($('#weekFullProgress'))$('#weekFullProgress').textContent=pct+'%';
   if($('#weekFullTitle'))$('#weekFullTitle').textContent=completed===total&&total?'Semana concluída. Excelente consistência.':'Seu plano adaptativo desta semana';
-  if($('#weekFullSummary'))$('#weekFullSummary').textContent='O NEXO distribuiu '+total+' missões usando seu tempo disponível e suas prioridades atuais.';
+  if($('#weekFullSummary')){const phase=studyPhaseMeta();$('#weekFullSummary').textContent=phase.label+' · '+(phase.days>0?phase.days+' dias para o primeiro domingo · ':'')+'o NEXO distribuiu '+total+' missões usando seu tempo disponível e suas prioridades atuais.';}
   const grid=$('#weekFullGrid');
   if(grid){
     grid.innerHTML=tasks.length?tasks.map(task=>`<article class="panel week-day-card ${task.status==='completed'?'done':''} ${Number(task.day_index)===today?'today':''}"><header><span>${String(Number(task.day_index)+1).padStart(2,'0')} · ${NEXO_WEEK_DAYS[Number(task.day_index)]||'Dia'}</span><b>${task.status==='completed'?'CONCLUÍDO':Number(task.day_index)===today?'HOJE':'PLANEJADO'}</b></header><div class="week-day-main"><span class="week-day-icon">${weekTaskIcon(task.task_type)}</span><div><h3>${esc(task.title)}</h3><p>${esc(task.topic||task.subject||task.area||'Atividade personalizada')}</p></div></div><div class="week-day-meta"><span>${Number(task.target_minutes||0)} min</span>${task.target_count?'<span>'+Number(task.target_count)+' item(ns)</span>':''}</div><div class="week-day-actions"><button class="outline-btn" data-week-launch="${task.id}">${weekTaskActionLabel(task.task_type)}</button><button class="primary-btn" data-week-complete="${task.id}" ${task.status==='completed'?'disabled':''}>${task.status==='completed'?'✓ Concluído':'Marcar concluído'}</button></div></article>`).join(''):'<article class="panel"><p style="color:var(--muted)">Ainda não há tarefas para esta semana.</p></article>';
@@ -3046,6 +3112,7 @@ async function loadRecentAttempts() {
     .select('id,is_correct,created_at,question:questions(area,subject,topic)')
     .order('created_at',{ascending:false}).limit(5);
   if (error) return console.error(error);
+  state.lastStudyAt=data?.[0]?.created_at||null;
   const recentHtml = data?.length ? data.map(a=>`
     <div class="recent-item">
       <span class="recent-status ${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span>
@@ -6028,6 +6095,12 @@ function renderNexoToday(){
     text=(kind.label||'Conteúdo')+' está em '+Math.round(Number(partial.p.progress_percent||0))+'%. Termine essa etapa antes do próximo treino.';
     status='DE ONDE PAROU';time='~6 min';mood='acolhedor';
     action=()=>{openPage('materiais');setTimeout(()=>openContentViewer('material',partial.item.id),100)};actionLabel='Continuar conteúdo →';
+  }else if(studyPhaseMeta().recovery){
+    const phase=studyPhaseMeta();
+    title='Volte com uma sessão leve de retomada.';
+    text='Faz '+phase.inactiveDays+' dias desde seu último estudo registrado. Não vou empilhar tarefas atrasadas: começamos pequeno e recalculamos a rota.';
+    status='RETOMADA INTELIGENTE';time='~20 min';mood='acolhedor';
+    action=()=>startRecoverySession();actionLabel='Retomar sem sobrecarga →';
   }else if(review){
     title='Hora de revisar '+review.item.topic+'.';
     text='Faz '+review.days+' dia(s) desde o último contato. Seu intervalo atual de revisão é '+review.meta.intervalDays+' dia(s).';
