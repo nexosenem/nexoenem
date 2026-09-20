@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-47">
+  <link rel="stylesheet" href="./styles.css?v=20260920-48">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -230,20 +230,6 @@
               <button class="primary-btn full" data-today-start>Começar plano <span>→</span></button>
             </article>
 
-            <button class="journey-home-card mobile-journey-home" data-page="ranking" type="button">
-              <div class="journey-mini-avatar" id="mobileJourneyAvatar" aria-hidden="true"></div>
-              <div class="journey-home-copy">
-                <span class="eyebrow">NEXO JORNADA</span>
-                <h3><b id="mobileJourneyLevel">Nível 1</b> · <span id="mobileJourneyLeague">Bronze</span></h3>
-                <p id="mobileJourneyMission">Complete missões e transforme seu estudo em evolução visível.</p>
-                <div class="journey-home-progress"><i id="mobileJourneyXpBar"></i></div>
-              </div>
-              <div class="journey-home-stats">
-                <span><b id="mobileJourneyCoins">0</b><small>N-Coins</small></span>
-                <span><b id="mobileJourneyStreak">0</b><small>dias 🔥</small></span>
-              </div>
-            </button>
-
             <section class="mobile-section">
               <div class="mobile-section-head"><div><span class="eyebrow">ÁREAS DO ENEM</span><h3>O que você quer estudar?</h3></div></div>
               <div class="mobile-subject-grid">
@@ -398,20 +384,6 @@
                 </div>
                 <button class="primary-btn full" data-core-start>Começar diagnóstico <span>→</span></button>
               </article>
-
-              <button class="panel journey-side-card" data-page="ranking" type="button">
-                <div class="journey-side-top">
-                  <div class="journey-mini-avatar" id="desktopJourneyAvatar" aria-hidden="true"></div>
-                  <div><span class="eyebrow">NEXO JORNADA</span><h3 id="desktopJourneyTitle">Nível 1 · Bronze</h3><p id="desktopJourneyMission">Sua próxima missão aparece aqui.</p></div>
-                </div>
-                <div class="journey-side-progress"><i id="desktopJourneyXpBar"></i></div>
-                <div class="journey-side-stats">
-                  <span><b id="desktopJourneyCoins">0</b><small>N-Coins</small></span>
-                  <span><b id="desktopJourneyStreak">0</b><small>sequência</small></span>
-                  <span><b id="desktopJourneyRank">—</b><small>liga semanal</small></span>
-                </div>
-                <strong>Abrir Jornada →</strong>
-              </button>
 
               <article class="panel weakness-panel">
                 <h3>Minhas maiores dificuldades <span>?</span></h3>
@@ -763,9 +735,9 @@
               <div class="plan-card-head"><span>FREE</span><h3>Para começar e criar consistência.</h3><p>Recursos essenciais com limites de uso pensados para manter a plataforma sustentável.</p></div>
               <div class="plan-price"><b>R$ 0</b><small>/ mês</small></div>
               <ul>
-                <li><b>25 questões por dia</b><span>Banco ENEM + correção explicada</span></li>
-                <li><b>2 sessões NEXO Core por dia</b><span>Treino adaptativo com limite diário</span></li>
-                <li><b>1 correção de redação por semana</b><span>Professor Nexo e competências</span></li>
+                <li><b>10 questões por dia</b><span>Banco ENEM + correção explicada</span></li>
+                <li><b>1 sessão NEXO Core por dia</b><span>Treino adaptativo com limite diário</span></li>
+                <li><b>1 correção de redação por mês</b><span>Experimente a correção completa do Professor Nexo</span></li>
                 <li><b>1 entrada na Arena por semana</b><span>Ranking e Pontos NEXO</span></li>
                 <li><b>Jornada e avatar</b><span>Cosméticos básicos e conquistáveis</span></li>
               </ul>
@@ -793,16 +765,16 @@
           <article class="panel plan-usage-card">
             <div class="panel-title"><b>Seu uso no Free</b><small id="planUsageStatus">carregando...</small></div>
             <div class="plan-usage-grid">
-              <div><span>Questões hoje</span><b id="planQuestionsUsage">0 / 25</b><i><em id="planQuestionsBar"></em></i></div>
-              <div><span>Core hoje</span><b id="planCoreUsage">0 / 2</b><i><em id="planCoreBar"></em></i></div>
-              <div><span>Redações na semana</span><b id="planEssayUsage">0 / 1</b><i><em id="planEssayBar"></em></i></div>
+              <div><span>Questões hoje</span><b id="planQuestionsUsage">0 / 10</b><i><em id="planQuestionsBar"></em></i></div>
+              <div><span>Core hoje</span><b id="planCoreUsage">0 / 1</b><i><em id="planCoreBar"></em></i></div>
+              <div><span>Redação no mês</span><b id="planEssayUsage">0 / 1</b><i><em id="planEssayBar"></em></i></div>
               <div><span>Arena na semana</span><b id="planArenaUsage">0 / 1</b><i><em id="planArenaBar"></em></i></div>
             </div>
           </article>
         </section>
 
         <section class="page" id="admin">
-          <div class="page-head"><div><span class="eyebrow gold">ADMINISTRAÇÃO</span><h2>Área do Admin</h2><p>Esta página só aparece para usuários com papel de administrador no banco.</p></div></div>
+          <div class="page-head"><div><span class="eyebrow gold">ADMINISTRAÇÃO · NEXO ULTRA</span><h2>Área do Admin</h2><p>Administradores têm acesso Ultra: sem limites, conteúdo premium e todos os cosméticos liberados.</p></div><div class="admin-ultra-badge">ULTRA</div></div>
           <div class="admin-stats" id="adminStats"></div>
           <div id="cloudinarySecurityStatus" class="cloudinary-security-status checking">Verificando proteção dos uploads...</div>
           <div class="admin-grid">
@@ -1115,6 +1087,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-52"></script>
+  <script src="./app.js?v=20260920-53"></script>
 </body>
 </html>
