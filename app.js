@@ -163,7 +163,7 @@ function openPage(id) {
     toast('Essa área é restrita ao administrador.','error'); return;
   }
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));
-  $('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  $$('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   toggleMenu(false);
   window.scrollTo({top:0,behavior:'smooth'});
   if (id==='desempenho') renderPerformance();
