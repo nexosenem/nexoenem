@@ -45,7 +45,8 @@ const state = {
   questionStartedAt:0,
   pdfCache:new Map(),
   visualCache:new Map(),
-  videos:[]
+  videos:[],
+  assistantIntents:[]
 };
 
 function toast(message, type='info') {
@@ -208,7 +209,7 @@ async function initApp(session) {
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
 
-  await Promise.all([loadQuestionMeta(), loadDashboard()]);
+  await Promise.all([loadQuestionMeta(), loadDashboard(), loadAssistantIntents()]);
   fillThemes();
   await loadRecentAttempts();
   renderBank();
@@ -722,13 +723,14 @@ async function submitAnswer(option) {
   const box=document.createElement('div');
   box.className='answer-panel '+(data.correct?'':'wrong');
   box.innerHTML=`
+    <div class="professor-nexo-inline"><img src="${data.correct?NEXO_MOOD_IMAGES.confiante:NEXO_MOOD_IMAGES.acolhedor}" alt=""><div><b>Professor Nexo</b><small>${data.correct?'Boa! Vamos consolidar o raciocínio.':'Sem problema. Vamos localizar exatamente onde o raciocínio desviou.'}</small></div></div>
     <div class="answer-title"><span class="answer-letter">${data.correct?'✓':'×'}</span><div><h4>${data.correct?'Resposta correta':'Resposta incorreta'}</h4><small>Gabarito: ${'ABCDE'[correct]}</small></div></div>
     <div class="answer-reason"><h5>Por que?</h5><p>${esc(detail.summary)}</p></div>
     <div class="answer-reason"><h5>${data.correct?'O que você acertou':'Onde sua alternativa falha'}</h5><p>${esc(detail.whyWrong)}</p></div>
     <div class="answer-reason"><h5>Como pensar nesta questão</h5><p>${esc(detail.method)}</p></div>
     <div id="hintBox" class="hint-box hidden"></div>
     <div class="post-answer-actions">
-      ${hint?'<button id="showHint">⚡ Macete</button>':''}
+      ${hint?'<button id="showHint">🐾 Macete do Professor Nexo</button>':''}
       <button id="openComments">💬 Comentários</button>
       <button id="nextAfterAnswer" class="next-action">Próxima questão →</button>
     </div>`;
@@ -737,12 +739,13 @@ async function submitAnswer(option) {
     $('#showHint').onclick=()=>{
       const h=$('#hintBox');
       h.classList.toggle('hidden');
-      h.innerHTML=`<h4>⚡ Macete para ganhar tempo</h4><p>${esc(hint)}</p>`;
+      h.innerHTML=`<h4>🐾 Macete do Professor Nexo</h4><p>${esc(hint)}</p>`;
     };
   }
   $('#openComments').onclick=()=>openQuestionComments(state.current.id);
   $('#nextAfterAnswer').onclick=()=>nextQuestion();
   $('.question-mobile-actions')?.classList.add('answered');
+  setNexoMood(data.correct?'confiante':'acolhedor');
   Promise.all([loadDashboard(),loadRecentAttempts()]).catch(err=>console.error('refresh after answer',err));
 }
 
@@ -900,13 +903,16 @@ function showEssayResult(text,scores,total){
   $('#essayResult').innerHTML=`<div class="score-card"><span class="eyebrow">NOTA ESTIMADA</span><div class="score-circle" style="background:conic-gradient(#5f7cff 0 ${total/10}%,#1e2b42 ${total/10}% 100%)"><b>${total}</b></div><p>${review.words} palavras · ${review.paras} parágrafo(s)</p></div>
     <div class="competencies">${scores.map((s,i)=>`<div class="comp-row"><span>C${i+1}</span><div><i style="width:${s/2}%"></i></div><b>${s}</b></div>`).join('')}</div>
     <div class="detailed-review">
-      <article><h4>Resenha do Nexo</h4><p>Seu texto sobre “${esc(t.title)}” tem uma base reconhecível de dissertação. O principal ponto de evolução agora está na competência C${weak+1} (${comps[weak]}). Em vez de mexer em tudo de uma vez, priorize esse aspecto na próxima versão e depois faça uma segunda revisão focada em clareza e correção gramatical.</p><div class="nia-review-signature">Nexo · análise orientativa do NEXO</div></article>
+      <article class="professor-essay-card"><div class="professor-nexo-inline"><img src="${NEXO_MOOD_IMAGES.pensativo}" alt=""><div><b>Professor Nexo</b><small>Correção orientativa da sua redação</small></div></div><p>Eu li seu texto como um professor de treino: primeiro olho o que já funciona, depois escolho uma prioridade para sua próxima versão. Não tente corrigir tudo de uma vez.</p></article>
+      <article><h4>Observação geral do Professor Nexo</h4><p>Seu texto sobre “${esc(t.title)}” tem uma base reconhecível de dissertação. O principal ponto de evolução agora está na competência C${weak+1} (${comps[weak]}). Em vez de mexer em tudo de uma vez, priorize esse aspecto na próxima versão e depois faça uma segunda revisão focada em clareza e correção gramatical.</p><div class="nia-review-signature">Professor Nexo · análise orientativa do NEXO</div></article>
       <article><h4>O que está funcionando</h4><p>${scores[3]>=160?'A progressão entre as partes está relativamente bem marcada e há mecanismos de ligação entre ideias.':'Já existe uma linha de raciocínio identificável; com conectivos mais precisos e retomadas melhores, ela ficará mais fácil de acompanhar.'}</p></article>
       <article><h4>O que eu melhoraria primeiro</h4><p>${tips[weak]}</p></article>
       <article><h4>Leitura de estrutura</h4><div class="review-checklist">${review.notes.map(n=>`<span><i>✓</i>${esc(n)}</span>`).join('')}</div></article>
       <article><h4>Plano para reescrever</h4><p>1) releia o tema e escreva sua tese em uma frase; 2) dê uma função para cada parágrafo; 3) em cada argumento, ligue causa e consequência; 4) revise conectivos; 5) finalize conferindo a proposta de intervenção e a norma-padrão.</p></article>
       <article><h4>Importante</h4><p>Esta análise é uma ferramenta automática de estudo, baseada em regras linguísticas e estruturais. Ela não substitui a correção humana nem a avaliação oficial do ENEM.</p></article>
     </div>`;
+  setNexoMood(scores[weak]>=160?'confiante':'pensativo');
+  addNiaMessage('Corrigi sua redação. Minha prioridade para sua próxima versão é a C'+(weak+1)+' — '+comps[weak]+'. Veja as observações no painel de correção e, se quiser, me pergunte “como melhorar a C'+(weak+1)+'?”.','bot');
 }
 
 async function loadVideos() {
@@ -1102,13 +1108,104 @@ function nexoQuestionContext(text){
     (hint||'Comece pelo comando: descubra exatamente o que ele pede, volte ao texto/dados e elimine alternativas que não respondem ao recorte.')};
 }
 
-function niaAnswer(text){
+async function loadAssistantIntents(){
+  try{
+    const {data,error}=await client.from('assistant_intents')
+      .select('key,category,patterns,mood,response_text,response_variants,priority')
+      .eq('active',true)
+      .order('priority',{ascending:true});
+    if(error)throw error;
+    state.assistantIntents=data||[];
+  }catch(err){
+    console.error('assistant intents',err);
+    state.assistantIntents=[];
+  }
+}
+
+function normalizeAssistantInput(value=''){
+  return String(value)
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g,'')
+    .replace(/[^a-z0-9\s]/g,' ')
+    .replace(/\s+/g,' ')
+    .trim();
+}
+
+function assistantIntentScore(input,pattern){
+  const q=normalizeAssistantInput(input),p=normalizeAssistantInput(pattern);
+  if(!q||!p)return 0;
+  if(q===p)return 1000+p.length;
+  if(q.includes(p))return 700+p.length;
+  const qw=new Set(q.split(' ')),pw=p.split(' ').filter(Boolean);
+  const hits=pw.filter(w=>qw.has(w)).length;
+  return pw.length ? Math.round((hits/pw.length)*400) : 0;
+}
+
+function findAssistantIntent(input){
+  let best=null,bestScore=0;
+  for(const intent of state.assistantIntents||[]){
+    const patterns=Array.isArray(intent.patterns)?intent.patterns:[];
+    for(const pattern of patterns){
+      const score=assistantIntentScore(input,pattern);
+      if(score>bestScore){bestScore=score;best=intent}
+    }
+  }
+  return bestScore>=220?best:null;
+}
+
+function chooseAssistantText(intent){
+  const variants=Array.isArray(intent?.response_variants)?intent.response_variants.filter(Boolean):[];
+  const pool=[intent?.response_text,...variants].filter(Boolean);
+  return pool.length?pool[Math.floor(Math.random()*pool.length)]:'';
+}
+
+async function logAssistantTurn(input,result){
+  if(!state.user)return;
+  const context=state.current?'question':($('#essayText')?.value?.trim()?'essay':'general');
+  const contextId=state.current?String(state.current.id):null;
+  try{
+    await client.from('assistant_logs').insert({
+      user_id:state.user.id,
+      input_text:input,
+      matched_key:result.key||null,
+      matched_category:result.category||null,
+      mood:result.mood||null,
+      response_text:result.text||null,
+      context_type:context,
+      context_id:contextId
+    });
+  }catch(err){console.error('assistant log',err)}
+}
+
+async function niaAnswer(text){
   const context=nexoQuestionContext(text);
-  if(context)return context;
+  if(context)return {...context,key:'question_context',category:'question'};
+
+  const intent=findAssistantIntent(text);
+  if(intent){
+    return {
+      key:intent.key,
+      category:intent.category,
+      mood:intent.mood||'feliz',
+      text:chooseAssistantText(intent)
+    };
+  }
+
   const hit=NEXO_ANSWERS.find(x=>x.k.test(text));
-  if(hit)return {mood:hit.mood||'feliz',text:typeof hit.a==='function'?hit.a():hit.a};
-  return {mood:'duvida',text:
-    'Boa pergunta. Eu ainda não tenho uma resposta fechada para esse jeito específico de perguntar — mas posso continuar com você.\n\nTenta reformular em uma destas linhas: “como estudo isso?”, “o que faço na prova?”, “estou ansioso”, “me ajuda nessa questão”, “como melhorar a redação?” ou “qual é a regra do ENEM?”.\n\nSe for sobre a questão que está aberta, diga “me ajuda nessa questão” que eu uso o contexto dela.'};
+  if(hit)return {
+    key:'local_fallback',
+    category:'fallback',
+    mood:hit.mood||'feliz',
+    text:typeof hit.a==='function'?hit.a():hit.a
+  };
+
+  return {
+    key:'fallback',
+    category:'fallback',
+    mood:'duvida',
+    text:'Eu ainda não tenho uma resposta pronta para esse jeito específico de perguntar, mas consigo continuar com você. Tenta me dizer o objetivo: “me ajuda nessa questão”, “corrige minha redação”, “estou ansioso”, “como estudo isso?” ou “qual regra do ENEM eu preciso saber?”.'
+  };
 }
 
 const NEXO_EMOTIONS={feliz:'😊',serio:'🎯',confiante:'💪',duvida:'🤔',acolhedor:'💙',animado:'✨'};
@@ -1142,11 +1239,35 @@ function initNexoMascotVisuals(){
 }
 initNexoMascotVisuals();
 
+const NEXO_MOOD_IMAGES={
+  feliz:'./assets/nexo-expressions/feliz.webp',
+  serio:'./assets/nexo-expressions/serio.webp',
+  confiante:'./assets/nexo-expressions/confiante.webp',
+  duvida:'./assets/nexo-expressions/duvida.webp',
+  surpresa:'./assets/nexo-expressions/surpresa.webp',
+  pensativo:'./assets/nexo-expressions/pensativo.webp',
+  acolhedor:'./assets/nexo-expressions/acolhedor.webp',
+  calmo:'./assets/nexo-expressions/calmo.webp',
+  animado:'./assets/nexo-expressions/motivado.webp',
+  motivado:'./assets/nexo-expressions/motivado.webp'
+};
+
 function setNexoMood(mood='feliz'){
   const panel=$('#niaPanel');
   if(panel)panel.dataset.mood=mood;
   const em=$('#nexoEmotion');
   if(em)em.textContent=NEXO_EMOTIONS[mood]||'🐾';
+  const avatar=$('#nexoAvatarImage');
+  const launcher=$('#nexoLauncherAvatar');
+  const src=NEXO_MOOD_IMAGES[mood]||NEXO_MOOD_IMAGES.feliz;
+  if(avatar){
+    avatar.onerror=()=>{avatar.onerror=null;const fallback=window.NEXO_MASCOT_ASSETS?.head;if(fallback)avatar.src=fallback};
+    avatar.src=src;
+  }
+  if(launcher && ['feliz','acolhedor','confiante','animado'].includes(mood)){
+    launcher.onerror=()=>{launcher.onerror=null;const fallback=window.NEXO_MASCOT_ASSETS?.head;if(fallback)launcher.src=fallback};
+    launcher.src=src;
+  }
 }
 
 function addNiaMessage(text,type){
@@ -1166,21 +1287,28 @@ function addNexoTyping(){
   return div;
 }
 
-function askNia(text){
+async function askNia(text){
   if(!text?.trim())return;
   const clean=text.trim();
   addNiaMessage(clean,'user');
-  setNexoMood('duvida');
+  setNexoMood('pensativo');
   const panel=$('#niaPanel');
   panel?.classList.add('thinking');
   const typing=addNexoTyping();
-  const result=niaAnswer(clean);
-  const delay=Math.min(900,Math.max(380,clean.length*9));
+  let result;
+  try{
+    result=await niaAnswer(clean);
+  }catch(err){
+    console.error('Professor Nexo',err);
+    result={key:'error',category:'fallback',mood:'acolhedor',text:'Tive um tropeço para buscar essa resposta. Tenta de novo em alguns segundos; eu continuo aqui com você.'};
+  }
+  const delay=Math.min(950,Math.max(360,clean.length*8));
   setTimeout(()=>{
     typing.remove();
     panel?.classList.remove('thinking');
-    setNexoMood(result.mood);
+    setNexoMood(result.mood||'feliz');
     addNiaMessage(result.text,'bot');
+    logAssistantTurn(clean,result);
   },delay);
 }
 
