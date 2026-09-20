@@ -313,6 +313,7 @@ const state = {
   essayThemeProgressLoaded:false,
   essayHistory:[],
   essayRevisionOf:null,
+  essayTrainingCompetency:null,
   savedQuestions:new Set(),
   weekPlan:null,
   questionReportTarget:null,
@@ -5032,6 +5033,151 @@ async function renderFocus() {
       visualOnly:false
     });
   });
+}
+
+
+const ESSAY_COMPETENCY_TRAINERS=Object.freeze([
+  {code:'C1',name:'Norma-padrão',mission:'Reescreva um parágrafo reduzindo períodos longos e revisando concordância, regência, pontuação e vocabulário.',check:'Leia em voz baixa e marque onde a frase exige releitura.'},
+  {code:'C2',name:'Compreensão da proposta',mission:'Resuma o tema em uma frase com problema + recorte + sociedade brasileira e confira se cada parágrafo responde a isso.',check:'Se um parágrafo servir para qualquer tema, ele está genérico demais.'},
+  {code:'C3',name:'Argumentação',mission:'Complete um argumento em quatro etapas: afirmação → causa → consequência → ligação com a tese.',check:'Mostre por que acontece, o que provoca e como sustenta a tese.'},
+  {code:'C4',name:'Coesão',mission:'Substitua repetições por retomadas claras e varie conectivos sem mudar a relação lógica.',check:'O conectivo deve mostrar causa, oposição, consequência, exemplificação ou conclusão.'},
+  {code:'C5',name:'Intervenção',mission:'Monte a intervenção em cinco peças: agente + ação + meio/modo + finalidade + detalhamento.',check:'A proposta precisa responder ao problema e respeitar os direitos humanos.'}
+]);
+
+const NEXO_REPERTOIRES=Object.freeze({
+  default:[
+    {name:'Constituição Federal de 1988',context:'Referência geral a direitos, cidadania e deveres do poder público.',use:'Use quando o direito citado tiver relação direta com o problema.'},
+    {name:'Declaração Universal dos Direitos Humanos',context:'Referência para dignidade, igualdade e proteção de direitos.',use:'Conecte o princípio ao problema concreto.'},
+    {name:'Milton Santos',context:'Espaço, cidadania, globalização e desigualdade podem ajudar em temas sociais e urbanos.',use:'Explique a ideia com suas palavras e ligue ao tema.'}
+  ],
+  'Educação':[
+    {name:'Paulo Freire',context:'Educação como formação crítica e participação social.',use:'Relacione formação crítica ao obstáculo educacional específico.'},
+    {name:'Educação como direito social',context:'Acesso, permanência e qualidade podem ser discutidos a partir da garantia do direito à educação.',use:'Mostre a distância entre direito e experiência concreta.'},
+    {name:'Pierre Bourdieu',context:'Diferenças de capital cultural ajudam a pensar desigualdades escolares.',use:'Explique como condições sociais afetam oportunidades.'}
+  ],
+  'Tecnologia e sociedade':[
+    {name:'Sociedade em rede',context:'Redes digitais alteram comunicação, circulação de informação e relações sociais.',use:'Relacione a estrutura de rede ao comportamento discutido.'},
+    {name:'Proteção de dados',context:'Privacidade e responsabilidade ajudam a analisar serviços e plataformas digitais.',use:'Use em temas de exposição, segurança e coleta de dados.'},
+    {name:'Educação midiática',context:'Leitura crítica de informação e meios de comunicação.',use:'Sustenta propostas contra desinformação e uso acrítico de plataformas.'}
+  ],
+  'Meio ambiente':[
+    {name:'Desenvolvimento sustentável',context:'Busca conciliar necessidades sociais, economia e proteção ambiental.',use:'Mostre qual dimensão está em conflito no tema.'},
+    {name:'Agenda 2030',context:'Os ODS organizam metas sociais e ambientais amplas.',use:'Use o objetivo relacionado como referência, não como lista.'},
+    {name:'Justiça ambiental',context:'Impactos ambientais podem atingir grupos sociais de forma desigual.',use:'Relacione vulnerabilidade social à distribuição de riscos.'}
+  ],
+  'Saúde pública':[
+    {name:'SUS',context:'Acesso, prevenção, atenção básica e informação estruturam discussões de saúde pública.',use:'Conecte o princípio ao obstáculo específico do tema.'},
+    {name:'Determinantes sociais da saúde',context:'Renda, moradia, educação e território também influenciam saúde.',use:'Evita tratar saúde apenas como escolha individual.'},
+    {name:'Prevenção e educação em saúde',context:'Informação e prevenção podem reduzir riscos antes do atendimento especializado.',use:'Base útil para propostas educativas e comunitárias.'}
+  ],
+  'Cidadania':[
+    {name:'Participação no espaço público',context:'A cidadania também envolve ação coletiva e participação social.',use:'Relacione participação à capacidade de agir sobre problemas comuns.'},
+    {name:'Direitos sociais',context:'Direitos dependem de acesso efetivo, não apenas reconhecimento formal.',use:'Mostre a distância entre garantia e realidade.'},
+    {name:'Capital social',context:'Redes de confiança e cooperação fortalecem ação comunitária.',use:'Pode sustentar propostas de participação e pertencimento.'}
+  ],
+  'Trabalho':[
+    {name:'Transformações do trabalho',context:'Tecnologia e mudanças econômicas alteram profissões e qualificação.',use:'Use para discutir requalificação e proteção profissional.'},
+    {name:'Trabalho de cuidado',context:'Atividades de cuidado têm valor social e econômico, embora sejam frequentemente invisibilizadas.',use:'Conecte cuidado, desigualdade e reconhecimento.'},
+    {name:'Qualificação profissional',context:'Formação contínua pode aproximar trabalhadores de novas demandas.',use:'Base para propostas de educação profissional.'}
+  ],
+  'Urbanização':[
+    {name:'Direito à cidade',context:'Acesso a mobilidade, serviços e espaços públicos é distribuído de forma desigual.',use:'Relacione infraestrutura à participação na vida urbana.'},
+    {name:'Segregação socioespacial',context:'Grupos sociais ocupam o espaço urbano de forma desigual.',use:'Explique como território e renda afetam oportunidades.'},
+    {name:'Planejamento urbano',context:'Transporte, habitação e uso do solo moldam qualidade de vida.',use:'Base para propostas concretas de gestão urbana.'}
+  ],
+  'Cultura':[
+    {name:'Patrimônio cultural',context:'Memória coletiva envolve bens, práticas e referências compartilhadas.',use:'Explique por que preservar determinada memória tem valor social.'},
+    {name:'Indústria cultural',context:'Produção cultural em larga escala permite discutir consumo e circulação.',use:'Use quando o tema envolver mídia ou consumo cultural.'},
+    {name:'Identidade cultural',context:'Identidades são construídas por práticas, memória e pertencimento.',use:'Relacione cultura ao grupo ou conflito do tema.'}
+  ],
+  'Inclusão e acessibilidade':[
+    {name:'Desenho universal',context:'Produtos, espaços e serviços podem ser pensados para o maior número possível de pessoas.',use:'Sustenta propostas de acessibilidade desde o projeto.'},
+    {name:'Barreiras atitudinais',context:'Atitudes e práticas também podem limitar participação.',use:'Ajuda a discutir preconceito, autonomia e inclusão.'},
+    {name:'Acessibilidade como participação',context:'Acesso envolve comunicação, mobilidade e uso autônomo.',use:'Conecte recurso acessível à participação concreta.'}
+  ]
+});
+
+const ESSAY_ARGUMENT_STRUCTURES=Object.freeze([
+  {name:'Causa → consequência',template:'O problema persiste porque [causa]. Como resultado, [consequência], o que reforça [ligação com a tese].',best:'bom para explicar mecanismos e efeitos sociais'},
+  {name:'Direito × realidade',template:'Embora [direito/princípio] seja reconhecido, [obstáculo] impede sua efetivação. Essa distância produz [consequência].',best:'bom para cidadania, educação, saúde e inclusão'},
+  {name:'Agente → prática → impacto',template:'Quando [agente] adota [prática], ocorre [impacto]. Sem [mudança], tende a permanecer [problema].',best:'bom para tecnologia, trabalho, mídia e consumo'},
+  {name:'Histórico → permanência',template:'Historicamente, [processo] contribuiu para [estrutura]. Hoje, esse legado aparece em [manifestação atual].',best:'bom quando houver relação histórica real'}
+]);
+
+function essayPrioritySignal(){
+  const rows=state.essayHistory||[];
+  if(!rows.length)return null;
+  const recent=rows.slice(0,5);
+  const avgs=[0,1,2,3,4].map(i=>Math.round(recent.reduce((sum,row)=>sum+Number(essayScoresFromRow(row)[i]||0),0)/recent.length));
+  const weakIndex=avgs.indexOf(Math.min(...avgs));
+  return {index:weakIndex,score:avgs[weakIndex],trainer:ESSAY_COMPETENCY_TRAINERS[weakIndex],averages:avgs,latest:rows[0]};
+}
+
+function currentEssayAxis(){
+  const selected=getEssayThemeData?.();
+  if(selected?.axis)return selected.axis;
+  const axis=$('#essayAxis')?.value||'all';
+  return axis!=='all'?axis:'default';
+}
+
+function activateEssayCompetency(index){
+  state.essayTrainingCompetency=clamp(Number(index||0),0,4);
+  renderEssayIntelligenceV5();
+  $('#essayCompetencyPlan')?.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+function renderEssayCompetencyPlan(){
+  const el=$('#essayCompetencyPlan');if(!el)return;
+  const signal=essayPrioritySignal();
+  const active=state.essayTrainingCompetency!==null?Number(state.essayTrainingCompetency):Number(signal?.index||0);
+  const trainer=ESSAY_COMPETENCY_TRAINERS[active];
+  if($('#essayPriorityCompetency'))$('#essayPriorityCompetency').textContent=signal?trainer.code+' · '+signal.score+'/200':'primeiro treino';
+  el.innerHTML='<div class="essay-comp-trainer-tabs">'+ESSAY_COMPETENCY_TRAINERS.map((x,i)=>'<button data-essay-train-comp="'+i+'" class="'+(i===active?'active':'')+'">'+x.code+'</button>').join('')+'</div>'+
+    '<article class="essay-comp-mission"><span>'+trainer.code+' · '+esc(trainer.name)+'</span><h4>Missão de 5 minutos</h4><p>'+esc(trainer.mission)+'</p><div><b>Como conferir:</b> '+esc(trainer.check)+'</div><footer><button id="askNexoCompetency" class="outline-btn">Perguntar ao Nexo</button><button id="focusEssayEditor" class="primary-btn">Levar para meu texto →</button></footer></article>';
+  $('[data-essay-train-comp]',el).forEach(btn=>btn.onclick=()=>activateEssayCompetency(Number(btn.dataset.essayTrainComp)));
+  $('#askNexoCompetency')?.addEventListener('click',()=>openProfessorNexo('Quero treinar '+trainer.code+' ('+trainer.name+'). Me dê um exercício curto usando o tema da minha redação atual.'));
+  $('#focusEssayEditor')?.addEventListener('click',()=>{$('#essayText')?.focus();$('#essayText')?.scrollIntoView({behavior:'smooth',block:'center'});toast('Foco ativo: '+trainer.code+' · '+trainer.name);});
+}
+
+function renderEssayVersionCompare(){
+  const el=$('#essayVersionCompare');if(!el)return;
+  const rows=state.essayHistory||[];
+  const latest=rows[0];
+  const previous=latest?.revision_of?rows.find(x=>Number(x.id)===Number(latest.revision_of)):rows[1];
+  if(!latest||!previous){
+    el.innerHTML='<p class="learning-empty">Depois de duas correções, o NEXO mostra a diferença por competência.</p>';
+    if($('#essayCompareLabel'))$('#essayCompareLabel').textContent=latest?'falta uma versão':'sem comparação';
+    return;
+  }
+  const a=essayScoresFromRow(previous),b=essayScoresFromRow(latest);
+  const totalDelta=Number(latest.estimated_score||0)-Number(previous.estimated_score||0);
+  if($('#essayCompareLabel'))$('#essayCompareLabel').textContent=(totalDelta>=0?'+':'')+totalDelta+' pts';
+  el.innerHTML='<div class="essay-compare-head"><span><small>ANTES</small><b>'+Number(previous.estimated_score||0)+'</b></span><i>→</i><span><small>AGORA</small><b>'+Number(latest.estimated_score||0)+'</b></span></div>'+
+    '<div class="essay-compare-comps">'+b.map((score,i)=>{const d=score-a[i];return '<div><span>C'+(i+1)+'</span><i><em style="width:'+score/2+'%"></em></i><b class="'+(d>0?'up':d<0?'down':'')+'">'+(d>0?'+':'')+d+'</b></div>'}).join('')+'</div>';
+}
+
+function renderEssayRepertoires(){
+  const el=$('#essayRepertoireList');if(!el)return;
+  const axis=currentEssayAxis();
+  const items=NEXO_REPERTOIRES[axis]||NEXO_REPERTOIRES.default;
+  if($('#essayRepertoireAxis'))$('#essayRepertoireAxis').textContent=axis==='default'?'repertório geral':axis;
+  el.innerHTML=items.map((x,i)=>'<article><span>'+String(i+1).padStart(2,'0')+'</span><div><b>'+esc(x.name)+'</b><p>'+esc(x.context)+'</p><small><strong>Como usar:</strong> '+esc(x.use)+'</small></div></article>').join('');
+}
+
+function renderEssayArguments(){
+  const el=$('#essayArgumentList');if(!el)return;
+  el.innerHTML=ESSAY_ARGUMENT_STRUCTURES.map((x,i)=>'<article><span>'+String(i+1).padStart(2,'0')+'</span><div><b>'+esc(x.name)+'</b><p>'+esc(x.template)+'</p><small>'+esc(x.best)+'</small></div><button data-use-argument="'+i+'">Treinar →</button></article>').join('');
+  $('[data-use-argument]',el).forEach(btn=>btn.onclick=()=>{
+    const x=ESSAY_ARGUMENT_STRUCTURES[Number(btn.dataset.useArgument)];
+    openProfessorNexo('Quero praticar a estrutura '+x.name+'. Tema atual: '+getEssayThemeData().title+'. Crie um exercício para eu preencher, sem escrever a redação por mim.');
+  });
+}
+
+function renderEssayIntelligenceV5(){
+  renderEssayCompetencyPlan();
+  renderEssayVersionCompare();
+  renderEssayRepertoires();
+  renderEssayArguments();
 }
 
 function essayThemeCompleted(theme){
