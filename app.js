@@ -291,6 +291,8 @@ const state = {
   personalRadar:[],
   learningIntelligence:null,
   recommendationExplanation:null,
+  featureFlags:new Map(),
+  globalSearchItems:[],
   examTimer:null,
   pendingGuidedTraining:null,
   lastFinishedStudy:null,
@@ -568,6 +570,37 @@ async function logClientError(area,error,code='runtime'){
   }
 }
 
+async function logProductEvent(eventName,metadata={},page=null){
+  if(!state?.user?.id||!navigator.onLine)return;
+  try{
+    await client.from('nexo_product_events').insert({
+      user_id:state.user.id,
+      event_name:String(eventName||'event').slice(0,80),
+      page:String(page||$('.page.active')?.id||'').slice(0,80)||null,
+      metadata:metadata&&typeof metadata==='object'?metadata:{}
+    });
+  }catch(err){
+    console.warn('product analytics unavailable',err);
+  }
+}
+
+async function loadFeatureFlags(){
+  if(!state.user?.id)return state.featureFlags;
+  try{
+    const {data,error}=await client.from('nexo_feature_flags').select('flag,enabled,min_plan');
+    if(error)throw error;
+    state.featureFlags=new Map((data||[]).map(x=>[x.flag,x]));
+  }catch(err){console.warn('feature flags',err)}
+  return state.featureFlags;
+}
+function featureEnabled(flag){
+  const row=state.featureFlags.get(flag);
+  if(!row)return true;
+  if(!row.enabled)return false;
+  const rank={free:0,plus:1,ultra:2};
+  return (rank[nexoAccessTier()]??0)>=(rank[row.min_plan]??0);
+}
+
 function showAuthMessage(message, error=false) {
   const el = $('#authMessage');
   el.textContent = message;
@@ -590,6 +623,59 @@ function setTheme(mode) {
   $('#themeToggle').textContent = mode === 'light' ? '☀' : '☾';
 }
 setTheme(localStorage.getItem('nexo-theme') || 'dark');
+
+const NEXO_EXPERIENCE_KEY='nexo-experience-v1';
+function defaultExperienceSettings(){
+  return {
+    font:'normal',
+    contrast:'normal',
+    motion:window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches?'reduced':'normal',
+    mode:'balanced',
+    dataSaver:false
+  };
+}
+function readExperienceSettings(){
+  try{return {...defaultExperienceSettings(),...JSON.parse(localStorage.getItem(NEXO_EXPERIENCE_KEY)||'{}')}}catch(_){return defaultExperienceSettings()}
+}
+function applyExperienceSettings(settings=readExperienceSettings(),save=false){
+  const s={...defaultExperienceSettings(),...settings};
+  document.body.dataset.fontScale=s.font;
+  document.body.dataset.contrast=s.contrast;
+  document.body.dataset.motion=s.motion;
+  document.body.dataset.experience=s.mode;
+  document.body.classList.toggle('data-saver',Boolean(s.dataSaver));
+  if(save)localStorage.setItem(NEXO_EXPERIENCE_KEY,JSON.stringify(s));
+  $('[data-font-scale]').forEach(b=>b.classList.toggle('active',b.dataset.fontScale===s.font));
+  $('[data-contrast]').forEach(b=>b.classList.toggle('active',b.dataset.contrast===s.contrast));
+  $('[data-motion]').forEach(b=>b.classList.toggle('active',b.dataset.motion===s.motion));
+  $('[data-experience-mode]').forEach(b=>b.classList.toggle('active',b.dataset.experienceMode===s.mode));
+  if($('#dataSaverToggle'))$('#dataSaverToggle').checked=Boolean(s.dataSaver);
+  return s;
+}
+function mutateExperience(patch){
+  const next={...readExperienceSettings(),...patch};
+  applyExperienceSettings(next,true);
+}
+applyExperienceSettings(readExperienceSettings(),false);
+$('#openExperienceSettings')?.addEventListener('click',()=>{
+  applyExperienceSettings(readExperienceSettings(),false);
+  $('#experienceSettingsModal')?.classList.remove('hidden');
+  $('#profileMenu')?.classList.add('hidden');
+  document.body.style.overflow='hidden';
+});
+function closeExperienceSettings(){
+  $('#experienceSettingsModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+}
+$('#closeExperienceSettings')?.addEventListener('click',closeExperienceSettings);
+$('#experienceSettingsModal')?.addEventListener('click',e=>{if(e.target===$('#experienceSettingsModal'))closeExperienceSettings()});
+$('[data-font-scale]').forEach(b=>b.addEventListener('click',()=>mutateExperience({font:b.dataset.fontScale})));
+$('[data-contrast]').forEach(b=>b.addEventListener('click',()=>mutateExperience({contrast:b.dataset.contrast})));
+$('[data-motion]').forEach(b=>b.addEventListener('click',()=>mutateExperience({motion:b.dataset.motion})));
+$('[data-experience-mode]').forEach(b=>b.addEventListener('click',()=>mutateExperience({mode:b.dataset.experienceMode})));
+$('#dataSaverToggle')?.addEventListener('change',e=>mutateExperience({dataSaver:Boolean(e.target.checked)}));
+$('#resetExperienceSettings')?.addEventListener('click',()=>{const s=defaultExperienceSettings();applyExperienceSettings(s,true);toast('Experiência restaurada ao padrão.');});
+
 
 
 function updateHomeExperience(){
@@ -1321,6 +1407,20 @@ $('#focusStart')?.addEventListener('click',async()=>{
   else startFocusMode();
 });
 
+function updateNetworkStatus(){
+  const online=navigator.onLine;
+  document.body.classList.toggle('is-offline',!online);
+  const el=$('#networkStatus');
+  if(el){
+    el.classList.toggle('hidden',online);
+    const b=el.querySelector('b');if(b)b.textContent=online?'Online':'Offline parcial';
+  }
+  if(online)logProductEvent('network_restored',{},$('.page.active')?.id||null);
+}
+window.addEventListener('online',()=>{updateNetworkStatus();toast('Conexão restaurada.')});
+window.addEventListener('offline',()=>{updateNetworkStatus();toast('Sem internet. Aulas já carregadas podem continuar disponíveis.','info')});
+updateNetworkStatus();
+
 const searchBox=$('.search');
 const globalSearch=$('#globalSearch');
 
@@ -1357,6 +1457,58 @@ globalSearch.addEventListener('keydown',e=>{
     setMobileSearchOpen(false,{focus:false});
   }
 });
+
+function buildGlobalSearchResults(query){
+  const q=normalizeTextKey(query).trim();
+  if(q.length<2)return [];
+  const out=[];
+  for(const item of state.materials||[]){
+    const hay=normalizeTextKey([item.title,item.subject,item.topic,item.area].join(' '));
+    if(hay.includes(q))out.push({type:'material',title:item.title,meta:[item.subject,item.topic,materialKind(item).label].filter(Boolean).join(' · '),id:item.id,score:hay.startsWith(q)?3:2});
+  }
+  const seenTopic=new Set();
+  for(const row of state.radarTopics||[]){
+    const key=String(row.subject||'')+'::'+String(row.topic||'');
+    if(seenTopic.has(key))continue;seenTopic.add(key);
+    const hay=normalizeTextKey([row.subject,row.topic,row.area].join(' '));
+    if(hay.includes(q))out.push({type:'topic',title:row.topic,meta:(row.subject||row.area||'')+' · Radar '+Math.round(Number(row.nexo_priority_score||0)),subject:row.subject||'',topic:row.topic,score:hay.startsWith(q)?3:1});
+  }
+  for(const [topic,defs] of Object.entries(NEXO_SUBTOPICS)){
+    for(const def of defs){
+      if(normalizeTextKey(def.name).includes(q))out.push({type:'subtopic',title:def.name,meta:'Subassunto · '+topic,topic,score:2});
+    }
+  }
+  for(const theme of THEMES){
+    const hay=normalizeTextKey([theme.title,theme.axis].join(' '));
+    if(hay.includes(q))out.push({type:'essay',title:theme.title,meta:'Redação · '+theme.axis,themeId:theme.id,axis:theme.axis,score:1});
+  }
+  return out.sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title,'pt-BR')).slice(0,10);
+}
+function renderGlobalSearchResults(query){
+  const box=$('#globalSearchResults');if(!box)return;
+  const items=buildGlobalSearchResults(query);
+  state.globalSearchItems=items;
+  if(!items.length){box.innerHTML=query.trim().length>=2?'<div class="search-empty">Nada encontrado. Tente outro termo.</div>':'';box.classList.toggle('hidden',!query.trim());return}
+  const icons={material:'▣',topic:'◎',subtopic:'◇',essay:'✎'};
+  box.innerHTML=items.map((item,index)=>'<button data-global-result="'+index+'"><span>'+icons[item.type]+'</span><div><b>'+esc(item.title)+'</b><small>'+esc(item.meta||'')+'</small></div><i>→</i></button>').join('');
+  box.classList.remove('hidden');
+  $('[data-global-result]',box).forEach(btn=>btn.onclick=async()=>{
+    const item=state.globalSearchItems[Number(btn.dataset.globalResult)];if(!item)return;
+    box.classList.add('hidden');globalSearch.value='';setMobileSearchOpen(false,{focus:false});
+    logProductEvent('search_result_open',{type:item.type},'search');
+    if(item.type==='material'){openPage('materiais');await loadMaterials({silent:true});return openContentViewer('material',item.id)}
+    if(item.type==='topic'){const lesson=topicLesson(item.topic,item.subject);return lesson?openLibraryTopic(item.subject,item.topic):(openPage('questoes'),startStudySession({mode:'search',subject:item.subject,topic:item.topic,radarTopic:item.topic,size:5,difficulty:'',visualOnly:false}))}
+    if(item.type==='subtopic'){const lesson=(state.materials||[]).find(m=>m.topic===item.topic&&materialKind(m).key==='lesson');return lesson?openLibraryTopic(lesson.subject,item.topic):(openPage('questoes'),startStudySession({mode:'search',topic:item.topic,size:5,difficulty:'',visualOnly:false}))}
+    if(item.type==='essay'){openPage('redacao');if($('#essayAxis'))$('#essayAxis').value=item.axis;renderEssayThemeOptions({keepSelection:false});if($('#essayTheme'))$('#essayTheme').value=String(item.themeId);updateEssayPrompt();$('#essayText')?.focus();}
+  });
+}
+let globalSearchTimer=null;
+globalSearch.addEventListener('input',e=>{
+  clearTimeout(globalSearchTimer);
+  const value=e.target.value||'';
+  globalSearchTimer=setTimeout(()=>renderGlobalSearchResults(value),120);
+});
+
 
 document.addEventListener('click',e=>{
   if(!e.target.closest('#profileButton')&&!e.target.closest('#profileMenu')) $('#profileMenu').classList.add('hidden');
@@ -2135,6 +2287,30 @@ async function resolveQuestionIssue(id,status){
 }
 
 
+
+async function loadAdminProductAnalytics(){
+  if(state.profile?.role!=='admin')return;
+  const el=$('#adminProductAnalytics');if(!el)return;
+  try{
+    const {data,error}=await client.rpc('get_admin_product_metrics');
+    if(error)throw error;
+    const pages=Array.isArray(data?.page_views_7d)?data.page_views_7d:[];
+    el.innerHTML='<div class="admin-product-kpis">'+[
+      ['Usuários ativos · 7d',Number(data?.active_users_7d||0)],
+      ['Questões · 7d',Number(data?.attempts_7d||0)],
+      ['Acerto · 7d',Number(data?.accuracy_7d||0)+'%'],
+      ['Conteúdos concluídos · 7d',Number(data?.content_completions_7d||0)],
+      ['Redações · 30d',Number(data?.essays_30d||0)],
+      ['Sessões · 7d',Number(data?.sessions_7d||0)]
+    ].map(x=>'<article><small>'+x[0]+'</small><b>'+x[1]+'</b></article>').join('')+'</div>'+
+    '<div class="admin-page-views"><b>Páginas mais abertas · 7 dias</b>'+(pages.length?pages.map(x=>'<div><span>'+esc(x.page)+'</span><strong>'+Number(x.views||0)+'</strong></div>').join(''):'<p>Sem eventos suficientes ainda.</p>')+'</div>';
+  }catch(err){
+    console.error('admin product analytics',err);
+    el.innerHTML='<p class="learning-empty">Não foi possível carregar as métricas agora.</p>';
+  }
+}
+$('#refreshProductAnalytics')?.addEventListener('click',loadAdminProductAnalytics);
+
 async function loadEssayHistory(){
   if(!state.user?.id)return [];
   try{
@@ -2220,7 +2396,10 @@ function persistStudySession(){
       coreSessionId:s.coreSessionId||null,
       maxHints:s.maxHints||null,
       coachTimeSeconds:s.coachTimeSeconds||null,
-      coachLongSeconds:s.coachLongSeconds||null
+      coachLongSeconds:s.coachLongSeconds||null,
+      examMode:Boolean(s.examMode),
+      examStartedAt:s.examStartedAt||null,
+      paceAlerts:s.paceAlerts||{}
     }));
   }catch(_){}
 }
@@ -2274,6 +2453,7 @@ async function resumePersistedStudySession(){
     $('#sessionTitle').textContent=saved.topic||saved.subject||saved.area||'Sessão retomada';
     $('#sessionSubtitle').textContent='Você voltou exatamente de onde parou.';
     updateStudyNavigation(state.session);
+    ensureExamClock();
     await showCurrentQuestion();
     toast('Sessão retomada.');
   }catch(err){
@@ -2305,7 +2485,8 @@ function openPage(id) {
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));
   $$('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   toggleMenu(false);
-  window.scrollTo({top:0,behavior:'smooth'});
+  window.scrollTo({top:0,behavior:document.body.dataset.motion==='reduced'?'auto':'smooth'});
+  logProductEvent('page_view',{},id);
   if (id==='inicio') { renderNexoToday(); renderMathTrail(); }
   if (id==='desempenho') renderPerformance();
   if (id==='focos') renderFocus();
@@ -2322,7 +2503,7 @@ function openPage(id) {
   if (id==='feedback') loadMyFeedback();
   if (id==='ranking') loadNexoJourney();
   if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
-  if (id==='admin') loadAdmin();
+  if (id==='admin') { loadAdmin(); loadAdminProductAnalytics(); }
 }
 $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{
   e.preventDefault();
@@ -2404,11 +2585,12 @@ async function initApp(session) {
     loadMaterials({silent:true}),
     loadTopicMastery(),
     loadSavedQuestions({render:false}),
-    loadNexoWeekPlan({silent:true})
+    loadNexoWeekPlan({silent:true}),
+    loadFeatureFlags()
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
-      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais','domínio por assunto','questões salvas','Semana NEXO'];
+      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais','domínio por assunto','questões salvas','Semana NEXO','feature flags'];
       console.error('bootstrap '+areas[index],result.reason);
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
@@ -2443,6 +2625,12 @@ async function initApp(session) {
   if(needsOnboarding)await safeBootStep('onboarding',async()=>openNexoOnboarding(false));
   else $('#niaButton')?.classList.remove('hidden');
 }
+
+function registerNexoServiceWorker(){
+  if(!('serviceWorker' in navigator)||location.protocol!=='https:')return;
+  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('service worker',err)),{once:true});
+}
+registerNexoServiceWorker();
 
 let sessionInitPromise=null;
 let initializedSessionUserId=null;
@@ -3077,6 +3265,7 @@ async function startStudySession(config) {
     const queue=fresh.slice(0,size);
     const coreSessionId=await beginNexoSession(config,queue.length);
     state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,examStartedAt:config.examMode?Date.now():null,paceAlerts:{},resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
+    logProductEvent('study_session_start',{mode:config.mode||'manual',area:config.area||null,subject:config.subject||null,topic:config.topic||null,size:queue.length,exam_mode:Boolean(config.examMode)},'questoes');
     $('#sessionSetup').classList.add('hidden');
     $('#studyWorkspace').classList.remove('hidden');
     $('#sessionAreaBadge').textContent=config.area||'Treino';
@@ -3977,6 +4166,7 @@ function buildImmediateNexoReaction(q,data,duration,behavior={}){
 }
 async function submitAnswer(option) {
   if(state.answered||!state.current||state.selectedOption===null)return;
+  if(!navigator.onLine)return toast('Você está offline. Reconecte para registrar e corrigir esta resposta.','error');
   const behaviorSnapshot=state.questionBehavior?{
     questionId:state.questionBehavior.questionId,
     startedAt:state.questionBehavior.startedAt,
@@ -4508,6 +4698,7 @@ async function finishSession() {
   clearPersistedStudySession();
   const finished={...(state.session||{})};
   const reportId=finished.coreSessionId||null;
+  logProductEvent('study_session_finish',{mode:finished.mode||'manual',size:Number(finished.size||0),correct:Number(finished.resultStats?.correct||0),wrong:Number(finished.resultStats?.wrong||0),exam_mode:Boolean(finished.examMode)},'questoes');
   if(state.session?.coreSessionId) await closeNexoSession('completed',state.session);
   $('#sessionProgress').style.width='100%';
   $('#nextQuestionBottom').classList.add('hidden');
@@ -5451,6 +5642,7 @@ $('#analyzeEssay').onclick=async()=>{
     loadEssayHistory().catch(()=>{});
     loadNexoWeekPlan({silent:true}).catch(()=>{});
     state.essayRevisionOf=null;
+    logProductEvent('essay_review',{score_band:Math.floor(total/100)*100,priority_competency:feedback.priority,version:currentEssayVersionNumber()},'redacao');
   }
   showEssayResult(text,scores,total);
 };
@@ -6015,6 +6207,7 @@ async function openContentViewer(type,id){
   if(!modal||!body)return;
 
   state.activeViewer={type,item,lastPersistAt:0};
+  logProductEvent('content_open',{type,content_id:Number(item.id||0),subject:item.subject||null,topic:item.topic||null},'materiais');
   title.textContent=item.title||'Conteúdo';
   const itemKind=type==='material'?materialKind(item):null;
   const radarMeta=type==='material'?materialRadarMeta(item):null;
