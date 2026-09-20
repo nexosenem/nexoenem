@@ -92,6 +92,7 @@ const state = {
   selectedOption:null,
   lastAnswer:null,
   questionStartedAt:0,
+  questionBehavior:null,
   pdfCache:new Map(),
   visualCache:new Map(),
   videos:[],
@@ -954,6 +955,7 @@ $('#mobileQuickTen').onclick=()=>{
 function resetSessionUI() {
   const previous=state.session;
   if(previous?.coreSessionId) closeNexoSession('abandoned',previous);
+  stopQuestionBehaviorMonitor();
   state.session=null; state.current=null; state.answered=false; state.selectedOption=null; state.lastAnswer=null;
   $('#sessionSetup').classList.remove('hidden');
   $('#studyWorkspace').classList.add('hidden');
@@ -1074,6 +1076,7 @@ async function showCurrentQuestion() {
   }
   state.current=state.session.queue[state.session.index];
   state.answered=false;state.selectedOption=null;state.lastAnswer=null;state.questionStartedAt=Date.now();
+  startQuestionBehaviorMonitor(state.current);
   $('.question-mobile-actions')?.classList.remove('answered');
   $('#nextQuestionBottom').classList.add('hidden');
   $('#sessionMeta').textContent=`Questão ${state.session.index+1} de ${state.session.size}`;
@@ -1103,6 +1106,119 @@ async function ensureMediaPath(q){
   return q;
 }
 
+function stopQuestionBehaviorMonitor(){
+  const behavior=state.questionBehavior;
+  if(behavior?.timers){
+    behavior.timers.forEach(timer=>clearTimeout(timer));
+  }
+  state.questionBehavior=null;
+}
+
+function questionBehaviorIsActive(questionId){
+  return Boolean(
+    state.questionBehavior &&
+    Number(state.questionBehavior.questionId)===Number(questionId) &&
+    state.current &&
+    Number(state.current.id)===Number(questionId) &&
+    !state.answered
+  );
+}
+
+function preAnswerHintFor(q,level=1){
+  const area=q?.area||'';
+  const topic=q?.topic||q?.subject||'conteúdo';
+  if(level<=1){
+    return 'Antes de olhar as alternativas de novo, resuma o comando em uma frase: o que exatamente a questão quer que você encontre, explique ou compare?';
+  }
+  if(level===2){
+    return getQuestionHint(q)||'Separe os dados úteis do contexto e elimine primeiro as alternativas que não respondem diretamente ao comando.';
+  }
+  if(area==='Matemática'){
+    return 'Terceira pista: faça uma estimativa antes da conta completa e teste a ordem de grandeza das alternativas. Isso reduz opções sem entregar o resultado.';
+  }
+  if(area==='Linguagens'){
+    return 'Terceira pista: volte ao trecho que sustenta o comando e procure a alternativa que pode ser provada pelo texto, não a que apenas parece mais bonita.';
+  }
+  if(area==='Ciências da Natureza'){
+    return 'Terceira pista: nomeie a relação de causa e efeito do fenômeno e confira unidades, direção da mudança e mecanismo antes de comparar as opções.';
+  }
+  if(area==='Ciências Humanas'){
+    return 'Terceira pista: fixe tempo, espaço, agente social e conceito central. Depois elimine generalizações e anacronismos.';
+  }
+  return 'Terceira pista: tente explicar em voz mental por que duas alternativas estão erradas. A resposta fica mais clara quando você elimina por evidência.';
+}
+
+function showQuestionCoachReaction(type,{force=false}={}){
+  const behavior=state.questionBehavior;
+  const q=state.current;
+  if(!behavior||!q||state.answered||Number(behavior.questionId)!==Number(q.id))return;
+  if(behavior.lastReaction===type&&!force)return;
+
+  const coach=$('#questionCoach');
+  const avatar=$('#questionCoachAvatar');
+  const text=$('#questionCoachText');
+  const button=$('#preAnswerHint');
+  if(!coach||!text)return;
+
+  let mood='pensativo';
+  let message='Se travar, eu te dou uma pista de estratégia sem revelar o gabarito.';
+  let label='Pedir pista';
+
+  if(type==='time'){
+    message=state.selectedOption===null
+      ? 'Você já está há mais de 1 minuto aqui. Tente reduzir o comando a uma pergunta simples; posso te dar uma pista leve.'
+      : 'Você já escolheu uma alternativa e ainda está hesitando. Quer uma pista para conferir o raciocínio sem revelar a resposta?';
+    label=behavior.hintCount?'Outra pista':'Quero uma pista';
+  }else if(type==='long_time'){
+    message='Essa questão já passou de 2 minutos. No ENEM, vale buscar o ponto decisivo agora e evitar ficar preso. Posso te orientar pelo método.';
+    label=behavior.hintCount?'Mais uma pista':'Ver estratégia';
+  }else if(type==='switching'){
+    message='Percebi que você trocou de alternativa algumas vezes. Em vez de comparar todas de novo, volte ao comando e elimine por evidência.';
+    label=behavior.hintCount?'Outra pista':'Me dá uma pista';
+  }else if(type==='hint_repeat'){
+    mood='acolhedor';
+    message='Você já usou mais de uma pista. Agora tente aplicar uma delas antes de pedir outra; se ainda travar, eu aprofundo o método sem entregar o gabarito.';
+    label=behavior.hintCount>=3?'Pistas usadas':'Próxima pista';
+  }
+
+  behavior.lastReaction=type;
+  coach.dataset.behavior=type;
+  coach.classList.add('is-reacting');
+  text.textContent=message;
+  if(button&&!button.disabled)button.textContent=label;
+  if(avatar)setNexoImage(avatar,nexoBustForMood(mood));
+  setNexoMood(mood);
+
+  clearTimeout(behavior.uiTimer);
+  behavior.uiTimer=setTimeout(()=>{
+    if(questionBehaviorIsActive(q.id))coach.classList.remove('is-reacting');
+  },7000);
+}
+
+function startQuestionBehaviorMonitor(q){
+  stopQuestionBehaviorMonitor();
+  const questionId=Number(q?.id||0);
+  const behavior={
+    questionId,
+    startedAt:Date.now(),
+    selectionChanges:0,
+    hintCount:0,
+    firstSelectionAt:0,
+    lastReaction:'',
+    timers:[],
+    uiTimer:null
+  };
+  state.questionBehavior=behavior;
+
+  behavior.timers.push(setTimeout(()=>{
+    if(questionBehaviorIsActive(questionId))showQuestionCoachReaction('time');
+  },65000));
+
+  behavior.timers.push(setTimeout(()=>{
+    if(questionBehaviorIsActive(questionId))showQuestionCoachReaction('long_time',{force:true});
+  },125000));
+}
+
 async function renderQuestion(q) {
   const card=$('#questionCard');
   if(q.media_type) await ensureMediaPath(q);
@@ -1124,9 +1240,9 @@ async function renderQuestion(q) {
     ${visual ? `<div id="visualWrap" class="visual-wrap"><div class="visual-head"><span>RECURSO VISUAL ORIGINAL</span><span>carregando…</span></div><div id="visualStage" class="visual-stage"><div class="visual-loading"></div></div></div>` : ''}
     <div class="q-section-title">COMANDO</div>
     <div class="q-prompt">${esc(q.prompt)}</div>
-    <div class="question-coach">
-      <img src="${NEXO_MEDIA_IMAGES.bustPensativo}" alt="Professor Nexo">
-      <div><b>Professor Nexo</b><small>Se travar, eu te dou uma pista de estratégia sem revelar o gabarito.</small></div>
+    <div class="question-coach" id="questionCoach" data-behavior="idle">
+      <img id="questionCoachAvatar" src="${NEXO_MEDIA_IMAGES.bustPensativo}" data-nexo-family="bust" alt="Professor Nexo">
+      <div><b>Professor Nexo</b><small id="questionCoachText">Se travar, eu te dou uma pista de estratégia sem revelar o gabarito.</small></div>
       <button id="preAnswerHint" type="button">Pedir pista</button>
     </div>
     <div id="preAnswerHintBox" class="pre-answer-hint hidden"></div>
@@ -1138,13 +1254,21 @@ async function renderQuestion(q) {
   const preHint=$('#preAnswerHint');
   if(preHint){
     preHint.onclick=()=>{
+      const behavior=state.questionBehavior;
+      if(!behavior||!questionBehaviorIsActive(q.id))return;
+      behavior.hintCount=Math.min(3,Number(behavior.hintCount||0)+1);
       const box=$('#preAnswerHintBox');
-      const hint=getQuestionHint(q)||'Leia primeiro o comando e descubra exatamente o que ele pede. Depois volte aos dados do enunciado e elimine alternativas que não respondem ao recorte.';
-      box.innerHTML='<div class="pre-hint-icon">✦</div><div><b>Pista de estratégia</b><p>'+esc(hint)+'</p></div>';
+      const hint=preAnswerHintFor(q,behavior.hintCount);
+      box.innerHTML='<div class="pre-hint-icon">✦</div><div><b>Pista '+behavior.hintCount+' de 3</b><p>'+esc(hint)+'</p></div>';
       box.classList.remove('hidden');
-      preHint.textContent='Pista aberta';
-      preHint.disabled=true;
-      setNexoMood('pensativo');
+      if(behavior.hintCount>=3){
+        preHint.textContent='3 pistas usadas';
+        preHint.disabled=true;
+      }else{
+        preHint.textContent='Outra pista';
+      }
+      if(behavior.hintCount>=2)showQuestionCoachReaction('hint_repeat',{force:true});
+      else setNexoMood('pensativo');
     };
   }
 
@@ -1158,6 +1282,15 @@ async function renderQuestion(q) {
 
 function selectAnswerOption(option){
   if(state.answered)return;
+  const previous=state.selectedOption;
+  const behavior=state.questionBehavior;
+  if(behavior&&questionBehaviorIsActive(state.current?.id)){
+    if(!behavior.firstSelectionAt)behavior.firstSelectionAt=Date.now();
+    if(previous!==null&&Number(previous)!==Number(option)){
+      behavior.selectionChanges=Number(behavior.selectionChanges||0)+1;
+      if(behavior.selectionChanges>=2)showQuestionCoachReaction('switching',{force:behavior.selectionChanges===2});
+    }
+  }
   state.selectedOption=option;
   $$('.q-option',$('#questionCard')).forEach((b,i)=>b.classList.toggle('selected',i===option));
   const confirm=$('#confirmAnswer');
@@ -1602,6 +1735,7 @@ function buildImmediateNexoReaction(q,data,duration){
 }
 async function submitAnswer(option) {
   if(state.answered||!state.current||state.selectedOption===null)return;
+  stopQuestionBehaviorMonitor();
   const confirm=$('#confirmAnswer');
   if(confirm){confirm.disabled=true;confirm.textContent='Corrigindo...';}
   state.answered=true;
@@ -1894,6 +2028,7 @@ function renderSimulationReport(finished,report){
 }
 
 async function finishSession() {
+  stopQuestionBehaviorMonitor();
   const finished={...(state.session||{})};
   const reportId=finished.coreSessionId||null;
   if(state.session?.coreSessionId) await closeNexoSession('completed',state.session);
