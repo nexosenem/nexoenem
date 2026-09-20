@@ -4530,7 +4530,7 @@ function renderReviewQueue(){
   }
   el.innerHTML=items.map(({item,meta})=>'<button class="review-queue-item" data-review-topic="'+encodeURIComponent(item.topic)+'" data-review-subject="'+encodeURIComponent(item.subject||'')+'">'+
     '<span>'+Math.round(Number(meta.score||0))+'%</span><div><b>'+esc(item.topic)+'</b><small>'+esc(meta.label)+' · '+(meta.daysSince<999?meta.daysSince+' dia(s) desde o último contato':'revisão recomendada')+'</small></div><i>→</i></button>').join('');
-  $('[data-review-topic]',el).forEach(btn=>btn.onclick=()=>{
+  $$('[data-review-topic]',el).forEach(btn=>btn.onclick=()=>{
     const topic=decodeURIComponent(btn.dataset.reviewTopic||'');
     const subject=decodeURIComponent(btn.dataset.reviewSubject||'');
     const item=topicLesson(topic,subject);
