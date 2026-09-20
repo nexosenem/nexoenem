@@ -400,6 +400,17 @@ function updateHomeExperience(){
 
 
 
+function renderNexoCommandCenter(){
+  const p=state.journey?.profile||{}, rec=state.core?.recommended_action||null;
+  $('[data-nexo-command]').forEach(card=>{
+    const level=card.querySelector('[data-command-level]'), streak=card.querySelector('[data-command-streak]'), coins=card.querySelector('[data-command-coins]'), next=card.querySelector('[data-command-next]');
+    if(level)level.textContent='NV. '+Number(p.level||1);
+    if(streak)streak.textContent=String(Number(p.streak_days||0));
+    if(coins)coins.textContent=Number(p.coins||0).toLocaleString('pt-BR');
+    if(next)next.innerHTML=rec?'<b>Próxima missão:</b> '+esc(rec.topic||rec.subject||rec.area||'treino adaptativo')+' · '+Number(rec.size||6)+' questões':'<b>Próxima missão:</b> faça o diagnóstico inicial para calibrar seu plano.';
+  });
+}
+
 function buildTodayPlan(){
   const core=state.core||{};
   const rec=core.recommended_action||null;
@@ -436,6 +447,7 @@ function buildTodayPlan(){
 }
 
 function renderTodayPlan(){
+  renderNexoCommandCenter();
   const plan=buildTodayPlan();
   $$('[data-today-plan]').forEach(card=>{
     const total=card.querySelector('[data-today-total]');
@@ -3854,6 +3866,7 @@ function renderNexoJourney(){
   const pct=clamp(Math.round(Number(p.xp_in_level||0)*100/Math.max(1,Number(p.xp_to_next||180))),0,100);
   if($('#journeyLevelBar'))$('#journeyLevelBar').style.width=pct+'%';
   if($('#journeyLevelText'))$('#journeyLevelText').textContent=Number(p.xp_in_level||0)+' / '+Number(p.xp_to_next||180)+' XP para o próximo nível';
+  renderNexoCommandCenter();
   renderJourneyHome();
   renderJourneyMissions();
   renderJourneyBoards();
