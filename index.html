@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-60">
+  <link rel="stylesheet" href="./styles.css?v=20260920-61">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -688,7 +688,11 @@
                 <div class="journey-avatar-builder-preview" id="avatarBuilderPreview"></div>
                 <div><b id="avatarBuilderTitle">Seu avatar NEXO</b><small>Visual leve, sem imagens pesadas.</small></div>
               </article>
-              <article class="avatar-builder-controls">
+              <article class="avatar-builder-controls" id="avatarBuilderControls">
+                <div class="avatar-builder-live">
+                  <div class="avatar-builder-mini-preview" id="avatarBuilderMiniPreview"></div>
+                  <div><b>Preview ao vivo</b><small id="avatarBuilderStatus">Personagem salvo</small></div>
+                </div>
                 <div class="avatar-option-group avatar-base-group"><span>Estilo do personagem</span><div>
                   <button data-avatar-field="base" data-avatar-value="masc">Masculino</button>
                   <button data-avatar-field="base" data-avatar-value="fem">Feminino</button>
@@ -1333,6 +1337,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-66"></script>
+  <script src="./app.js?v=20260920-67"></script>
 </body>
 </html>
