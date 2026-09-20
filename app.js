@@ -441,16 +441,16 @@ function renderNexoCore(){
     : 'Resolva algumas questões para eu transformar seu desempenho em uma recomendação personalizada.');
   $$('[data-core-mastery]').forEach(el=>el.textContent=rec?Math.round(Number(rec.mastery||0))+'%':'—');
   $$('[data-core-priority]').forEach(el=>el.textContent=rec?Math.round(Number(rec.priority||0))+'%':'—');
-  $('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
+  $$('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
   const coreMood=rec
     ? (Number(rec.priority||0)>=70?'pensativo':Number(rec.mastery||0)>=70?'confiante':'serio')
     : 'pensativo';
   const coreSrc=NEXO_MOOD_IMAGES?.[coreMood]||'./assets/nexo-expressions/pensativo.webp';
-  $('[data-core-avatar]').forEach(img=>{
+  $$('[data-core-avatar]').forEach(img=>{
     if(img.getAttribute('src')!==coreSrc)img.src=coreSrc;
   });
   updateHomeExperience();
-  $('[data-core-start]').forEach(btn=>{
+  $$('[data-core-start]').forEach(btn=>{
     btn.innerHTML=rec
       ? 'Treinar '+Number(rec.size||6)+' questões <span>→</span>'
       : 'Começar diagnóstico <span>→</span>';
@@ -761,7 +761,7 @@ async function renderQuestion(q) {
     <div class="confirm-answer-wrap"><small>Selecione uma alternativa. Você poderá conferir antes de enviar.</small><button id="confirmAnswer" class="primary-btn" disabled>Confirmar resposta</button></div>
     <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small></div>`;
 
-  $('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
+  $$('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
   const preHint=$('#preAnswerHint');
   if(preHint){
     preHint.onclick=()=>{
