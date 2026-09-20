@@ -1211,7 +1211,7 @@ function renderPlanExperience(){
   const request=$('#requestPlusBtn');
   if(request){
     request.disabled=plus||ultra;
-    request.innerHTML=ultra?'✓ NEXO Ultra ativo':plus?'✓ NEXO Plus ativo':'Quero o NEXO Plus <span>→</span>';
+    request.innerHTML=ultra?'✓ NEXO Ultra ativo':plus?'✓ NEXO Plus ativo':'Quero o Plus · R$ 9,99/mês <span>→</span>';
   }
 }
 
@@ -4108,6 +4108,16 @@ function wardrobeCategoryLabel(category){
   const field=wardrobeItemField({category});
   return ({hair:'Cabelo',hair_color:'Cor do cabelo',outfit:'Roupa',accessory:'Acessório',frame:'Moldura',background:'Cenário',aura:'Aura'})[field]||String(category||'Item');
 }
+function nexoCollectionLabel(code){
+  return ({
+    core:'NEXO Core',
+    focus:'Focus',
+    academy:'Academy',
+    aurora:'Aurora',
+    royal:'Royal',
+    starter:'Inicial'
+  })[String(code||'core')]||'NEXO Core';
+}
 function wardrobeItemState(item,owned,level,plus,ultra){
   const mode=String(item?.grant_mode||'store');
   const planAllowed=!item?.plus_only||plus||ultra;
@@ -4226,6 +4236,16 @@ function renderJourneyStore(){
     categorySelect.value=categories.includes(current)?current:'all';
   }
 
+  const collections=[...new Set(catalog.map(item=>item.collection_code||'core'))]
+    .sort((a,b)=>nexoCollectionLabel(a).localeCompare(nexoCollectionLabel(b),'pt-BR'));
+  const collectionSelect=$('#storeCollection');
+  if(collectionSelect){
+    const current=collectionSelect.value||'all';
+    collectionSelect.innerHTML='<option value="all">Todas as coleções</option>'+
+      collections.map(code=>'<option value="'+esc(code)+'">'+esc(nexoCollectionLabel(code))+'</option>').join('');
+    collectionSelect.value=collections.includes(current)?current:'all';
+  }
+
   const stateFor=item=>wardrobeItemState(item,owned,level,plus,ultra);
   const stats={owned:0,available:0,plus:0,locked:0};
   catalog.forEach(item=>{
@@ -4246,14 +4266,16 @@ function renderJourneyStore(){
 
   if($('#storeNotice')){
     $('#storeNotice').innerHTML=ultra
-      ? '<b>Ultra ativo:</b> todos os cosméticos compatíveis com sua base estão incluídos enquanto o plano estiver ativo.'
-      : '<b>Loja limpa:</b> itens de nível e itens iniciais não aparecem mais como compra. Eles desbloqueiam automaticamente na Jornada.';
+      ? '<b>Ultra ativo:</b> cosméticos compatíveis ficam incluídos enquanto o plano estiver ativo.'
+      : 'Itens iniciais e recompensas por nível são liberados automaticamente na Jornada.';
   }
 
   const selectedCategory=$('#storeCategory')?.value||'all';
+  const selectedCollection=$('#storeCollection')?.value||'all';
   const filtered=catalog.filter(item=>{
     const s=stateFor(item);
     if(selectedCategory!=='all'&&item.category!==selectedCategory)return false;
+    if(selectedCollection!=='all'&&(item.collection_code||'core')!==selectedCollection)return false;
     if(storeFilter==='owned')return s.has;
     if(storeFilter==='plus')return Boolean(item.plus_only);
     if(storeFilter==='affordable')return s.available&&coins>=Number(item.price||0);
@@ -4272,9 +4294,10 @@ function renderJourneyStore(){
     const price=Number(item.price||0);
     const affordable=coins>=price;
     const category=wardrobeCategoryLabel(item.category);
+    const collection=nexoCollectionLabel(item.collection_code||'core');
     const status=ultra?'INCLUÍDO NO ULTRA'
       :s.plusLocked?'EXCLUSIVO PLUS'
-      :s.permanentOwned?'NO INVENTÁRIO'
+      :s.permanentOwned?'ADQUIRIDO'
       :s.levelLocked?'LIBERA NO NÍVEL '+Number(item.unlock_level||1)
       :price===0?'RESGATE GRÁTIS'
       :price.toLocaleString('pt-BR')+' N¢';
@@ -4289,7 +4312,7 @@ function renderJourneyStore(){
 
     return '<article class="journey-store-item rarity-'+esc(item.rarity)+' '+(s.has?'owned ':'')+(s.plusLocked?'plus-locked ':'')+(s.levelLocked?'level-locked ':'')+'">'+
       '<div class="store-item-visual"><div class="store-avatar-preview" data-store-preview="'+esc(item.item_code)+'"></div><i>'+esc(category)+'</i></div>'+
-      '<div class="store-item-copy"><small>'+(item.plus_only?'NEXO PLUS · ':'')+esc(String(item.rarity||'comum').toUpperCase())+'</small><h4>'+esc(item.name)+'</h4><p>'+esc(item.description||'Cosmético NEXO')+'</p></div>'+
+      '<div class="store-item-copy"><small>'+(item.plus_only?'NEXO PLUS · ':'')+esc(collection)+' · '+esc(String(item.rarity||'comum').toUpperCase())+'</small><h4>'+esc(item.name)+'</h4><p>'+esc(item.description||'Cosmético NEXO')+'</p></div>'+
       '<div class="store-item-bottom"><span>'+esc(status)+'</span>'+action+'</div>'+
     '</article>';
   }).join(''):'<div class="journey-empty">Nenhum item encontrado nesse filtro.</div>';
@@ -4825,6 +4848,7 @@ $$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.da
 $('#wardrobeCategory')?.addEventListener('change',renderNexoWardrobe);
 $$('[data-store-filter]').forEach(btn=>btn.onclick=()=>{storeFilter=btn.dataset.storeFilter||'all';$('[data-store-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderJourneyStore();});
 $('#storeCategory')?.addEventListener('change',renderJourneyStore);
+$('#storeCollection')?.addEventListener('change',renderJourneyStore);
 $$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTabTarget));
 $('#refreshJourney')?.addEventListener('click',()=>loadNexoJourney());
 $('#startNexoArena')?.addEventListener('click',startNexoArena);
@@ -4893,7 +4917,7 @@ $('#requestPlusBtn')?.addEventListener('click',async()=>{
   }catch(err){
     console.error('request plus',err);
     toast('Não foi possível registrar agora.','error');
-    btn.disabled=false;btn.innerHTML='Quero o NEXO Plus <span>→</span>';
+    btn.disabled=false;btn.innerHTML='Quero o Plus · R$ 9,99/mês <span>→</span>';
   }
 });
 
