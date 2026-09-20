@@ -1566,12 +1566,12 @@ async function loadDashboard() {
   $('#mobileProgressDonut').style.background=`conic-gradient(var(--cyan) 0 ${pct}%,#1c2b40 ${pct}% 100%)`;
 
   const weak = state.dashboard.weak_topics || [];
-  $('#weaknessBars').innerHTML = weak.length ? weak.slice(0,5).map(x=>{
+  $$('#weaknessBars').innerHTML = weak.length ? weak.slice(0,5).map(x=>{
     const acc = clamp(100-Number(x.error_rate||0),0,100);
     return `<div class="weak-row"><label>${esc(x.topic)}</label><div class="weak-track"><i style="width:${acc}%"></i></div><b>${acc}%</b></div>`;
   }).join('') : '<p style="color:var(--muted);font-size:12px">Resolva algumas questões para o sistema identificar seus pontos de atenção.</p>';
 
-  $('#mobileWeaknessBars').innerHTML = weak.length ? weak.slice(0,3).map(x=>{
+  $$('#mobileWeaknessBars').innerHTML = weak.length ? weak.slice(0,3).map(x=>{
     const acc = clamp(100-Number(x.error_rate||0),0,100);
     return `<div class="mobile-weak-item"><span>${esc(x.topic)}</span><div class="bar"><i style="width:${acc}%"></i></div><b>${acc}%</b></div>`;
   }).join('') : '<p>Resolva algumas questões para descobrir seus pontos de atenção.</p>';
@@ -1752,7 +1752,7 @@ function setSelectedArea(area) {
   state.selectedArea = area;
   $$('[data-study-area]').forEach(b=>b.classList.toggle('active',b.dataset.studyArea===area));
   const subjects=[...(state.subjects[area]||[])].sort((a,b)=>a.localeCompare(b,'pt-BR'));
-  $('#sessionSubject').innerHTML='<option value="">Todas da área</option>'+subjects.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  $$('#sessionSubject').innerHTML='<option value="">Todas da área</option>'+subjects.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
 }
 
 $$('[data-study-area]').forEach(b=>b.onclick=()=>setSelectedArea(b.dataset.studyArea));
@@ -3256,7 +3256,7 @@ async function renderPerformance() {
   const areas=['Linguagens','Ciências Humanas','Ciências da Natureza','Matemática'];
   renderMasteryMap();
   $('#masteryMapTrain').onclick=()=>rec?startCoreRecommendation():(openPage('questoes'),resetSessionUI());
-  $('#areaPerformance').innerHTML=areas.map(area=>{
+  $$('#areaPerformance').innerHTML=areas.map(area=>{
     const x=map.get(area)||{accuracy:0,attempts:0};
     return `<div class="perf-row"><span>${area}<small>${Number(x.attempts||0)} questões</small></span><div class="perf-track"><i style="width:${Number(x.accuracy||0)}%"></i></div><b>${Number(x.accuracy||0)}%</b></div>`;
   }).join('');
@@ -3276,9 +3276,9 @@ async function renderPerformance() {
     .select('is_correct,duration_seconds,created_at,question:questions(subject,topic)')
     .order('created_at',{ascending:false}).limit(12);
   if(recentError)logClientError('performance',recentError,'recent_attempts');
-  $('#performanceTimeline').innerHTML=(recent||[]).map(a=>`<div class="timeline-row"><span class="${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span><div><b>${esc(a.question?.subject||'Questão')}</b><small>${esc(a.question?.topic||'')} · ${formatStudyDuration(a.duration_seconds||0)}</small></div><small>${new Date(a.created_at).toLocaleDateString('pt-BR')}</small></div>`).join('')||'<p style="color:var(--muted)">Ainda não há respostas registradas.</p>';
+  $$('#performanceTimeline').innerHTML=(recent||[]).map(a=>`<div class="timeline-row"><span class="${a.is_correct?'ok':'bad'}">${a.is_correct?'✓':'×'}</span><div><b>${esc(a.question?.subject||'Questão')}</b><small>${esc(a.question?.topic||'')} · ${formatStudyDuration(a.duration_seconds||0)}</small></div><small>${new Date(a.created_at).toLocaleDateString('pt-BR')}</small></div>`).join('')||'<p style="color:var(--muted)">Ainda não há respostas registradas.</p>';
 
-  $('#sessionHistory').innerHTML=(sessions||[]).map(item=>{
+  $$('#sessionHistory').innerHTML=(sessions||[]).map(item=>{
     const answered=Number(item.answered_count||0),correct=Number(item.correct_count||0);
     const accuracy=answered?Math.round(correct*100/answered):0;
     const label=item.mode==='simulado'?'Simulado':item.mode==='core'?'NEXO Core':item.mode==='adaptive'?'Adaptativo':'Sessão';
@@ -3311,7 +3311,7 @@ async function renderFocus() {
   const weak=coreWeak.length?coreWeak:fallback;
 
   renderFocusRoadmap();
-  $('#focusGrid').innerHTML=weak.length?weak.map((x,index)=>{
+  $$('#focusGrid').innerHTML=weak.length?weak.map((x,index)=>{
     const mastery=Math.round(Number(x.mastery??x.accuracy??0));
     const priority=Math.round(Number(x.priority??(100-mastery)));
     const recommended=index===0;
@@ -3339,8 +3339,8 @@ async function renderFocus() {
 }
 
 function fillThemes() {
-  $('#essayTheme').innerHTML=THEMES.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+'<option value="custom">✦ Tema personalizado</option>';
-  $('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
+  $$('#essayTheme').innerHTML=THEMES.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+'<option value="custom">✦ Tema personalizado</option>';
+  $$('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
   updateEssayPrompt();
   $$('[data-theme]').forEach(b=>b.onclick=()=>{$('#essayTheme').value=b.dataset.theme;updateEssayPrompt();openPage('redacao');$('#essayText').focus()});
 }
@@ -3793,7 +3793,7 @@ function renderVideos(){
   const list=state.videos
     .filter(v=>(!s||[v.title,v.area,v.subject,v.topic,v.description].filter(Boolean).join(' ').toLowerCase().includes(s))&&(!favoritesOnly||favoriteContent('video',v.id)))
     .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a)));
-  $('#videoGrid').innerHTML=list.length?list.map(v=>{
+  $$('#videoGrid').innerHTML=list.length?list.map(v=>{
     const fav=favoriteContent('video',v.id);
     const poster=v.thumbnail_url||cloudinaryVideoPoster(v.video_url||'');
     return `<article class="panel video-card content-card">
@@ -3861,7 +3861,7 @@ $('#materialFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classL
 function renderBank(){
   const search=$('#bankSearch').value.toLowerCase().trim(),area=$('#bankArea').value;
   const list=state.questionMeta.filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search))).slice(0,150);
-  $('#bankList').innerHTML=list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.media_type?' · ◉ visual':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join('');
+  $$('#bankList').innerHTML=list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.media_type?' · ◉ visual':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join('');
   $$('[data-bank]').forEach(b=>b.onclick=()=>openSingleQuestion(Number(b.dataset.bank)));
 }
 $('#bankSearch').addEventListener('input',renderBank);
@@ -3879,7 +3879,7 @@ async function openSingleQuestion(id){
 async function loadMyFeedback(){
   const {data,error}=await client.from('feedback').select('rating,message,status,created_at').order('created_at',{ascending:false}).limit(30);
   if(error)return console.error(error);
-  $('#feedbackList').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">${initials(state.profile?.full_name||'A').slice(0,1)}</span><div><b>Você <span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleDateString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Você ainda não enviou feedback.</p>';
+  $$('#feedbackList').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">${initials(state.profile?.full_name||'A').slice(0,1)}</span><div><b>Você <span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleDateString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Você ainda não enviou feedback.</p>';
 }
 $('#sendFeedback').onclick=async()=>{
   const message=$('#feedbackText').value.trim(),rating=Number($('#feedbackRating').value);
@@ -4234,7 +4234,45 @@ function renderJourneyAchievements(){
   </article>`).join('');
 }
 
-let avatarEditorCategory='base';
+const NEXO_AVATAR_LOOKS=Object.freeze([
+  {
+    code:'original',
+    name:'NEXO Original',
+    tag:'ESSENCIAL',
+    description:'Visual limpo para começar: azul, preto e assinatura NEXO.',
+    avatar:{hair:'wave',hair_color:'blue',outfit:'blue',accessory:'glasses',frame:'basic',background:'grid',aura:'none'}
+  },
+  {
+    code:'focus',
+    name:'Focus Mode',
+    tag:'FOCO',
+    description:'Setup de estudo intenso com Jaqueta Focus, headset e aura azul.',
+    avatar:{hair:'short',hair_color:'ink',outfit:'focus',accessory:'headphones',frame:'neon',background:'study',aura:'blue'}
+  },
+  {
+    code:'academy',
+    name:'NEXO Academy',
+    tag:'CONQUISTA',
+    description:'Visual acadêmico para quem está construindo consistência.',
+    avatar:{hair:'wave',hair_color:'brown',outfit:'academy',accessory:'glasses',frame:'level',background:'library',aura:'none'}
+  },
+  {
+    code:'aurora',
+    name:'Aurora Plus',
+    tag:'PLUS',
+    description:'Roxo, brilho e energia NEXO em um conjunto premium.',
+    avatar:{hair:'hologram',hair_color:'purple',outfit:'aurora',accessory:'tiara',frame:'cosmic',background:'aurora',aura:'purple'}
+  },
+  {
+    code:'royal',
+    name:'Royal NEXO',
+    tag:'PLUS',
+    description:'Conjunto de alto nível com Royal, coroa e aura dourada.',
+    avatar:{hair:'wave',hair_color:'blonde',outfit:'royal',accessory:'crown',frame:'diamond',background:'midnight',aura:'gold'}
+  }
+]);
+
+let avatarEditorCategory='looks';
 
 function avatarEditorGroupForField(field){
   return ['base','skin','hair','hair_color','outfit','accessory','frame','background','aura'].includes(field)
@@ -4251,6 +4289,7 @@ function avatarEditorIconForField(field){
 
 function avatarEditorLabel(field){
   return ({
+    looks:'Looks NEXO',
     base:'Base',skin:'Tom de pele',hair:'Cabelo',hair_color:'Cor do cabelo',
     outfit:'Roupa',accessory:'Acessório',frame:'Moldura',background:'Ambiente',aura:'Aura'
   })[field]||'Personalização';
@@ -4314,37 +4353,135 @@ function renderAvatarVisualCard(btn,draft){
   btn.dataset.avatarIcon=avatarEditorIconForField(field);
 }
 
+function avatarLookStatus(look){
+  const issues=[];
+  let levelRequired=0;
+  let hasPlus=false;
+  let hasStore=false;
+  let incompatible=false;
+
+  for(const [field,value] of Object.entries(look.avatar||{})){
+    const btn=avatarOptionButton(field,value);
+    if(!btn){
+      issues.push(field+':missing');
+      continue;
+    }
+    if(btn.hidden){
+      incompatible=true;
+      continue;
+    }
+    if(btn.dataset.locked==='true'){
+      const reason=btn.dataset.lockReason||'store';
+      if(reason==='plus')hasPlus=true;
+      else if(reason==='level')levelRequired=Math.max(levelRequired,Number(btn.dataset.unlockLevel||1));
+      else hasStore=true;
+    }
+  }
+
+  const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
+  const using=Object.entries(look.avatar||{}).every(([field,value])=>draft[field]===value);
+
+  if(using)return {state:'using',label:'USANDO'};
+  if(incompatible)return {state:'incompatible',label:'BASE INCOMPATÍVEL'};
+  if(hasPlus)return {state:'plus',label:'PLUS'};
+  if(levelRequired)return {state:'level',label:'NÍVEL '+levelRequired,level:levelRequired};
+  if(hasStore)return {state:'store',label:'LOJA'};
+  if(issues.length)return {state:'unavailable',label:'INDISPONÍVEL'};
+  return {state:'available',label:'DISPONÍVEL'};
+}
+
+function avatarLookPreview(look){
+  const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
+  const next={...draft,...(look.avatar||{})};
+  return normalizeAvatarDraftForBase(next);
+}
+
+function renderAvatarLooks(){
+  const grid=$('#avatarLooksGrid');
+  if(!grid)return;
+
+  grid.innerHTML=NEXO_AVATAR_LOOKS.map(look=>{
+    const status=avatarLookStatus(look);
+    const action=status.state==='using'?'Em uso':status.state==='available'?'Equipar':status.label;
+    return '<article class="avatar-look-card '+esc(status.state)+'" data-avatar-look-card="'+esc(look.code)+'">'+
+      '<div class="avatar-look-preview" data-avatar-look-preview="'+esc(look.code)+'"></div>'+
+      '<div class="avatar-look-copy"><span>'+esc(look.tag)+'</span><h4>'+esc(look.name)+'</h4><p>'+esc(look.description)+'</p></div>'+
+      '<div class="avatar-look-foot"><small>'+esc(status.label)+'</small><button data-avatar-look="'+esc(look.code)+'" '+(status.state==='using'?'disabled':'')+'>'+esc(action)+'</button></div>'+
+    '</article>';
+  }).join('');
+
+  $$('[data-avatar-look-preview]',grid).forEach(node=>{
+    const look=NEXO_AVATAR_LOOKS.find(x=>x.code===node.dataset.avatarLookPreview);
+    if(look)renderStudentAvatar(node,avatarLookPreview(look));
+  });
+}
+
+function applyAvatarLook(code){
+  const look=NEXO_AVATAR_LOOKS.find(x=>x.code===code);
+  if(!look)return;
+
+  const status=avatarLookStatus(look);
+  if(status.state==='using')return;
+  if(status.state==='plus')return openNexoPlans('Esse Look faz parte do NEXO Plus.');
+  if(status.state==='level')return toast('Esse Look libera por completo no nível '+Number(status.level||1)+'.');
+  if(status.state==='store'){
+    toast('Alguns itens desse Look ainda precisam ser conquistados na Loja NEXO.');
+    setJourneyTab('store');
+    return;
+  }
+  if(status.state==='incompatible')return toast('Esse Look não é compatível com a base atual do personagem.');
+  if(status.state!=='available')return toast('Esse Look ainda não está disponível.');
+
+  state.avatarDraft=normalizeAvatarDraftForBase({
+    ...normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar),
+    ...(look.avatar||{})
+  });
+  renderAvatarBuilder();
+  toast(look.name+' equipado. Salve o personagem para confirmar.');
+  if(navigator.vibrate)navigator.vibrate(12);
+}
+
 function renderAvatarEditorCategory(){
   const controls=$('#avatarBuilderControls');
   if(!controls)return;
 
-  $('[data-avatar-category]',controls).forEach(btn=>{
+  $$('[data-avatar-category]',controls).forEach(btn=>{
     btn.classList.toggle('active',btn.dataset.avatarCategory===avatarEditorCategory);
   });
 
-  $('.avatar-option-group',controls).forEach(group=>{
+  const looksPanel=$('#avatarLooksPanel');
+  if(looksPanel)looksPanel.classList.toggle('editor-hidden',avatarEditorCategory!=='looks');
+
+  $$('.avatar-option-group',controls).forEach(group=>{
     const first=group.querySelector('[data-avatar-field]');
     const category=avatarEditorGroupForField(first?.dataset.avatarField||'base');
     group.dataset.avatarEditorGroup=category;
-    group.classList.toggle('editor-hidden',category!==avatarEditorCategory);
+    group.classList.toggle('editor-hidden',avatarEditorCategory==='looks'||category!==avatarEditorCategory);
   });
 
-  const activeGroups=$('.avatar-option-group',controls).filter(group=>group.dataset.avatarEditorGroup===avatarEditorCategory);
+  const title=$('#avatarSelectionTitle');
+  const text=$('#avatarSelectionText');
+  if(title)title.textContent=avatarEditorLabel(avatarEditorCategory);
+
+  if(avatarEditorCategory==='looks'){
+    if(text)text.textContent='Conjuntos prontos que respeitam seu inventário, nível e plano.';
+    renderAvatarLooks();
+    return;
+  }
+
+  const activeGroups=$$('.avatar-option-group',controls).filter(group=>group.dataset.avatarEditorGroup===avatarEditorCategory);
   const selected=[];
   activeGroups.forEach(group=>{
     const active=group.querySelector('[data-avatar-field].active:not([hidden])');
     if(active)selected.push(avatarOptionCleanLabel(active));
   });
 
-  const title=$('#avatarSelectionTitle');
-  const text=$('#avatarSelectionText');
-  if(title)title.textContent=avatarEditorLabel(avatarEditorCategory);
   if(text)text.textContent=selected.length
     ? selected.join(' · ')
     : 'Escolha uma opção para visualizar no personagem.';
 
   const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
-  $('[data-avatar-field]',controls)
+  $$('[data-avatar-field]',controls)
     .filter(btn=>btn.dataset.avatarEditorCategory===avatarEditorCategory&&!btn.hidden)
     .forEach(btn=>renderAvatarVisualCard(btn,draft));
 }
@@ -4530,9 +4667,16 @@ $('#avatarBuilderControls')?.addEventListener('click',e=>{
   const categoryBtn=e.target.closest?.('[data-avatar-category]');
   if(!categoryBtn)return;
   e.preventDefault();
-  avatarEditorCategory=categoryBtn.dataset.avatarCategory||'base';
+  avatarEditorCategory=categoryBtn.dataset.avatarCategory||'looks';
   renderAvatarEditorCategory();
   categoryBtn.scrollIntoView?.({behavior:'smooth',block:'nearest',inline:'center'});
+});
+
+$('#avatarBuilderControls')?.addEventListener('click',e=>{
+  const lookBtn=e.target.closest?.('[data-avatar-look]');
+  if(!lookBtn)return;
+  e.preventDefault();
+  applyAvatarLook(lookBtn.dataset.avatarLook);
 });
 
 $('#requestPlusBtn')?.addEventListener('click',async()=>{
@@ -4588,7 +4732,7 @@ async function loadQuestionComments(questionId){
   $('#questionComments').innerHTML='<div class="comment-empty">Carregando comentários...</div>';
   const {data,error}=await client.rpc('get_question_comments_v2',{p_question_id:Number(questionId)});
   if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
-  $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
+  $$('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
     <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.is_mine&&isNexoUltra()?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
@@ -5342,10 +5486,10 @@ async function loadAdmin(){
   ].map(x=>`<article class="admin-stat"><small>${x[0]}</small><b>${x[1]}</b></article>`).join('');
 
   const {data}=await client.from('feedback').select('id,rating,message,status,created_at,user_id').order('created_at',{ascending:false}).limit(60);
-  $('#adminFeedbacks').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">N</span><div><b><span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum feedback recebido.</p>';
+  $$('#adminFeedbacks').innerHTML=data?.length?data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">N</span><div><b><span class="stars">${'★'.repeat(x.rating)}${'☆'.repeat(5-x.rating)}</span></b><p>${esc(x.message)}</p><small>${new Date(x.created_at).toLocaleString('pt-BR')} · ${esc(x.status)}</small></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum feedback recebido.</p>';
 
   const reports=await client.rpc('get_reported_comments');
-  $('#reportedComments').innerHTML=reports.data?.length?reports.data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">!</span><div><b>${esc(x.author_name)} · ${x.report_count} denúncia(s)</b><p>${esc(x.body)}</p><small>Questão #${x.question_id}</small><div class="comment-actions"><button data-admin-remove="${x.comment_id}" class="danger">Remover comentário</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum comentário denunciado.</p>';
+  $$('#reportedComments').innerHTML=reports.data?.length?reports.data.map(x=>`<div class="feedback-entry"><span class="mini-avatar">!</span><div><b>${esc(x.author_name)} · ${x.report_count} denúncia(s)</b><p>${esc(x.body)}</p><small>Questão #${x.question_id}</small><div class="comment-actions"><button data-admin-remove="${x.comment_id}" class="danger">Remover comentário</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum comentário denunciado.</p>';
   $$('[data-admin-remove]').forEach(b=>b.onclick=async()=>{if(!confirm('Remover este comentário da comunidade?'))return;const {error}=await client.rpc('admin_remove_comment',{p_comment_id:Number(b.dataset.adminRemove)});if(error)return toast('Falha ao remover.','error');toast('Comentário removido.');loadAdmin()});
 
   const counts=new Map();
