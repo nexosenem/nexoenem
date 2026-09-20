@@ -787,6 +787,8 @@ function renderNexoCore(){
   });
   updateHomeExperience();
   renderTodayPlan();
+  if(state.videos.length)renderVideos();
+  if(state.materials.length)renderMaterials();
   $$('[data-core-start]').forEach(btn=>{
     btn.innerHTML=initial
       ? 'Iniciar diagnóstico · '+Number(rec.size||6)+' questões <span>→</span>'
@@ -2050,6 +2052,15 @@ function externalEmbedUrl(url=''){
   return '';
 }
 
+function contentMatchesCore(item){
+  const rec=state.core?.recommended_action;
+  if(!rec||!item)return false;
+  const sameTopic=rec.topic&&item.topic&&String(rec.topic).toLowerCase()===String(item.topic).toLowerCase();
+  const sameSubject=rec.subject&&item.subject&&String(rec.subject).toLowerCase()===String(item.subject).toLowerCase();
+  const sameArea=rec.area&&item.area&&String(rec.area).toLowerCase()===String(item.area).toLowerCase();
+  return Boolean(sameTopic||sameSubject||sameArea);
+}
+
 function contentCardProgress(type,id){
   const p=getContentProgress(type,id);
   const pct=p.completed?100:Math.round(Number(p.progress_percent||0));
@@ -2112,6 +2123,7 @@ async function openContentViewer(type,id){
     if(embed){
       body.innerHTML=`<iframe class="content-frame video-frame" src="${esc(embed)}" title="${esc(item.title||'Videoaula')}" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe>`;
       await saveContentProgress('video',id,{seconds:current.progress_seconds||0,percent:Math.max(5,Number(current.progress_percent||0)),completed:current.completed});
+      renderVideos();
     }else{
       const poster=item.thumbnail_url||cloudinaryVideoPoster(item.video_url||'');
       body.innerHTML=`<video id="contentVideoPlayer" class="content-video" controls playsinline preload="metadata" ${poster?'poster="'+esc(poster)+'"':''}><source src="${esc(item.video_url||'')}" type="${item.format?'video/'+esc(item.format):''}"></video>`;
@@ -2147,6 +2159,7 @@ async function openContentViewer(type,id){
       ? `<iframe class="content-frame pdf-frame" src="${esc(item.file_url||'')}#toolbar=1&navpanes=0" title="${esc(item.title||'PDF')}"></iframe>`
       : `<div class="material-image-wrap"><img src="${esc(item.file_url||'')}" alt="${esc(item.title||'Material')}"></div>`;
     await saveContentProgress('material',id,{seconds:0,percent:Math.max(10,Number(current.progress_percent||0)),completed:current.completed});
+    renderMaterials();
   }
 
   updateViewerFavoriteButton();
@@ -2197,7 +2210,9 @@ async function loadVideos() {
 }
 function renderVideos(){
   const s=$('#videoSearch').value.toLowerCase().trim();
-  const list=state.videos.filter(v=>!s||[v.title,v.area,v.subject,v.topic,v.description].filter(Boolean).join(' ').toLowerCase().includes(s));
+  const list=state.videos
+    .filter(v=>!s||[v.title,v.area,v.subject,v.topic,v.description].filter(Boolean).join(' ').toLowerCase().includes(s))
+    .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a)));
   $('#videoGrid').innerHTML=list.length?list.map(v=>{
     const fav=favoriteContent('video',v.id);
     const poster=v.thumbnail_url||cloudinaryVideoPoster(v.video_url||'');
@@ -2206,6 +2221,7 @@ function renderVideos(){
       <button class="content-open-area" data-content-open="${v.id}" data-content-type="video">
         <div class="video-thumb">${poster?'<img src="'+esc(poster)+'" alt="">':'<span>▶</span>'}</div>
         <div class="video-body">
+          ${contentMatchesCore(v)?'<span class="core-content-badge">✦ RECOMENDADO PELO NEXO</span>':''}
           <b>${esc(v.title)}</b>
           <small>${esc([v.area,v.subject,v.topic].filter(Boolean).join(' · '))}</small>
           ${v.description?'<p>'+esc(v.description)+'</p>':''}
@@ -2228,7 +2244,9 @@ async function loadMaterials(){
 }
 function renderMaterials(){
   const s=($('#materialSearch')?.value||'').toLowerCase().trim();
-  const list=state.materials.filter(m=>!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLowerCase().includes(s));
+  const list=state.materials
+    .filter(m=>!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLowerCase().includes(s))
+    .sort((a,b)=>Number(contentMatchesCore(b))-Number(contentMatchesCore(a)));
   const grid=$('#materialGrid');
   if(!grid)return;
   grid.innerHTML=list.length?list.map(m=>{
@@ -2241,6 +2259,7 @@ function renderMaterials(){
       <button class="content-open-area" data-content-open="${m.id}" data-content-type="material">
         <div class="video-thumb"><span>${icon}</span></div>
         <div class="video-body">
+          ${contentMatchesCore(m)?'<span class="core-content-badge">✦ RECOMENDADO PELO NEXO</span>':''}
           <b>${esc(m.title)}</b>
           <small>${esc([m.area,m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>
           ${m.description?'<p>'+esc(m.description)+'</p>':''}
@@ -2841,10 +2860,26 @@ async function toggleAdminContent(value){
 }
 async function deleteAdminContent(value){
   const {type,id,table}=parseAdminContentKey(value);
-  if(!confirm('Remover este conteúdo do NEXO? O arquivo original continuará no Cloudinary até configurarmos a exclusão assinada.'))return;
+  if(!confirm('Remover este conteúdo? Se a exclusão segura do Cloudinary estiver configurada, o arquivo também será apagado de lá.'))return;
+
+  const fields=type==='video'?'cloudinary_public_id':'cloudinary_public_id,resource_type';
+  const {data:asset}=await client.from(table).select(fields).eq('id',id).maybeSingle();
+  let cloudDeleted=false;
+  if(asset?.cloudinary_public_id){
+    try{
+      const {data,error}=await client.functions.invoke('cloudinary-destroy',{
+        body:{
+          public_id:asset.cloudinary_public_id,
+          resource_type:type==='video'?'video':(asset.resource_type||'image')
+        }
+      });
+      cloudDeleted=!error&&Boolean(data?.ok);
+    }catch(err){console.warn('cloudinary destroy unavailable',err)}
+  }
+
   const {error}=await client.from(table).delete().eq('id',id);
   if(error)return toast('Não foi possível remover.','error');
-  toast('Removido do NEXO. O arquivo continua no Cloudinary.');
+  toast(cloudDeleted?'Conteúdo e arquivo removidos.':'Conteúdo removido do NEXO. O arquivo do Cloudinary pode continuar armazenado.');
   await loadAdmin();
   if(type==='video')loadVideos();else loadMaterials();
 }
