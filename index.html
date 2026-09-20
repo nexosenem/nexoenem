@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-77">
+  <link rel="stylesheet" href="./styles.css?v=20260920-78">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -141,10 +141,10 @@
         <button class="nav-item" data-page="redacao"><span>✎</span>Redação</button>
         <button class="nav-item" data-page="desempenho"><span>▥</span>Meu Desempenho</button>
         <button class="nav-item" data-page="focos"><span>◎</span>Meus Focos</button>
-        <button class="nav-item" data-page="videoaulas"><span>▶</span>Videoaulas</button>
-        <button class="nav-item" data-page="materiais"><span>▧</span>Materiais PDF</button>
         <button class="nav-item radar-nav-item" data-page="radar"><span>◉</span>Radar ENEM</button>
         <button class="nav-item week-nav-item" data-page="semana"><span>◫</span>Semana NEXO</button>
+        <button class="nav-item" data-page="materiais"><span>▧</span>Materiais PDF</button>
+        <button class="nav-item" data-page="videoaulas"><span>▶</span>Videoaulas</button>
         <button class="nav-item" data-page="simulados"><span>▤</span>Simulados</button>
         <button class="nav-item" data-page="banco"><span>▦</span>Banco de Questões</button>
         <button class="nav-item" data-page="temas"><span>▧</span>Temas de Redação</button>
@@ -286,7 +286,7 @@
                 <button id="mobileAdaptive"><span>◎</span><div><b>Treino adaptativo</b><small>Foque nos seus erros</small></div></button>
                 <button data-page="simulados"><span>▤</span><div><b>Simulado</b><small>Sessão organizada</small></div></button>
                 <button data-page="redacao"><span>✎</span><div><b>Redação</b><small>Pratique e salve</small></div></button>
-                <button data-page="videoaulas"><span>▶</span><div><b>Videoaulas</b><small>Por matéria e tema</small></div></button>
+                <button data-page="radar" class="radar-shortcut"><span>◉</span><div><b>Radar ENEM</b><small>2009–2025 · o que mais cai</small></div></button>
                 <button id="mobileFocusMode" class="focus-shortcut"><span>◷</span><div><b>Modo Foco</b><small>25 min sem distração</small></div></button>
                 <button data-page="ranking" class="journey-shortcut"><span>♕</span><div><b>NEXO Jornada</b><small>Missões, ligas e avatar</small></div></button>
               </div>
@@ -328,7 +328,7 @@
                 <div class="hero-copy">
                   <span class="eyebrow">NEXO ENEM · <b id="desktopHomeGreeting">SEU PLANO DE HOJE</b></span>
                   <h1>Mais que estudo,<br><span>um novo futuro.</span></h1>
-                  <p id="desktopHeroSubtitle"><b>500 questões reais</b> dos cadernos ENEM • sessões adaptativas • redação • análises personalizadas pelo NEXO Core.</p>
+                  <p id="desktopHeroSubtitle"><b>500 questões para treino</b> • Radar com <b>3.060 questões analisadas de 2009 a 2025</b> • redação • NEXO Core adaptativo.</p>
                   <div class="hero-actions">
                     <button class="primary-btn" id="continueStudy">Continuar estudando <b>→</b></button>
                     <button class="outline-btn" data-page="desempenho">▥ Ver meu desempenho</button>
@@ -399,7 +399,7 @@
                 <button class="feature-card" id="adaptiveButton"><span>◎</span><div><b>Treino Adaptativo</b><small>Uma sessão baseada nos seus temas com mais erros.</small></div><i>Iniciar treino →</i></button>
                 <button class="feature-card" data-page="simulados"><span>▤</span><div><b>Simulado ENEM</b><small>Monte uma prova organizada sem trocar de área aleatoriamente.</small></div><i>Fazer simulado →</i></button>
                 <button class="feature-card" data-page="redacao"><span>✎</span><div><b>Redação</b><small>Histórico, nota estimada e análise por competência.</small></div><i>Praticar redação →</i></button>
-                <button class="feature-card" data-page="videoaulas"><span>▶</span><div><b>Videoaulas</b><small>Aulas cadastradas pelo administrador.</small></div><i>Assistir agora →</i></button>
+                <button class="feature-card" data-page="radar"><span>◉</span><div><b>Radar ENEM</b><small>Veja os assuntos mais recorrentes nas 17 edições de 2009 a 2025.</small></div><i>Explorar prioridades →</i></button>
               </div>
 
               <div class="home-lower">
@@ -1607,6 +1607,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-92"></script>
+  <script src="./app.js?v=20260920-93"></script>
 </body>
 </html>
