@@ -1670,10 +1670,33 @@ function renderEnemRadar(){
             '<div class="radar-topic-stats"><span><b>'+fmt(row.questions)+'</b> questões</span><span><b>'+row.years_present+'/17</b> edições</span><span><b>'+fmt(row.questions_2021_2025)+'</b> desde 2021</span><span>última: <b>'+row.last_year+'</b></span></div>'+
             '<div class="radar-score-line"><i style="--radar-score:'+score+'%"></i><span>Índice NEXO <b>'+score.toFixed(1)+'</b></span></div>'+
           '</div>'+
-          '<button class="outline-btn radar-train-btn" data-radar-train="'+key+'">Treinar <span>→</span></button>'+
+          '<div class="radar-actions">'+
+            (row.topic==='Estatística e análise de dados'?'<button class="outline-btn radar-study-btn" data-radar-study="'+key+'">Estudar <span>→</span></button>':'')+
+            '<button class="outline-btn radar-train-btn" data-radar-train="'+key+'">Treinar <span>→</span></button>'+
+          '</div>'+
         '</article>';
       }).join('');
-      $$('[data-radar-train]',list).forEach(btn=>{
+      $('[data-radar-study]',list).forEach(btn=>{
+        btn.onclick=async()=>{
+          if(btn.disabled)return;
+          const key=decodeURIComponent(btn.dataset.radarStudy||'');
+          const row=topics.find(item=>[item.area,item.subject,item.topic].join('||')===key);
+          if(!row)return;
+          const previous=btn.innerHTML;
+          btn.disabled=true;
+          btn.textContent='Abrindo aula...';
+          try{await startRadarContent(row)}
+          catch(err){
+            console.error('radar study',err);
+            logClientError('enem_radar',err,'radar_study');
+            toast('Não consegui abrir essa aula agora.','error');
+          }finally{
+            btn.disabled=false;
+            btn.innerHTML=previous;
+          }
+        };
+      });
+      $('[data-radar-train]',list).forEach(btn=>{
         btn.onclick=async()=>{
           if(btn.disabled)return;
           const key=decodeURIComponent(btn.dataset.radarTrain||'');
@@ -1706,6 +1729,21 @@ function renderEnemRadar(){
       return '<div class="radar-year-cell" title="'+classified+' de '+total+' itens com classificação confiável"><b>'+row.year+'</b><span>'+pct+'%</span><i style="--year-score:'+pct+'%"></i></div>';
     }).join('');
   }
+}
+
+async function startRadarContent(row){
+  if(!row)return;
+  if(!state.materials.length)await loadMaterials({silent:true});
+  const wanted=String(radarTrainingTopic(row.subject,row.topic)||row.topic||'').toLocaleLowerCase('pt-BR');
+  const item=(state.materials||[]).find(m=>
+    String(m.topic||'').toLocaleLowerCase('pt-BR')===wanted &&
+    (!row.subject||!m.subject||String(m.subject).toLocaleLowerCase('pt-BR')===String(row.subject).toLocaleLowerCase('pt-BR'))
+  );
+  if(!item){
+    toast('A Aula NEXO deste assunto ainda está em preparação.','info');
+    return;
+  }
+  await openContentViewer('material',item.id);
 }
 
 async function startRadarTraining(row){
@@ -4829,10 +4867,14 @@ async function openContentViewer(type,id){
     }
   }else{
     speed?.classList.add('hidden');
-    const isPdf=String(item.format||'').toLowerCase()==='pdf'||/\.pdf(?:\?|$)/i.test(item.file_url||'');
+    const format=String(item.format||'').toLowerCase();
+    const isPdf=format==='pdf'||/\.pdf(?:\?|$)/i.test(item.file_url||'');
+    const isHtml=format==='html'||/\.html(?:\?|$)/i.test(item.file_url||'');
     body.innerHTML=isPdf
       ? `<iframe class="content-frame pdf-frame" src="${esc(item.file_url||'')}#toolbar=1&navpanes=0" title="${esc(item.title||'PDF')}"></iframe>`
-      : `<div class="material-image-wrap"><img src="${esc(item.file_url||'')}" alt="${esc(item.title||'Material')}"></div>`;
+      : isHtml
+        ? `<iframe class="content-frame lesson-frame" src="${esc(item.file_url||'')}" title="${esc(item.title||'Aula NEXO')}"></iframe>`
+        : `<div class="material-image-wrap"><img src="${esc(item.file_url||'')}" alt="${esc(item.title||'Material')}"></div>`;
     await saveContentProgress('material',id,{seconds:0,percent:Math.max(10,Number(current.progress_percent||0)),completed:current.completed});
     renderMaterials();
   }
@@ -4874,6 +4916,11 @@ $('#contentViewer')?.addEventListener('click',e=>{if(e.target===$('#contentViewe
 $('#viewerFavorite')?.addEventListener('click',()=>{const v=state.activeViewer;if(v)toggleContentFavorite(v.type,v.item.id)});
 $('#viewerComplete')?.addEventListener('click',markViewerComplete);
 $('#viewerPractice')?.addEventListener('click',()=>{const v=state.activeViewer;if(v)startContentPractice(v.item)});
+window.addEventListener('message',e=>{
+  if(e.origin!==location.origin||e.data?.type!=='nexo-content-train')return;
+  const v=state.activeViewer;
+  if(v?.item)startContentPractice(v.item);
+});
 $('#viewerSpeed')?.addEventListener('change',e=>{const p=$('#contentVideoPlayer');if(p)p.playbackRate=Number(e.target.value||1)});
 
 async function loadVideos({silent=false}={}) {
