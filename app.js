@@ -1701,7 +1701,7 @@ function renderEnemRadar(){
           '</div>'+
         '</article>';
       }).join('');
-      $('[data-radar-study]',list).forEach(btn=>{
+      $$('[data-radar-study]',list).forEach(btn=>{
         btn.onclick=async()=>{
           if(btn.disabled)return;
           const key=decodeURIComponent(btn.dataset.radarStudy||'');
@@ -2174,7 +2174,7 @@ function openPage(id) {
   if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
   if (id==='admin') loadAdmin();
 }
-$('[data-page]').forEach(b=>b.addEventListener('click',e=>{
+$$('[data-page]').forEach(b=>b.addEventListener('click',e=>{
   e.preventDefault();
   if(b.matches('.mobile-hero .primary-btn[data-page="questoes"]')){
     const saved=readPersistedStudySession();
@@ -2449,7 +2449,7 @@ function applyQuestionCatalogSummary(summary){
   if(!summary)return;
   const fmt=n=>Number(n||0).toLocaleString('pt-BR');
   const areaMap=new Map((summary.areas||[]).map(row=>[row.area,row]));
-  $('.subject-card[data-area]').forEach(card=>{
+  $$('.subject-card[data-area]').forEach(card=>{
     const row=areaMap.get(card.dataset.area);
     const small=card.querySelector('small');
     if(row&&small)small.textContent=fmt(row.archive_questions||row.active_questions)+' questões no acervo';
