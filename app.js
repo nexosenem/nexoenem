@@ -5182,6 +5182,9 @@ function renderMathTrail(){
   const roots=$('[data-math-trail]');
   if(!roots.length)return;
   const rows=(state.radarTopics||[]).filter(r=>r.area==='Matemática').sort((a,b)=>Number(b.nexo_priority_score||0)-Number(a.nexo_priority_score||0));
+  if(topicMaterials('Raciocínio quantitativo','Matemática').length&&!rows.some(r=>r.topic==='Raciocínio quantitativo')){
+    rows.push({area:'Matemática',subject:'Matemática',topic:'Raciocínio quantitativo',questions:236,years_present:17,nexo_priority_score:-1,transversal:true});
+  }
   const html=rows.length?rows.map((row,index)=>{
     const meta=topicLearningMeta(row.topic,row.subject);
     const score=meta.attempts?meta.score:meta.progress;
@@ -5529,12 +5532,18 @@ function materialRadarMeta(item){
     String(r.topic||'').toLocaleLowerCase('pt-BR')===String(item?.topic||'').toLocaleLowerCase('pt-BR') &&
     (!item?.subject||String(r.subject||'').toLocaleLowerCase('pt-BR')===String(item.subject).toLocaleLowerCase('pt-BR'))
   );
-  if(!row)return null;
-  return {
-    questions:Number(row.questions||0),
-    years:Number(row.years_present||0),
-    score:Math.round(Number(row.nexo_priority_score||0))
-  };
+  if(row){
+    return {
+      questions:Number(row.questions||0),
+      years:Number(row.years_present||0),
+      score:Math.round(Number(row.nexo_priority_score||0)),
+      transversal:false
+    };
+  }
+  if(String(item?.topic||'').toLocaleLowerCase('pt-BR')==='raciocínio quantitativo'){
+    return {questions:236,years:17,score:null,transversal:true};
+  }
+  return null;
 }
 
 function materialSequence(item){
@@ -5601,7 +5610,7 @@ function renderMaterials(){
     const avg=items.length?Math.round(items.reduce((sum,m)=>sum+(getContentProgress('material',m.id).completed?100:Number(getContentProgress('material',m.id).progress_percent||0)),0)/items.length):0;
     const encoded=encodeURIComponent(key);
     const seq=materialSequence(first);
-    const radarText='<span class="content-learning-chip '+learning.key+'">'+esc(learning.label)+'</span>'+(radar?'<span class="content-radar-chip">🔥 Prioridade '+radar.score+'</span><span>'+radar.questions+' questões</span><span>'+radar.years+'/17 edições</span>':'');
+    const radarText='<span class="content-learning-chip '+learning.key+'">'+esc(learning.label)+'</span>'+(radar?(radar.transversal?'<span class="content-radar-chip">FUNDAMENTO TRANSVERSAL</span><span>'+radar.questions+' itens no Radar bruto</span><span>'+radar.years+'/17 edições</span>':'<span class="content-radar-chip">🔥 Prioridade '+radar.score+'</span><span>'+radar.questions+' questões</span><span>'+radar.years+'/17 edições</span>'):'');
     const resources=items.map(m=>{
       const kind=materialKind(m),fav=favoriteContent('material',m.id);
       const p=getContentProgress('material',m.id);
