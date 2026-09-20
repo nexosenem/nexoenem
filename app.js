@@ -1138,7 +1138,7 @@ function initNexoMascotVisuals(){
 
   bindImage($('#nexoLauncherAvatar'),a.head);
   bindImage($('#nexoAvatarImage'),a.head);
-  bindImage($('#nexoHeroImage'),a.hero||a.head);
+  bindImage($('#nexoHeroImage'),a.head);
 }
 initNexoMascotVisuals();
 
