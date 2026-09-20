@@ -328,7 +328,7 @@ async function getSeenIds() {
 
 async function fetchQuestions(filters={}) {
   let q = client.from('questions').select(
-    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop'
+    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop'
   ).eq('is_active',true).limit(500);
   if (filters.area) q=q.eq('area',filters.area);
   if (filters.subject) q=q.eq('subject',filters.subject);
@@ -406,21 +406,6 @@ async function showCurrentQuestion() {
   $('#sessionProgress').style.width=`${Math.round((state.session.index/state.session.size)*100)}%`;
   $('#questionCard').innerHTML='<div class="question-loading"><div class="pulse-block"></div><div class="pulse-line"></div><div class="pulse-line short"></div></div>';
   renderQuestion(state.current);
-}
-
-async function ensureQuestionMedia(q){
-  if(!q?.media_type) return q;
-  if(q.media_path) return q;
-  if(state.mediaCache.has(Number(q.id))){
-    q.media_path=state.mediaCache.get(Number(q.id));
-    return q;
-  }
-  const {data,error}=await client.from('questions').select('media_path').eq('id',Number(q.id)).single();
-  if(!error && data?.media_path){
-    q.media_path=data.media_path;
-    state.mediaCache.set(Number(q.id),data.media_path);
-  }
-  return q;
 }
 
 function localMediaPath(q){
@@ -513,8 +498,7 @@ async function loadStoredVisual(q){
 }
 
 function loadLocalVisual(q){
-  const path=localMediaPath(q);
-  return path ? mountVisualImage(q,path) : Promise.resolve(false);
+  return q?.media_path ? mountVisualImage(q,q.media_path) : Promise.resolve(false);
 }
 
 function showVisualFallback(q){
@@ -560,8 +544,8 @@ async function getPdf(url) {
 
 async function renderVisual(q) {
   try{
-    if(await loadStoredVisual(q)) return true;
     if(await loadLocalVisual(q)) return true;
+    if(await loadStoredVisual(q)) return true;
     if(!q.source_pdf_url || !q.source_page || !q.media_crop) return false;
     const pdf=await getPdf(q.source_pdf_url);
     const page=await pdf.getPage(Number(q.source_page));
