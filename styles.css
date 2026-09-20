@@ -2750,3 +2750,73 @@ img[data-core-avatar]{
   .core-avatar img,
   img[data-core-avatar]{border-radius:inherit!important}
 }
+
+
+/* =========================================================
+   PROFESSOR NEXO · PROACTIVE QUESTION COACH v1
+   ========================================================= */
+.question-coach{
+  transition:border-color .2s ease,box-shadow .2s ease,background .2s ease,transform .2s ease;
+}
+
+.question-coach.is-reacting{
+  border-color:rgba(94,103,231,.48)!important;
+  background:
+    radial-gradient(circle at 0% 50%,rgba(95,86,223,.14),transparent 34%),
+    linear-gradient(135deg,rgba(13,24,45,.98),rgba(9,18,34,.98))!important;
+  box-shadow:0 12px 30px rgba(0,0,0,.16),0 0 0 1px rgba(100,93,232,.06) inset;
+  transform:translateY(-1px);
+}
+
+.question-coach[data-behavior="switching"]{
+  border-color:rgba(126,98,228,.42)!important;
+}
+
+.question-coach[data-behavior="time"],
+.question-coach[data-behavior="long_time"]{
+  border-color:rgba(72,157,226,.42)!important;
+}
+
+.question-coach[data-behavior="hint_repeat"]{
+  border-color:rgba(151,109,224,.42)!important;
+}
+
+.question-coach img[data-nexo-family="bust"]{
+  object-fit:contain!important;
+  object-position:center top!important;
+  padding:0!important;
+  background:
+    radial-gradient(circle at 50% 32%,rgba(75,154,255,.13),transparent 58%),
+    rgba(8,17,34,.74)!important;
+}
+
+.question-coach.is-reacting button{
+  border-color:rgba(103,88,224,.48)!important;
+  background:linear-gradient(135deg,rgba(93,73,205,.20),rgba(43,91,160,.16))!important;
+  color:#dcd7ff!important;
+}
+
+.pre-answer-hint{
+  animation:nexoCoachReveal .2s ease both;
+}
+
+@keyframes nexoCoachReveal{
+  from{opacity:0;transform:translateY(-4px)}
+  to{opacity:1;transform:none}
+}
+
+@media(max-width:760px){
+  .question-coach.is-reacting{
+    transform:none;
+  }
+
+  .question-coach img[data-nexo-family="bust"]{
+    width:42px!important;
+    height:48px!important;
+    border-radius:12px!important;
+  }
+
+  .question-coach small{
+    line-height:1.45!important;
+  }
+}
