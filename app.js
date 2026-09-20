@@ -1216,23 +1216,27 @@ async function initApp(session) {
   };
 
   const name = state.profile.full_name || state.user.email?.split('@')[0] || 'Aluno';
-  $('#profileName').textContent = name.split(' ')[0];
-  $('#menuName').textContent = name;
-  $('#menuEmail').textContent = state.user.email || '';
-  $('#profileRole').textContent = state.profile.role === 'admin' ? (isNexoUltra()?'Administrador · Ultra':'Administrador') : ('Estudante · '+(isNexoPlus()?'Plus':'Free'));
-  if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
-  $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
-  applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
-  updateHomeExperience();
-  restoreFocusMode();
-  if(focusModeState.running&&!focusModeState.paused)beginFocusInterval();
-  renderFocusMode();
+  await safeBootStep('identidade',async()=>{
+    if($('#profileName'))$('#profileName').textContent = name.split(' ')[0];
+    if($('#menuName'))$('#menuName').textContent = name;
+    if($('#menuEmail'))$('#menuEmail').textContent = state.user.email || '';
+    if($('#profileRole'))$('#profileRole').textContent = state.profile.role === 'admin' ? (isNexoUltra()?'Administrador · Ultra':'Administrador') : ('Estudante · '+(isNexoPlus()?'Plus':'Free'));
+    if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
+    $('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
+  });
+  await safeBootStep('estilo',async()=>applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false));
+  await safeBootStep('home',async()=>updateHomeExperience());
+  await safeBootStep('foco',async()=>{
+    restoreFocusMode();
+    if(focusModeState.running&&!focusModeState.paused)beginFocusInterval();
+    renderFocusMode();
+  });
 
-  clearAuthMessage();
-  $('#authScreen').classList.add('hidden');
-  $('#app').classList.remove('hidden');
-  prepareDesktopSidebarLabels();
-  restoreDesktopSidebar();
+  showAuthenticatedShell();
+  await safeBootStep('sidebar',async()=>{
+    prepareDesktopSidebarLabels();
+    restoreDesktopSidebar();
+  });
   $('#niaButton')?.classList.add('hidden');
 
   const needsOnboarding=!state.profile.onboarding_completed_at;
@@ -1269,51 +1273,90 @@ async function initApp(session) {
     }
   }
 
-  fillThemes();
+  await safeBootStep('temas',async()=>fillThemes());
   loadRecentAttempts().catch(err=>logClientError('recent_attempts',err,'recent_load'));
-  renderBank();
+  await safeBootStep('banco',async()=>renderBank());
 
-  if(needsOnboarding)openNexoOnboarding(false);
+  if(needsOnboarding)await safeBootStep('onboarding',async()=>openNexoOnboarding(false));
   else $('#niaButton')?.classList.remove('hidden');
 }
 
 let sessionInitPromise=null;
 let initializedSessionUserId=null;
 
+function showAuthenticatedShell(){
+  $('#authScreen')?.classList.add('hidden');
+  $('#app')?.classList.remove('hidden');
+  $('#niaPanel')?.classList.add('hidden');
+  clearAuthMessage();
+  const boot=$('#boot');
+  if(boot&&!boot.classList.contains('hidden')){
+    boot.classList.add('fade');
+    setTimeout(()=>boot.classList.add('hidden'),300);
+  }
+}
+
+function showLoggedOutShell(){
+  $('#app')?.classList.add('hidden');
+  $('#authScreen')?.classList.remove('hidden');
+  $('#niaButton')?.classList.add('hidden');
+  $('#niaPanel')?.classList.add('hidden');
+  $('#nexoOnboarding')?.classList.add('hidden');
+  document.body.classList.remove('onboarding-open');
+  clearAuthMessage();
+  const boot=$('#boot');
+  if(boot&&!boot.classList.contains('hidden')){
+    boot.classList.add('fade');
+    setTimeout(()=>boot.classList.add('hidden'),300);
+  }
+}
+
+async function safeBootStep(label,fn){
+  try{
+    return await fn();
+  }catch(err){
+    console.error('NEXO bootstrap · '+label,err);
+    try{logClientError('bootstrap_safe',err,'safe_'+String(label).replace(/[^a-z0-9]+/gi,'_').toLowerCase())}catch(_){}
+    return null;
+  }
+}
+
 async function handleSession(session) {
   if(window.__nexoBootWatchdog){clearTimeout(window.__nexoBootWatchdog);window.__nexoBootWatchdog=null;}
 
-  if(session?.user?.id && initializedSessionUserId===session.user.id && !$('#app')?.classList.contains('hidden')){
-    $('#authScreen')?.classList.add('hidden');
+  if(!session){
+    state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null; state.membership=null;
+    initializedSessionUserId=null;
+    showLoggedOutShell();
     return;
   }
 
-  if(sessionInitPromise && session?.user?.id===state.user?.id){
-    return sessionInitPromise;
-  }
+  // Regra de ouro do NEXO: sessão válida abre o produto primeiro.
+  // Core, Jornada, conteúdos e personalizações nunca podem bloquear o acesso.
+  state.user=session.user;
+  showAuthenticatedShell();
 
-  if (session) {
-    sessionInitPromise=(async()=>{
+  if(initializedSessionUserId===session.user.id)return;
+  if(sessionInitPromise && session.user.id===state.user?.id)return sessionInitPromise;
+
+  sessionInitPromise=(async()=>{
+    try{
       await initApp(session);
       initializedSessionUserId=session.user.id;
-    })();
-    try{
-      await sessionInitPromise;
-    }finally{
-      sessionInitPromise=null;
+    }catch(err){
+      console.error('NEXO init parcial',err);
+      try{logClientError('auth_session',err,'session_partial_init')}catch(_){}
+      // A sessão permanece utilizável mesmo se um módulo secundário falhar.
+      showAuthenticatedShell();
+      toast('O NEXO abriu em modo seguro. Alguns módulos podem terminar de carregar em instantes.','info');
     }
-  } else {
-    state.user=null; state.profile=null; state.journey=null; state.avatarDraft=null; state.membership=null; initializedSessionUserId=null;
-    $('#app').classList.add('hidden');
-    $('#authScreen').classList.remove('hidden');
-    $('#niaButton')?.classList.add('hidden');
-    $('#niaPanel')?.classList.add('hidden');
-    $('#nexoOnboarding')?.classList.add('hidden');
-    document.body.classList.remove('onboarding-open');
-    clearAuthMessage();
+  })();
+
+  try{
+    await sessionInitPromise;
+  }finally{
+    sessionInitPromise=null;
   }
-  $('#boot').classList.add('fade');
-  setTimeout(()=>$('#boot').classList.add('hidden'),450);
 }
 
 function reportSessionError(err) {
@@ -1324,11 +1367,8 @@ function reportSessionError(err) {
   // Se o Supabase já entregou uma sessão válida, um erro de inicialização da UI
   // não deve derrubar a conta nem mandar o usuário de volta para o login.
   if(state.user?.id){
-    $('#authScreen').classList.add('hidden');
-    $('#app').classList.remove('hidden');
-    $('#niaPanel')?.classList.add('hidden');
-    clearAuthMessage();
-    toast('Sua sessão continua ativa. Recarreguei o NEXO sem desconectar sua conta.','error');
+    showAuthenticatedShell();
+    toast('Sua sessão continua ativa. O NEXO entrou em modo seguro sem desconectar sua conta.','error');
   }else{
     $('#app').classList.add('hidden');
     $('#authScreen').classList.remove('hidden');
