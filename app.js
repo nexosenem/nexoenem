@@ -119,6 +119,197 @@ const state = {
   }
 };
 
+const NEXO_FOCUS_KEY='nexo-focus-v1';
+const focusModeState={
+  minutes:25,
+  running:false,
+  paused:false,
+  endAt:0,
+  remaining:25*60,
+  interval:null,
+  completed:false
+};
+
+function focusStorageKey(){
+  return NEXO_FOCUS_KEY+':'+String(state.user?.id||'guest');
+}
+function saveFocusMode(){
+  try{
+    localStorage.setItem(focusStorageKey(),JSON.stringify({
+      minutes:focusModeState.minutes,
+      running:focusModeState.running,
+      paused:focusModeState.paused,
+      endAt:focusModeState.endAt,
+      remaining:focusModeState.remaining,
+      completed:focusModeState.completed
+    }));
+  }catch(_){}
+}
+function restoreFocusMode(){
+  try{
+    const raw=localStorage.getItem(focusStorageKey());
+    if(!raw)return;
+    const saved=JSON.parse(raw);
+    focusModeState.minutes=Number(saved.minutes||25);
+    focusModeState.running=Boolean(saved.running);
+    focusModeState.paused=Boolean(saved.paused);
+    focusModeState.endAt=Number(saved.endAt||0);
+    focusModeState.remaining=Math.max(0,Number(saved.remaining||focusModeState.minutes*60));
+    focusModeState.completed=Boolean(saved.completed);
+    if(focusModeState.running&&!focusModeState.paused&&focusModeState.endAt){
+      focusModeState.remaining=Math.max(0,Math.ceil((focusModeState.endAt-Date.now())/1000));
+      if(focusModeState.remaining<=0){
+        focusModeState.running=false;
+        focusModeState.completed=true;
+      }
+    }
+  }catch(_){}
+}
+function focusSeconds(){
+  if(focusModeState.running&&!focusModeState.paused&&focusModeState.endAt){
+    return Math.max(0,Math.ceil((focusModeState.endAt-Date.now())/1000));
+  }
+  return Math.max(0,Number(focusModeState.remaining||0));
+}
+function formatFocusTime(total){
+  const s=Math.max(0,Math.floor(Number(total||0)));
+  const m=Math.floor(s/60),sec=s%60;
+  return String(m).padStart(2,'0')+':'+String(sec).padStart(2,'0');
+}
+function updateFocusTarget(){
+  const rec=state.core?.recommended_action;
+  const title=$('#focusTargetTitle'), reason=$('#focusTargetReason');
+  if(title)title.textContent=rec?.topic||rec?.subject||rec?.area||'Seu próximo melhor passo';
+  if(reason)reason.textContent=rec?.reason||'Use esse tempo para uma tarefa só. Quando terminar, o NEXO te leva direto para um treino curto.';
+}
+function renderFocusMode(){
+  const seconds=focusSeconds();
+  focusModeState.remaining=seconds;
+  const total=Math.max(1,focusModeState.minutes*60);
+  const elapsed=Math.max(0,total-seconds);
+  const angle=Math.min(360,Math.round((elapsed/total)*360));
+  const timer=$('#focusTimerText'), ring=$('#focusRing'), stateEl=$('#focusTimerState');
+  const start=$('#focusStart'), reset=$('#focusReset');
+  const pill=$('#focusRunningPill'), pillText=$('#focusRunningText');
+  if(timer)timer.textContent=formatFocusTime(seconds);
+  if(ring)ring.style.setProperty('--focus-progress',angle+'deg');
+  if(pillText)pillText.textContent=formatFocusTime(seconds);
+  $('[data-focus-minutes]').forEach(btn=>btn.classList.toggle('active',Number(btn.dataset.focusMinutes)===focusModeState.minutes));
+
+  if(focusModeState.completed){
+    if(stateEl)stateEl.textContent='CONCLUÍDO';
+    if(start){start.textContent='Treinar esse foco →';start.dataset.focusAction='train';}
+    reset?.classList.remove('hidden');
+    pill?.classList.add('hidden');
+  }else if(focusModeState.running&&focusModeState.paused){
+    if(stateEl)stateEl.textContent='PAUSADO';
+    if(start){start.textContent='Continuar';start.dataset.focusAction='resume';}
+    reset?.classList.remove('hidden');
+    pill?.classList.remove('hidden');
+  }else if(focusModeState.running){
+    if(stateEl)stateEl.textContent='EM FOCO';
+    if(start){start.textContent='Pausar';start.dataset.focusAction='pause';}
+    reset?.classList.remove('hidden');
+    pill?.classList.remove('hidden');
+  }else{
+    if(stateEl)stateEl.textContent='PRONTO';
+    if(start){start.textContent='Começar foco';start.dataset.focusAction='start';}
+    reset?.classList.add('hidden');
+    pill?.classList.add('hidden');
+  }
+}
+function clearFocusInterval(){
+  if(focusModeState.interval){clearInterval(focusModeState.interval);focusModeState.interval=null}
+}
+function beginFocusInterval(){
+  clearFocusInterval();
+  focusModeState.interval=setInterval(()=>{
+    const seconds=focusSeconds();
+    focusModeState.remaining=seconds;
+    if(seconds<=0&&focusModeState.running){
+      clearFocusInterval();
+      focusModeState.running=false;
+      focusModeState.paused=false;
+      focusModeState.completed=true;
+      focusModeState.remaining=0;
+      saveFocusMode();
+      renderFocusMode();
+      try{navigator.vibrate?.([180,80,180])}catch(_){}
+      toast('Foco concluído. Hora de transformar atenção em acertos.');
+      $('#focusModeModal')?.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+      return;
+    }
+    renderFocusMode();
+  },1000);
+}
+function setFocusMinutes(minutes){
+  if(focusModeState.running)return;
+  focusModeState.minutes=Number(minutes||25);
+  focusModeState.remaining=focusModeState.minutes*60;
+  focusModeState.completed=false;
+  saveFocusMode();
+  renderFocusMode();
+}
+function startFocusMode(){
+  focusModeState.completed=false;
+  focusModeState.paused=false;
+  focusModeState.running=true;
+  if(!focusModeState.remaining||focusModeState.remaining<=0)focusModeState.remaining=focusModeState.minutes*60;
+  focusModeState.endAt=Date.now()+focusModeState.remaining*1000;
+  saveFocusMode();
+  beginFocusInterval();
+  renderFocusMode();
+}
+function pauseFocusMode(){
+  focusModeState.remaining=focusSeconds();
+  focusModeState.running=true;
+  focusModeState.paused=true;
+  focusModeState.endAt=0;
+  clearFocusInterval();
+  saveFocusMode();
+  renderFocusMode();
+}
+function resumeFocusMode(){
+  focusModeState.running=true;
+  focusModeState.paused=false;
+  focusModeState.endAt=Date.now()+focusModeState.remaining*1000;
+  saveFocusMode();
+  beginFocusInterval();
+  renderFocusMode();
+}
+function resetFocusMode(){
+  clearFocusInterval();
+  focusModeState.running=false;
+  focusModeState.paused=false;
+  focusModeState.completed=false;
+  focusModeState.endAt=0;
+  focusModeState.remaining=focusModeState.minutes*60;
+  saveFocusMode();
+  renderFocusMode();
+}
+function openFocusMode(){
+  updateFocusTarget();
+  renderFocusMode();
+  $('#focusModeModal')?.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeFocusMode(){
+  $('#focusModeModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+  renderFocusMode();
+}
+async function finishFocusIntoTraining(){
+  resetFocusMode();
+  closeFocusMode();
+  if(state.core?.recommended_action){
+    await startCoreRecommendation();
+  }else{
+    openPage('questoes');
+    toast('Escolha uma área e faça uma sessão curta para fechar seu bloco de foco.');
+  }
+}
+
 function toast(message, type='info') {
   const el = $('#toast');
   el.textContent = message;
@@ -554,6 +745,21 @@ $('#logoutBtn').onclick = async () => {
   $('#profileMenu').classList.add('hidden');
 };
 
+$('#mobileFocusMode')?.addEventListener('click',openFocusMode);
+$('#desktopFocusMode')?.addEventListener('click',openFocusMode);
+$('#focusRunningPill')?.addEventListener('click',openFocusMode);
+$('#closeFocusMode')?.addEventListener('click',closeFocusMode);
+$('#focusModeModal')?.addEventListener('click',e=>{if(e.target===$('#focusModeModal'))closeFocusMode()});
+$('[data-focus-minutes]').forEach(btn=>btn.addEventListener('click',()=>setFocusMinutes(Number(btn.dataset.focusMinutes))));
+$('#focusReset')?.addEventListener('click',resetFocusMode);
+$('#focusStart')?.addEventListener('click',async()=>{
+  const action=$('#focusStart')?.dataset.focusAction||'start';
+  if(action==='pause')pauseFocusMode();
+  else if(action==='resume')resumeFocusMode();
+  else if(action==='train')await finishFocusIntoTraining();
+  else startFocusMode();
+});
+
 $('#themeToggle').onclick=()=>setTheme(document.body.classList.contains('light')?'dark':'light');
 $('#profileButton').onclick=()=>$('#profileMenu').classList.toggle('hidden');
 const searchBox=$('.search');
@@ -658,6 +864,9 @@ async function initApp(session) {
   $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
   applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
   updateHomeExperience();
+  restoreFocusMode();
+  if(focusModeState.running&&!focusModeState.paused)beginFocusInterval();
+  renderFocusMode();
 
   clearAuthMessage();
   $('#authScreen').classList.add('hidden');
