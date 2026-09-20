@@ -242,6 +242,16 @@
               <button class="primary-btn full" data-today-start>Começar plano <span>→</span></button>
             </article>
 
+            <article class="nexo-week-card mobile-week-card" data-nexo-week>
+              <div class="nexo-week-head">
+                <div><span class="eyebrow">SEMANA NEXO</span><h3>Seu plano dos próximos 7 dias.</h3></div>
+                <span class="nexo-week-progress"><b data-week-progress>0/7</b><small>concluídos</small></span>
+              </div>
+              <p data-week-summary>O NEXO vai organizar questões, revisão, foco, redação e simulado usando seus dados reais.</p>
+              <div class="nexo-week-tasks" data-week-tasks><p class="week-loading">Montando sua semana...</p></div>
+              <button class="outline-btn full" data-page="semana">Abrir Semana NEXO →</button>
+            </article>
+
             <article class="nexo-command-center mobile-command-center" data-nexo-command>
               <div class="command-head"><div><span class="eyebrow">CENTRAL NEXO</span><h3>Seu cockpit de evolução</h3></div><button data-page="ranking">Jornada →</button></div>
               <div class="command-stats">
@@ -338,6 +348,16 @@
                 <p data-today-summary>O NEXO Core vai montar uma rotina usando seu tempo disponível e seu foco atual.</p>
                 <div class="today-plan-blocks" data-today-blocks></div>
                 <button class="primary-btn" data-today-start>Começar plano <span>→</span></button>
+              </article>
+
+              <article class="panel nexo-week-card desktop-week-card" data-nexo-week>
+                <div class="nexo-week-head">
+                  <div><span class="eyebrow">SEMANA NEXO · PLANO ADAPTATIVO</span><h3>Os próximos 7 dias, já organizados.</h3></div>
+                  <span class="nexo-week-progress"><b data-week-progress>0/7</b><small>concluídos</small></span>
+                </div>
+                <p data-week-summary>Questões, revisão, foco, redação e simulado distribuídos a partir das suas prioridades.</p>
+                <div class="nexo-week-tasks" data-week-tasks><p class="week-loading">Montando sua semana...</p></div>
+                <button class="outline-btn" data-page="semana">Ver plano semanal completo →</button>
               </article>
 
               <article class="panel nexo-command-center desktop-command-center" data-nexo-command>
@@ -591,6 +611,12 @@
                   <p>Nota estimada, competências, pontos fortes e a prioridade da próxima versão.</p>
                 </div>
               </article>
+
+              <article class="panel essay-history-card">
+                <div class="panel-title"><div><b>Histórico de redações</b><small>nota, competências e reescritas</small></div><span id="essayHistoryTrend">—</span></div>
+                <div id="essayHistorySummary" class="essay-history-summary"></div>
+                <div id="essayHistoryList" class="essay-history-list"><p style="color:var(--muted)">Seu histórico aparecerá aqui após a primeira correção.</p></div>
+              </article>
             </aside>
           </div>
         </section>
@@ -677,12 +703,32 @@
           </div>
         </section>
 
+        <section class="page" id="semana">
+          <div class="page-head nexo-page-head">
+            <div><span class="eyebrow">NEXO CORE · PLANEJAMENTO</span><h2>Semana NEXO</h2><p>Um plano de 7 dias que transforma seus erros, ritmo e prioridades em ações concretas.</p></div>
+            <div class="page-nexo-mentor"><img src="./assets/nexo-family/bust-confiante.avif" data-nexo-safe-avatar alt="Professor Nexo"><span><b>Plano vivo</b><small>questões • redação • revisão • simulado</small></span></div>
+          </div>
+          <article class="panel week-full-hero">
+            <div>
+              <span class="eyebrow">SEU CICLO ATUAL</span>
+              <h3 id="weekFullTitle">Montando seu plano semanal...</h3>
+              <p id="weekFullSummary">O NEXO usa suas prioridades reais e o tempo diário informado no onboarding.</p>
+            </div>
+            <div class="week-full-score"><b id="weekFullProgress">0%</b><small>da semana concluída</small></div>
+          </article>
+          <div id="weekFullGrid" class="week-full-grid"><article class="panel"><p style="color:var(--muted)">Carregando sua semana...</p></article></div>
+        </section>
+
         <section class="page" id="banco">
           <div class="page-head"><div><span class="eyebrow">BANCO</span><h2>Banco de Questões</h2><p>500 questões reais extraídas dos cadernos enviados.</p></div></div>
           <div class="panel">
             <div class="bank-filters"><input id="bankSearch" class="text-input" placeholder="Pesquisar tema ou matéria..."><select id="bankArea"><option value="">Todas as áreas</option><option>Linguagens</option><option>Ciências Humanas</option><option>Ciências da Natureza</option><option>Matemática</option></select></div>
             <div id="bankList" class="bank-list"></div>
           </div>
+          <article class="panel saved-questions-panel">
+            <div class="panel-title"><div><b>Questões salvas</b><small>seu caderno pessoal para voltar depois</small></div><span id="savedQuestionsCount">0 salvas</span></div>
+            <div id="savedQuestionList" class="saved-question-list"><p style="color:var(--muted)">Você ainda não salvou nenhuma questão.</p></div>
+          </article>
         </section>
 
         <section class="page" id="temas">
@@ -1149,6 +1195,10 @@
               <h3>Comentários denunciados</h3>
               <div id="reportedComments" class="admin-feedbacks"></div>
             </article>
+            <article class="panel admin-reports-panel">
+              <div class="panel-title"><div><b>Problemas em questões</b><small>gabarito, imagem, texto, alternativas e explicação</small></div><span id="questionIssueCount">0 abertos</span></div>
+              <div id="adminQuestionIssues" class="admin-feedbacks"></div>
+            </article>
             <article class="panel admin-content-panel">
               <div class="panel-title"><b>Gerenciar videoaulas</b><small>editar, ocultar ou remover</small></div>
               <div id="adminVideoList" class="admin-content-list"></div>
@@ -1257,6 +1307,29 @@
       <div class="comment-compose">
         <textarea id="commentText" rows="3" maxlength="1200" placeholder="Compartilhe uma dúvida, explicação ou jeito de resolver..."></textarea>
         <button id="sendComment" class="primary-btn">Comentar</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="questionIssueModal" class="community-modal hidden" aria-modal="true" role="dialog">
+    <div class="community-sheet question-issue-sheet">
+      <div class="community-head"><div><span class="eyebrow">AJUDAR A MELHORAR</span><h3>Reportar problema na questão</h3></div><button id="closeQuestionIssue" class="icon-btn">×</button></div>
+      <label>O que está errado?
+        <select id="questionIssueType">
+          <option value="gabarito">Gabarito parece incorreto</option>
+          <option value="imagem">Imagem / gráfico não aparece</option>
+          <option value="texto">Texto ou enunciado com problema</option>
+          <option value="alternativas">Alternativas duplicadas ou erradas</option>
+          <option value="explicacao">Explicação precisa de revisão</option>
+          <option value="outro">Outro problema</option>
+        </select>
+      </label>
+      <label>Detalhes
+        <textarea id="questionIssueDetails" rows="5" maxlength="1200" placeholder="Explique rapidamente o que você encontrou..."></textarea>
+      </label>
+      <div class="question-issue-actions">
+        <button id="cancelQuestionIssue" class="outline-btn">Cancelar</button>
+        <button id="sendQuestionIssue" class="primary-btn">Enviar reporte</button>
       </div>
     </div>
   </div>
