@@ -2101,3 +2101,179 @@ img[data-core-avatar]{
     max-width:68% !important;
   }
 }
+
+
+/* =========================================================
+   NEXO SAFE MASCOT + DAILY PLAN v1
+   Final override after discovering the old expression files
+   were malformed crops.
+   ========================================================= */
+
+/* Use a deliberate portrait/bust treatment instead of stretching square faces */
+.mobile-nexo-stage{
+  overflow:hidden!important;
+  background:
+    radial-gradient(circle at 50% 38%,rgba(75,166,255,.22),transparent 56%),
+    linear-gradient(160deg,rgba(16,26,55,.95),rgba(8,16,31,.96))!important;
+  border:1px solid rgba(101,94,220,.30);
+  box-shadow:0 14px 34px rgba(0,0,0,.22);
+}
+.mobile-nexo-stage img{
+  object-fit:contain!important;
+  object-position:center center!important;
+  transform:none!important;
+  border-radius:inherit!important;
+  padding:5px;
+}
+.mobile-nexo-stage:before,
+.mobile-nexo-stage .nexo-glow{pointer-events:none}
+.home-nexo-mascot{
+  object-fit:contain!important;
+  object-position:center center!important;
+  transform:translateX(-50%)!important;
+  border-radius:24px!important;
+  padding:7px;
+  background:
+    radial-gradient(circle at 50% 38%,rgba(74,168,255,.17),transparent 58%),
+    rgba(8,17,33,.72);
+}
+.core-avatar img,
+.nia-mini-avatar img,
+.nexo-welcome img,
+.answer-professor img,
+.professor-nexo-inline img,
+.page-nexo-mentor img,
+.nexo-guide-card img,
+.simulation-hero-mascot img,
+.performance-core-mascot img,
+.essay-score-side>img,
+.essay-priority-prof img,
+.sim-report-professor img,
+.session-finish-state img{
+  object-fit:contain!important;
+  object-position:center center!important;
+  transform:none!important;
+  padding:3px;
+  background:
+    radial-gradient(circle at 50% 35%,rgba(84,154,255,.14),transparent 57%),
+    #0a1730!important;
+}
+.core-avatar img{padding:2px}
+
+/* The hero on phones becomes a compact intentional mascot portrait */
+@media(max-width:760px){
+  .mobile-hero{
+    min-height:238px!important;
+    padding:20px!important;
+  }
+  .mobile-hero h1{max-width:66%!important}
+  .mobile-hero p{max-width:64%!important}
+  .mobile-nexo-stage{
+    right:14px!important;
+    top:38px!important;
+    width:142px!important;
+    height:142px!important;
+    border-radius:34px!important;
+  }
+  .mobile-nexo-stage:before{
+    width:116px!important;
+    height:116px!important;
+    right:12px!important;
+    top:12px!important;
+  }
+  .mobile-nexo-stage .nexo-glow{
+    width:128px!important;
+    height:128px!important;
+    right:6px!important;
+    top:7px!important;
+  }
+  .mobile-nexo-stage img{
+    width:100%!important;
+    height:100%!important;
+    right:0!important;
+    bottom:0!important;
+    padding:6px!important;
+  }
+  .nexo-float-chip.chip-a{right:94px!important;top:9px!important}
+  .nexo-float-chip.chip-b{right:4px!important;bottom:7px!important}
+
+  .mobile-core-card .core-avatar{
+    width:56px!important;height:56px!important;border-radius:16px!important;
+  }
+  .nexo-welcome{grid-template-columns:88px 1fr!important}
+  .nexo-welcome img{width:84px!important;height:92px!important}
+}
+
+/* Daily plan */
+.today-plan-card{
+  position:relative;overflow:hidden;
+  border:1px solid rgba(93,91,201,.32);
+  border-radius:18px;
+  padding:16px;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(58,180,255,.08),transparent 32%),
+    radial-gradient(circle at 0% 100%,rgba(111,75,236,.10),transparent 38%),
+    linear-gradient(155deg,rgba(10,20,38,.98),rgba(7,14,28,.98));
+  box-shadow:0 14px 40px rgba(0,0,0,.12);
+}
+.today-plan-card:after{
+  content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:-72px;bottom:-85px;
+  border:1px solid rgba(104,91,225,.10);
+  box-shadow:0 0 0 24px rgba(82,105,230,.022),0 0 0 50px rgba(58,179,227,.012);
+  pointer-events:none
+}
+.today-plan-head{
+  position:relative;z-index:1;display:flex;align-items:flex-start;justify-content:space-between;gap:12px
+}
+.today-plan-head h3{font-size:17px;margin:6px 0 0}
+.today-plan-time{
+  min-width:58px;padding:8px 9px;border-radius:13px;text-align:center;
+  border:1px solid rgba(109,91,224,.28);background:rgba(76,60,177,.10)
+}
+.today-plan-time b{display:block;font-size:20px;line-height:1}
+.today-plan-time small{display:block;margin-top:2px;font-size:7px;color:#75869f;text-transform:uppercase;letter-spacing:.8px}
+.today-plan-card>p{
+  position:relative;z-index:1;margin:10px 0 12px;color:#8d9caf;font-size:9.5px;line-height:1.55;max-width:720px
+}
+.today-plan-blocks{position:relative;z-index:1;display:grid;gap:7px;margin-bottom:12px}
+.today-plan-block{
+  display:grid;grid-template-columns:31px 1fr auto;gap:9px;align-items:center;
+  padding:9px;border:1px solid rgba(82,99,139,.16);border-radius:11px;background:rgba(10,21,39,.64)
+}
+.today-plan-block>span{
+  width:29px;height:29px;border-radius:9px;display:grid;place-items:center;
+  background:#272259;color:#c8beff;font-size:7px;font-weight:900
+}
+.today-plan-block div{min-width:0}
+.today-plan-block b{display:block;font-size:9.5px}
+.today-plan-block small{
+  display:block;font-size:7.5px;color:#718198;margin-top:1px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis
+}
+.today-plan-block strong{font-size:9px;color:#aab7cb;white-space:nowrap}
+.today-plan-card>[data-today-start]{position:relative;z-index:1;font-size:9px}
+
+.mobile-today-plan{margin-top:10px}
+.desktop-today-plan{margin:0!important}
+.desktop-today-plan .today-plan-blocks{
+  grid-template-columns:repeat(4,minmax(0,1fr));gap:8px
+}
+.desktop-today-plan .today-plan-block{
+  grid-template-columns:30px 1fr;
+}
+.desktop-today-plan .today-plan-block strong{grid-column:2;color:#786cf0}
+
+body.light .today-plan-card{
+  background:linear-gradient(155deg,#f7f5ff,#f4fbff);
+  border-color:#d3ccff
+}
+body.light .today-plan-block{background:#fff}
+
+@media(max-width:760px){
+  .today-plan-card{padding:14px}
+  .today-plan-head h3{font-size:14px}
+  .today-plan-card>p{font-size:8.8px}
+  .today-plan-block{padding:8px}
+  .today-plan-block b{font-size:9px}
+  .today-plan-block small{font-size:7.2px}
+}
