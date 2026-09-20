@@ -531,7 +531,7 @@ function avatarItemCompatibleWithBase(item,base){
 }
 
 function avatarOptionButton(field,value){
-  return $('[data-avatar-field]').find(btn=>btn.dataset.avatarField===field&&btn.dataset.avatarValue===value)||null;
+  return $$('[data-avatar-field]').find(btn=>btn.dataset.avatarField===field&&btn.dataset.avatarValue===value)||null;
 }
 
 function avatarValueCompatibleWithBase(field,value,base){
@@ -4238,6 +4238,14 @@ function renderAvatarBuilder(){
   const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
   state.avatarDraft=draft;
   renderStudentAvatar($('#avatarBuilderPreview'),draft);
+  renderStudentAvatar($('#avatarBuilderMiniPreview'),draft);
+  const status=$('#avatarBuilderStatus');
+  if(status){
+    const saved=normalizedAvatar(state.journey?.profile?.avatar);
+    const changed=JSON.stringify(draft)!==JSON.stringify(saved);
+    status.textContent=changed?'Alterações não salvas':'Personagem salvo';
+    status.classList.toggle('dirty',changed);
+  }
   const owned=journeyInventorySet(),plus=isNexoPlus(),ultra=isNexoUltra();
   const level=Number(state.journey?.profile?.level||1);
   $$('[data-avatar-field]').forEach(btn=>{
@@ -4257,6 +4265,8 @@ function renderAvatarBuilder(){
     btn.classList.toggle('locked',locked);
     btn.classList.toggle('plus-locked',plusLocked);
     btn.dataset.locked=locked?'true':'false';
+    btn.dataset.lockReason=plusLocked?'plus':itemLocked?(level<Number(item?.unlock_level||1)?'level':'store'):'';
+    btn.dataset.unlockLevel=item?.unlock_level?String(item.unlock_level):'';
     if(!btn.classList.contains('tone-swatch')){
       const base=(btn.dataset.baseLabel||btn.textContent).replace(/\s*🔒$/,'').replace(/\s*PLUS$/i,'');
       btn.dataset.baseLabel=base;
@@ -4364,21 +4374,40 @@ $$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.d
 $('#refreshJourney')?.addEventListener('click',()=>loadNexoJourney());
 $('#startNexoArena')?.addEventListener('click',startNexoArena);
 
-$$('[data-avatar-field]').forEach(btn=>btn.onclick=()=>{
+function applyAvatarChoice(btn){
+  if(!btn)return;
   if(btn.dataset.locked==='true'){
-    if(btn.classList.contains('plus-locked'))return openNexoPlans('Esse estilo é exclusivo do NEXO Plus.');
-    toast('Desbloqueie esse cosmético na Loja NEXO.');
+    const reason=btn.dataset.lockReason||'store';
+    if(reason==='plus')return openNexoPlans('Esse estilo é exclusivo do NEXO Plus.');
+    if(reason==='level')return toast('Esse item desbloqueia no nível '+Number(btn.dataset.unlockLevel||1)+'.');
+    toast('Esse cosmético ainda não está no seu inventário. Veja na Loja NEXO.');
     setJourneyTab('store');
     return;
   }
-  state.avatarDraft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
-  state.avatarDraft[btn.dataset.avatarField]=btn.dataset.avatarValue;
-  if(btn.dataset.avatarField==='base'){
-    const starter=starterAvatarForBase(btn.dataset.avatarValue);
-    state.avatarDraft={...state.avatarDraft,base:starter.base,hair:starter.hair,outfit:starter.outfit,accessory:'none'};
+  try{
+    state.avatarDraft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
+    const field=btn.dataset.avatarField;
+    const value=btn.dataset.avatarValue;
+    state.avatarDraft[field]=value;
+    if(field==='base'){
+      const starter=starterAvatarForBase(value);
+      state.avatarDraft={...state.avatarDraft,base:starter.base,hair:starter.hair,outfit:starter.outfit,accessory:'none'};
+    }
+    state.avatarDraft=normalizeAvatarDraftForBase(state.avatarDraft);
+    renderAvatarBuilder();
+    if(navigator.vibrate)navigator.vibrate(8);
+  }catch(err){
+    console.error('avatar choice',err);
+    logClientError('journey_avatar',err,'avatar_choice');
+    toast('Não consegui aplicar esse item agora.','error');
   }
-  state.avatarDraft=normalizeAvatarDraftForBase(state.avatarDraft);
-  renderAvatarBuilder();
+}
+
+$('#avatarBuilderControls')?.addEventListener('click',e=>{
+  const btn=e.target.closest?.('[data-avatar-field]');
+  if(!btn)return;
+  e.preventDefault();
+  applyAvatarChoice(btn);
 });
 
 $('#requestPlusBtn')?.addEventListener('click',async()=>{
@@ -4402,7 +4431,8 @@ $('#saveJourneyAvatar')?.addEventListener('click',async()=>{
   if(!state.avatarDraft)return;
   btn.disabled=true;btn.textContent='Salvando...';
   try{
-    const {data,error}=await client.rpc('save_nexo_avatar',{p_avatar:state.avatarDraft});
+    const cleanDraft=normalizeAvatarDraftForBase(state.avatarDraft);
+    const {data,error}=await client.rpc('save_nexo_avatar',{p_avatar:cleanDraft});
     if(error)throw error;
     if(state.journey?.profile)state.journey.profile.avatar=data;
     state.avatarDraft=normalizedAvatar(data);
