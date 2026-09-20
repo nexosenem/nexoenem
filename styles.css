@@ -9052,3 +9052,14 @@ body.light .radar-priority.high{color:#126a88}
     font-size:.92rem!important;
   }
 }
+
+
+/* NEXO Conteúdo · Radar -> Aula */
+.radar-actions{display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap}
+.radar-study-btn{border-color:rgba(87,213,255,.46)!important;background:linear-gradient(135deg,rgba(87,213,255,.10),rgba(139,114,255,.10))!important}
+.content-frame.lesson-frame{width:100%;min-height:min(76vh,900px);border:0;background:#07111f}
+@media(max-width:760px){
+  .radar-actions{width:100%;justify-content:stretch}
+  .radar-actions .outline-btn{flex:1;min-width:120px}
+  .content-frame.lesson-frame{min-height:72vh}
+}
