@@ -535,6 +535,7 @@
             <div class="session-bar panel">
               <div><span id="sessionAreaBadge" class="tag accent">Área</span><b id="sessionTitle">Sessão</b><small id="sessionMeta">Questão 1 de 10</small></div>
               <div class="session-progress"><i id="sessionProgress"></i></div>
+              <div id="examClockPill" class="exam-clock-pill hidden"><span>◷</span><b id="examClockText">00:00</b><small id="examClockStatus">ritmo de prova</small></div>
               <button id="endSession" class="ghost-btn">Encerrar</button>
             </div>
 
@@ -837,7 +838,14 @@
             <button class="sim-card" data-sim-area="Ciências Humanas"><span>◎</span><b>Humanas</b><small>20 questões</small></button>
             <button class="sim-card" data-sim-area="Ciências da Natureza"><span>⌬</span><b>Natureza</b><small>20 questões</small></button>
             <button class="sim-card" data-sim-area="Matemática"><span>Σ</span><b>Matemática</b><small>20 questões</small></button>
+            <button class="sim-card sim-strategy-card" data-sim-mode="sprint"><span>⚡</span><b>Sprint</b><small>5 questões · ritmo e decisão</small><i>rápido</i></button>
+            <button class="sim-card sim-strategy-card" data-sim-mode="mini"><span>10</span><b>Mini ENEM</b><small>10 questões mistas · modo prova</small></button>
+            <button class="sim-card sim-strategy-card" data-sim-mode="full"><span>90</span><b>Prova longa</b><small>90 questões · feedback só no final</small><i>Plus recomendado</i></button>
           </div>
+          <article class="panel exam-strategy-panel">
+            <div><span class="eyebrow">ESTRATÉGIA NEXO</span><h3>Treine também a decisão de pular.</h3><p>Em modo prova, o NEXO registra a resposta sem revelar o gabarito. O relatório final mostra acerto, ritmo, hesitação e assuntos que consumiram tempo demais.</p></div>
+            <div class="exam-strategy-rules"><span><b>2 min</b><small>atenção ao ritmo</small></span><span><b>3 min</b><small>considere pular</small></span><span><b>final</b><small>corrija tudo junto</small></span></div>
+          </article>
         </section>
 
         <section class="page" id="semana">
