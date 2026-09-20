@@ -308,6 +308,8 @@ const state = {
   avatarDraft:null,
   registerBase:'neutral',
   journeyTab:'missions',
+  studyGroups:[],
+  selectedStudyGroup:null,
   lastSimulationReport:null,
   completedEssayThemes:new Set(),
   essayThemeProgressLoaded:false,
@@ -6469,9 +6471,10 @@ function renderStudentAvatar(target,avatarInput){
 
 function setJourneyTab(tab='missions'){
   state.journeyTab=tab;
-  $$('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
-  $$('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
+  $('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
+  $('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
   if(tab==='avatar')renderAvatarBuilder();
+  if(tab==='groups')loadStudyGroups({silent:true});
 }
 
 function missionProgressText(m){
@@ -7267,6 +7270,85 @@ function renderAvatarBuilder(){
   renderAvatarEditorCategory();
 }
 
+
+async function loadStudyGroups({silent=true}={}){
+  if(!state.user?.id)return [];
+  try{
+    const {data,error}=await client.rpc('get_my_study_groups');
+    if(error)throw error;
+    state.studyGroups=Array.isArray(data)?data:[];
+    if(state.selectedStudyGroup){
+      state.selectedStudyGroup=state.studyGroups.find(g=>String(g.id)===String(state.selectedStudyGroup.id))||null;
+    }
+    if(!state.selectedStudyGroup&&state.studyGroups.length)state.selectedStudyGroup=state.studyGroups[0];
+    renderStudyGroups();
+    return state.studyGroups;
+  }catch(err){
+    console.error('study groups',err);
+    if(!silent)toast('Não consegui carregar seus grupos agora.','error');
+    return [];
+  }
+}
+function renderStudyGroups(){
+  const list=$('#studyGroupsList'),detail=$('#studyGroupDetail');
+  if(list){
+    list.innerHTML=state.studyGroups.length?state.studyGroups.map(g=>'<button class="study-group-row '+(state.selectedStudyGroup?.id===g.id?'active':'')+'" data-study-group="'+g.id+'"><span>'+String(g.name||'G').slice(0,2).toUpperCase()+'</span><div><b>'+esc(g.name)+'</b><small>'+Number(g.member_count||0)+' membro(s) · '+Number((g.goals||[]).length)+' meta(s)</small></div><i>→</i></button>').join(''):'<p class="learning-empty">Você ainda não participa de um grupo.</p>';
+    $('[data-study-group]',list).forEach(btn=>btn.onclick=()=>{
+      state.selectedStudyGroup=state.studyGroups.find(g=>String(g.id)===String(btn.dataset.studyGroup))||null;
+      renderStudyGroups();
+    });
+  }
+  if(!detail)return;
+  const g=state.selectedStudyGroup;
+  if(!g){detail.innerHTML='<p class="learning-empty">Selecione um grupo para ver membros e metas.</p>';return}
+  const members=Array.isArray(g.members)?g.members:[],goals=Array.isArray(g.goals)?g.goals:[];
+  detail.innerHTML='<header class="study-group-detail-head"><div><span>GRUPO DE ESTUDO</span><h3>'+esc(g.name)+'</h3><p>'+esc(g.description||'Sem descrição.')+'</p></div><div class="study-group-code"><small>CÓDIGO</small><b>'+esc(g.join_code||'—')+'</b><button id="copyStudyGroupCode">Copiar</button></div></header>'+
+    '<div class="study-group-columns"><section><div class="panel-title"><b>Membros</b><small>'+members.length+' no grupo</small></div><div class="study-group-members">'+members.map(m=>'<div><span>'+String(m.name||'A').slice(0,1).toUpperCase()+'</span><b>'+esc(m.name||'Aluno NEXO')+'</b><small>'+(m.role==='owner'?'organizador':'membro')+'</small></div>').join('')+'</div></section>'+
+    '<section><div class="panel-title"><b>Metas compartilhadas</b><small>progresso somado do grupo</small></div><div class="study-group-goals">'+(goals.length?goals.map(goal=>{const current=Number(goal.current_value||0),target=Math.max(1,Number(goal.target_value||1)),pct=clamp(Math.round(current*100/target),0,100);return '<article><div><b>'+esc(goal.title)+'</b><small>'+current+' / '+target+' '+esc(goal.unit||'itens')+(goal.due_date?' · até '+new Date(goal.due_date+'T12:00:00').toLocaleDateString('pt-BR'):'')+'</small></div><strong>'+pct+'%</strong><i><em style="width:'+pct+'%"></em></i></article>'}).join(''):'<p class="learning-empty">Nenhuma meta criada ainda.</p>')+'</div></section></div>'+
+    '<section class="study-group-goal-create"><input id="studyGroupGoalTitle" class="text-input" maxlength="120" placeholder="Nova meta: ex. Resolver questões de Matemática"><input id="studyGroupGoalTarget" class="text-input" type="number" min="1" max="10000" value="50"><select id="studyGroupGoalUnit"><option>questões</option><option>redações</option><option>dias</option></select><input id="studyGroupGoalDate" class="text-input" type="date"><button id="createStudyGroupGoal" class="outline-btn">Adicionar meta</button></section>'+
+    '<footer class="study-group-footer">'+(g.is_owner?'<button id="deleteStudyGroup" class="ghost-btn danger">Excluir grupo</button>':'<button id="leaveStudyGroup" class="ghost-btn">Sair do grupo</button>')+'</footer>';
+  $('#copyStudyGroupCode')?.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(g.join_code||'');toast('Código copiado.')}catch(_){toast('Código: '+g.join_code)}});
+  $('#createStudyGroupGoal')?.addEventListener('click',async()=>{
+    const title=$('#studyGroupGoalTitle')?.value.trim(),target=Number($('#studyGroupGoalTarget')?.value||1),unit=$('#studyGroupGoalUnit')?.value||'questões',due=$('#studyGroupGoalDate')?.value||null;
+    if(!title)return toast('Dê um nome para a meta.','error');
+    const {error}=await client.from('study_group_goals').insert({group_id:g.id,created_by:state.user.id,title,target_value:target,unit,due_date:due});
+    if(error)return toast('Não consegui criar essa meta.','error');
+    toast('Meta compartilhada criada.');loadStudyGroups({silent:true});
+  });
+  $('#leaveStudyGroup')?.addEventListener('click',async()=>{
+    if(!confirm('Sair deste grupo?'))return;
+    const {error}=await client.from('study_group_members').delete().eq('group_id',g.id).eq('user_id',state.user.id);
+    if(error)return toast('Não consegui sair do grupo.','error');
+    state.selectedStudyGroup=null;toast('Você saiu do grupo.');loadStudyGroups({silent:true});
+  });
+  $('#deleteStudyGroup')?.addEventListener('click',async()=>{
+    if(!confirm('Excluir este grupo e suas metas?'))return;
+    const {error}=await client.from('study_groups').delete().eq('id',g.id);
+    if(error)return toast('Não consegui excluir o grupo.','error');
+    state.selectedStudyGroup=null;toast('Grupo excluído.');loadStudyGroups({silent:true});
+  });
+}
+$('#createStudyGroup')?.addEventListener('click',async()=>{
+  const name=$('#studyGroupName')?.value.trim(),description=$('#studyGroupDescription')?.value.trim()||null;
+  if(!name)return toast('Dê um nome para o grupo.','error');
+  const {data,error}=await client.rpc('create_study_group',{p_name:name,p_description:description});
+  if(error)return toast('Não consegui criar o grupo.','error');
+  $('#studyGroupName').value='';$('#studyGroupDescription').value='';
+  toast('Grupo criado · código '+data.join_code);
+  await loadStudyGroups({silent:true});
+  state.selectedStudyGroup=state.studyGroups.find(g=>String(g.id)===String(data.id))||state.selectedStudyGroup;
+  renderStudyGroups();
+});
+$('#joinStudyGroup')?.addEventListener('click',async()=>{
+  const code=$('#studyGroupCode')?.value.trim();
+  if(!code)return toast('Digite o código do grupo.','error');
+  const {data,error}=await client.rpc('join_study_group',{p_code:code});
+  if(error)return toast('Código inválido ou grupo indisponível.','error');
+  $('#studyGroupCode').value='';toast('Você entrou em '+(data?.name||'um grupo')+'.');
+  await loadStudyGroups({silent:true});
+});
+$('#refreshStudyGroups')?.addEventListener('click',()=>loadStudyGroups({silent:false}));
+
 function renderNexoJourney(){
   const j=state.journey;
   if(!j?.profile)return;
@@ -7480,19 +7562,26 @@ $('#commentModal').addEventListener('click',e=>{if(e.target===$('#commentModal')
 
 async function loadQuestionComments(questionId){
   $('#questionComments').innerHTML='<div class="comment-empty">Carregando comentários...</div>';
-  const {data,error}=await client.rpc('get_question_comments_v2',{p_question_id:Number(questionId)});
+  const {data,error}=await client.rpc('get_question_comments_v3',{p_question_id:Number(questionId)});
   if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
   $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
-    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.is_mine&&isNexoUltra()?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
+    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.is_mine&&isNexoUltra()?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${Number(c.reputation||0)} ajuda(s) · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
+    <div class="comment-helpful"><button data-helpful-comment="${c.id}" class="${c.helpful_by_me?'active':''}">✦ Útil <b>${Number(c.helpful_count||0)}</b></button><small>Marque quando a explicação realmente ajudar.</small></div>
   </article>`).join(''):'<div class="comment-empty">Ainda não há comentários. Seja o primeiro a compartilhar uma dúvida ou um jeito de resolver.</div>';
   $$('[data-comment-avatar]',$('#questionComments')).forEach(node=>{
     const row=data[Number(node.dataset.commentAvatar)];
     renderStudentAvatar(node,row?.avatar);
   });
-  $$('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
-  $$('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
+  $('[data-report-comment]').forEach(b=>b.onclick=()=>reportComment(Number(b.dataset.reportComment)));
+  $('[data-delete-comment]').forEach(b=>b.onclick=()=>deleteComment(Number(b.dataset.deleteComment)));
+  $('[data-helpful-comment]').forEach(b=>b.onclick=async()=>{
+    const {data:vote,error:voteError}=await client.rpc('toggle_comment_helpful',{p_comment_id:Number(b.dataset.helpfulComment)});
+    if(voteError)return toast('Não consegui registrar esse voto.','error');
+    b.classList.toggle('active',Boolean(vote?.helpful));
+    const count=b.querySelector('b');if(count)count.textContent=Number(vote?.helpful_count||0);
+  });
 }
 
 $('#sendComment').onclick=async()=>{
