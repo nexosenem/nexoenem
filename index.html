@@ -547,6 +547,20 @@
           <div class="admin-stats" id="adminStats"></div>
           <div id="cloudinarySecurityStatus" class="cloudinary-security-status checking">Verificando proteção dos uploads...</div>
           <div class="admin-grid">
+            <article class="panel admin-team-panel">
+              <div class="admin-team-head">
+                <div>
+                  <span class="eyebrow gold">EQUIPE</span>
+                  <h3>Gerenciar administradores</h3>
+                  <p>Escolha quais contas do NEXO podem acessar a Área do Admin. A pessoa precisa criar uma conta antes de aparecer aqui.</p>
+                </div>
+                <button id="refreshAdminUsers" class="outline-btn">Atualizar contas</button>
+              </div>
+              <div class="admin-team-search">
+                <input id="adminUserSearch" class="text-input" type="search" placeholder="Buscar por nome ou e-mail...">
+              </div>
+              <div id="adminUserList" class="admin-user-list"><div class="admin-user-empty">Carregando contas...</div></div>
+            </article>
             <article class="panel">
               <h3>Publicar videoaula</h3>
               <label>Título<input id="videoTitle" class="text-input" placeholder="Ex.: Funções do 1º grau"></label>
