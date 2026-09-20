@@ -286,39 +286,84 @@ body.light .comment-item p{color:#45556c}
 .review-checklist i{font-style:normal;color:#6dddb7}
 .nia-review-signature{margin-top:10px;font-size:10px;color:#8779ff;letter-spacing:.7px}
 
-/* NIA assistant */
+/* Nexo mascot assistant */
 .nia-button{
-  position:fixed;right:20px;bottom:20px;z-index:120;width:58px;height:58px;border-radius:20px;border:1px solid #6b59eb;
-  background:linear-gradient(145deg,#6f58f2,#283b8e);box-shadow:0 12px 36px rgba(76,61,202,.38);color:#fff
+  position:fixed;right:20px;bottom:20px;z-index:120;width:64px;height:64px;border-radius:22px;border:1px solid rgba(101,85,238,.95);
+  padding:0;overflow:hidden;background:linear-gradient(145deg,#07162f,#172d68);
+  box-shadow:0 14px 42px rgba(62,76,220,.38),0 0 0 1px rgba(61,214,255,.08) inset;color:#fff;
+  animation:nexoFloat 3.4s ease-in-out infinite
 }
-.nia-button span{font-size:22px;font-weight:900}.nia-button i{position:absolute;right:7px;top:7px;width:8px;height:8px;border-radius:50%;background:#46e2be;box-shadow:0 0 10px #46e2be}
+.nia-button img{width:100%;height:100%;object-fit:cover;object-position:50% 34%;display:block;transform:scale(1.06)}
+.nia-button i{position:absolute;right:6px;top:6px;width:9px;height:9px;border-radius:50%;background:#46e2be;box-shadow:0 0 12px #46e2be}
+.nia-button:hover{transform:translateY(-3px) scale(1.04);box-shadow:0 18px 48px rgba(73,92,255,.48)}
+
 .nia-panel{
-  position:fixed;right:20px;bottom:90px;z-index:125;width:min(390px,calc(100vw - 24px));max-height:72vh;
-  display:grid;grid-template-rows:auto auto 1fr auto auto;border:1px solid #293c5d;border-radius:18px;overflow:hidden;
-  background:rgba(7,15,28,.98);box-shadow:0 24px 80px rgba(0,0,0,.45);backdrop-filter:blur(20px)
+  position:fixed;right:20px;bottom:94px;z-index:125;width:min(420px,calc(100vw - 24px));max-height:78vh;
+  display:flex;flex-direction:column;border:1px solid #293c5d;border-radius:22px;overflow:hidden;
+  background:rgba(6,14,28,.985);box-shadow:0 24px 90px rgba(0,0,0,.52);backdrop-filter:blur(22px)
 }
-body.light .nia-panel{background:rgba(255,255,255,.98)}
-.nia-head{display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:center;padding:12px;border-bottom:1px solid var(--line)}
-.nia-head small{display:block;color:var(--muted);font-size:9px}.nia-head>button{border:0;background:none;color:var(--text);font-size:22px}
+body.light .nia-panel{background:rgba(255,255,255,.985)}
+.nia-head{display:grid;grid-template-columns:52px 1fr auto;gap:10px;align-items:center;padding:12px 13px;border-bottom:1px solid var(--line)}
+.nia-head b{font-size:14px;letter-spacing:.8px}.nia-head small{display:block;color:var(--muted);font-size:9px;margin-top:2px}
+.nia-head>button{border:0;background:none;color:var(--text);font-size:22px}
 .nia-mini-avatar{
-  width:44px;height:44px;border-radius:14px;display:grid;place-items:center;position:relative;font-weight:900;color:#fff;
-  transition:.2s
+  width:50px;height:50px;border-radius:16px;position:relative;display:grid;place-items:center;
+  overflow:visible;background:#0e1b34;border:1px solid #6555ee;box-shadow:0 7px 22px rgba(58,68,210,.25);
+  transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease
 }
-.nia-mini-avatar:after{content:"";position:absolute;left:8px;right:8px;bottom:-4px;height:12px;border-radius:7px 7px 2px 2px;background:var(--outfit,#684ff0)}
-.nia-mini-avatar.outfit-purple{background:linear-gradient(145deg,#765bff,#263b89);--outfit:#765bff}
-.nia-mini-avatar.outfit-neon{background:linear-gradient(145deg,#00b8c8,#18384f);--outfit:#27e7cf}
-.nia-mini-avatar.outfit-academic{background:linear-gradient(145deg,#4d596d,#1a2230);--outfit:#d9af58}
-.nia-mini-avatar.outfit-street{background:linear-gradient(145deg,#9b3e88,#342047);--outfit:#ef74c8}
+.nia-mini-avatar img{width:100%;height:100%;object-fit:cover;object-position:center 31%;border-radius:15px;display:block}
+.nexo-emotion{
+  position:absolute;right:-7px;bottom:-6px;display:grid;place-items:center;width:23px;height:23px;border-radius:9px;
+  background:#101d36;border:1px solid #44567d;font-size:12px;box-shadow:0 5px 12px rgba(0,0,0,.28)
+}
+.nia-panel.thinking .nia-mini-avatar{animation:nexoThinking .62s ease-in-out infinite alternate}
+.nia-panel[data-mood="confiante"] .nia-mini-avatar{transform:rotate(-2deg) scale(1.04);box-shadow:0 7px 25px rgba(65,217,255,.34)}
+.nia-panel[data-mood="serio"] .nia-mini-avatar{border-color:#8290ac}
+.nia-panel[data-mood="acolhedor"] .nia-mini-avatar{box-shadow:0 7px 27px rgba(184,100,255,.34)}
+.nia-panel[data-mood="animado"] .nia-mini-avatar{animation:nexoCelebrate .55s ease 2}
+
+.nexo-welcome{
+  display:grid;grid-template-columns:82px 1fr;gap:11px;align-items:center;padding:10px 13px;
+  background:linear-gradient(105deg,rgba(83,58,210,.17),rgba(30,176,227,.06));border-bottom:1px solid var(--line)
+}
+.nexo-welcome img{width:82px;height:94px;object-fit:cover;object-position:42% 18%;border-radius:14px;border:1px solid rgba(91,100,235,.28)}
+.nexo-welcome div{display:grid;gap:4px}.nexo-welcome b{font-size:12px;line-height:1.35}.nexo-welcome small{font-size:9px;color:var(--muted);line-height:1.45}
+.nexo-welcome .eyebrow{font-size:8px}
+
 .nia-outfits{display:flex;gap:5px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--line);overflow-x:auto}
-.nia-outfits span{font-size:9px;color:var(--muted)}.nia-outfits button{white-space:nowrap;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font-size:9px;padding:5px 8px}.nia-outfits button.active{border-color:#735ee9;color:#cfc7ff;background:rgba(99,78,220,.12)}
-.nia-messages{overflow:auto;padding:12px;display:grid;gap:8px;align-content:start}
-.nia-msg{max-width:88%;padding:10px 11px;border-radius:13px;font-size:11px;line-height:1.55}
-.nia-msg.bot{justify-self:start;background:#111e34;border:1px solid #263a5b;color:#c5d0df}
-.nia-msg.user{justify-self:end;background:#5c4ad1;color:#fff}
+.nia-outfits span{font-size:9px;color:var(--muted);white-space:nowrap}
+.nia-outfits button{white-space:nowrap;border:1px solid var(--line);border-radius:999px;background:transparent;color:var(--muted);font-size:9px;padding:5px 8px}
+.nia-outfits button.active{border-color:#735ee9;color:#dfdaff;background:rgba(99,78,220,.16)}
+.nia-mini-avatar.outfit-classic{border-color:#4b78ff}
+.nia-mini-avatar.outfit-purple{border-color:#9d65ff;box-shadow:0 7px 25px rgba(126,75,255,.30)}
+.nia-mini-avatar.outfit-purple img{filter:hue-rotate(17deg) saturate(1.12)}
+.nia-mini-avatar.outfit-academic{border-color:#d6b56b;box-shadow:0 7px 25px rgba(212,177,93,.24)}
+.nia-mini-avatar.outfit-academic:before{content:"⌁";position:absolute;z-index:3;left:5px;top:3px;color:#f3d48a;font-weight:900;font-size:13px;text-shadow:0 1px 3px #000}
+.nia-mini-avatar.outfit-competitive{border-color:#45d7ff;box-shadow:0 7px 28px rgba(55,208,255,.34)}
+
+.nia-messages{overflow:auto;padding:12px;display:grid;gap:9px;align-content:start;min-height:160px;max-height:34vh}
+.nia-msg{max-width:90%;padding:10px 11px;border-radius:14px;font-size:11px;line-height:1.58;white-space:pre-line;animation:nexoMessageIn .24s ease-out}
+.nia-msg.bot{justify-self:start;background:#101e35;border:1px solid #263a5b;color:#cbd6e6}
+.nia-msg.bot b{color:#e5e0ff}.nia-msg.user{justify-self:end;background:linear-gradient(145deg,#634fd8,#4b43bd);color:#fff}
 body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
-.nia-quick{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;border-top:1px solid var(--line)}
-.nia-quick button{white-space:nowrap;border:1px solid var(--line);border-radius:999px;background:transparent;color:#aebad0;font-size:9px;padding:6px 8px}
-.nia-compose{display:grid;grid-template-columns:1fr 40px;gap:7px;padding:10px}.nia-compose input{border:1px solid var(--line);border-radius:11px;background:var(--panel-2);color:var(--text);padding:10px}.nia-compose button{border:0;border-radius:11px;background:#6b56e8;color:#fff;font-weight:900}
+.nia-msg.typing{display:flex;gap:4px;align-items:center;width:max-content;padding:10px 14px}
+.nia-msg.typing i{width:5px;height:5px;border-radius:50%;background:#8297bd;animation:nexoDot .8s infinite alternate}
+.nia-msg.typing i:nth-child(2){animation-delay:.15s}.nia-msg.typing i:nth-child(3){animation-delay:.3s}
+
+.nia-quick{display:flex;gap:6px;padding:8px 10px;overflow-x:auto;border-top:1px solid var(--line);scrollbar-width:none}
+.nia-quick::-webkit-scrollbar{display:none}
+.nia-quick button{white-space:nowrap;border:1px solid var(--line);border-radius:999px;background:rgba(14,26,48,.58);color:#b9c5da;font-size:9px;padding:7px 9px}
+.nia-quick button:hover{border-color:#6b58e8;color:#fff}
+.nia-compose{display:grid;grid-template-columns:1fr 42px;gap:7px;padding:10px;border-top:1px solid rgba(255,255,255,.03)}
+.nia-compose input{border:1px solid var(--line);border-radius:12px;background:var(--panel-2);color:var(--text);padding:11px}
+.nia-compose button{border:0;border-radius:12px;background:linear-gradient(145deg,#6b56e8,#3379ef);color:#fff;font-weight:900;font-size:17px}
+.nia-compose button:active{transform:scale(.95)}
+
+@keyframes nexoFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes nexoThinking{from{transform:rotate(-2deg) translateY(0)}to{transform:rotate(2deg) translateY(-2px)}}
+@keyframes nexoCelebrate{0%{transform:scale(1)}40%{transform:scale(1.12) rotate(-4deg)}75%{transform:scale(1.06) rotate(3deg)}100%{transform:scale(1)}}
+@keyframes nexoMessageIn{from{opacity:0;transform:translateY(5px) scale(.98)}to{opacity:1;transform:none}}
+@keyframes nexoDot{from{opacity:.35;transform:translateY(0)}to{opacity:1;transform:translateY(-3px)}}
 
 .admin-reports-panel{grid-column:1/-1}
 
