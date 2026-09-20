@@ -1615,6 +1615,68 @@ async function resolveQuestionIssue(id,status){
   loadAdminQuestionIssues();
 }
 
+
+async function loadEssayHistory(){
+  if(!state.user?.id)return [];
+  try{
+    const {data,error}=await client.from('essays')
+      .select('id,theme_title,essay_text,status,estimated_score,competencies,feedback,revision_of,version_number,word_count,created_at')
+      .eq('user_id',state.user.id).eq('status','reviewed').order('created_at',{ascending:false}).limit(30);
+    if(error)throw error;
+    state.essayHistory=data||[];
+    renderEssayHistory();
+    return state.essayHistory;
+  }catch(err){console.error('essay history',err);return []}
+}
+function essayScoresFromRow(row){
+  const c=row?.competencies||{};
+  return [c.c1,c.c2,c.c3,c.c4,c.c5].map(x=>Number(x||0));
+}
+function renderEssayHistory(){
+  const list=$('#essayHistoryList'),summary=$('#essayHistorySummary'),trend=$('#essayHistoryTrend');
+  if(!list)return;
+  const rows=state.essayHistory||[],latest=rows[0],previous=rows[1];
+  const avg=rows.length?Math.round(rows.reduce((sum,r)=>sum+Number(r.estimated_score||0),0)/rows.length):0;
+  const delta=latest&&previous?Number(latest.estimated_score||0)-Number(previous.estimated_score||0):0;
+  if(trend)trend.textContent=!latest?'—':!previous?'1ª redação':(delta>0?'+'+delta:delta)+' pts';
+  if(summary)summary.innerHTML=rows.length?`<span><b>${Number(latest.estimated_score||0)}</b><small>última nota</small></span><span><b>${avg}</b><small>média</small></span><span><b>${rows.length}</b><small>correções</small></span>`:'';
+  list.innerHTML=rows.length?rows.map(row=>{
+    const scores=essayScoresFromRow(row),weak=scores.indexOf(Math.min(...scores))+1;
+    return `<button class="essay-history-row" data-essay-history="${row.id}"><span class="essay-history-score">${Number(row.estimated_score||0)}</span><div><b>${esc(row.theme_title||'Redação')}</b><small>${new Date(row.created_at).toLocaleDateString('pt-BR')} · C${weak} para revisar${Number(row.version_number||1)>1?' · versão '+Number(row.version_number):''}</small></div><i>→</i></button>`;
+  }).join(''):'<p style="color:var(--muted)">Seu histórico aparecerá aqui após a primeira correção.</p>';
+  $('[data-essay-history]',list).forEach(btn=>btn.onclick=()=>openEssayHistory(Number(btn.dataset.essayHistory)));
+}
+function openEssayHistory(id){
+  const row=(state.essayHistory||[]).find(x=>Number(x.id)===Number(id));if(!row)return;
+  const scores=essayScoresFromRow(row);
+  showEssayResult(row.essay_text||'',scores,Number(row.estimated_score||scores.reduce((a,b)=>a+b,0)));
+  $('#essayResult')?.scrollIntoView({behavior:'smooth',block:'start'});
+  setTimeout(()=>{
+    const actions=$('#essayResult .essay-priority-actions');
+    if(actions&&!$('#rewriteHistoryEssay')){
+      const btn=document.createElement('button');
+      btn.id='rewriteHistoryEssay';btn.className='primary-btn';btn.textContent='Reescrever esta versão';btn.onclick=()=>rewriteEssayHistory(row.id);actions.appendChild(btn);
+    }
+  },30);
+}
+function rewriteEssayHistory(id){
+  const row=(state.essayHistory||[]).find(x=>Number(x.id)===Number(id));if(!row)return;
+  state.essayRevisionOf=Number(row.id);
+  $('#essayTheme').value='custom';updateEssayPrompt();
+  $('#customEssayTheme').value=row.theme_title||'Reescrita';
+  $('#customEssayPrompt').value='Reescreva sua versão anterior melhorando a competência prioritária indicada pelo Professor Nexo.';
+  $('#essayText').value=row.essay_text||'';
+  $('#wordCount').textContent=(($('#essayText').value.match(/\S+/g)||[]).length)+' palavras';
+  updateEssayPrompt();
+  $('#essayText').focus();$('#essayText').scrollIntoView({behavior:'smooth',block:'center'});
+  toast('Modo reescrita ativado. Sua próxima correção ficará ligada à versão anterior.');
+}
+function currentEssayVersionNumber(){
+  if(!state.essayRevisionOf)return 1;
+  const parent=(state.essayHistory||[]).find(x=>Number(x.id)===Number(state.essayRevisionOf));
+  return Math.max(2,Number(parent?.version_number||1)+1);
+}
+
 function maintenanceModuleForPage(id){
   return ({
     questoes:'questions',
