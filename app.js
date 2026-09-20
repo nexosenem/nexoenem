@@ -809,8 +809,11 @@ function renderOnboardingStep(){
     ? ob.areas.length+' selecionada(s) · '+(ob.areas[0]||'')+' será a primeira prioridade.'
     : 'Escolha pelo menos uma área.';
 
-  $$('[data-onboarding-minutes]').forEach(btn=>{
+  $('[data-onboarding-minutes]').forEach(btn=>{
     btn.classList.toggle('active',Number(btn.dataset.onboardingMinutes)===ob.dailyMinutes);
+  });
+  $('[data-onboarding-diagnostic]').forEach(btn=>{
+    btn.classList.toggle('active',(btn.dataset.onboardingDiagnostic!=='no')===Boolean(ob.diagnostic));
   });
   updateOnboardingPreview();
 }
@@ -865,7 +868,7 @@ async function saveNexoOnboarding(){
       difficult_areas:ob.areas,
       daily_minutes:ob.dailyMinutes,
       onboarding_completed_at:completedAt,
-      onboarding_version:2,
+      onboarding_version:3,
       updated_at:completedAt
     }).eq('id',state.user.id);
     if(error)throw error;
@@ -876,7 +879,7 @@ async function saveNexoOnboarding(){
       difficult_areas:[...ob.areas],
       daily_minutes:ob.dailyMinutes,
       onboarding_completed_at:completedAt,
-      onboarding_version:2
+      onboarding_version:3
     };
 
     closeNexoOnboarding();
@@ -2147,7 +2150,7 @@ async function resumePersistedStudySession(){
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
     const queue=saved.ids.map(id=>byId.get(Number(id))).filter(Boolean);
     if(!queue.length)throw new Error('session questions unavailable');
-    state.session={...saved,queue,size:queue.length,index:Math.min(Number(saved.index||0),queue.length-1),correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0}};
+    state.session={...saved,queue,size:queue.length,index:Math.min(Number(saved.index||0),queue.length-1),correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
     openPage('questoes');
     $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
     $('#sessionAreaBadge').textContent=saved.mode==='core'?'NEXO Core':(saved.area||'Treino');
@@ -3859,10 +3862,15 @@ async function submitAnswer(option) {
   const previousJourneyLevel=Number(state.journey?.profile?.level||0);
   state.lastAnswer={...data,duration_seconds:duration,first_selection_seconds:firstSelectionSeconds,selection_changes:selectionChanges,hint_count:hintCount,nexo_reaction:reaction};
   if(state.session){
-    const stats=state.session.resultStats||{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0};
+    const stats=state.session.resultStats||{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}};
     stats.totalSeconds+=duration;
     if(data.correct){stats.correct++;stats.correctIds.push(Number(state.current.id))}
-    else{stats.wrong++;stats.wrongIds.push(Number(state.current.id))}
+    else{
+      stats.wrong++;stats.wrongIds.push(Number(state.current.id));
+      stats.patterns=stats.patterns||{};
+      const key=reaction.likelyPattern||'conteúdo';
+      stats.patterns[key]=Number(stats.patterns[key]||0)+1;
+    }
     stats.xp+=Number(game.xp_gained||0);
     stats.coins+=Number(game.coins_gained||0);
     state.session.resultStats=stats;
@@ -3983,6 +3991,9 @@ async function submitAnswer(option) {
   $('.question-mobile-actions')?.classList.add('answered');
   setNexoMood(reaction.mood);
   nexoHaptic(data.correct?[24]:[35,35,35])
+  client.rpc('refresh_my_learning_achievements')
+    .then(()=>loadNexoJourney({silent:true}))
+    .catch(err=>console.warn('learning achievements after answer',err));
   Promise.all([
     loadDashboard(),
     loadNexoCore(),
@@ -4218,6 +4229,9 @@ function renderStudySessionReport(finished,report){
   const hasContent=Boolean(topicLesson(topic,finished.subject||'Matemática'));
   const wrongIds=Array.isArray(stats.wrongIds)?stats.wrongIds:[];
   const xp=Number(stats.xp||0),coins=Number(stats.coins||0);
+  const patternLabels={tempo:'Tempo alto',pressa:'Leitura / pressa','indecisão':'Indecisão',apoio:'Dependência de pista','conteúdo':'Conteúdo / método'};
+  const patternEntries=Object.entries(stats.patterns||{}).sort((a,b)=>Number(b[1])-Number(a[1]));
+  const topPattern=patternEntries[0]?.[0]||'';
 
   state.lastFinishedStudy={finished,report,accuracy,correct,wrong,domain};
   $('#questionCard').innerHTML=`
@@ -4247,7 +4261,7 @@ function renderStudySessionReport(finished,report){
       ${xp||coins?`<section class="study-report-rewards"><span><b>+${xp}</b><small>XP nesta sessão</small></span><span><b>+${coins}</b><small>N-Coins</small></span></section>`:''}
 
       <section class="study-report-next">
-        <div><span class="eyebrow">O QUE FAZER AGORA</span><h4>${wrong?('Revisar antes de repetir '+topic+'.'):(next?('Avançar para '+next.topic+'.'):'Consolidar este assunto.')}</h4><p>${wrong?'Comece pelos erros desta sessão e volte ao conteúdo se alguma explicação ainda estiver fraca.':next?'Seu desempenho permite seguir a trilha sem abandonar a revisão futura.':'Uma nova rodada curta pode confirmar o domínio.'}</p></div>
+        <div><span class="eyebrow">O QUE FAZER AGORA</span><h4>${wrong?('Revisar antes de repetir '+topic+'.'):(next?('Avançar para '+next.topic+'.'):'Consolidar este assunto.')}</h4><p>${wrong?'Comece pelos erros desta sessão e volte ao conteúdo se alguma explicação ainda estiver fraca.':next?'Seu desempenho permite seguir a trilha sem abandonar a revisão futura.':'Uma nova rodada curta pode confirmar o domínio.'}</p>${topPattern?'<div class="study-error-signal"><b>Sinal principal desta sessão:</b> '+esc(patternLabels[topPattern]||topPattern)+'</div>':''}</div>
       </section>
 
       <div class="study-report-actions">
