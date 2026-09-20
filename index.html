@@ -127,6 +127,7 @@
         <button class="nav-item" data-page="desempenho"><span>▥</span>Meu Desempenho</button>
         <button class="nav-item" data-page="focos"><span>◎</span>Meus Focos</button>
         <button class="nav-item" data-page="videoaulas"><span>▶</span>Videoaulas</button>
+        <button class="nav-item" data-page="materiais"><span>▧</span>Materiais PDF</button>
         <button class="nav-item" data-page="simulados"><span>▤</span>Simulados</button>
         <button class="nav-item" data-page="banco"><span>▦</span>Banco de Questões</button>
         <button class="nav-item" data-page="temas"><span>▧</span>Temas de Redação</button>
@@ -478,6 +479,12 @@
           <div class="video-grid" id="videoGrid"></div>
         </section>
 
+        <section class="page" id="materiais">
+          <div class="page-head"><div><span class="eyebrow">BIBLIOTECA</span><h2>Materiais de estudo</h2><p>PDFs e imagens publicados pelo administrador, armazenados no Cloudinary.</p></div></div>
+          <div class="filter-line"><input id="materialSearch" class="text-input" placeholder="Buscar PDF, matéria ou tema..."></div>
+          <div class="video-grid" id="materialGrid"></div>
+        </section>
+
         <section class="page" id="simulados">
           <div class="page-head nexo-page-head">
             <div><span class="eyebrow">SIMULADOS · NEXO CORE</span><h2>Simulados</h2><p>Treine decisão, tempo e resistência. No final, o Professor Nexo transforma seu resultado em um plano de revisão.</p></div>
@@ -547,6 +554,17 @@
               <label>URL externa<input id="videoUrl" class="text-input" placeholder="https://..."></label>
               <button class="primary-btn wide" id="addVideo">Publicar videoaula</button>
               <div id="uploadStatus" class="upload-status hidden"></div>
+            </article>
+            <article class="panel">
+              <h3>Publicar material</h3>
+              <label>Título<input id="materialTitle" class="text-input" placeholder="Ex.: Resumo de eletrodinâmica"></label>
+              <label>Área<select id="materialArea"><option>Linguagens</option><option>Ciências Humanas</option><option>Ciências da Natureza</option><option>Matemática</option></select></label>
+              <label>Matéria<input id="materialSubject" class="text-input" placeholder="Ex.: Física"></label>
+              <label>Tema<input id="materialTopic" class="text-input" placeholder="Ex.: Circuitos elétricos"></label>
+              <label>Descrição<textarea id="materialDescription" rows="3" placeholder="Descrição curta do material"></textarea></label>
+              <label>PDF ou imagem<input id="materialFile" type="file" accept=".pdf,application/pdf,image/*"></label>
+              <button class="primary-btn wide" id="addMaterial">Publicar material</button>
+              <div id="materialUploadStatus" class="upload-status hidden"></div>
             </article>
             <article class="panel">
               <h3>Feedbacks recebidos</h3>
@@ -730,6 +748,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-33"></script>
+  <script src="./app.js?v=20260920-34"></script>
 </body>
 </html>
