@@ -7508,3 +7508,25 @@ body.light .avatar-look-preview{background:#f2f6fc}
   .avatar-looks-grid{grid-template-columns:1fr}
   .avatar-look-card{min-height:230px}
 }
+
+/* NEXO Achievement Looks */
+.avatar-look-card.achievement{
+  border-color:rgba(112,88,160,.18);
+  filter:saturate(.62);
+}
+.avatar-look-card.achievement .avatar-look-preview{opacity:.58}
+.avatar-look-achievement{
+  display:block;margin-top:8px;padding:5px 7px;
+  border:1px solid rgba(88,101,137,.14);border-radius:8px;
+  font-size:6px;font-style:normal;font-weight:900;letter-spacing:.45px;
+}
+.avatar-look-achievement.locked{color:#77869b;background:rgba(255,255,255,.018)}
+.avatar-look-achievement.unlocked{
+  color:#69dcb2;border-color:rgba(67,216,164,.20);background:rgba(67,216,164,.055)
+}
+.avatar-look-card.achievement .avatar-look-foot button{color:#9c8ff0}
+.journey-achievement button[data-achievement-look]{
+  margin-top:7px;border:1px solid rgba(111,88,226,.30);border-radius:8px;
+  background:rgba(98,75,210,.09);color:#bfb5ff;padding:6px 8px;
+  font-size:6px;font-weight:900;cursor:pointer
+}
