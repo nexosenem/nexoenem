@@ -331,7 +331,7 @@ async function getSeenIds() {
 
 async function fetchQuestions(filters={}) {
   let q = client.from('questions').select(
-    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop'
+    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop'
   ).eq('is_active',true).limit(500);
   if (filters.area) q=q.eq('area',filters.area);
   if (filters.subject) q=q.eq('subject',filters.subject);
@@ -418,9 +418,25 @@ function localMediaPath(q){
   return day ? `./media/questions/${q.source_year}-d${day}-q${q.source_question_number}.webp` : null;
 }
 
+async function ensureMediaPath(q){
+  if(!q?.media_type || q.media_path) return q;
+  const id=Number(q.id);
+  if(state.visualCache.has('path:'+id)){
+    q.media_path=state.visualCache.get('path:'+id);
+    return q;
+  }
+  const {data,error}=await client.from('questions').select('media_path').eq('id',id).single();
+  if(!error && data?.media_path){
+    q.media_path=data.media_path;
+    state.visualCache.set('path:'+id,data.media_path);
+  }
+  return q;
+}
+
 async function renderQuestion(q) {
   const card=$('#questionCard');
-  const visual = Boolean(q.media_type);
+  if(q.media_type) await ensureMediaPath(q);
+  const visual = Boolean(q.media_type && q.media_path);
   card.innerHTML=`
     <div class="q-top">
       <div class="q-tags">
