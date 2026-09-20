@@ -2684,3 +2684,69 @@ body.light .nexo-reaction-meta small{
     font-size:6.3px!important;
   }
 }
+
+
+/* NEXO MOBILE VISUAL + HINT FIX v1 */
+.nexo-menu-link{color:#b7adff}
+.nexo-menu-link span{border-color:#6858d9;color:#d7d0ff}
+
+/* Recursos visuais das questões sempre cabem no card sem cortes */
+.visual-stage{padding:8px;min-width:0}
+.q-media-image,
+.visual-stage canvas{
+  display:block;
+  width:auto;
+  height:auto;
+  max-width:100%;
+  max-height:560px;
+  object-fit:contain;
+  object-position:center;
+  margin:auto;
+}
+
+/* Retratos do Professor Nexo com o mesmo enquadramento */
+.question-coach img,
+.answer-professor img,
+.core-avatar img,
+img[data-core-avatar]{
+  padding:0!important;
+  object-fit:cover!important;
+  object-position:center 22%!important;
+  transform:none!important;
+  background:#0a1730!important;
+}
+.question-coach img{overflow:hidden}
+.answer-professor img{overflow:hidden}
+
+/* Dica antes da resposta e macete depois da resposta são visualmente diferentes */
+.pre-answer-hint{
+  border-color:rgba(62,181,226,.30)!important;
+  background:linear-gradient(105deg,rgba(32,130,173,.12),rgba(35,62,118,.08))!important;
+}
+.pre-answer-hint b{color:#67dfff!important}
+.hint-box{
+  border-color:rgba(126,91,236,.46)!important;
+  background:linear-gradient(135deg,rgba(94,66,211,.18),rgba(17,28,49,.88))!important;
+}
+.hint-box h4{color:#cabfff!important}
+
+/* No celular o botão flutuante estava cobrindo botões e cards.
+   O Professor Nexo continua acessível pelo menu "Mais" e pelos cards contextuais. */
+@media(max-width:760px){
+  .nia-button{display:none!important}
+  .visual-stage{padding:6px;min-height:120px}
+  .q-media-image,
+  .visual-stage canvas{
+    max-height:52vh;
+    max-width:100%;
+  }
+  .visual-wrap{border-radius:14px}
+  .question-coach img{
+    width:42px!important;height:42px!important;border-radius:12px!important;
+  }
+  .answer-professor img{
+    width:56px!important;height:56px!important;border-radius:15px!important;
+  }
+  .core-avatar img,
+  img[data-core-avatar]{border-radius:inherit!important}
+}
