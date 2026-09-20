@@ -641,28 +641,28 @@ function renderNexoCore(){
   const rec=core.recommended_action||null;
   const momentum=core.momentum||{};
   const initial=Boolean(rec && !rec.topic && Number(rec.attempts||0)===0);
-  $('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
-  $('[data-core-status]').forEach(el=>el.textContent=initial?'primeiro diagnóstico':rec?'adaptativo':'calibrando');
-  $('[data-core-title]').forEach(el=>el.textContent=initial
+  $$('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
+  $$('[data-core-status]').forEach(el=>el.textContent=initial?'primeiro diagnóstico':rec?'adaptativo':'calibrando');
+  $$('[data-core-title]').forEach(el=>el.textContent=initial
     ? ('Diagnóstico inicial · '+(rec.area||'ENEM'))
     : rec
       ? ((rec.subject||rec.area||'Treino')+' · '+(rec.topic||'revisão direcionada'))
       : 'Seu próximo melhor passo');
-  $('[data-core-reason]').forEach(el=>el.textContent=rec
+  $$('[data-core-reason]').forEach(el=>el.textContent=rec
     ? (rec.reason||'O NEXO encontrou um ponto com boa margem de evolução.')
     : 'Resolva algumas questões para eu transformar seu desempenho em uma recomendação personalizada.');
-  $('[data-core-mastery]').forEach(el=>el.textContent=initial?'—':rec?Math.round(Number(rec.mastery||0))+'%':'—');
-  $('[data-core-priority]').forEach(el=>el.textContent=initial?'1ª':rec?Math.round(Number(rec.priority||0))+'%':'—');
-  $('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
+  $$('[data-core-mastery]').forEach(el=>el.textContent=initial?'—':rec?Math.round(Number(rec.mastery||0))+'%':'—');
+  $$('[data-core-priority]').forEach(el=>el.textContent=initial?'1ª':rec?Math.round(Number(rec.priority||0))+'%':'—');
+  $$('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
   const coreMood=rec
     ? (Number(rec.priority||0)>=70?'pensativo':Number(rec.mastery||0)>=70?'confiante':'serio')
     : 'pensativo';
   const coreSrc=NEXO_MOOD_IMAGES?.[coreMood]||'./assets/nexo-expressions/pensativo.webp';
-  $$('[data-core-avatar]').forEach(img=>{
+  $$$('[data-core-avatar]').forEach(img=>{
     if(img.getAttribute('src')!==coreSrc)img.src=coreSrc;
   });
   updateHomeExperience();
-  $$('[data-core-start]').forEach(btn=>{
+  $$$('[data-core-start]').forEach(btn=>{
     btn.innerHTML=initial
       ? 'Iniciar diagnóstico · '+Number(rec.size||6)+' questões <span>→</span>'
       : rec
@@ -975,7 +975,7 @@ async function renderQuestion(q) {
     <div class="confirm-answer-wrap"><small>Selecione uma alternativa. Você poderá conferir antes de enviar.</small><button id="confirmAnswer" class="primary-btn" disabled>Confirmar resposta</button></div>
     <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small></div>`;
 
-  $$('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
+  $$$('.q-option',card).forEach(b=>b.onclick=()=>selectAnswerOption(Number(b.dataset.option)));
   const preHint=$('#preAnswerHint');
   if(preHint){
     preHint.onclick=()=>{
