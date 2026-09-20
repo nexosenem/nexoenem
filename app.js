@@ -1751,8 +1751,13 @@ async function startRadarContent(row){
   await openContentViewer('material',item.id);
 }
 
-async function startRadarTraining(row){
+async function startRadarTraining(row,skipGate=false){
   if(!row)return;
+  if(!skipGate){
+    if(!state.materials.length)await loadMaterials({silent:true});
+    const lesson=topicLesson(row.topic,row.subject);
+    if(lesson&&showGuidedTraining(lesson,{source:'radar',size:10}))return;
+  }
   const preferredTopic=radarTrainingTopic(row.subject,row.topic);
   const candidates=[
     {area:row.area||'',subject:row.subject||'',topic:row.topic||'',radarTopic:row.topic||'',fallbackTopic:preferredTopic||row.topic||''},
@@ -4054,6 +4059,130 @@ function renderSimulationReport(finished,report){
   setNexoMood(mood);
 }
 
+
+async function startReviewQuestionIds(ids,finished={}){
+  const clean=[...new Set((ids||[]).map(Number).filter(Boolean))];
+  if(!clean.length)return toast('Nenhum erro desta sessão para revisar.','info');
+  try{
+    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+    const {data,error}=await client.from('questions').select(fields).in('id',clean);
+    if(error)throw error;
+    const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
+    const queue=clean.map(id=>byId.get(id)).filter(Boolean);
+    if(!queue.length)throw new Error('Questões de revisão indisponíveis.');
+    if(state.session?.coreSessionId)await closeNexoSession('abandoned',state.session);
+    const config={mode:'review-errors',area:finished.area||'',subject:finished.subject||'',topic:finished.topic||'',size:queue.length};
+    const coreSessionId=await beginNexoSession(config,queue.length);
+    state.session={...config,queue,index:0,size:queue.length,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0}};
+    openPage('questoes');
+    $('#sessionSetup').classList.add('hidden');
+    $('#studyWorkspace').classList.remove('hidden');
+    $('#sessionAreaBadge').textContent='Revisão de erros';
+    $('#sessionTitle').textContent=finished.topic||finished.subject||'Erros da sessão';
+    $('#sessionSubtitle').textContent='Refaça apenas as questões que você errou, agora com o raciocínio fresco.';
+    updateStudyNavigation(state.session);
+    await showCurrentQuestion();
+  }catch(err){
+    console.error('review wrong ids',err);
+    toast('Não consegui abrir a revisão dos erros agora.','error');
+  }
+}
+
+function nextRadarTopic(currentTopic,subject='Matemática'){
+  const rows=(state.radarTopics||[]).filter(r=>String(r.subject||'')===String(subject||'')).sort((a,b)=>Number(b.nexo_priority_score||0)-Number(a.nexo_priority_score||0));
+  const index=rows.findIndex(r=>String(r.topic)===String(currentTopic));
+  return index>=0&&index<rows.length-1?rows[index+1]:null;
+}
+
+function sessionLearningCopy(accuracy,wrong,topic){
+  if(accuracy>=85)return {mood:'confiante',title:'Você consolidou bem esta rodada.',text:'Seu desempenho está forte. Vale avançar e voltar a este assunto em uma revisão espaçada.',status:'CONSOLIDANDO'};
+  if(accuracy>=65)return {mood:'serio',title:'Bom avanço, com espaço claro para lapidar.',text:wrong?'Revise os erros antes de repetir o treino. Isso costuma render mais do que fazer outra bateria imediatamente.':'Seu padrão está estável. Faça mais uma rodada curta para confirmar. ',status:'EM EVOLUÇÃO'};
+  return {mood:'acolhedor',title:'O treino mostrou exatamente o que revisar agora.',text:'Volte ao conteúdo de '+(topic||'este assunto')+', revise o ponto central e depois refaça os erros.',status:'REVISAR'};
+}
+
+function renderStudySessionReport(finished,report){
+  const stats=finished.resultStats||{};
+  const attempts=Number(report?.attempts||0)||Number(stats.correct||0)+Number(stats.wrong||0)||Number(finished.size||0);
+  const correct=Number(report?.correct||0)||Number(stats.correct||0);
+  const wrong=Math.max(0,attempts-correct);
+  const accuracy=attempts?Math.round(correct*100/attempts):0;
+  const totalSeconds=Number(report?.total_seconds||0)||Number(stats.totalSeconds||0);
+  const avgSeconds=Number(report?.avg_seconds||0)||(attempts?Math.round(totalSeconds/attempts):0);
+  const topic=finished.topic||finished.subject||finished.area||'Sessão';
+  const learning=topicLearningMeta(topic,finished.subject||'Matemática');
+  const domain=learning.attempts?learning.accuracy:accuracy;
+  const copy=sessionLearningCopy(accuracy,wrong,topic);
+  const next=nextRadarTopic(topic,finished.subject||'Matemática');
+  const hasContent=Boolean(topicLesson(topic,finished.subject||'Matemática'));
+  const wrongIds=Array.isArray(stats.wrongIds)?stats.wrongIds:[];
+  const xp=Number(stats.xp||0),coins=Number(stats.coins||0);
+
+  state.lastFinishedStudy={finished,report,accuracy,correct,wrong,domain};
+  $('#questionCard').innerHTML=`
+    <div class="study-report-live">
+      <section class="study-report-hero ${accuracy>=80?'strong':accuracy>=60?'mid':'review'}">
+        <div class="study-report-professor">
+          <div class="study-report-sparkles" aria-hidden="true">✦ · ✧ · ✦</div>
+          <img src="${nexoBustForMood(copy.mood)}" alt="Professor Nexo">
+          <div><span>SESSÃO CONCLUÍDA · PROFESSOR NEXO</span><h3>${esc(copy.title)}</h3><p>${esc(copy.text)}</p></div>
+        </div>
+        <div class="study-report-score"><small>APROVEITAMENTO</small><b>${accuracy}%</b><span>${correct}/${attempts} acertos</span></div>
+      </section>
+
+      <section class="study-report-metrics">
+        <article><span>✓</span><div><b>${correct}</b><small>acertos</small></div></article>
+        <article><span>×</span><div><b>${wrong}</b><small>pontos de revisão</small></div></article>
+        <article><span>◷</span><div><b>${formatStudyDuration(avgSeconds)}</b><small>média por questão</small></div></article>
+        <article><span>◎</span><div><b>${domain}%</b><small>domínio estimado</small></div></article>
+      </section>
+
+      <section class="study-report-progress">
+        <div><span>${esc(topic)}</span><b>${esc(learning.label||copy.status)}</b></div>
+        <div class="study-domain-track"><i style="width:${clamp(domain,0,100)}%"></i></div>
+        <small>${learning.attempts||attempts} questão(ões) consideradas neste assunto · ${learning.completed}/${Math.max(1,learning.materials.length)} conteúdo(s) concluído(s)</small>
+      </section>
+
+      ${xp||coins?`<section class="study-report-rewards"><span><b>+${xp}</b><small>XP nesta sessão</small></span><span><b>+${coins}</b><small>N-Coins</small></span></section>`:''}
+
+      <section class="study-report-next">
+        <div><span class="eyebrow">O QUE FAZER AGORA</span><h4>${wrong?('Revisar antes de repetir '+topic+'.'):(next?('Avançar para '+next.topic+'.'):'Consolidar este assunto.')}</h4><p>${wrong?'Comece pelos erros desta sessão e volte ao conteúdo se alguma explicação ainda estiver fraca.':next?'Seu desempenho permite seguir a trilha sem abandonar a revisão futura.':'Uma nova rodada curta pode confirmar o domínio.'}</p></div>
+      </section>
+
+      <div class="study-report-actions">
+        ${hasContent?'<button id="reportBackContent" class="primary-btn">← Voltar ao conteúdo</button>':''}
+        ${wrongIds.length?'<button id="reportReviewErrors" class="outline-btn">↻ Revisar meus erros ('+wrongIds.length+')</button>':''}
+        <button id="newSameSession" class="outline-btn">Treinar novamente</button>
+        ${next?'<button id="reportNextTopic" class="outline-btn">Próximo assunto →</button>':''}
+        <button id="reportHome" class="ghost-btn">Ir para o início</button>
+      </div>
+    </div>`;
+
+  $('#reportBackContent')?.addEventListener('click',()=>openLibraryTopic(finished.subject||'Matemática',topic));
+  $('#reportReviewErrors')?.addEventListener('click',()=>startReviewQuestionIds(wrongIds,finished));
+  $('#newSameSession')?.addEventListener('click',()=>{
+    if(finished.mode==='content'){
+      const item=topicLesson(topic,finished.subject||'Matemática');
+      if(item)return startContentPractice(item,true,Number(finished.size||5));
+    }
+    startStudySession({
+      mode:finished.mode||'manual',
+      area:finished.area||'',
+      subject:finished.subject||'',
+      topic:finished.topic||'',
+      radarTopic:finished.radarTopic||'',
+      fallbackTopic:finished.fallbackTopic||'',
+      difficulty:finished.difficulty||'',
+      visualOnly:Boolean(finished.visualOnly),
+      size:Number(finished.size||10)
+    });
+  });
+  $('#reportNextTopic')?.addEventListener('click',()=>next&&openLibraryTopic(next.subject||'Matemática',next.topic));
+  $('#reportHome')?.addEventListener('click',()=>openPage('inicio'));
+  updateStudyNavigation(finished);
+  setNexoMood(copy.mood);
+  try{if(navigator.vibrate)navigator.vibrate(accuracy>=80?[30,40,30]:[28])}catch(_){}
+}
+
 async function finishSession() {
   stopQuestionBehaviorMonitor();
   clearPersistedStudySession();
@@ -4071,18 +4200,15 @@ async function finishSession() {
     return;
   }
 
-  $('#questionCard').innerHTML=`<div class="empty-state session-finish-state"><img src="${NEXO_MEDIA_IMAGES.bustConfiante}" alt="Professor Nexo"><span>SESSÃO CONCLUÍDA</span><h3>Mais dados, uma recomendação melhor.</h3><p>Você terminou ${finished.size||0} questões. O NEXO Core já incorporou esse resultado ao seu perfil.</p><div><button id="newSameSession" class="primary-btn">Nova sessão igual</button><button id="backSetup" class="outline-btn">Trocar conteúdo</button></div></div>`;
-  $('#newSameSession').onclick=()=>startStudySession({
-    mode:finished.mode||'manual',
-    area:finished.area||'',
-    subject:finished.subject||'',
-    topic:finished.topic||'',
-    difficulty:finished.difficulty||'',
-    visualOnly:Boolean(finished.visualOnly),
-    size:Number(finished.size||10)
-  });
-  $('#backSetup').onclick=()=>resetSessionUI();
-  loadNexoCore().catch(err=>console.error('core after session',err));
+  $('#questionCard').innerHTML='<div class="question-loading"><div class="pulse-block"></div><div class="pulse-line"></div><div class="pulse-line short"></div></div>';
+  const [report]=await Promise.all([
+    getNexoSessionReport(reportId),
+    loadTopicMastery(),
+    loadNexoCore().catch(err=>console.error('core after session',err))
+  ]);
+  renderStudySessionReport(finished,report);
+  renderNexoToday();
+  renderMathTrail();
 }
 
 $$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
@@ -5051,7 +5177,12 @@ async function launchGuidedTrainingNow(){
   const pending=state.pendingGuidedTraining;
   closeGuidedTraining();
   state.pendingGuidedTraining=null;
-  if(pending?.item)await startContentPractice(pending.item,true,pending.size||5);
+  if(!pending?.item)return;
+  if(pending.source==='radar'){
+    const row=(state.radarTopics||[]).find(r=>String(r.topic)===String(pending.item.topic)&&String(r.subject||'')===String(pending.item.subject||''));
+    if(row)return startRadarTraining(row,true);
+  }
+  await startContentPractice(pending.item,true,pending.size||5);
 }
 
 async function openGuidedLesson(){
@@ -5393,11 +5524,12 @@ function renderMaterials(){
   grid.innerHTML=orderedGroups.map(([key,items],index)=>{
     items.sort((a,b)=>materialKind(a).order-materialKind(b).order||Number(a.id)-Number(b.id));
     const first=items[0],radar=materialRadarMeta(first),expanded=state.materialOpenTopic===key;
+    const learning=topicLearningMeta(first.topic,first.subject);
     const completed=items.filter(m=>getContentProgress('material',m.id).completed).length;
     const avg=items.length?Math.round(items.reduce((sum,m)=>sum+(getContentProgress('material',m.id).completed?100:Number(getContentProgress('material',m.id).progress_percent||0)),0)/items.length):0;
     const encoded=encodeURIComponent(key);
     const seq=materialSequence(first);
-    const radarText=radar?'<span class="content-radar-chip">🔥 Prioridade '+radar.score+'</span><span>'+radar.questions+' questões</span><span>'+radar.years+'/17 edições</span>':'';
+    const radarText='<span class="content-learning-chip '+learning.key+'">'+esc(learning.label)+'</span>'+(radar?'<span class="content-radar-chip">🔥 Prioridade '+radar.score+'</span><span>'+radar.questions+' questões</span><span>'+radar.years+'/17 edições</span>':'');
     const resources=items.map(m=>{
       const kind=materialKind(m),fav=favoriteContent('material',m.id);
       const p=getContentProgress('material',m.id);
