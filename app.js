@@ -964,7 +964,7 @@ async function initApp(session) {
   $('#profileName').textContent = name.split(' ')[0];
   $('#menuName').textContent = name;
   $('#menuEmail').textContent = state.user.email || '';
-  $('#profileRole').textContent = state.profile.role === 'admin' ? 'Administrador' : 'Estudante · Free';
+  $('#profileRole').textContent = state.profile.role === 'admin' ? (isNexoUltra()?'Administrador · Ultra':'Administrador') : ('Estudante · '+(isNexoPlus()?'Plus':'Free'));
   if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
   $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
   applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
@@ -3461,10 +3461,11 @@ function renderJourneyBoards(){
     const el=$(target);if(!el)return;
     el.innerHTML=rows?.length?rows.map((row,index)=>{
       const mine=String(row.user_id||'')===String(state.user?.id||'');
+      const rowUltra=mine&&isNexoUltra();
       return `<div class="journey-rank-row ${mine?'mine':''}">
         <span class="journey-rank-pos">${Number(row.rank_position)<=3?['🥇','🥈','🥉'][Number(row.rank_position)-1]:'#'+row.rank_position}</span>
         <span class="journey-rank-avatar" data-rank-avatar="${index}"></span>
-        <div class="journey-rank-user"><b>${esc(row.full_name)}${mine?' · você':''}${row.plan==='ultra'?'<i>NEXO ULTRA</i>':row.plan==='plus'?'<i>NEXO PLUS</i>':''}</b><small>NV. ${Number(row.level||1)} · ${arena?Number(row.correct_answers||0)+' acertos na Arena':esc(row.league||'Bronze')}</small></div>
+        <div class="journey-rank-user"><b>${esc(row.full_name)}${mine?' · você':''}${rowUltra?'<i class="ultra">NEXO ULTRA</i>':row.plan==='plus'?'<i>NEXO PLUS</i>':''}</b><small>NV. ${Number(row.level||1)} · ${arena?Number(row.correct_answers||0)+' acertos na Arena':esc(row.league||'Bronze')}</small></div>
         <strong>${Number(row.points||0).toLocaleString('pt-BR')}<small> pts</small></strong>
       </div>`;
     }).join(''):'<div class="journey-empty">A competição começa quando os alunos pontuarem nesta semana.</div>';
@@ -3719,7 +3720,7 @@ async function loadQuestionComments(questionId){
   const {data,error}=await client.rpc('get_question_comments_v2',{p_question_id:Number(questionId)});
   if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
   $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
-    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.plan==='ultra'?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
+    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.is_mine&&isNexoUltra()?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
   </article>`).join(''):'<div class="comment-empty">Ainda não há comentários. Seja o primeiro a compartilhar uma dúvida ou um jeito de resolver.</div>';
