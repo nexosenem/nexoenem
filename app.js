@@ -1113,17 +1113,24 @@ $('#scrim')?.addEventListener('click',()=>toggleMenu(false));
 $('#moreMobile')?.addEventListener('click',()=>toggleMenu(true));
 
 
-function isNexoPlus(){
-  return Boolean(state.membership?.is_plus);
+function nexoAccessTier(){
+  if(state.membership?.is_ultra||state.membership?.plan==='ultra')return 'ultra';
+  if(state.profile?.role==='admin')return 'ultra';
+  if(state.membership?.is_plus||state.membership?.plan==='plus')return 'plus';
+  return 'free';
 }
 
 function isNexoUltra(){
-  return Boolean(state.membership?.is_ultra);
+  return nexoAccessTier()==='ultra';
+}
+
+function isNexoPlus(){
+  return ['plus','ultra'].includes(nexoAccessTier());
 }
 
 function planUsageReached(kind){
   const m=state.membership;
-  if(!m||m.is_plus)return false;
+  if(!m||isNexoPlus())return false;
   const usage=m.usage||{},limits=m.limits||{};
   const map={
     questions:['questions_today','questions_per_day'],
@@ -1168,9 +1175,9 @@ function setUsageBar(id,value,limit){
 }
 
 function renderPlanExperience(){
-  const m=state.membership;
-  if(!m)return;
-  const ultra=Boolean(m.is_ultra),plus=Boolean(m.is_plus);
+  const m=state.membership||{usage:{},limits:{}};
+  const tier=nexoAccessTier();
+  const ultra=tier==='ultra',plus=tier==='plus'||ultra;
   const plan=ultra?'ULTRA':plus?'PLUS':'FREE';
   document.body.dataset.plan=ultra?'ultra':plus?'plus':'free';
   if($('#headerPlanBadge'))$('#headerPlanBadge').textContent=plan;
@@ -1205,7 +1212,14 @@ async function loadNexoMembership({silent=true}={}){
   try{
     const {data,error}=await client.rpc('get_nexo_membership');
     if(error)throw error;
-    state.membership=data||null;
+    const server=data||{};
+    const roleUltra=state.profile?.role==='admin';
+    state.membership={
+      ...server,
+      plan:roleUltra?'ultra':(server.plan||'free'),
+      is_ultra:Boolean(server.is_ultra||roleUltra),
+      is_plus:Boolean(server.is_plus||server.is_ultra||roleUltra)
+    };
     renderPlanExperience();
     return state.membership;
   }catch(err){
@@ -1228,6 +1242,12 @@ async function refreshCurrentRole({silent=true}={}){
     const previousRole=state.profile?.role||'student';
     state.profile={...(state.profile||{}),...data};
     const isAdmin=data.role==='admin';
+    if(isAdmin){
+      state.membership={...(state.membership||{}),plan:'ultra',is_ultra:true,is_plus:true};
+    }else if(state.membership?.plan==='ultra'||state.membership?.is_ultra){
+      await loadNexoMembership({silent:true});
+    }
+    renderPlanExperience();
 
     $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
@@ -1336,12 +1356,15 @@ async function initApp(session) {
     onboarding_version:2
   };
 
+  await safeBootStep('membership',async()=>loadNexoMembership({silent:true}));
+  renderPlanExperience();
+
   const name = state.profile.full_name || state.user.email?.split('@')[0] || 'Aluno';
   await safeBootStep('identidade',async()=>{
     if($('#profileName'))$('#profileName').textContent = name.split(' ')[0];
     if($('#menuName'))$('#menuName').textContent = name;
     if($('#menuEmail'))$('#menuEmail').textContent = state.user.email || '';
-    if($('#profileRole'))$('#profileRole').textContent = state.profile.role === 'admin' ? (isNexoUltra()?'Administrador · Ultra':'Administrador') : ('Estudante · '+(isNexoPlus()?'Plus':'Free'));
+    if($('#profileRole'))$('#profileRole').textContent = isNexoUltra()?'Administrador · Ultra':('Estudante · '+(isNexoPlus()?'Plus':'Free'));
     if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
     $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
   });
