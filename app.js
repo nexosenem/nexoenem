@@ -564,10 +564,10 @@ function toggleMenu(open) {
   $('#sidebar').classList.toggle('open', open);
   $('#scrim').classList.toggle('hidden', !open);
 }
-$('#mobileMenu').onclick=()=>toggleMenu(true);
-$('#closeMenu').onclick=()=>toggleMenu(false);
-$('#scrim').onclick=()=>toggleMenu(false);
-$('#moreMobile').onclick=()=>toggleMenu(true);
+$('#mobileMenu')?.addEventListener('click',()=>toggleMenu(true));
+$('#closeMenu')?.addEventListener('click',()=>toggleMenu(false));
+$('#scrim')?.addEventListener('click',()=>toggleMenu(false));
+$('#moreMobile')?.addEventListener('click',()=>toggleMenu(true));
 
 async function refreshCurrentRole({silent=true}={}){
   if(!state.user?.id)return null;
