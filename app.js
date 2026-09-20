@@ -915,7 +915,7 @@ function setDesktopSidebarCollapsed(collapsed, persist=true){
 }
 
 function prepareDesktopSidebarLabels(){
-  $('.side-nav .nav-item').forEach(btn=>{
+  $$('.side-nav .nav-item').forEach(btn=>{
     if(btn.dataset.sidebarLabel)return;
     const clone=btn.cloneNode(true);
     clone.querySelectorAll('span').forEach(el=>el.remove());
