@@ -3634,9 +3634,18 @@ function renderJourneyStore(){
   const owned=journeyInventorySet();
   const level=Number(j.profile?.level||1);
   const plus=isNexoPlus(),ultra=isNexoUltra();
+  const base=j.profile?.avatar?.base||'neutral';
   const el=$('#journeyStore');if(!el)return;
   const rarityIcon={comum:'•',incomum:'◆',raro:'✦','épico':'✧','lendário':'♕'};
-  el.innerHTML=(j.catalog||[]).map(item=>{
+  const collectionLabel=item=>{
+    const bases=Array.isArray(item.compatible_bases)?item.compatible_bases:[];
+    if(bases.length===1&&bases[0]==='fem')return 'COLEÇÃO FEMININA';
+    if(bases.length===1&&bases[0]==='masc')return 'COLEÇÃO MASCULINA';
+    if(bases.length===1&&bases[0]==='neutral')return 'COLEÇÃO NEUTRA';
+    return 'COLEÇÃO NEXO';
+  };
+  const visibleCatalog=(j.catalog||[]).filter(item=>ultra||avatarItemCompatibleWithBase(item,base));
+  el.innerHTML=visibleCatalog.map(item=>{
     const has=ultra||owned.has(item.item_code);
     const plusLocked=Boolean(item.plus_only&&!plus&&!ultra);
     const levelLocked=!ultra&&level<Number(item.unlock_level||1);
@@ -3650,7 +3659,7 @@ function renderJourneyStore(){
       :Number(item.price||0)+' N-Coins';
     return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''} ${plusLocked?'plus-locked':''}">
       <div class="store-item-visual"><span>${rarityIcon[item.rarity]||'✦'}</span><i>${item.plus_only?'PLUS · ':''}${esc(item.category)}</i></div>
-      <div><small>${item.plus_only?'NEXO PLUS · ':''}${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
+      <div><small>${item.plus_only?'NEXO PLUS · ':''}${collectionLabel(item)} · ${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
       <div class="store-item-bottom">
         <span>${status}</span>
         ${ultra?'<button disabled>Ultra</button>':has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked||item.grant_mode==='level'?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">${Number(item.price||0)===0?'Resgatar':'Comprar'}</button>`}
@@ -3673,7 +3682,7 @@ function renderJourneyStore(){
       console.error('buy Nexo item',err);
       const msg=String(err?.message||'');
       if(handlePlanLimitError(err))return;
-      toast(msg.includes('insufficient')?'N-Coins insuficientes.':msg.includes('level required')?'Seu nível ainda não libera esse item.':'Não foi possível concluir a compra.','error');
+      toast(msg.includes('insufficient')?'N-Coins insuficientes.':msg.includes('level required')?'Seu nível ainda não libera esse item.':msg.includes('base_incompatible')?'Esse item pertence a outra coleção de personagem.':'Não foi possível concluir a compra.','error');
       btn.disabled=false;btn.textContent='Comprar';
     }
   });
