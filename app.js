@@ -811,7 +811,8 @@ $('#analyzeEssay').onclick=async()=>{
   }
   const feedback={
     strength:scores[3]>=160?'Boa presença de mecanismos de coesão e encadeamento.':'A estrutura está identificável; vale tornar a progressão entre parágrafos ainda mais explícita.',
-    priority:scores.indexOf(Math.min(...scores))+1
+    priority:scores.indexOf(Math.min(...scores))+1,
+    detailed_review:buildDetailedEssayReview(text,scores)
   };
   const { error }=await client.from('essays').insert({
     user_id:state.user.id,theme_title:t.title,essay_text:text,status:'reviewed',
