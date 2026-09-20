@@ -1492,7 +1492,7 @@ function renderGlobalSearchResults(query){
   const icons={material:'▣',topic:'◎',subtopic:'◇',essay:'✎'};
   box.innerHTML=items.map((item,index)=>'<button data-global-result="'+index+'"><span>'+icons[item.type]+'</span><div><b>'+esc(item.title)+'</b><small>'+esc(item.meta||'')+'</small></div><i>→</i></button>').join('');
   box.classList.remove('hidden');
-  $('[data-global-result]',box).forEach(btn=>btn.onclick=async()=>{
+  $$('[data-global-result]',box).forEach(btn=>btn.onclick=async()=>{
     const item=state.globalSearchItems[Number(btn.dataset.globalResult)];if(!item)return;
     box.classList.add('hidden');globalSearch.value='';setMobileSearchOpen(false,{focus:false});
     logProductEvent('search_result_open',{type:item.type},'search');
@@ -2339,7 +2339,7 @@ function renderEssayHistory(){
     const scores=essayScoresFromRow(row),weak=scores.indexOf(Math.min(...scores))+1;
     return `<button class="essay-history-row" data-essay-history="${row.id}"><span class="essay-history-score">${Number(row.estimated_score||0)}</span><div><b>${esc(row.theme_title||'Redação')}</b><small>${new Date(row.created_at).toLocaleDateString('pt-BR')} · C${weak} para revisar${Number(row.version_number||1)>1?' · versão '+Number(row.version_number):''}</small></div><i>→</i></button>`;
   }).join(''):'<p style="color:var(--muted)">Seu histórico aparecerá aqui após a primeira correção.</p>';
-  $('[data-essay-history]',list).forEach(btn=>btn.onclick=()=>openEssayHistory(Number(btn.dataset.essayHistory)));
+  $$('[data-essay-history]',list).forEach(btn=>btn.onclick=()=>openEssayHistory(Number(btn.dataset.essayHistory)));
   renderEssayIntelligenceV5();
 }
 function openEssayHistory(id){
@@ -2477,6 +2477,12 @@ function maintenanceModuleForPage(id){
 }
 
 function openPage(id) {
+  const featureByPage={desempenho:'v3_intelligence',simulados:'v4_exam_strategy',redacao:'v5_essay_intelligence',ranking:'v6_community'};
+  const requiredFlag=featureByPage[id];
+  if(requiredFlag&&!featureEnabled(requiredFlag)){
+    toast('Este módulo está temporariamente indisponível.','info');
+    return;
+  }
   const maintenanceKey=maintenanceModuleForPage(id);
   if(maintenanceKey&&blockMaintenance(maintenanceKey))return;
   if (id === 'admin' && state.profile?.role !== 'admin') {
@@ -5642,7 +5648,7 @@ $('#analyzeEssay').onclick=async()=>{
     loadEssayHistory().catch(()=>{});
     loadNexoWeekPlan({silent:true}).catch(()=>{});
     state.essayRevisionOf=null;
-    logProductEvent('essay_review',{score_band:Math.floor(total/100)*100,priority_competency:feedback.priority,version:currentEssayVersionNumber()},'redacao');
+    logProductEvent('essay_review',{score_band:Math.floor(total/100)*100,priority_competency:feedback.priority},'redacao');
   }
   showEssayResult(text,scores,total);
 };
@@ -6225,6 +6231,16 @@ async function openContentViewer(type,id){
 
   const current=getContentProgress(type,id);
   if(type==='video'){
+    if(document.body.classList.contains('data-saver')){
+      body.innerHTML='<div class="data-saver-content"><span>ECONOMIA DE DADOS</span><h3>Vídeo pausado por padrão.</h3><p>O modo Economia de dados evita carregar mídia pesada automaticamente.</p><button id="loadDataSaverVideo" class="primary-btn">Carregar vídeo mesmo assim</button></div>';
+      $('#loadDataSaverVideo')?.addEventListener('click',()=>{
+        document.body.classList.remove('data-saver');
+        openContentViewer(type,id);
+        setTimeout(()=>document.body.classList.add('data-saver'),250);
+      });
+      updateViewerFavoriteButton();
+      return;
+    }
     const embed=externalEmbedUrl(item.video_url||'');
     speed?.classList.toggle('hidden',Boolean(embed));
     if(embed){
@@ -7486,7 +7502,7 @@ function renderStudyGroups(){
   const list=$('#studyGroupsList'),detail=$('#studyGroupDetail');
   if(list){
     list.innerHTML=state.studyGroups.length?state.studyGroups.map(g=>'<button class="study-group-row '+(state.selectedStudyGroup?.id===g.id?'active':'')+'" data-study-group="'+g.id+'"><span>'+String(g.name||'G').slice(0,2).toUpperCase()+'</span><div><b>'+esc(g.name)+'</b><small>'+Number(g.member_count||0)+' membro(s) · '+Number((g.goals||[]).length)+' meta(s)</small></div><i>→</i></button>').join(''):'<p class="learning-empty">Você ainda não participa de um grupo.</p>';
-    $('[data-study-group]',list).forEach(btn=>btn.onclick=()=>{
+    $$('[data-study-group]',list).forEach(btn=>btn.onclick=()=>{
       state.selectedStudyGroup=state.studyGroups.find(g=>String(g.id)===String(btn.dataset.studyGroup))||null;
       renderStudyGroups();
     });
