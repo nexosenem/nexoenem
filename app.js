@@ -948,13 +948,41 @@ async function renderPerformance() {
 }
 
 async function renderFocus() {
-  await loadDashboard();
-  const weak=state.dashboard?.weak_topics||[];
-  $('#focusGrid').innerHTML=weak.length?weak.map(x=>{
-    const error=Number(x.error_rate||0);
-    return `<article class="focus-card"><header><b>${esc(x.topic)}</b><span class="risk">${error}% de erro</span></header><p>${esc(x.subject)} · ${x.attempts} resposta(s)</p><div class="focus-score">${100-error}%</div><button class="outline-btn small" data-focus="${esc(x.topic)}">Treinar este tema →</button></article>`;
-  }).join(''):'<article class="focus-card"><h3>Ainda não há dados suficientes</h3><p>Resolva algumas questões para gerar seu plano personalizado.</p></article>';
-  $$('[data-focus]').forEach(b=>b.onclick=()=>{openPage('questoes');startStudySession({topic:b.dataset.focus,size:10,area:'',subject:'',difficulty:'',visualOnly:false})});
+  await Promise.all([loadDashboard(),loadNexoCore()]);
+  const coreWeak=state.core?.weak_skills||[];
+  const fallback=(state.dashboard?.weak_topics||[]).map(x=>({
+    topic:x.topic,subject:x.subject,attempts:x.attempts,
+    accuracy:100-Number(x.error_rate||0),
+    priority:Number(x.error_rate||0),
+    mastery:100-Number(x.error_rate||0)
+  }));
+  const weak=coreWeak.length?coreWeak:fallback;
+
+  $('#focusGrid').innerHTML=weak.length?weak.map((x,index)=>{
+    const mastery=Math.round(Number(x.mastery??x.accuracy??0));
+    const priority=Math.round(Number(x.priority??(100-mastery)));
+    const recommended=index===0;
+    return `<article class="focus-card ${recommended?'core-focus':''}">
+      <header><b>${esc(x.topic)}</b><span class="risk">${recommended?'NEXO recomenda':priority+'% prioridade'}</span></header>
+      <p>${esc(x.subject||x.area||'Conteúdo')} · ${Number(x.attempts||0)} resposta(s)</p>
+      <div class="focus-score">${mastery}%</div>
+      <small style="display:block;color:var(--muted);margin:-3px 0 10px">domínio estimado</small>
+      <button class="outline-btn small" data-focus="${esc(x.topic)}" data-focus-area="${esc(x.area||'')}" data-focus-subject="${esc(x.subject||'')}">Treinar este tema →</button>
+    </article>`;
+  }).join(''):'<article class="focus-card"><h3>O NEXO Core ainda está calibrando</h3><p>Resolva algumas questões para gerar seu plano personalizado.</p></article>';
+
+  $$('[data-focus]').forEach(b=>b.onclick=()=>{
+    openPage('questoes');
+    startStudySession({
+      mode:'core',
+      topic:b.dataset.focus,
+      area:b.dataset.focusArea||'',
+      subject:b.dataset.focusSubject||'',
+      size:8,
+      difficulty:'',
+      visualOnly:false
+    });
+  });
 }
 
 function fillThemes() {
