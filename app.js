@@ -1752,6 +1752,7 @@ async function startRadarTraining(row){
   if(!row)return;
   const preferredTopic=radarTrainingTopic(row.subject,row.topic);
   const candidates=[
+    {area:row.area||'',subject:row.subject||'',topic:row.topic||'',radarTopic:row.topic||'',fallbackTopic:preferredTopic||row.topic||''},
     {area:row.area||'',subject:row.subject||'',topic:preferredTopic||''},
     {area:row.area||'',subject:row.subject||'',topic:''},
     {area:row.area||'',subject:'',topic:''}
@@ -2731,17 +2732,34 @@ async function getSeenIds() {
 }
 
 async function fetchQuestions(filters={}) {
+  let radarKeys=null;
+  if(filters.radarTopic){
+    try{
+      let rq=client.from('enem_radar_items').select('year,question_index').eq('topic',filters.radarTopic);
+      if(filters.area)rq=rq.eq('area',filters.area);
+      if(filters.subject)rq=rq.eq('subject',filters.subject);
+      const {data:radarRows,error:radarError}=await rq.limit(1000);
+      if(!radarError&&radarRows?.length){
+        radarKeys=new Set(radarRows.map(r=>String(r.year)+'::'+String(r.question_index)));
+      }
+    }catch(err){
+      console.warn('radar question filter fallback',err);
+    }
+  }
+
   let q = client.from('questions').select(
     'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop'
   ).eq('is_active',true).limit(1000);
   if (filters.area) q=q.eq('area',filters.area);
   if (filters.subject) q=q.eq('subject',filters.subject);
   if (filters.difficulty) q=q.eq('difficulty',Number(filters.difficulty));
-  if (filters.topic) q=q.eq('topic',filters.topic);
+  if (!radarKeys&&filters.topic) q=q.eq('topic',filters.fallbackTopic||filters.topic);
   if (filters.visualOnly) q=q.not('media_type','is',null);
   const { data, error } = await q;
   if (error) throw error;
-  return data || [];
+  const rows=data||[];
+  if(!radarKeys)return rows;
+  return rows.filter(x=>radarKeys.has(String(x.source_year)+'::'+String(x.source_question_number)));
 }
 
 $('#startSession').onclick=async()=>{
@@ -4787,14 +4805,17 @@ function wireContentCards(){
 }
 
 async function startContentPractice(item){
-  const trainingTopic=radarTrainingTopic(item?.subject||'',item?.topic||'')||item?.topic||'';
+  const radarTopic=item?.topic||'';
+  const fallbackTopic=radarTrainingTopic(item?.subject||'',radarTopic)||radarTopic;
   closeContentViewer();
   openPage('questoes');
   await startStudySession({
     mode:'content',
     area:item.area||'',
     subject:item.subject||'',
-    topic:trainingTopic,
+    topic:radarTopic,
+    radarTopic,
+    fallbackTopic,
     difficulty:'',
     visualOnly:false,
     size:5
