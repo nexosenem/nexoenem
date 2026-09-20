@@ -97,6 +97,42 @@ function setTheme(mode) {
 }
 setTheme(localStorage.getItem('nexo-theme') || 'dark');
 
+
+function updateHomeExperience(){
+  const first=(state.profile?.full_name||state.user?.email?.split('@')[0]||'').trim().split(/\s+/)[0]||'';
+  const hour=new Date().getHours();
+  const greeting=hour<12?'BOM DIA':hour<18?'BOA TARDE':'BOA NOITE';
+  const label=first?greeting+', '+first.toUpperCase():greeting;
+  const rec=state.core?.recommended_action||null;
+
+  const desktop=$('#desktopHomeGreeting');
+  const mobile=$('#mobileHomeGreeting');
+  if(desktop)desktop.textContent=label;
+  if(mobile)mobile.textContent=label;
+
+  const desktopSub=$('#desktopHeroSubtitle');
+  const mobileSub=$('#mobileHeroSubtitle');
+  if(rec){
+    const focus=(rec.subject||rec.area||'Treino')+' · '+(rec.topic||'revisão');
+    if(desktopSub)desktopSub.innerHTML='<b>Seu próximo foco:</b> '+esc(focus)+' • '+Number(rec.size||6)+' questões recomendadas pelo NEXO Core.';
+    if(mobileSub)mobileSub.textContent='Seu foco agora: '+focus+'.';
+  }else{
+    if(desktopSub)desktopSub.innerHTML='<b>500 questões reais</b> dos cadernos ENEM • sessões adaptativas • redação • análises personalizadas pelo NEXO Core.';
+    if(mobileSub)mobileSub.textContent='Continue de onde parou ou siga a recomendação do NEXO Core.';
+  }
+
+  const hint=$('#heroCoreHint');
+  if(hint)hint.textContent=rec
+    ? 'próximo foco: '+(rec.topic||rec.subject||rec.area||'treino adaptativo')
+    : 'analisando seu próximo foco';
+
+  const heroMascots=$$('.home-nexo-mascot, .mobile-nexo-stage img');
+  const heroSrc=rec && Number(rec.priority||0)>=65
+    ? './assets/nexo-expressions/pensativo.webp'
+    : './assets/nexo-expressions/confiante.webp';
+  heroMascots.forEach(img=>{if(img.getAttribute('src')!==heroSrc)img.src=heroSrc});
+}
+
 function setAuthTab(tab) {
   clearAuthMessage();
   const login = tab === 'login';
@@ -221,6 +257,7 @@ async function initApp(session) {
   $('#avatar').textContent = initials(name);
   $$('.admin-only').forEach(el=>el.classList.toggle('hidden',profile.role!=='admin'));
   applyNexoStyle(profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
+  updateHomeExperience();
 
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
@@ -338,8 +375,16 @@ function renderNexoCore(){
     : 'Resolva algumas questões para eu transformar seu desempenho em uma recomendação personalizada.');
   $$('[data-core-mastery]').forEach(el=>el.textContent=rec?Math.round(Number(rec.mastery||0))+'%':'—');
   $$('[data-core-priority]').forEach(el=>el.textContent=rec?Math.round(Number(rec.priority||0))+'%':'—');
-  $$('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
-  $$('[data-core-start]').forEach(btn=>{
+  $('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
+  const coreMood=rec
+    ? (Number(rec.priority||0)>=70?'pensativo':Number(rec.mastery||0)>=70?'confiante':'serio')
+    : 'pensativo';
+  const coreSrc=NEXO_MOOD_IMAGES?.[coreMood]||'./assets/nexo-expressions/pensativo.webp';
+  $('[data-core-avatar]').forEach(img=>{
+    if(img.getAttribute('src')!==coreSrc)img.src=coreSrc;
+  });
+  updateHomeExperience();
+  $('[data-core-start]').forEach(btn=>{
     btn.innerHTML=rec
       ? 'Treinar '+Number(rec.size||6)+' questões <span>→</span>'
       : 'Começar diagnóstico <span>→</span>';
@@ -1542,7 +1587,10 @@ async function askNia(text){
 
 $('#niaButton').onclick=()=>{
   $('#niaPanel').classList.toggle('hidden');
-  if(!$('#niaPanel').classList.contains('hidden'))setNexoMood('feliz');
+  if(!$('#niaPanel').classList.contains('hidden')){
+    const active=$('.page.active')?.id||'inicio';
+    setNexoMood(active==='redacao'?'serio':active==='questoes'?'pensativo':'feliz');
+  }
 };
 $('#closeNia').onclick=()=>$('#niaPanel').classList.add('hidden');
 $('#niaSend').onclick=()=>{const v=$('#niaInput').value;$('#niaInput').value='';askNia(v)};
