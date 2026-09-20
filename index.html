@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-51">
+  <link rel="stylesheet" href="./styles.css?v=20260920-54">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -127,7 +127,7 @@
   <div id="app" class="hidden">
     <aside id="sidebar" class="sidebar">
       <button id="closeMenu" class="close-menu mobile-only" aria-label="Fechar menu">×</button>
-      <button id="desktopSidebarToggle" class="desktop-sidebar-toggle" type="button" aria-label="Recolher menu lateral" aria-expanded="true">
+      <button id="desktopSidebarToggle" class="desktop-sidebar-toggle" type="button" aria-label="Recolher menu lateral" aria-expanded="true" onclick="return window.toggleDesktopSidebar ? window.toggleDesktopSidebar() : false;">
         <span>‹</span>
       </button>
       <a class="brand" href="#" data-page="inicio">
@@ -1180,6 +1180,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-56"></script>
+  <script src="./app.js?v=20260920-57"></script>
 </body>
 </html>
