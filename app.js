@@ -914,6 +914,19 @@ function setDesktopSidebarCollapsed(collapsed, persist=true){
   }
 }
 
+function prepareDesktopSidebarLabels(){
+  $('.side-nav .nav-item').forEach(btn=>{
+    if(btn.dataset.sidebarLabel)return;
+    const clone=btn.cloneNode(true);
+    clone.querySelectorAll('span').forEach(el=>el.remove());
+    const label=String(clone.textContent||'').replace(/\s+/g,' ').trim();
+    if(label){
+      btn.dataset.sidebarLabel=label;
+      btn.title=label;
+    }
+  });
+}
+
 function restoreDesktopSidebar(){
   if(innerWidth<=760){
     document.body.classList.remove('sidebar-collapsed');
@@ -935,7 +948,8 @@ window.addEventListener('resize',()=>{
   if(innerWidth<=760){
     document.body.classList.remove('sidebar-collapsed');
   }else{
-    restoreDesktopSidebar();
+    prepareDesktopSidebarLabels();
+  restoreDesktopSidebar();
   }
 });
 
