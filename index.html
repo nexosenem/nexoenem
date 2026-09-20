@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-45">
+  <link rel="stylesheet" href="./styles.css?v=20260920-44">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -135,7 +135,7 @@
         <button class="nav-item" data-page="banco"><span>▦</span>Banco de Questões</button>
         <button class="nav-item" data-page="temas"><span>▧</span>Temas de Redação</button>
         <button class="nav-item" data-page="feedback"><span>◌</span>Feedback</button>
-        <button class="nav-item" data-page="ranking"><span>♕</span>Ranking</button>
+        <button class="nav-item journey-nav-item" data-page="ranking"><span>✦</span>NEXO Jornada</button>
         <button id="openNexoFromMenu" class="nav-item nexo-menu-link"><span>🐾</span>Professor Nexo</button>
         <button class="nav-item admin-link admin-only hidden" data-page="admin"><span>♛</span>Área do Admin</button>
       </nav>
@@ -215,6 +215,20 @@
               <button class="primary-btn full" data-today-start>Começar plano <span>→</span></button>
             </article>
 
+            <button class="journey-home-card mobile-journey-home" data-page="ranking" type="button">
+              <div class="journey-mini-avatar" id="mobileJourneyAvatar" aria-hidden="true"></div>
+              <div class="journey-home-copy">
+                <span class="eyebrow">NEXO JORNADA</span>
+                <h3><b id="mobileJourneyLevel">Nível 1</b> · <span id="mobileJourneyLeague">Bronze</span></h3>
+                <p id="mobileJourneyMission">Complete missões e transforme seu estudo em evolução visível.</p>
+                <div class="journey-home-progress"><i id="mobileJourneyXpBar"></i></div>
+              </div>
+              <div class="journey-home-stats">
+                <span><b id="mobileJourneyCoins">0</b><small>N-Coins</small></span>
+                <span><b id="mobileJourneyStreak">0</b><small>dias 🔥</small></span>
+              </div>
+            </button>
+
             <section class="mobile-section">
               <div class="mobile-section-head"><div><span class="eyebrow">ÁREAS DO ENEM</span><h3>O que você quer estudar?</h3></div></div>
               <div class="mobile-subject-grid">
@@ -232,6 +246,7 @@
                 <button data-page="simulados"><span>▤</span><div><b>Simulado</b><small>Sessão organizada</small></div></button>
                 <button data-page="redacao"><span>✎</span><div><b>Redação</b><small>Pratique e salve</small></div></button>
                 <button data-page="videoaulas"><span>▶</span><div><b>Videoaulas</b><small>Por matéria e tema</small></div></button>
+                <button data-page="ranking" class="journey-shortcut"><span>♕</span><div><b>NEXO Jornada</b><small>Missões, ligas e avatar</small></div></button>
               </div>
             </section>
 
@@ -367,6 +382,20 @@
                 </div>
                 <button class="primary-btn full" data-core-start>Começar diagnóstico <span>→</span></button>
               </article>
+
+              <button class="panel journey-side-card" data-page="ranking" type="button">
+                <div class="journey-side-top">
+                  <div class="journey-mini-avatar" id="desktopJourneyAvatar" aria-hidden="true"></div>
+                  <div><span class="eyebrow">NEXO JORNADA</span><h3 id="desktopJourneyTitle">Nível 1 · Bronze</h3><p id="desktopJourneyMission">Sua próxima missão aparece aqui.</p></div>
+                </div>
+                <div class="journey-side-progress"><i id="desktopJourneyXpBar"></i></div>
+                <div class="journey-side-stats">
+                  <span><b id="desktopJourneyCoins">0</b><small>N-Coins</small></span>
+                  <span><b id="desktopJourneyStreak">0</b><small>sequência</small></span>
+                  <span><b id="desktopJourneyRank">—</b><small>liga semanal</small></span>
+                </div>
+                <strong>Abrir Jornada →</strong>
+              </button>
 
               <article class="panel weakness-panel">
                 <h3>Minhas maiores dificuldades <span>?</span></h3>
@@ -540,9 +569,116 @@
           </div>
         </section>
 
-        <section class="page" id="ranking">
-          <div class="page-head"><div><span class="eyebrow">CONSTÂNCIA</span><h2>Ranking</h2><p>Classificação por total de acertos, sem expor e-mails.</p></div></div>
-          <div class="ranking panel" id="rankingList"></div>
+        <section class="page journey-page" id="ranking">
+          <div class="page-head journey-page-head">
+            <div><span class="eyebrow">GAMIFICAÇÃO · NEXO JORNADA</span><h2>Seu estudo também pode ser uma conquista.</h2><p>Ganhe XP, N-Coins, complete missões, personalize seu avatar e dispute ligas sem transformar estudo em farm de questões fáceis.</p></div>
+            <button class="outline-btn" id="refreshJourney">↻ Atualizar</button>
+          </div>
+
+          <div class="journey-top-grid">
+            <article class="journey-profile-card">
+              <div class="journey-profile-glow"></div>
+              <div class="journey-avatar-large" id="journeyAvatar"></div>
+              <div class="journey-profile-copy">
+                <span class="eyebrow">SEU PERSONAGEM</span>
+                <h3 id="journeyPlayerName">Aluno NEXO</h3>
+                <p><b id="journeyLevel">Nível 1</b> · <span id="journeyTitle">Calouro NEXO</span></p>
+                <div class="journey-level-progress"><i id="journeyLevelBar"></i></div>
+                <small id="journeyLevelText">0 / 180 XP para o próximo nível</small>
+                <div class="journey-profile-stats">
+                  <span><b id="journeyCoins">0</b><small>N-Coins</small></span>
+                  <span><b id="journeyStreak">0</b><small>dias seguidos</small></span>
+                  <span><b id="journeyLeague">Bronze</b><small>liga atual</small></span>
+                  <span><b id="journeyRank">—</b><small>posição semanal</small></span>
+                </div>
+                <button class="primary-btn" data-journey-tab-target="avatar">Personalizar avatar <span>→</span></button>
+              </div>
+            </article>
+
+            <article class="journey-arena-card">
+              <div>
+                <span class="eyebrow">ARENA NEXO · SEMANAL</span>
+                <h3>20 questões. Mesmo desafio. Ranking da semana.</h3>
+                <p>A Arena usa questões mistas e premia desempenho consistente. Acertos, dificuldade e eficiência geram Pontos NEXO.</p>
+                <div class="journey-arena-meta">
+                  <span><b id="journeyArenaPoints">0</b><small>pontos na Arena</small></span>
+                  <span><b id="journeyArenaRank">—</b><small>posição</small></span>
+                </div>
+              </div>
+              <button class="primary-btn wide" id="startNexoArena">Entrar na Arena <span>→</span></button>
+            </article>
+          </div>
+
+          <nav class="journey-tabs" aria-label="Seções da Jornada">
+            <button class="active" data-journey-tab="missions">Missões</button>
+            <button data-journey-tab="league">Ligas</button>
+            <button data-journey-tab="avatar">Avatar</button>
+            <button data-journey-tab="store">Loja</button>
+            <button data-journey-tab="achievements">Conquistas</button>
+          </nav>
+
+          <div class="journey-panel active" data-journey-panel="missions">
+            <div class="journey-section-head"><div><span class="eyebrow">MISSÕES</span><h3>Um motivo claro para começar hoje.</h3></div><p>As recompensas são geradas pelo desempenho real registrado no NEXO.</p></div>
+            <div class="journey-mission-columns">
+              <section><div class="journey-list-title"><b>Hoje</b><small>reinicia diariamente</small></div><div id="journeyDailyMissions" class="journey-missions"></div></section>
+              <section><div class="journey-list-title"><b>Esta semana</b><small>metas de constância</small></div><div id="journeyWeeklyMissions" class="journey-missions"></div></section>
+            </div>
+          </div>
+
+          <div class="journey-panel" data-journey-panel="league">
+            <div class="journey-section-head"><div><span class="eyebrow">LIGAS NEXO</span><h3>Competição que recompensa qualidade.</h3></div><p>Pontos consideram acerto, dificuldade, autonomia e ritmo — não apenas volume.</p></div>
+            <div class="journey-ranking-grid">
+              <article class="panel journey-board-card"><div class="panel-title"><b>Ranking semanal</b><small id="journeyWeekLabel">semana atual</small></div><div id="journeyLeagueBoard" class="journey-board"></div></article>
+              <article class="panel journey-board-card"><div class="panel-title"><b>Arena NEXO</b><small>desafio de 20 questões</small></div><div id="journeyArenaBoard" class="journey-board"></div></article>
+            </div>
+            <div class="league-road">
+              <span data-league="Bronze">Bronze</span><span data-league="Prata">Prata</span><span data-league="Ouro">Ouro</span><span data-league="Platina">Platina</span><span data-league="Diamante">Diamante</span><span data-league="NEXO">NEXO</span>
+            </div>
+          </div>
+
+          <div class="journey-panel" data-journey-panel="avatar">
+            <div class="journey-section-head"><div><span class="eyebrow">MEU PERSONAGEM</span><h3>Crie uma identidade que evolui com você.</h3></div><p>Itens premium são conquistados com N-Coins. Nenhum cosmético altera seu desempenho.</p></div>
+            <div class="avatar-builder">
+              <article class="avatar-builder-stage">
+                <div class="journey-avatar-builder-preview" id="avatarBuilderPreview"></div>
+                <div><b id="avatarBuilderTitle">Seu avatar NEXO</b><small>Visual leve, sem imagens pesadas.</small></div>
+              </article>
+              <article class="avatar-builder-controls">
+                <div class="avatar-option-group"><span>Pele</span><div>
+                  <button data-avatar-field="skin" data-avatar-value="light">Clara</button><button data-avatar-field="skin" data-avatar-value="medium">Média</button><button data-avatar-field="skin" data-avatar-value="tan">Bronze</button><button data-avatar-field="skin" data-avatar-value="deep">Escura</button>
+                </div></div>
+                <div class="avatar-option-group"><span>Cabelo</span><div>
+                  <button data-avatar-field="hair" data-avatar-value="short">Curto</button><button data-avatar-field="hair" data-avatar-value="wave">Ondulado</button><button data-avatar-field="hair" data-avatar-value="curly">Cacheado</button><button data-avatar-field="hair" data-avatar-value="buzz">Raspado</button>
+                </div></div>
+                <div class="avatar-option-group"><span>Cor do cabelo</span><div>
+                  <button data-avatar-field="hair_color" data-avatar-value="ink">Preto</button><button data-avatar-field="hair_color" data-avatar-value="brown">Castanho</button><button data-avatar-field="hair_color" data-avatar-value="blonde">Loiro</button><button data-avatar-field="hair_color" data-avatar-value="blue">Azul</button>
+                </div></div>
+                <div class="avatar-option-group"><span>Moletom</span><div>
+                  <button data-avatar-field="outfit" data-avatar-value="purple">Roxo</button><button data-avatar-field="outfit" data-avatar-value="blue">Azul</button><button data-avatar-field="outfit" data-avatar-value="teal">Verde</button><button data-avatar-field="outfit" data-avatar-value="cyan" data-avatar-item="outfit_cyan">Ciano 🔒</button><button data-avatar-field="outfit" data-avatar-value="gold" data-avatar-item="outfit_gold">Elite 🔒</button>
+                </div></div>
+                <div class="avatar-option-group"><span>Acessório</span><div>
+                  <button data-avatar-field="accessory" data-avatar-value="none">Nenhum</button><button data-avatar-field="accessory" data-avatar-value="glasses">Óculos</button><button data-avatar-field="accessory" data-avatar-value="headphones" data-avatar-item="acc_headphones">Headset 🔒</button><button data-avatar-field="accessory" data-avatar-value="crown" data-avatar-item="acc_crown">Coroa 🔒</button>
+                </div></div>
+                <div class="avatar-option-group"><span>Moldura</span><div>
+                  <button data-avatar-field="frame" data-avatar-value="basic">Padrão</button><button data-avatar-field="frame" data-avatar-value="neon" data-avatar-item="frame_neon">Neon 🔒</button><button data-avatar-field="frame" data-avatar-value="cosmic" data-avatar-item="frame_cosmic">Cósmica 🔒</button>
+                </div></div>
+                <div class="avatar-option-group"><span>Ambiente</span><div>
+                  <button data-avatar-field="background" data-avatar-value="grid">QG Base</button><button data-avatar-field="background" data-avatar-value="midnight" data-avatar-item="bg_midnight">Meia-noite 🔒</button><button data-avatar-field="background" data-avatar-value="aurora" data-avatar-item="bg_aurora">Aurora 🔒</button>
+                </div></div>
+                <button class="primary-btn wide" id="saveJourneyAvatar">Salvar personagem</button>
+              </article>
+            </div>
+          </div>
+
+          <div class="journey-panel" data-journey-panel="store">
+            <div class="journey-section-head"><div><span class="eyebrow">LOJA NEXO</span><h3>Gaste N-Coins só em personalização.</h3></div><p>O sistema nunca vende vantagem acadêmica: moedas servem apenas para cosméticos.</p></div>
+            <div id="journeyStore" class="journey-store-grid"></div>
+          </div>
+
+          <div class="journey-panel" data-journey-panel="achievements">
+            <div class="journey-section-head"><div><span class="eyebrow">CONQUISTAS</span><h3>Marcos que contam sua história de estudo.</h3></div><p>As medalhas são liberadas automaticamente com seu progresso real.</p></div>
+            <div id="journeyAchievements" class="journey-achievements-grid"></div>
+          </div>
         </section>
 
         <section class="page" id="admin">
@@ -806,6 +942,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-46"></script>
+  <script src="./app.js?v=20260920-49"></script>
 </body>
 </html>
