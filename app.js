@@ -203,7 +203,7 @@ async function initApp(session) {
   $('#profileRole').textContent = profile.role === 'admin' ? 'Administrador' : 'Estudante';
   $('#avatar').textContent = initials(name);
   $$('.admin-only').forEach(el=>el.classList.toggle('hidden',profile.role!=='admin'));
-  applyNiaOutfit(profile.assistant_outfit || localStorage.getItem('nia-outfit') || 'purple', false);
+  applyNexoStyle(profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false);
 
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
@@ -1002,40 +1002,199 @@ async function deleteComment(id){
   loadQuestionComments(Number($('#commentModal').dataset.questionId));
 }
 
-const NIA_ANSWERS=[
-  {k:/tempo|2 min|3 min|prova|rel[oó]gio/i,a:'No ENEM, trabalhe por blocos. Se uma questão passou de ~3 minutos sem avanço real, marque para voltar. Priorize as que você entende de primeira e reserve um bloco final para as difíceis e para o cartão-resposta.'},
-  {k:/chut|n[aã]o sei|eliminar/i,a:'Quando precisar chutar, tente primeiro eliminar alternativas incompatíveis com unidade, escala, período histórico ou ideia central do texto. Evite procurar “a mais bonita”: procure a que atende exatamente ao comando.'},
-  {k:/reda[cç][aã]o|come[cç]ar|introdu/i,a:'Uma abertura segura: contextualize o tema em 1–2 frases, apresente o problema e termine a introdução com uma tese que antecipe os dois argumentos que serão desenvolvidos.'},
-  {k:/conclus|interven/i,a:'Na conclusão do ENEM, monte a intervenção com cinco peças: agente + ação + meio/modo + finalidade + detalhamento. Depois confira se ela respeita os direitos humanos.'},
-  {k:/matem[aá]tica|conta|c[aá]lculo/i,a:'Em Matemática, não comece calculando. Primeiro identifique o que a questão realmente pede, estime a resposta e use as alternativas para eliminar ordens de grandeza impossíveis.'},
-  {k:/ansied|nervos|press[aã]o/i,a:'Na hora da prova, use um procedimento simples: leia o comando, faça uma tentativa objetiva e, se travar, marque para voltar. A estratégia reduz a sensação de que você precisa resolver tudo imediatamente.'},
-  {k:/estud|rotina|organiza/i,a:'Monte ciclos curtos: teoria essencial → 10 a 20 questões → revisão dos erros. O que você erra deve decidir boa parte do próximo bloco de estudo, em vez de repetir só o que já domina.'}
+const ENEM_2026 = {
+  firstDate:'2026-11-08',
+  secondDate:'2026-11-15',
+  gatesOpen:'12h',
+  gatesClose:'13h',
+  starts:'13h30',
+  firstEnds:'19h',
+  secondEnds:'18h30'
+};
+
+function daysUntil(dateString){
+  const today=new Date();
+  const target=new Date(dateString+'T00:00:00-03:00');
+  const start=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  return Math.ceil((target-start)/86400000);
+}
+
+function enemDatesText(){
+  const d1=daysUntil(ENEM_2026.firstDate);
+  let countdown='';
+  if(d1>1) countdown=' Faltam cerca de '+d1+' dias para o primeiro domingo.';
+  else if(d1===1) countdown=' É amanhã: hoje é dia de descansar, separar o material e evitar maratona de conteúdo.';
+  else if(d1===0) countdown=' O primeiro dia é hoje.';
+  else {
+    const d2=daysUntil(ENEM_2026.secondDate);
+    if(d2>0) countdown=' O primeiro domingo já passou; faltam cerca de '+d2+' dias para o segundo.';
+    else if(d2===0) countdown=' O segundo dia é hoje.';
+    else countdown=' As duas aplicações regulares de 2026 já passaram. Para a próxima edição, confirme o novo cronograma no INEP.';
+  }
+  return '📅 ENEM 2026: as provas regulares serão em 8 e 15 de novembro.'+countdown+
+    '\n\nNo 1º dia: Linguagens, Ciências Humanas e Redação. No 2º: Ciências da Natureza e Matemática.'+
+    '\n\nOs portões abrem às 12h, fecham às 13h e a prova começa às 13h30, sempre no horário de Brasília. Dados do cronograma oficial do INEP.';
+}
+
+const NEXO_ANSWERS=[
+  {k:/quando.*enem|que dia.*enem|data.*prova|datas.*enem|faltam quantos|quanto falta/i,mood:'confiante',a:()=>enemDatesText()},
+  {k:/primeiro dia|1[ºo] dia|dia 1|o que cai.*primeiro/i,mood:'serio',a:'No primeiro domingo do ENEM você faz Linguagens, Ciências Humanas e a Redação. A duração regular é de 5h30.\n\nMinha sugestão: não deixe a redação para os minutos finais. Defina um ponto da prova para iniciar o texto mesmo que ainda existam questões objetivas pendentes.'},
+  {k:/segundo dia|2[ºo] dia|dia 2|o que cai.*segundo/i,mood:'confiante',a:'No segundo domingo você faz Ciências da Natureza e Matemática. A duração regular é de 5 horas.\n\nComo costuma haver mais cálculo, proteja seu tempo: se uma questão não avançar depois de uma tentativa objetiva, marque e siga. Voltar depois é estratégia, não desistência.'},
+  {k:/hor[aá]rio|port[aã]o|fecha.*port|abre.*port|come[cç]a.*prova/i,mood:'serio',a:'⏰ Horário oficial: portões abrem às 12h, fecham às 13h e a aplicação começa às 13h30, pelo horário de Brasília. No 1º dia o término regular é às 19h; no 2º, às 18h30.\n\nPlaneje chegar com bastante antecedência. O pior uso da energia no dia é gastá-la correndo contra o relógio antes mesmo da prova começar.'},
+  {k:/o que levar|levar.*prova|caneta|documento|identifica[cç][aã]o/i,mood:'confiante',a:'🎒 Obrigatório: caneta esferográfica de tinta preta e corpo transparente + documento de identificação válido, físico ou digital aceito pelo edital.\n\nÉ aconselhável levar o Cartão de Confirmação. Separe também água e um lanche simples. Faça essa mochila na véspera para não depender da memória quando estiver ansioso.'},
+  {k:/celular|rel[oó]gio|proibid|pode levar.*l[aá]pis|calculadora|fone/i,mood:'serio',a:'Celular, relógio de qualquer tipo, fones, calculadora, lápis, borracha, régua e vários outros itens não podem ficar com você durante a prova. Os eletrônicos devem ficar desligados no envelope porta-objetos fornecido pela organização.\n\nUse somente caneta preta de material transparente para responder. No dia, siga as instruções dos fiscais mesmo que você já conheça as regras.'},
+  {k:/local.*prova|onde.*prova|endere[cç]o.*prova/i,mood:'confiante',a:'O local de prova deve ser conferido na Página do Participante do ENEM, no cartão de confirmação. Quando estiver disponível, confira endereço, bloco/sala e planeje o trajeto antes.\n\nUma boa regra é simular a ida alguns dias antes ou, no mínimo, verificar transporte e tempo de deslocamento com margem.'},
+  {k:/quantas quest|n[uú]mero.*quest|estrutura.*enem/i,mood:'confiante',a:'O ENEM regular tem 180 questões objetivas, 45 por área, distribuídas em dois domingos, além da redação.\n\nNão trate as 90 questões de cada dia como 90 decisões gigantes. Pense em blocos menores: uma página, uma questão, uma decisão por vez.'},
+  {k:/tri|teoria de resposta|nota.*quest|quest[aã]o f[aá]cil/i,mood:'serio',a:'A TRI não olha apenas quantas você acertou; ela considera o padrão de respostas e a coerência entre itens de diferentes dificuldades. Por isso, uma questão simples que você sabe fazer merece muito cuidado.\n\nNa prática: não desperdice fáceis por pressa, não tente adivinhar “peso” de questão e priorize consistência.'},
+  {k:/tempo|2 min|3 min|rel[oó]gio|administrar.*prova/i,mood:'confiante',a:'⏱ Não precisa cronometrar cada item obsessivamente. Trabalhe por blocos. Se uma questão passou de uns 3 minutos sem progresso real, marque e siga.\n\nFaça uma primeira passada nas que você entende rápido, uma segunda nas intermediárias e guarde um bloco final para difíceis + cartão-resposta. No 1º dia, reserve tempo real para planejar, escrever e revisar a redação.'},
+  {k:/por onde come[cç]ar|ordem.*prova|come[cç]ar.*quest/i,mood:'confiante',a:'Comece pelo que te coloca em ritmo. Se Linguagens te aquece, vá nela; se a redação te preocupa muito, faça ao menos o projeto do texto cedo.\n\nA melhor ordem não é a mais “inteligente” no papel — é a que reduz travamentos e mantém sua tomada de decisão estável.'},
+  {k:/cart[aã]o.?resposta|gabarito.*cart[aã]o|marcar.*cart/i,mood:'serio',a:'Não deixe todo o cartão-resposta para o último minuto. Transfira em blocos e confira número da questão + alternativa antes de marcar.\n\nUm erro de deslocamento no cartão pode contaminar várias respostas, então desacelere alguns segundos nessa etapa.'},
+  {k:/chut|n[aã]o sei|eliminar alternativa/i,mood:'confiante',a:'Se precisar chutar, primeiro tente eliminar. Procure alternativa incompatível com unidade, escala, período histórico, ideia central do texto ou dado do enunciado.\n\nDepois escolha entre as restantes sem gastar energia infinita. Chute consciente é melhor do que deixar em branco por perfeccionismo.'},
+  {k:/redação|reda[cç][aã]o.*enem|melhorar.*texto/i,mood:'confiante',a:'Na redação, pense em quatro tarefas: compreender exatamente o recorte do tema, formular uma tese clara, desenvolver dois argumentos e fechar com intervenção completa.\n\nAntes de escrever, gaste alguns minutos no esqueleto: tese → argumento 1 → argumento 2 → agente/ação/meio/finalidade. Isso diminui repetição e ajuda a manter o texto no tema.'},
+  {k:/introdu[cç][aã]o|como come[cç]ar.*reda/i,mood:'serio',a:'Uma introdução segura tem 3 movimentos: contextualização curta, apresentação do problema e tese.\n\nVocê não precisa começar com uma frase “genial”. Precisa deixar claro qual problema vai discutir e quais caminhos argumentativos o texto seguirá.'},
+  {k:/desenvolvimento|argumento.*reda|par[aá]grafo.*argument/i,mood:'serio',a:'No desenvolvimento, cada parágrafo precisa defender uma ideia — não apenas acumular repertório. Uma estrutura eficiente é: tópico frasal → explicação da causa ou consequência → repertório conectado → fechamento que volta à tese.\n\nSe o repertório não ajuda a provar o argumento, ele está decorando o texto, não trabalhando por você.'},
+  {k:/conclus[aã]o|interven[cç][aã]o/i,mood:'confiante',a:'Na conclusão do ENEM, confira cinco peças: agente + ação + meio/modo + finalidade + detalhamento.\n\nPergunte: quem fará? O quê? Como? Para quê? Algum elemento foi detalhado? E a proposta respeita os direitos humanos? Se sim, sua intervenção tende a ficar muito mais completa.'},
+  {k:/compet[eê]ncia|c1|c2|c3|c4|c5/i,mood:'serio',a:'As cinco competências avaliam, em resumo: C1 domínio da escrita formal; C2 compreensão do tema e repertório; C3 seleção/organização dos argumentos; C4 coesão; C5 proposta de intervenção.\n\nQuando revisar, não tente “sentir” se a redação está boa. Faça uma checagem por competência — fica muito mais objetivo.'},
+  {k:/zero.*reda|reda.*zer|motivo.*zero/i,mood:'serio',a:'Algumas situações podem zerar a redação, como fuga total ao tema, texto insuficiente, desrespeito à estrutura dissertativo-argumentativa exigida ou identificação indevida, conforme as regras do exame.\n\nNa prática, sua maior proteção é simples: responda exatamente ao recorte proposto, escreva um texto completo e siga as instruções do caderno.'},
+  {k:/matem[aá]tica|conta|c[aá]lculo/i,mood:'confiante',a:'Em Matemática, não comece calculando por impulso. Primeiro descubra: o que foi dado? o que pedem? qual unidade? qual ordem de grandeza faria sentido?\n\nDepois use as alternativas como ferramenta. Estimar antes da conta costuma eliminar respostas impossíveis e economiza tempo.'},
+  {k:/linguagens|portugu[eê]s|interpreta[cç][aã]o/i,mood:'serio',a:'Em Linguagens, leia o comando antes de mergulhar no texto. Descubra se a questão pede efeito de sentido, finalidade, estratégia argumentativa, relação entre textos ou informação explícita.\n\nA alternativa correta precisa responder ao comando e ser sustentada pelo texto — não basta parecer verdadeira em geral.'},
+  {k:/humanas|hist[oó]ria|geografia|filosofia|sociologia/i,mood:'serio',a:'Em Humanas, marque mentalmente quatro coisas: tempo, espaço, agente social e conceito central. Depois elimine alternativas anacrônicas, absolutas demais ou que extrapolam o documento.\n\nQuando houver texto-base, trate-o como evidência — não como decoração.'},
+  {k:/natureza|biologia|qu[ií]mica|f[ií]sica/i,mood:'serio',a:'Em Natureza, identifique primeiro o fenômeno e as grandezas envolvidas. Em gráfico: eixos, unidade e tendência. Em experimento: variável manipulada, medida e controle. Em cálculo: unidade antes da fórmula.\n\nIsso reduz a chance de escolher uma fórmula conhecida que não responde ao problema.'},
+  {k:/plano.*estud|organiza.*estud|rotina|cronograma/i,mood:'confiante',a:'📚 Monte um ciclo simples: teoria essencial → questões → correção ativa → revisão dos erros. Seus erros devem decidir boa parte do próximo bloco de estudo.\n\nUma sessão de 60–90 minutos pode ter: 15–20 min de revisão, 35–50 min de questões e 15–20 min analisando por que você errou. Melhor constância real do que um cronograma perfeito que você não consegue cumprir.'},
+  {k:/revis[aã]o|revisar|caderno de erros/i,mood:'confiante',a:'Revisão eficiente não é reler tudo. Volte principalmente ao que você quase esqueceu e ao que errou.\n\nFaça um caderno de erros curto: questão/tema → por que errei → qual pista eu deveria ter percebido → regra ou ideia que resolve. Depois refaça sem olhar.'},
+  {k:/simulado|simula[cç][aã]o/i,mood:'confiante',a:'Use simulados para treinar decisão e resistência, não só nota. Reproduza tempo, pausas e estratégia de marcação.\n\nDepois, classifique os erros: conteúdo, interpretação, cálculo, pressa ou gestão de tempo. Essa classificação vale mais do que apenas olhar o percentual final.'},
+  {k:/procrast|enrol|n[aã]o consigo come[cç]ar/i,mood:'acolhedor',a:'Se começar está difícil, reduza a tarefa até ela ficar pequena demais para assustar: abra a matéria, escolha 5 questões e faça só a primeira.\n\nNão negocie com a ideia de “estudar muito”; negocie com a próxima ação de 10 minutos. Depois que o movimento começa, você decide se continua.'},
+  {k:/foco|concentr|distra/i,mood:'serio',a:'Para recuperar foco, diminua atrito: celular longe, uma única tarefa aberta e um bloco curto com objetivo específico — por exemplo, “resolver 12 questões de porcentagem e corrigir os erros”.\n\nSe a mente fugir, não transforme isso em bronca. Perceba, volte e continue. Foco é retorno repetido, não concentração perfeita.'},
+  {k:/motiva|desanim|pregui[cç]/i,mood:'animado',a:'Você não precisa sentir motivação para começar. Em semanas difíceis, a meta pode ser manter o vínculo com o estudo: 20 minutos bem feitos ainda contam.\n\nEscolha uma vitória pequena agora — 5 questões, uma revisão ou um parágrafo de redação. Resultado grande costuma ser soma de dias comuns.'},
+  {k:/ansied|nervos|press[aã]o.*prova|cora[cç][aã]o.*aceler/i,mood:'acolhedor',a:'Se a ansiedade estiver alta, não tente “proibir” a sensação. Ajude o corpo a desacelerar: apoie os pés no chão, solte o ar um pouco mais devagar do que puxa por 1–2 minutos e escolha uma ação pequena e concreta.\n\nNa prova: leia o comando, faça uma tentativa objetiva e, se travar, marque para voltar. Isso tira da sua cabeça a obrigação de resolver tudo agora.\n\nSe essa ansiedade estiver muito intensa, frequente ou atrapalhando sono e rotina, vale conversar com um psicólogo ou outro profissional de saúde.'},
+  {k:/p[aâ]nico|crise.*ansiedade|n[aã]o consigo respirar|tremendo/i,mood:'acolhedor',a:'Se você estiver em uma crise agora, priorize se estabilizar antes de estudar: sente-se, firme os pés no chão, olhe ao redor e nomeie coisas que você vê e ouve. Faça expirações lentas, sem forçar respirações enormes.\n\nQuando a intensidade baixar, escolha algo simples: água, ambiente mais tranquilo e uma pausa curta. Se crises assim se repetem ou parecem incontroláveis, procure apoio profissional.'},
+  {k:/deu branco|branco.*prova|esqueci tudo|trav.*quest/i,mood:'acolhedor',a:'Deu branco? Isso não prova que você “não sabe”. Pare de encarar a mesma linha. Solte o ar, releia somente o comando e procure uma informação concreta que você reconhece.\n\nSe em 30–60 segundos nada destravar, pule e volte. Muitas vezes o cérebro recupera o acesso ao conteúdo quando a pressão daquela questão diminui.'},
+  {k:/dormir|sono|ins[oô]nia|virar a noite/i,mood:'acolhedor',a:'Sono faz parte da preparação. Evite tentar compensar conteúdo virando a noite — isso costuma cobrar caro em atenção, memória de trabalho e controle emocional.\n\nNa semana da prova, preserve horários relativamente estáveis. Na véspera, seu objetivo é chegar funcional, não aprender o edital inteiro em uma noite.'},
+  {k:/cansad|esgotad|burnout|exaust/i,mood:'acolhedor',a:'Se você está esgotado, aumentar a cobrança pode diminuir ainda mais o rendimento. Faça uma triagem: o que é essencial hoje, o que pode esperar e quanto descanso seu corpo está pedindo.\n\nReduza volume por um dia se necessário e mantenha apenas um contato leve com o estudo. Persistência não é ignorar limite físico.'},
+  {k:/compara|todo mundo.*melhor|sou burro|sou ruim|n[aã]o sou capaz/i,mood:'acolhedor',a:'Comparar bastidores seus com o resultado dos outros distorce a realidade. Para a prova, o dado útil é: quais erros você está cometendo hoje e qual deles consegue reduzir nesta semana?\n\nSua preparação não precisa parecer impressionante. Precisa ficar um pouco mais consistente. Vamos trabalhar no próximo ponto controlável.'},
+  {k:/medo.*fracass|medo.*n[aã]o passar|e se eu n[aã]o passar|decepcionar/i,mood:'acolhedor',a:'Esse medo costuma misturar prova, futuro e expectativa de outras pessoas numa única coisa enorme. Separe: o ENEM é uma avaliação importante, mas não é uma definição do seu valor nem a única decisão possível para a sua vida.\n\nHoje você controla processo: estudar, descansar, treinar estratégia e comparecer preparado. O resultado vem depois.'},
+  {k:/pais|fam[ií]lia.*press|cobran[cç]a/i,mood:'acolhedor',a:'Cobrança de família pode transformar estudo em ameaça. Se for possível, tente conversar com linguagem concreta: diga o que você está fazendo, qual é seu plano e qual tipo de apoio ajuda — por exemplo, menos perguntas sobre nota e mais respeito ao horário de estudo/descanso.\n\nVocê pode levar a prova a sério sem transformar cada dia num julgamento.'},
+  {k:/perfeccion|tenho que acertar tudo|n[aã]o posso errar/i,mood:'acolhedor',a:'No ENEM, tentar garantir perfeição em cada questão pode destruir sua gestão de tempo. O objetivo é somar o máximo de boas decisões durante horas de prova.\n\nAceite erros inevitáveis, proteja as questões acessíveis e não entregue 8 minutos para uma única questão só porque você “deveria” saber.'},
+  {k:/v[eé]spera|dia antes|um dia antes/i,mood:'acolhedor',a:'🌙 Na véspera, faça pouco e conhecido: revisão leve de fórmulas/erros frequentes, confira documento, canetas, lanche, água, trajeto e horário.\n\nEvite simulado gigante ou assunto novo até tarde. Sua prioridade é chegar com energia cognitiva e sem pendências logísticas.'},
+  {k:/lanche|comer|alimenta|[aá]gua|hidrata/i,mood:'confiante',a:'Leve água e alimentos que você já conhece e que sejam fáceis de consumir. Evite transformar o dia da prova em teste de energético, suplemento ou comida diferente.\n\nO INEP orienta que alimentos possam ser vistoriados; itens industrializados devem estar lacrados ou com rótulo visível. Coma de modo simples e regular.'},
+  {k:/banheiro|ir ao banheiro/i,mood:'serio',a:'Você pode precisar ir ao banheiro durante a aplicação seguindo o procedimento dos fiscais. Estratégia prática: use o banheiro antes de entrar, hidrate-se sem exagero e não espere chegar a um desconforto enorme para pedir para sair.'},
+  {k:/inscri[cç][aã]o|inscrever|taxa.*enem/i,mood:'serio',a:'Para o ENEM 2026, o período regular de inscrições foi de 25 de maio a 12 de junho, e o pagamento da taxa teve prazo até 22 de junho.\n\nComo esses prazos mudam a cada edição, para qualquer situação específica de inscrição o que vale é a Página do Participante e o edital oficial do INEP.'},
+  {k:/resultado|nota.*enem|quando sai.*nota/i,mood:'serio',a:'A data de divulgação do resultado deve ser confirmada no cronograma oficial do INEP para a edição correspondente. Eu prefiro não inventar uma data quando ela pode mudar.\n\nQuando a nota sair, olhe cada área e a redação separadamente antes de pensar em Sisu, Prouni ou Fies.'},
+  {k:/sisu|prouni|fies|faculdade/i,mood:'confiante',a:'Depois do ENEM, sua nota pode ser usada em processos como Sisu, Prouni e Fies, conforme as regras e calendários de cada programa.\n\nA melhor escolha depende de curso, instituição, modalidade e sua nota por área. Quando você tiver suas notas, posso te ajudar a organizar uma comparação sem misturar tudo.'},
+  {k:/rem[eé]dio|ansiol[ií]tico|calmante|medica[cç][aã]o/i,mood:'serio',a:'Não comece, pare ou mude remédio para ansiedade por conta própria só por causa da prova. Se você já usa medicação, siga a orientação do profissional que te acompanha.\n\nSe existe uma dúvida específica sobre efeito, dose ou horário, fale com médico ou farmacêutico — isso é mais seguro do que testar algo novo perto do ENEM.'},
+  {k:/quero morrer|me matar|suic[ií]d|n[aã]o quero viver|acabar com tudo/i,mood:'acolhedor',a:'Eu quero tratar isso como algo importante. Se você está pensando em se machucar ou não se sente seguro agora, procure uma pessoa de confiança e fique perto de alguém.\n\nNo Brasil, você pode ligar para o CVV no 188. Se houver risco imediato, procure um pronto atendimento ou acione o SAMU 192 / emergência local. Estudo e prova podem esperar — sua segurança vem primeiro.'}
 ];
+
+function nexoQuestionContext(text){
+  if(!/(essa quest|quest[aã]o atual|me ajuda.*quest|macete.*quest|como resolver.*essa)/i.test(text))return null;
+  const q=state.current;
+  if(!q)return {mood:'duvida',text:'Abre uma questão no NEXO e me chama de novo. Aí eu consigo usar a matéria e o tema da questão atual para te orientar sem entregar resposta antes da hora.'};
+  const hint=getQuestionHint(q);
+  if(state.lastAnswer){
+    const selected=state.selectedOption===null?Number(state.lastAnswer.correct_option):Number(state.selectedOption);
+    const detail=buildAnswerExplanation(q,state.lastAnswer,selected);
+    return {mood:state.lastAnswer.correct?'animado':'acolhedor',text:
+      'Estamos em '+(q.subject||q.area)+' — '+(q.topic||'tema da questão')+'.\n\n'+
+      detail.summary+'\n\n'+detail.method+(hint?'\n\n⚡ '+hint:'')};
+  }
+  return {mood:'serio',text:
+    'Estamos em '+(q.subject||q.area)+' — '+(q.topic||'tema da questão')+'. Eu não vou te entregar o gabarito antes de você confirmar.\n\n'+
+    (hint||'Comece pelo comando: descubra exatamente o que ele pede, volte ao texto/dados e elimine alternativas que não respondem ao recorte.')};
+}
+
 function niaAnswer(text){
-  const hit=NIA_ANSWERS.find(x=>x.k.test(text));
-  return hit?.a||'Eu ainda não tenho uma resposta pronta específica para isso. Posso ajudar melhor com tempo de prova, estratégias de questão, Matemática, redação, organização de estudos e revisão de erros.';
+  const context=nexoQuestionContext(text);
+  if(context)return context;
+  const hit=NEXO_ANSWERS.find(x=>x.k.test(text));
+  if(hit)return {mood:hit.mood||'feliz',text:typeof hit.a==='function'?hit.a():hit.a};
+  return {mood:'duvida',text:
+    'Boa pergunta. Eu ainda não tenho uma resposta fechada para esse jeito específico de perguntar — mas posso continuar com você.\n\nTenta reformular em uma destas linhas: “como estudo isso?”, “o que faço na prova?”, “estou ansioso”, “me ajuda nessa questão”, “como melhorar a redação?” ou “qual é a regra do ENEM?”.\n\nSe for sobre a questão que está aberta, diga “me ajuda nessa questão” que eu uso o contexto dela.'};
 }
+
+const NEXO_EMOTIONS={feliz:'😊',serio:'🎯',confiante:'💪',duvida:'🤔',acolhedor:'💙',animado:'✨'};
+
+function initNexoMascotVisuals(){
+  const a=window.NEXO_MASCOT_ASSETS;
+  if(!a)return;
+  const launcher=$('#nexoLauncherAvatar'),avatar=$('#nexoAvatarImage'),hero=$('#nexoHeroImage');
+  if(launcher)launcher.src=a.head;
+  if(avatar)avatar.src=a.head;
+  if(hero)hero.src=a.hero;
+}
+initNexoMascotVisuals();
+
+function setNexoMood(mood='feliz'){
+  const panel=$('#niaPanel');
+  if(panel)panel.dataset.mood=mood;
+  const em=$('#nexoEmotion');
+  if(em)em.textContent=NEXO_EMOTIONS[mood]||'🐾';
+}
+
 function addNiaMessage(text,type){
-  const div=document.createElement('div');div.className='nia-msg '+type;div.textContent=text;$('#niaMessages').appendChild(div);$('#niaMessages').scrollTop=$('#niaMessages').scrollHeight;
+  const div=document.createElement('div');
+  div.className='nia-msg '+type;
+  div.textContent=text;
+  $('#niaMessages').appendChild(div);
+  $('#niaMessages').scrollTop=$('#niaMessages').scrollHeight;
 }
+
+function addNexoTyping(){
+  const div=document.createElement('div');
+  div.className='nia-msg bot typing';
+  div.innerHTML='<i></i><i></i><i></i>';
+  $('#niaMessages').appendChild(div);
+  $('#niaMessages').scrollTop=$('#niaMessages').scrollHeight;
+  return div;
+}
+
 function askNia(text){
   if(!text?.trim())return;
-  addNiaMessage(text.trim(),'user');
-  setTimeout(()=>addNiaMessage(niaAnswer(text),'bot'),180);
+  const clean=text.trim();
+  addNiaMessage(clean,'user');
+  setNexoMood('duvida');
+  const panel=$('#niaPanel');
+  panel?.classList.add('thinking');
+  const typing=addNexoTyping();
+  const result=niaAnswer(clean);
+  const delay=Math.min(900,Math.max(380,clean.length*9));
+  setTimeout(()=>{
+    typing.remove();
+    panel?.classList.remove('thinking');
+    setNexoMood(result.mood);
+    addNiaMessage(result.text,'bot');
+  },delay);
 }
-$('#niaButton').onclick=()=>$('#niaPanel').classList.toggle('hidden');
+
+$('#niaButton').onclick=()=>{
+  $('#niaPanel').classList.toggle('hidden');
+  if(!$('#niaPanel').classList.contains('hidden'))setNexoMood('feliz');
+};
 $('#closeNia').onclick=()=>$('#niaPanel').classList.add('hidden');
 $('#niaSend').onclick=()=>{const v=$('#niaInput').value;$('#niaInput').value='';askNia(v)};
 $('#niaInput').addEventListener('keydown',e=>{if(e.key==='Enter'){$('#niaSend').click()}});
 $$('[data-nia]').forEach(b=>b.onclick=()=>askNia(b.dataset.nia));
-function applyNiaOutfit(outfit,save=true){
-  const allowed=['purple','neon','academic','street'];if(!allowed.includes(outfit))outfit='purple';
-  const avatar=$('#niaAvatar');if(avatar)avatar.className='nia-mini-avatar outfit-'+outfit;
-  $$('[data-outfit]').forEach(b=>b.classList.toggle('active',b.dataset.outfit===outfit));
-  localStorage.setItem('nia-outfit',outfit);
-  if(save&&state.user) client.from('profiles').update({assistant_outfit:outfit,updated_at:new Date().toISOString()}).eq('id',state.user.id);
+
+function normalizeNexoStyle(style){
+  const legacy={neon:'classic',street:'competitive'};
+  return legacy[style]||style;
 }
-$$('[data-outfit]').forEach(b=>b.onclick=()=>applyNiaOutfit(b.dataset.outfit,true));
+function applyNexoStyle(style,save=true){
+  style=normalizeNexoStyle(style);
+  const allowed=['classic','purple','academic','competitive'];
+  if(!allowed.includes(style))style='classic';
+  const avatar=$('#niaAvatar');
+  if(avatar)avatar.className='nia-mini-avatar outfit-'+style;
+  $$('[data-outfit]').forEach(b=>b.classList.toggle('active',b.dataset.outfit===style));
+  localStorage.setItem('nexo-style',style);
+  if(save&&state.user){
+    client.from('profiles').update({assistant_outfit:style,updated_at:new Date().toISOString()}).eq('id',state.user.id)
+      .then(({error})=>{if(error)console.error('nexo style',error)});
+  }
+  setNexoMood(style==='competitive'?'confiante':style==='academic'?'serio':'feliz');
+}
+function applyNiaOutfit(outfit,save=true){applyNexoStyle(outfit,save)}
+$$('[data-outfit]').forEach(b=>b.onclick=()=>applyNexoStyle(b.dataset.outfit,true));
+
 
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
