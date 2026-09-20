@@ -5588,3 +5588,59 @@ body[data-plan="ultra"] #headerPlanBadge,
     font-size:22px!important;
   }
 }
+
+
+/* NEXO FOCUS MASCOT v2 */
+.focus-mascot-wrap{
+  isolation:isolate;
+}
+.focus-mascot-wrap::after{
+  content:"";
+  position:absolute;
+  inset:auto 10% 4% 10%;
+  height:32%;
+  border-radius:50%;
+  background:radial-gradient(circle,rgba(59,211,239,.18),rgba(106,78,239,.10) 48%,transparent 72%);
+  filter:blur(14px);
+  z-index:0;
+}
+.focus-mascot-img{
+  position:relative;
+  z-index:2;
+  width:min(94%,270px)!important;
+  height:auto!important;
+  max-height:390px!important;
+  object-fit:contain!important;
+  object-position:center bottom!important;
+  transform:none!important;
+  filter:drop-shadow(0 16px 30px rgba(0,0,0,.34)) drop-shadow(0 0 16px rgba(74,199,255,.12))!important;
+}
+@media(max-width:760px){
+  .focus-mascot-wrap{
+    min-height:128px!important;
+    height:128px!important;
+  }
+  .focus-mascot-img{
+    width:150px!important;
+    max-height:126px!important;
+  }
+  .focus-orbit{
+    width:134px!important;
+    height:134px!important;
+  }
+}
+@media(max-width:760px) and (max-height:760px){
+  .focus-mascot-wrap{
+    display:grid!important;
+    min-height:96px!important;
+    height:96px!important;
+  }
+  .focus-mascot-img{
+    width:114px!important;
+    max-height:94px!important;
+  }
+  .focus-orbit{
+    width:102px!important;
+    height:102px!important;
+  }
+}
