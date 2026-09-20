@@ -7928,3 +7928,59 @@ body.light .essay-theme-control select{background:#fff}
   .essay-side-v2{grid-template-columns:1fr}
   .essay-guide-card h3{font-size:14px}
 }
+
+
+/* =========================================================
+   NEXO Avatar v5 · hide incompatible options + clean compact avatars
+   ========================================================= */
+
+/* Some avatar cards are marked with the native hidden attribute by JS.
+   The visual-card layout uses display:flex!important, so without this rule
+   incompatible items reappear as empty "BLOQUEADO" cards. */
+#avatarBuilderControls .avatar-option-group button[data-avatar-field][hidden]{
+  display:none!important;
+}
+
+/* Tiny header/ranking avatars must be rendered from the same 180px canvas
+   used by the editor previews. Scaling the complete character avoids fixed
+   2px details (especially glasses) turning into a dark mask at 29–44px. */
+.header-journey-avatar,
+.journey-rank-avatar,
+.comment-social-avatar,
+.topbar .profile-avatar-shell{
+  position:relative!important;
+  overflow:hidden!important;
+  contain:layout paint;
+}
+
+.header-journey-avatar>.student-avatar-shell,
+.journey-rank-avatar>.student-avatar-shell,
+.comment-social-avatar>.student-avatar-shell,
+.topbar .profile-avatar-shell>.student-avatar-shell{
+  position:absolute!important;
+  left:50%!important;
+  top:50%!important;
+  width:180px!important;
+  height:180px!important;
+  min-width:180px!important;
+  min-height:180px!important;
+  max-width:none!important;
+  max-height:none!important;
+  aspect-ratio:1/1!important;
+  transform-origin:center!important;
+  border-radius:60px!important;
+  box-shadow:none!important;
+}
+
+.header-journey-avatar>.student-avatar-shell{
+  transform:translate(-50%,-50%) scale(.17)!important;
+}
+.journey-rank-avatar>.student-avatar-shell{
+  transform:translate(-50%,-50%) scale(.165)!important;
+}
+.comment-social-avatar>.student-avatar-shell{
+  transform:translate(-50%,-50%) scale(.19)!important;
+}
+.topbar .profile-avatar-shell>.student-avatar-shell{
+  transform:translate(-50%,-50%) scale(.245)!important;
+}
