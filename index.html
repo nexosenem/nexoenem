@@ -174,9 +174,11 @@
         <label class="search">
           <span>⌕</span>
           <input id="globalSearch" type="search" placeholder="Buscar matéria, tema ou questão..." autocomplete="off">
+          <div id="globalSearchResults" class="global-search-results hidden" role="listbox"></div>
         </label>
 
         <div class="top-actions">
+          <span id="networkStatus" class="network-status hidden"><i></i><b>Offline parcial</b></span>
           <button id="themeToggle" class="icon-btn" aria-label="Alternar tema">☾</button>
           <button id="notificationBtn" class="icon-btn notification" aria-label="Notificações">♧<i></i></button>
           <button id="headerJourneyPill" class="header-journey-pill" data-page="ranking" type="button" aria-label="Abrir NEXO Jornada">
@@ -195,6 +197,7 @@
           <button id="profileAdminShortcut" class="admin-only hidden" data-page="admin">♛ Área do Admin</button>
           <button id="editStudyPlan">✦ Ajustar meu plano</button>
           <button id="toggleNexoHaptics">◉ <span>Feedback tátil: ligado</span></button>
+          <button id="openExperienceSettings">Aa <span>Acessibilidade & experiência</span></button>
           <button id="exportMyData">⇩ Exportar meus dados</button>
           <button id="logoutBtn">Sair da conta</button>
         </div>
@@ -1337,6 +1340,10 @@
 
           <div id="cloudinarySecurityStatus" class="cloudinary-security-status checking">Verificando proteção dos uploads...</div>
           <div class="admin-grid">
+            <article class="panel admin-product-analytics">
+              <div class="panel-title"><div><b>Produto & aprendizagem</b><small>uso real sem expor conteúdo pessoal dos alunos</small></div><button id="refreshProductAnalytics" class="outline-btn small">Atualizar</button></div>
+              <div id="adminProductAnalytics" class="admin-product-analytics-grid"><p class="learning-empty">Carregando métricas...</p></div>
+            </article>
             <article class="panel admin-team-panel">
               <div class="admin-team-head">
                 <div>
@@ -1409,6 +1416,30 @@
       <button data-page="desempenho"><span>▥</span><small>Desempenho</small></button>
       <button id="moreMobile" aria-label="Abrir mais opções"><span>☰</span><small>Mais</small></button>
     </nav>
+  </div>
+
+  <div id="experienceSettingsModal" class="experience-settings-modal hidden" aria-modal="true" role="dialog">
+    <section class="experience-settings-shell">
+      <header><div><span class="eyebrow">NEXO · EXPERIÊNCIA</span><h3>Ajuste o NEXO para você.</h3><p>Tamanho de texto, contraste, animações e consumo de dados ficam salvos neste aparelho.</p></div><button id="closeExperienceSettings" class="icon-btn">×</button></header>
+      <div class="experience-setting-group">
+        <span>Tamanho do texto</span>
+        <div><button data-font-scale="normal">Normal</button><button data-font-scale="large">Grande</button><button data-font-scale="xlarge">Muito grande</button></div>
+      </div>
+      <div class="experience-setting-group">
+        <span>Contraste</span>
+        <div><button data-contrast="normal">Padrão</button><button data-contrast="high">Alto contraste</button></div>
+      </div>
+      <div class="experience-setting-group">
+        <span>Animações</span>
+        <div><button data-motion="normal">Normais</button><button data-motion="reduced">Reduzidas</button></div>
+      </div>
+      <div class="experience-setting-group">
+        <span>Modo da interface</span>
+        <div><button data-experience-mode="balanced">Equilibrado</button><button data-experience-mode="focus">Foco</button><button data-experience-mode="gamified">Gamificado</button></div>
+      </div>
+      <label class="experience-toggle"><input id="dataSaverToggle" type="checkbox"><span><b>Economia de dados</b><small>reduz efeitos decorativos e prioriza conteúdo textual.</small></span></label>
+      <footer><small>O modo Foco reduz elementos de gamificação visual, mas não altera seus dados ou recompensas.</small><button id="resetExperienceSettings" class="ghost-btn">Restaurar padrão</button></footer>
+    </section>
   </div>
 
   <div id="focusModeModal" class="focus-mode-modal hidden" aria-modal="true" role="dialog">
