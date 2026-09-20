@@ -4750,6 +4750,92 @@ function applyNiaOutfit(outfit,save=true){applyNexoStyle(outfit,save)}
 $$('[data-outfit]').forEach(b=>b.onclick=()=>applyNexoStyle(b.dataset.outfit,true));
 
 
+function healthServiceIcon(key){
+  return ({auth:'◎',database:'▦',core:'✦',journey:'♕',edge:'⚡',uploads:'☁'})[key]||'•';
+}
+
+function healthStatusText(status){
+  if(status==='healthy')return 'Operacional';
+  if(status==='warning')return 'Atenção';
+  if(status==='down')return 'Indisponível';
+  return 'Verificando';
+}
+
+function renderNexoHealth(payload){
+  const services=Array.isArray(payload?.services)?payload.services:[];
+  const grid=$('#nexoHealthGrid');
+  if(grid){
+    grid.innerHTML=services.length?services.map(service=>{
+      const status=['healthy','warning','down'].includes(service.status)?service.status:'checking';
+      const latency=Number(service.latency_ms||0);
+      return '<article class="health-service '+status+'"><span class="health-dot">'+healthServiceIcon(service.key)+'</span><div><b>'+esc(service.label||service.key||'Serviço')+'</b><small>'+esc(service.detail||healthStatusText(status))+'</small></div><em>'+healthStatusText(status)+(latency?' · '+latency+'ms':'')+'</em></article>';
+    }).join(''):'<div class="journey-empty">Nenhum serviço retornado pelo monitor.</div>';
+  }
+
+  const overall=$('#healthOverall');
+  if(overall){
+    const status=['healthy','warning','down'].includes(payload?.overall)?payload.overall:'checking';
+    overall.className='health-overall '+status;
+    overall.innerHTML='<i></i> '+(status==='healthy'?'Tudo operacional':status==='warning'?'Atenção necessária':status==='down'?'Falha detectada':'Verificando');
+  }
+
+  const m=payload?.metrics||{};
+  const metrics=$('#nexoHealthMetrics');
+  if(metrics)metrics.innerHTML=[
+    [m.users,'usuários'],
+    [m.questions,'questões'],
+    [m.attempts,'respostas'],
+    [m.errors_last_15m,'erros / 15 min']
+  ].map(([value,label])=>'<span><b>'+(value===null||value===undefined?'—':Number(value).toLocaleString('pt-BR'))+'</b><small>'+label+'</small></span>').join('');
+
+  const checked=$('#healthLastCheck');
+  if(checked){
+    const date=payload?.checked_at?new Date(payload.checked_at):new Date();
+    checked.textContent='Atualizado às '+date.toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  }
+
+  const errors=$('#nexoHealthErrors');
+  const recent=Array.isArray(payload?.recent_errors)?payload.recent_errors:[];
+  if(errors){
+    errors.innerHTML=recent.length?recent.map(row=>'<article><span>'+esc(row.area||'app')+'</span><div><b>'+esc(row.code||'runtime')+'</b><p>'+esc(row.message||'Erro sem mensagem')+'</p></div><time>'+new Date(row.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</time></article>').join(''):'<div class="health-no-errors">✓ Nenhum erro recente registrado.</div>';
+  }
+}
+
+async function loadNexoHealth({silent=false}={}){
+  if(state.profile?.role!=='admin')return;
+  if(state.healthMonitorLoading)return;
+  state.healthMonitorLoading=true;
+  const btn=$('#refreshNexoHealth');
+  const overall=$('#healthOverall');
+  if(btn){btn.disabled=true;btn.textContent='Verificando...';}
+  if(overall&&!silent){overall.className='health-overall checking';overall.innerHTML='<i></i> Verificando';}
+
+  try{
+    const {data,error}=await client.functions.invoke('nexo-health',{body:{}});
+    if(error)throw error;
+    if(data?.error)throw new Error(data.error);
+    renderNexoHealth(data||{});
+  }catch(err){
+    console.error('NEXO Health Monitor',err);
+    if(overall){overall.className='health-overall down';overall.innerHTML='<i></i> Monitor indisponível';}
+    const grid=$('#nexoHealthGrid');
+    if(grid)grid.innerHTML='<div class="health-monitor-failure"><b>Não foi possível executar o diagnóstico.</b><span>'+esc(String(err?.message||err||'Falha desconhecida'))+'</span></div>';
+    const checked=$('#healthLastCheck');
+    if(checked)checked.textContent='Falha na última verificação';
+    if(!silent)toast('O Health Monitor não respondeu.','error');
+  }finally{
+    state.healthMonitorLoading=false;
+    if(btn){btn.disabled=false;btn.textContent='Atualizar agora';}
+  }
+}
+
+$('#refreshNexoHealth')?.addEventListener('click',()=>loadNexoHealth({silent:false}));
+setInterval(()=>{
+  if(state.user&&state.profile?.role==='admin'&&$('.page.active')?.id==='admin'){
+    loadNexoHealth({silent:true});
+  }
+},30000);
+
 async function checkCloudinarySecurityStatus(){
   const el=$('#cloudinarySecurityStatus');
   if(!el)return;
@@ -4843,6 +4929,7 @@ $('#refreshAdminUsers')?.addEventListener('click',loadAdminUsers);
 
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
+  loadNexoHealth({silent:true});
   checkCloudinarySecurityStatus();
   loadAdminUsers();
   const [profiles,attempts,feedbacks,videosCount,materialsCount,progressRows,videosRows,materialsRows]=await Promise.all([
