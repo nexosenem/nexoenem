@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-28">
+  <link rel="stylesheet" href="./styles.css?v=20260920-29">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -560,6 +560,95 @@
     </div>
   </div>
 
+  <div id="nexoOnboarding" class="nexo-onboarding hidden" role="dialog" aria-modal="true" aria-labelledby="onboardingTitle">
+    <div class="onboarding-backdrop"></div>
+    <section class="onboarding-shell">
+      <aside class="onboarding-mentor">
+        <div class="onboarding-mentor-orbit" aria-hidden="true"></div>
+        <img id="onboardingMascot" src="./assets/nexo-expressions/confiante.webp" alt="Professor Nexo">
+        <div class="onboarding-mentor-copy">
+          <span>PROFESSOR NEXO</span>
+          <h3 id="onboardingMentorTitle">Vamos montar seu ponto de partida.</h3>
+          <p id="onboardingMentorText">São só três escolhas. Eu uso isso para criar sua primeira recomendação antes mesmo de conhecer todo o seu histórico.</p>
+        </div>
+      </aside>
+
+      <main class="onboarding-content">
+        <header class="onboarding-head">
+          <div>
+            <span class="eyebrow">NEXO CORE · CONFIGURAÇÃO INICIAL</span>
+            <h2 id="onboardingTitle">Seu plano começa por você.</h2>
+          </div>
+          <span id="onboardingStepLabel" class="onboarding-step-label">1 de 3</span>
+        </header>
+
+        <div class="onboarding-progress"><i id="onboardingProgress"></i></div>
+
+        <section class="onboarding-step" data-onboarding-step="1">
+          <span class="onboarding-question">01 · META</span>
+          <h3>Qual nota você quer perseguir no ENEM?</h3>
+          <p>Não é uma promessa nem uma cobrança. É uma referência para o NEXO ajustar intensidade e ritmo.</p>
+
+          <div class="goal-score-display">
+            <span>Meta estimada</span>
+            <strong id="goalScoreValue">750</strong>
+            <small>pontos</small>
+          </div>
+
+          <input id="goalScoreRange" class="goal-score-range" type="range" min="500" max="1000" step="10" value="750" aria-label="Meta de nota">
+          <div class="goal-score-scale"><span>500</span><span>750</span><span>1000</span></div>
+
+          <div class="onboarding-presets" id="goalScorePresets">
+            <button type="button" data-goal-score="650">650</button>
+            <button type="button" data-goal-score="750" class="active">750</button>
+            <button type="button" data-goal-score="850">850</button>
+            <button type="button" data-goal-score="900">900+</button>
+          </div>
+        </section>
+
+        <section class="onboarding-step hidden" data-onboarding-step="2">
+          <span class="onboarding-question">02 · DIFICULDADES</span>
+          <h3>Quais áreas mais precisam da sua atenção?</h3>
+          <p>Escolha uma ou duas. A primeira será usada no seu diagnóstico inicial.</p>
+
+          <div class="onboarding-area-grid">
+            <button type="button" data-onboarding-area="Matemática"><span>Σ</span><div><b>Matemática</b><small>cálculo, lógica e resolução</small></div><i>+</i></button>
+            <button type="button" data-onboarding-area="Ciências da Natureza"><span>⌬</span><div><b>Natureza</b><small>física, química e biologia</small></div><i>+</i></button>
+            <button type="button" data-onboarding-area="Linguagens"><span>A</span><div><b>Linguagens</b><small>interpretação e repertório</small></div><i>+</i></button>
+            <button type="button" data-onboarding-area="Ciências Humanas"><span>◎</span><div><b>Humanas</b><small>história, geografia e sociedade</small></div><i>+</i></button>
+          </div>
+          <small id="onboardingAreaHint" class="onboarding-inline-hint">Escolha pelo menos uma área.</small>
+        </section>
+
+        <section class="onboarding-step hidden" data-onboarding-step="3">
+          <span class="onboarding-question">03 · ROTINA</span>
+          <h3>Quanto tempo cabe de verdade no seu dia?</h3>
+          <p>Escolha um tempo sustentável. O NEXO prefere constância real a um cronograma impossível.</p>
+
+          <div class="onboarding-time-grid">
+            <button type="button" data-onboarding-minutes="20"><b>20 min</b><small>sessão essencial</small></button>
+            <button type="button" data-onboarding-minutes="30"><b>30 min</b><small>ritmo leve</small></button>
+            <button type="button" data-onboarding-minutes="45"><b>45 min</b><small>ritmo consistente</small></button>
+            <button type="button" data-onboarding-minutes="60" class="active"><b>1 hora</b><small>ritmo completo</small></button>
+            <button type="button" data-onboarding-minutes="90"><b>1h30</b><small>imersão diária</small></button>
+            <button type="button" data-onboarding-minutes="120"><b>2 horas</b><small>rotina intensiva</small></button>
+          </div>
+
+          <div class="onboarding-preview">
+            <span>✦ PRIMEIRA MISSÃO</span>
+            <p id="onboardingPreviewText">Com 1 hora por dia, seu primeiro diagnóstico terá cerca de 8 questões na área que você marcou como prioridade.</p>
+          </div>
+        </section>
+
+        <footer class="onboarding-actions">
+          <button id="onboardingBack" type="button" class="ghost-btn hidden">← Voltar</button>
+          <div class="onboarding-action-spacer"></div>
+          <button id="onboardingNext" type="button" class="primary-btn">Continuar <span>→</span></button>
+        </footer>
+      </main>
+    </section>
+  </div>
+
   <button id="niaButton" class="nia-button nexo-launcher hidden" aria-label="Abrir Nexo">
     <img id="nexoLauncherAvatar" alt="Nexo, mascote do NEXO ENEM">
     <i></i>
@@ -620,6 +709,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-28"></script>
+  <script src="./app.js?v=20260920-29"></script>
 </body>
 </html>
