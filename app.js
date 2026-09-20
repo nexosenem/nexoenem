@@ -640,17 +640,20 @@ function renderNexoCore(){
   const core=state.core||{};
   const rec=core.recommended_action||null;
   const momentum=core.momentum||{};
-  $$('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
-  $$('[data-core-status]').forEach(el=>el.textContent=rec?'adaptativo':'calibrando');
-  $$('[data-core-title]').forEach(el=>el.textContent=rec
-    ? ((rec.subject||rec.area||'Treino')+' · '+(rec.topic||'revisão direcionada'))
-    : 'Seu próximo melhor passo');
-  $$('[data-core-reason]').forEach(el=>el.textContent=rec
+  const initial=Boolean(rec && !rec.topic && Number(rec.attempts||0)===0);
+  $('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
+  $('[data-core-status]').forEach(el=>el.textContent=initial?'primeiro diagnóstico':rec?'adaptativo':'calibrando');
+  $('[data-core-title]').forEach(el=>el.textContent=initial
+    ? ('Diagnóstico inicial · '+(rec.area||'ENEM'))
+    : rec
+      ? ((rec.subject||rec.area||'Treino')+' · '+(rec.topic||'revisão direcionada'))
+      : 'Seu próximo melhor passo');
+  $('[data-core-reason]').forEach(el=>el.textContent=rec
     ? (rec.reason||'O NEXO encontrou um ponto com boa margem de evolução.')
     : 'Resolva algumas questões para eu transformar seu desempenho em uma recomendação personalizada.');
-  $$('[data-core-mastery]').forEach(el=>el.textContent=rec?Math.round(Number(rec.mastery||0))+'%':'—');
-  $$('[data-core-priority]').forEach(el=>el.textContent=rec?Math.round(Number(rec.priority||0))+'%':'—');
-  $$('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
+  $('[data-core-mastery]').forEach(el=>el.textContent=initial?'—':rec?Math.round(Number(rec.mastery||0))+'%':'—');
+  $('[data-core-priority]').forEach(el=>el.textContent=initial?'1ª':rec?Math.round(Number(rec.priority||0))+'%':'—');
+  $('[data-core-momentum]').forEach(el=>el.textContent=String(Number(momentum.attempts_7d||0)));
   const coreMood=rec
     ? (Number(rec.priority||0)>=70?'pensativo':Number(rec.mastery||0)>=70?'confiante':'serio')
     : 'pensativo';
@@ -660,9 +663,11 @@ function renderNexoCore(){
   });
   updateHomeExperience();
   $$('[data-core-start]').forEach(btn=>{
-    btn.innerHTML=rec
-      ? 'Treinar '+Number(rec.size||6)+' questões <span>→</span>'
-      : 'Começar diagnóstico <span>→</span>';
+    btn.innerHTML=initial
+      ? 'Iniciar diagnóstico · '+Number(rec.size||6)+' questões <span>→</span>'
+      : rec
+        ? 'Treinar '+Number(rec.size||6)+' questões <span>→</span>'
+        : 'Começar diagnóstico <span>→</span>';
     btn.onclick=()=>{
       if(rec) startCoreRecommendation();
       else {
@@ -2027,6 +2032,27 @@ function nexoQuestionContext(text){
 }
 
 
+function nexoStudyPlanContext(text){
+  if(!/(minha meta|meu objetivo|quanto estudar|quanto tempo estudar|meu plano|plano de estudo|plano do nexo|areas que escolhi|áreas que escolhi)/i.test(text))return null;
+  const goal=Number(state.profile?.goal_score||state.core?.profile?.goal_score||0);
+  const minutes=Number(state.profile?.daily_minutes||state.core?.profile?.daily_minutes||0);
+  const areas=Array.isArray(state.profile?.difficult_areas)
+    ? state.profile.difficult_areas
+    : Array.isArray(state.core?.profile?.difficult_areas)?state.core.profile.difficult_areas:[];
+  if(!goal&&!minutes&&!areas.length)return null;
+  const time=minutes>=60
+    ? (minutes===60?'1 hora':minutes===90?'1h30':minutes===120?'2 horas':Math.round(minutes/60*10)/10+' horas')
+    : minutes+' minutos';
+  return {
+    mood:'confiante',
+    text:'Seu plano atual no NEXO está configurado'+
+      (goal?' com meta de '+goal+' pontos':'')+
+      (minutes?' e '+time+' disponíveis por dia':'')+'.'+
+      (areas.length?' Suas prioridades iniciais são '+areas.join(' e ')+'.':'')+
+      '\n\nEu uso isso como ponto de partida. Conforme você responde questões, o NEXO Core troca essas suposições pelo seu desempenho real.'
+  };
+}
+
 function nexoSimulationContext(text){
   if(!/(meu (ultimo|último) simulado|analise.*simulado|an[aá]lise.*simulado|o que revisar.*sess[aã]o|resultado.*simulado|como fui.*simulado)/i.test(text))return null;
   const report=state.lastSimulationReport;
@@ -2141,6 +2167,9 @@ async function niaAnswer(text){
 
   const simulationContext=nexoSimulationContext(text);
   if(simulationContext)return {...simulationContext,key:'simulation_report',category:'simulation'};
+
+  const planContext=nexoStudyPlanContext(text);
+  if(planContext)return {...planContext,key:'study_plan_profile',category:'adaptive'};
 
   const coreContext=await nexoCoreAssistantContext(text);
   if(coreContext)return {...coreContext,key:'nexo_core',category:'adaptive'};
