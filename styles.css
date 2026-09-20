@@ -7994,3 +7994,203 @@ body.light .essay-theme-control select{background:#fff}
   .essay-theme-tools{grid-template-columns:1fr}
   .essay-random-theme{width:100%}
 }
+
+
+/* =========================================================
+   Redação NEXO v3 · compact workspace
+   ========================================================= */
+#redacao{padding-top:8px;padding-bottom:42px}
+#redacao .essay-page-head{align-items:flex-start;gap:14px;margin-bottom:12px}
+#redacao .essay-page-head h2{max-width:760px;margin:4px 0 7px;font-size:clamp(28px,4.5vw,42px);line-height:1.04;letter-spacing:-.025em}
+#redacao .essay-page-head p{max-width:760px;font-size:12px;line-height:1.5;color:#91a1b7}
+#redacao .essay-mentor{align-self:center}
+
+#redacao .essay-flow-bar{gap:7px;margin-bottom:14px}
+#redacao .essay-flow-bar>span{min-height:58px;padding:9px 10px;border-radius:14px}
+#redacao .essay-flow-bar i{width:29px;height:29px}
+#redacao .essay-flow-bar b{font-size:9px}
+#redacao .essay-flow-bar small{font-size:6.5px}
+
+#redacao .essay-workspace-v2{grid-template-columns:minmax(0,1.45fr) minmax(280px,.55fr);gap:14px}
+#redacao .essay-editor-v2,
+#redacao .essay-guide-card,
+#redacao .essay-result-v2{
+  border-color:rgba(83,101,143,.22);
+  background:
+    radial-gradient(circle at 100% 0%,rgba(62,126,190,.055),transparent 31%),
+    linear-gradient(165deg,rgba(9,20,38,.98),rgba(6,14,28,.99));
+  box-shadow:0 18px 48px rgba(0,0,0,.14)
+}
+#redacao .essay-editor-v2{padding:18px;border-radius:19px}
+#redacao .essay-editor-heading{margin-bottom:14px}
+#redacao .essay-editor-heading h3,
+#redacao .essay-writing-head h3{font-size:17px;line-height:1.15}
+#redacao .essay-enem-chip{padding:6px 9px;font-size:7px}
+
+#redacao .essay-theme-control{gap:9px;margin-bottom:3px}
+#redacao .essay-theme-tools{gap:9px}
+#redacao .essay-theme-control label{font-size:8px;letter-spacing:.15px}
+#redacao .essay-theme-control select{
+  min-height:50px;
+  border-radius:13px;
+  padding:0 14px;
+  font-size:11px;
+  font-weight:780;
+  border-color:rgba(84,107,151,.28);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.015)
+}
+#redacao .essay-random-theme{
+  min-height:50px;
+  border-radius:13px;
+  padding:0 16px;
+  font-size:10px;
+  font-weight:900
+}
+#redacao .essay-theme-count{margin-top:1px;font-size:7px}
+#redacao .essay-prompt-v2{
+  margin:11px 0 18px;
+  padding:13px 14px;
+  border-radius:13px;
+  font-size:9px;
+  line-height:1.55
+}
+
+#redacao .essay-writing-head{align-items:center;margin-bottom:10px}
+#redacao .essay-writing-head>span{font-size:8px;background:rgba(255,255,255,.018)}
+#redacao .essay-writing-shell{border-radius:15px}
+#redacao .essay-writing-shell textarea{
+  min-height:390px;
+  padding:18px!important;
+  font-size:15px!important;
+  line-height:1.8!important
+}
+#redacao .essay-structure-check{grid-template-columns:repeat(2,1fr);gap:7px;margin:11px 0 13px}
+#redacao .essay-structure-check span{
+  min-height:36px;
+  display:flex;
+  align-items:center;
+  padding:8px 10px;
+  border-radius:10px;
+  font-size:7.5px;
+  background:rgba(255,255,255,.012)
+}
+#redacao .essay-editor-actions{gap:10px}
+#redacao .essay-editor-actions>small{font-size:7.5px}
+#redacao .essay-editor-actions .primary-btn{min-height:50px;border-radius:13px}
+
+#redacao .essay-side-v2{gap:14px;top:84px}
+#redacao .essay-guide-card{padding:16px;border-radius:18px}
+#redacao .essay-guide-card h3{font-size:16px;margin:5px 0 11px}
+#redacao .essay-competency-mini{gap:6px}
+#redacao .essay-competency-mini span{
+  min-height:38px;
+  grid-template-columns:38px 1fr;
+  padding:8px 9px;
+  border-radius:10px
+}
+#redacao .essay-competency-mini b{font-size:9px}
+#redacao .essay-competency-mini small{font-size:7.5px}
+#redacao .essay-guide-card>p{font-size:7.5px}
+
+#redacao .essay-result-v2{min-height:230px;padding:13px;border-radius:18px}
+#redacao .essay-empty-v2{
+  min-height:200px;
+  border:1px dashed rgba(102,119,160,.15);
+  border-radius:14px;
+  background:rgba(255,255,255,.008)
+}
+#redacao .essay-empty-v2>span{font-size:25px}
+#redacao .essay-empty-v2 h3{font-size:15px}
+#redacao .essay-empty-v2 p{font-size:7.5px;max-width:250px}
+
+@media(max-width:980px){
+  #redacao .essay-workspace-v2{grid-template-columns:1fr}
+  #redacao .essay-side-v2{position:static;grid-template-columns:1fr 1fr}
+}
+
+@media(max-width:760px){
+  #redacao{padding-top:10px;padding-bottom:90px}
+  #redacao .essay-page-head{display:block;margin-bottom:10px}
+  #redacao .essay-page-head h2{
+    margin:3px 0 6px;
+    font-size:27px;
+    line-height:1.06
+  }
+  #redacao .essay-page-head p{font-size:12px;line-height:1.45}
+  #redacao .essay-mentor{display:none!important}
+
+  #redacao .essay-flow-bar{
+    grid-template-columns:repeat(4,minmax(0,1fr));
+    gap:5px;
+    overflow:visible;
+    margin-bottom:10px
+  }
+  #redacao .essay-flow-bar>span{
+    min-width:0!important;
+    min-height:52px;
+    grid-template-columns:25px minmax(0,1fr);
+    column-gap:5px;
+    padding:7px 6px
+  }
+  #redacao .essay-flow-bar i{width:25px;height:25px;font-size:9px}
+  #redacao .essay-flow-bar b{font-size:7.5px;white-space:nowrap}
+  #redacao .essay-flow-bar small{font-size:5.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+  #redacao .essay-editor-v2{padding:13px;border-radius:17px}
+  #redacao .essay-editor-heading{align-items:center;margin-bottom:12px}
+  #redacao .essay-editor-heading h3{font-size:16px}
+  #redacao .essay-enem-chip{font-size:6px;padding:5px 7px}
+
+  #redacao .essay-theme-tools{grid-template-columns:1fr;gap:8px}
+  #redacao .essay-theme-control select{min-height:51px;font-size:13px;border-radius:14px}
+  #redacao .essay-random-theme{width:100%;min-height:48px;font-size:12px;border-radius:14px}
+  #redacao .essay-theme-count{font-size:8px}
+  #redacao .essay-prompt-v2{margin:10px 0 16px;padding:12px;font-size:9px}
+
+  #redacao .essay-writing-head{flex-direction:row;align-items:center}
+  #redacao .essay-writing-head h3{font-size:15px}
+  #redacao .essay-writing-head>span{font-size:7px;padding:5px 7px}
+  #redacao .essay-writing-shell textarea{
+    min-height:285px!important;
+    padding:15px!important;
+    font-size:15px!important;
+    line-height:1.7!important
+  }
+  #redacao .essay-structure-check{grid-template-columns:1fr 1fr;gap:6px}
+  #redacao .essay-structure-check span{min-height:34px;font-size:7px;padding:7px 8px}
+  #redacao .essay-editor-actions{display:grid;gap:9px}
+  #redacao .essay-editor-actions>small{max-width:none;font-size:7px}
+  #redacao .essay-editor-actions .primary-btn{width:100%;min-height:54px;font-size:14px;border-radius:14px}
+
+  #redacao .essay-side-v2{grid-template-columns:1fr;gap:10px}
+  #redacao .essay-guide-card{padding:13px;border-radius:16px}
+  #redacao .essay-guide-card h3{font-size:15px}
+  #redacao .essay-competency-mini{
+    grid-template-columns:1fr 1fr;
+    gap:6px
+  }
+  #redacao .essay-competency-mini span{
+    display:flex;
+    gap:8px;
+    min-height:38px;
+    padding:8px
+  }
+  #redacao .essay-competency-mini span:last-child{grid-column:1/-1}
+  #redacao .essay-competency-mini b{font-size:9px}
+  #redacao .essay-competency-mini small{font-size:7px}
+  #redacao .essay-guide-card>p{font-size:7px;margin-top:9px}
+
+  #redacao .essay-result-v2{min-height:175px;padding:10px;border-radius:16px}
+  #redacao .essay-empty-v2{min-height:150px}
+  #redacao .essay-empty-v2>span{font-size:22px}
+  #redacao .essay-empty-v2 h3{font-size:14px;margin:6px 0 3px}
+  #redacao .essay-empty-v2 p{font-size:7px;max-width:230px}
+}
+
+@media(max-width:390px){
+  #redacao .essay-page-head h2{font-size:24px}
+  #redacao .essay-flow-bar small{display:none}
+  #redacao .essay-flow-bar>span{grid-template-rows:1fr;min-height:44px}
+  #redacao .essay-flow-bar i{grid-row:1}
+  #redacao .essay-structure-check{grid-template-columns:1fr}
+}
