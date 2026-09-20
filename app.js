@@ -192,6 +192,11 @@ const state = {
   lastSimulationReport:null,
   completedEssayThemes:new Set(),
   essayThemeProgressLoaded:false,
+  essayHistory:[],
+  essayRevisionOf:null,
+  savedQuestions:new Set(),
+  weekPlan:null,
+  questionReportTarget:null,
   onboarding:{
     step:1,
     goalScore:750,
