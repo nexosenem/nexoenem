@@ -1243,13 +1243,13 @@ const NEXO_MOOD_IMAGES={
   feliz:'./assets/nexo-expressions/feliz.webp',
   serio:'./assets/nexo-expressions/serio.webp',
   confiante:'./assets/nexo-expressions/confiante.webp',
-  duvida:'./assets/nexo-expressions/duvida.webp',
-  surpresa:'./assets/nexo-expressions/surpresa.webp',
+  duvida:'./assets/nexo-expressions/pensativo.webp',
+  surpresa:'./assets/nexo-expressions/feliz.webp',
   pensativo:'./assets/nexo-expressions/pensativo.webp',
   acolhedor:'./assets/nexo-expressions/acolhedor.webp',
-  calmo:'./assets/nexo-expressions/calmo.webp',
-  animado:'./assets/nexo-expressions/motivado.webp',
-  motivado:'./assets/nexo-expressions/motivado.webp'
+  calmo:'./assets/nexo-expressions/acolhedor.webp',
+  animado:'./assets/nexo-expressions/confiante.webp',
+  motivado:'./assets/nexo-expressions/confiante.webp'
 };
 
 function setNexoMood(mood='feliz'){
