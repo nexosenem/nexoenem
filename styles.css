@@ -7541,3 +7541,28 @@ body[data-plan="ultra"] #headerPlanBadge,
 body[data-plan="ultra"] .header-journey-pill{
   box-shadow:inset 0 0 0 1px rgba(231,188,93,.14);
 }
+
+/* NEXO access model · role and plan separated */
+.admin-access-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.plan-access-chip{
+  display:inline-flex;align-items:center;padding:4px 7px;border:1px solid var(--line);
+  border-radius:999px;font-size:7px;font-weight:900;text-transform:uppercase;letter-spacing:.45px;color:var(--muted)
+}
+.plan-access-chip.plus{color:#a899ff;border-color:rgba(118,91,230,.30);background:rgba(118,91,230,.07)}
+.plan-access-chip.ultra{color:#f1cb76;border-color:rgba(230,185,83,.34);background:rgba(230,185,83,.07)}
+.admin-user-access{display:grid;grid-template-columns:auto minmax(210px,1fr);gap:10px;align-items:end}
+.admin-access-control>small{display:block;margin-bottom:5px;color:var(--muted);font-size:7px;font-weight:900;letter-spacing:.6px}
+.admin-plan-switch{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:3px;border:1px solid var(--line);border-radius:10px;background:rgba(5,13,25,.42)}
+.admin-plan-switch button{
+  border:0;border-radius:7px;padding:7px 9px;background:transparent;color:var(--muted);
+  font-size:8px;font-weight:900;cursor:pointer
+}
+.admin-plan-switch button.active{background:rgba(104,82,220,.17);color:#c8beff}
+.admin-plan-switch button.ultra.active{background:rgba(230,185,83,.13);color:#f3d286}
+body.light .admin-plan-switch{background:#f5f7fb}
+@media(max-width:820px){
+  .admin-user-row{grid-template-columns:38px minmax(0,1fr)!important}
+  .admin-user-access{grid-column:1/-1;grid-template-columns:1fr;gap:8px}
+  .admin-role-action button{width:100%}
+  .admin-plan-switch button{min-height:39px}
+}
