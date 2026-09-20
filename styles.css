@@ -72,3 +72,17 @@ body.light .hero-card{background:linear-gradient(105deg,#12182b,#151c33);color:#
 @media(max-width:520px){
   .subject-grid,.feature-grid,.stats-grid,.admin-stats,.video-grid,.themes-grid,.focus-grid,.study-area-grid,.sim-grid{grid-template-columns:1fr}.hero-copy h1{font-size:32px}.hero-actions{display:grid}.hero-actions button{width:100%}.progress-row{grid-template-columns:1fr}.legend{grid-template-columns:repeat(3,1fr)}.legend span{grid-template-columns:8px 1fr}.legend b{grid-column:2}.weak-row{grid-template-columns:1fr 90px 34px}.study-area-grid{grid-template-columns:1fr 1fr}.study-area-grid button{padding:12px 6px}.setup-title{display:grid}.setup-chip{width:max-content}.question-page-head #changeSession{width:100%}.q-option b{font-weight:560}.editor-footer{gap:8px}.editor-footer .primary-btn{padding:9px 12px}.auth-card{padding:22px 18px}
 }
+
+
+.resend-confirm{
+  width:100%;
+  margin:-4px 0 14px;
+  padding:10px 12px;
+  border:1px solid #6d55e7;
+  border-radius:10px;
+  background:rgba(108,85,231,.12);
+  color:#d6ceff;
+  font-weight:700;
+}
+.resend-confirm:hover{background:rgba(108,85,231,.22)}
+.resend-confirm:disabled{opacity:.6;cursor:wait}
