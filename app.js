@@ -2156,13 +2156,16 @@ function openPage(id) {
   if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
   if (id==='admin') loadAdmin();
 }
-$('[data-page]').forEach(b=>b.addEventListener('click',e=>{e.preventDefault();openPage(b.dataset.page)}));
-$('.mobile-hero .primary-btn[data-page="questoes"]')?.addEventListener('click',e=>{
-  const saved=readPersistedStudySession();
-  const partial=(state.materials||[]).map(item=>({item,p:getContentProgress('material',item.id)})).filter(x=>Number(x.p.progress_percent||0)>0&&!x.p.completed).sort((a,b)=>new Date(b.p.last_opened_at||0)-new Date(a.p.last_opened_at||0))[0];
-  if(saved){e.preventDefault();e.stopImmediatePropagation();resumePersistedStudySession()}
-  else if(partial?.item){e.preventDefault();e.stopImmediatePropagation();openPage('materiais');setTimeout(()=>openContentViewer('material',partial.item.id),80)}
-});
+$('[data-page]').forEach(b=>b.addEventListener('click',e=>{
+  e.preventDefault();
+  if(b.matches('.mobile-hero .primary-btn[data-page="questoes"]')){
+    const saved=readPersistedStudySession();
+    const partial=(state.materials||[]).map(item=>({item,p:getContentProgress('material',item.id)})).filter(x=>Number(x.p.progress_percent||0)>0&&!x.p.completed).sort((a,b)=>new Date(b.p.last_opened_at||0)-new Date(a.p.last_opened_at||0))[0];
+    if(saved)return resumePersistedStudySession();
+    if(partial?.item){openPage('materiais');setTimeout(()=>openContentViewer('material',partial.item.id),80);return}
+  }
+  openPage(b.dataset.page);
+}));
 
 async function initApp(session) {
   state.user = session.user;
