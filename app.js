@@ -3517,7 +3517,7 @@ function fillThemes() {
   };
 
   $('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
-  $('[data-theme]').forEach(b=>b.onclick=()=>{
+  $$('[data-theme]').forEach(b=>b.onclick=()=>{
     const t=THEMES.find(x=>String(x.id)===String(b.dataset.theme));
     if(t&&$('#essayAxis'))$('#essayAxis').value=t.axis;
     renderEssayThemeOptions({keepSelection:false});
