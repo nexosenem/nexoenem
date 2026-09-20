@@ -10,7 +10,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-34">
+  <link rel="stylesheet" href="./styles.css?v=20260920-35">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -476,13 +476,13 @@
 
         <section class="page" id="videoaulas">
           <div class="page-head"><div><span class="eyebrow">CONTEÚDO</span><h2>Videoaulas</h2><p>Conteúdo publicado pelo administrador e organizado por matéria.</p></div></div>
-          <div class="filter-line"><input id="videoSearch" class="text-input" placeholder="Buscar videoaula..."></div>
+          <div class="filter-line content-filter-line"><input id="videoSearch" class="text-input" placeholder="Buscar videoaula..."><button id="videoFavoritesOnly" class="outline-btn">☆ Favoritos</button></div>
           <div class="video-grid" id="videoGrid"></div>
         </section>
 
         <section class="page" id="materiais">
           <div class="page-head"><div><span class="eyebrow">BIBLIOTECA</span><h2>Materiais de estudo</h2><p>PDFs e imagens publicados pelo administrador, armazenados no Cloudinary.</p></div></div>
-          <div class="filter-line"><input id="materialSearch" class="text-input" placeholder="Buscar PDF, matéria ou tema..."></div>
+          <div class="filter-line content-filter-line"><input id="materialSearch" class="text-input" placeholder="Buscar PDF, matéria ou tema..."><button id="materialFavoritesOnly" class="outline-btn">☆ Favoritos</button></div>
           <div class="video-grid" id="materialGrid"></div>
         </section>
 
@@ -543,6 +543,7 @@
         <section class="page" id="admin">
           <div class="page-head"><div><span class="eyebrow gold">ADMINISTRAÇÃO</span><h2>Área do Admin</h2><p>Esta página só aparece para usuários com papel de administrador no banco.</p></div></div>
           <div class="admin-stats" id="adminStats"></div>
+          <div id="cloudinarySecurityStatus" class="cloudinary-security-status checking">Verificando proteção dos uploads...</div>
           <div class="admin-grid">
             <article class="panel">
               <h3>Publicar videoaula</h3>
@@ -786,6 +787,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-36"></script>
+  <script src="./app.js?v=20260920-37"></script>
 </body>
 </html>
