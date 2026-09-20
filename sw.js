@@ -1,9 +1,10 @@
-const NEXO_CACHE='nexo-v7-20260920-2';
+const NEXO_CACHE='nexo-v7-20260920-3';
 const SHELL=[
   './',
   './index.html',
   './styles.css',
   './app.js',
+  './assets/nexo-runtime-compat.js',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',
