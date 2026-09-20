@@ -101,7 +101,59 @@ const THEMES = [
   {id:3,axis:'Cidadania',title:'Desafios para combater a desinformação na sociedade brasileira',prompt:'Discuta estratégias de educação midiática e responsabilidade social para reduzir a desinformação.'},
   {id:4,axis:'Saúde pública',title:'Caminhos para ampliar o cuidado com a saúde mental entre adolescentes',prompt:'Analise os obstáculos ao cuidado em saúde mental e proponha ações de prevenção e acolhimento.'},
   {id:5,axis:'Urbanização',title:'Mobilidade urbana e direito à cidade no Brasil contemporâneo',prompt:'Discuta os impactos da mobilidade desigual e proponha políticas para cidades mais acessíveis.'},
-  {id:6,axis:'Cultura',title:'A preservação do patrimônio cultural diante das transformações digitais',prompt:'Analise como preservar memória e patrimônio cultural em uma sociedade cada vez mais digital.'}
+  {id:6,axis:'Cultura',title:'A preservação do patrimônio cultural diante das transformações digitais',prompt:'Analise como preservar memória e patrimônio cultural em uma sociedade cada vez mais digital.'},
+
+  {id:7,axis:'Educação',title:'Desafios para reduzir a evasão escolar no ensino médio brasileiro',prompt:'Analise fatores que afastam estudantes da escola e proponha caminhos para fortalecer permanência, aprendizagem e perspectiva de futuro.'},
+  {id:8,axis:'Educação',title:'A valorização da leitura na formação de jovens brasileiros',prompt:'Discuta os obstáculos à formação de leitores e proponha ações que aproximem adolescentes da literatura e de práticas de leitura.'},
+  {id:9,axis:'Educação',title:'Desigualdades de acesso a oportunidades educacionais no Brasil',prompt:'Analise como diferenças sociais e territoriais afetam trajetórias escolares e proponha medidas para ampliar a equidade educacional.'},
+  {id:10,axis:'Educação',title:'A valorização dos profissionais da educação na qualidade do ensino',prompt:'Discuta a relação entre condições de trabalho, formação docente e qualidade educacional, propondo ações de valorização profissional.'},
+
+  {id:11,axis:'Tecnologia e sociedade',title:'Privacidade e proteção de dados na vida digital dos brasileiros',prompt:'Analise riscos relacionados à exposição de dados pessoais e proponha medidas de educação e proteção para o uso seguro de serviços digitais.'},
+  {id:12,axis:'Tecnologia e sociedade',title:'Os efeitos do uso excessivo de telas na infância',prompt:'Discuta impactos do tempo excessivo de tela no desenvolvimento infantil e proponha formas de promover hábitos digitais mais equilibrados.'},
+  {id:13,axis:'Tecnologia e sociedade',title:'Inclusão digital de pessoas idosas no Brasil',prompt:'Analise barreiras enfrentadas por pessoas idosas no acesso a tecnologias e proponha iniciativas para ampliar autonomia e participação digital.'},
+  {id:14,axis:'Tecnologia e sociedade',title:'Cyberbullying e violência digital entre adolescentes',prompt:'Discuta causas e consequências da violência praticada em ambientes digitais e proponha estratégias de prevenção, educação e acolhimento.'},
+
+  {id:15,axis:'Trabalho',title:'Desafios para a inserção dos jovens no mercado de trabalho brasileiro',prompt:'Analise obstáculos enfrentados por jovens em busca do primeiro emprego e proponha ações de qualificação e ampliação de oportunidades.'},
+  {id:16,axis:'Trabalho',title:'Automação e requalificação profissional no mundo do trabalho',prompt:'Discuta como transformações tecnológicas alteram profissões e proponha caminhos para preparar trabalhadores para novas demandas profissionais.'},
+  {id:17,axis:'Trabalho',title:'A invisibilidade do trabalho de cuidado na sociedade brasileira',prompt:'Analise a importância social e econômica das atividades de cuidado e proponha medidas para seu reconhecimento e melhor distribuição.'},
+  {id:18,axis:'Trabalho',title:'Caminhos para combater a informalidade e a precarização do trabalho juvenil',prompt:'Discuta fatores que levam jovens a ocupações precárias e proponha medidas para ampliar proteção, qualificação e acesso a trabalho digno.'},
+
+  {id:19,axis:'Meio ambiente',title:'O descarte de lixo eletrônico e seus impactos no Brasil',prompt:'Analise os desafios do descarte de equipamentos eletrônicos e proponha ações de consumo responsável, coleta adequada e reciclagem.'},
+  {id:20,axis:'Meio ambiente',title:'Adaptação das cidades brasileiras aos eventos climáticos extremos',prompt:'Discuta a vulnerabilidade urbana diante de calor intenso, enchentes e outros eventos extremos e proponha estratégias de prevenção e adaptação.'},
+  {id:21,axis:'Meio ambiente',title:'Desperdício de alimentos e sustentabilidade no Brasil',prompt:'Analise causas e consequências do desperdício de alimentos e proponha ações para reduzir perdas em residências, comércio e cadeias produtivas.'},
+  {id:22,axis:'Meio ambiente',title:'Uso consciente da água diante dos desafios de abastecimento',prompt:'Discuta fatores que pressionam os recursos hídricos e proponha estratégias de educação, gestão e consumo responsável da água.'},
+  {id:23,axis:'Meio ambiente',title:'Saneamento básico e qualidade de vida nas cidades brasileiras',prompt:'Analise os impactos da falta de saneamento na saúde e no meio ambiente e proponha caminhos para ampliar o acesso a serviços adequados.'},
+
+  {id:24,axis:'Saúde pública',title:'Sedentarismo entre jovens e promoção de hábitos saudáveis',prompt:'Analise fatores que favorecem o sedentarismo entre adolescentes e proponha ações para estimular atividade física e hábitos de vida saudáveis.'},
+  {id:25,axis:'Saúde pública',title:'Desafios para fortalecer a confiança em campanhas de vacinação',prompt:'Discuta fatores que dificultam a adesão a campanhas de vacinação e proponha estratégias de comunicação, informação e acesso.'},
+  {id:26,axis:'Saúde pública',title:'Promoção da saúde menstrual e combate à desinformação',prompt:'Analise obstáculos ao acesso a informação, produtos e cuidados relacionados à saúde menstrual e proponha medidas de educação e acolhimento.'},
+  {id:27,axis:'Saúde pública',title:'Alimentação saudável diante da expansão dos ultraprocessados',prompt:'Discuta fatores que influenciam escolhas alimentares e proponha ações de educação e acesso que favoreçam uma alimentação mais saudável.'},
+
+  {id:28,axis:'Cidadania',title:'Educação financeira e prevenção do endividamento entre jovens',prompt:'Analise a importância da educação financeira na juventude e proponha estratégias para estimular planejamento, consumo consciente e uso responsável do crédito.'},
+  {id:29,axis:'Cidadania',title:'Solidão e enfraquecimento dos vínculos comunitários na vida contemporânea',prompt:'Discuta fatores que contribuem para o isolamento social e proponha ações capazes de fortalecer convivência, pertencimento e redes de apoio.'},
+  {id:30,axis:'Cidadania',title:'Desafios para ampliar a participação social dos jovens em suas comunidades',prompt:'Analise barreiras à participação juvenil em iniciativas coletivas e proponha formas de estimular protagonismo, diálogo e ação comunitária.'},
+  {id:31,axis:'Cidadania',title:'Combate ao trabalho infantil e garantia do direito à infância',prompt:'Analise fatores que mantêm crianças e adolescentes em situações de trabalho inadequado e proponha medidas de prevenção, proteção e permanência escolar.'},
+
+  {id:32,axis:'Inclusão e acessibilidade',title:'Acessibilidade digital para pessoas com deficiência',prompt:'Discuta barreiras encontradas por pessoas com deficiência em sites, aplicativos e serviços digitais e proponha medidas para ampliar acessibilidade e autonomia.'},
+  {id:33,axis:'Inclusão e acessibilidade',title:'Desafios da acessibilidade nos espaços urbanos brasileiros',prompt:'Analise obstáculos físicos e sociais à circulação de pessoas com deficiência e proponha ações para tornar as cidades mais inclusivas.'},
+  {id:34,axis:'Inclusão e acessibilidade',title:'Etarismo e inclusão das pessoas idosas na sociedade brasileira',prompt:'Discuta formas de discriminação relacionadas à idade e proponha ações que valorizem autonomia, convivência e participação social das pessoas idosas.'},
+
+  {id:35,axis:'Cultura',title:'Democratização do acesso à cultura no Brasil',prompt:'Analise barreiras econômicas, territoriais e sociais ao acesso a atividades culturais e proponha medidas para ampliar a participação da população.'},
+  {id:36,axis:'Cultura',title:'Valorização das culturas indígenas e afro-brasileiras na formação social do país',prompt:'Discuta a importância da valorização de patrimônios, saberes e produções culturais indígenas e afro-brasileiras e proponha ações de reconhecimento e difusão.'},
+  {id:37,axis:'Cultura',title:'Preservação das tradições e identidades culturais regionais brasileiras',prompt:'Analise desafios para manter vivas tradições regionais em meio às transformações sociais e proponha ações de registro, transmissão e valorização cultural.'},
+
+  {id:38,axis:'Urbanização',title:'Déficit de áreas verdes e qualidade de vida nas cidades',prompt:'Discuta a importância de parques, arborização e espaços verdes urbanos e proponha estratégias para ampliar seu acesso de forma equilibrada.'},
+  {id:39,axis:'Urbanização',title:'Moradia digna e segregação socioespacial nas cidades brasileiras',prompt:'Analise como desigualdades de moradia afetam o direito à cidade e proponha caminhos para ampliar habitação adequada e integração urbana.'},
+  {id:40,axis:'Urbanização',title:'Segurança de pedestres e ciclistas no trânsito brasileiro',prompt:'Discuta fatores que aumentam a vulnerabilidade de pedestres e ciclistas e proponha ações de infraestrutura, educação e fiscalização para reduzir riscos.'},
+  {id:41,axis:'Urbanização',title:'O acesso ao lazer e aos espaços públicos como fator de bem-estar',prompt:'Analise a importância de espaços públicos de convivência e lazer e proponha medidas para ampliar seu acesso, segurança e qualidade.'},
+
+  {id:42,axis:'Ciência e sociedade',title:'Divulgação científica como ferramenta de combate à desinformação',prompt:'Discuta a importância da comunicação científica acessível e proponha estratégias para aproximar conhecimento científico e população.'},
+  {id:43,axis:'Ciência e sociedade',title:'Incentivo à participação de jovens na ciência e na inovação',prompt:'Analise obstáculos que afastam estudantes de atividades científicas e proponha ações para ampliar iniciação científica, experimentação e interesse pela pesquisa.'},
+
+  {id:44,axis:'Consumo',title:'Consumo consciente diante do crescimento da moda descartável',prompt:'Analise impactos sociais e ambientais do consumo acelerado de roupas e proponha estratégias para estimular escolhas mais responsáveis.'},
+  {id:45,axis:'Consumo',title:'Publicidade digital e formação de hábitos de consumo entre adolescentes',prompt:'Discuta como publicidade personalizada e influenciadores afetam decisões de consumo de jovens e proponha medidas de educação para escolhas mais conscientes.'},
+
+  {id:46,axis:'Proteção e prevenção',title:'Prevenção de desastres e cultura de redução de riscos nas cidades brasileiras',prompt:'Analise a importância do planejamento preventivo diante de enchentes, deslizamentos e outros desastres e proponha ações de informação, infraestrutura e preparação comunitária.'}
 ];
 
 const state = {
@@ -3420,11 +3472,60 @@ async function renderFocus() {
   });
 }
 
-function fillThemes() {
-  $('#essayTheme').innerHTML=THEMES.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+'<option value="custom">✦ Tema personalizado</option>';
-  $('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
+function renderEssayThemeOptions({keepSelection=true}={}){
+  const themeSelect=$('#essayTheme');
+  if(!themeSelect)return;
+  const axis=$('#essayAxis')?.value||'all';
+  const previous=keepSelection?themeSelect.value:'';
+  const visible=axis==='all'?THEMES:THEMES.filter(t=>t.axis===axis);
+
+  themeSelect.innerHTML=visible.map(t=>`<option value="${t.id}">${esc(t.title)}</option>`).join('')+
+    '<option value="custom">✦ Tema personalizado</option>';
+
+  if(previous==='custom')themeSelect.value='custom';
+  else if(previous&&visible.some(t=>String(t.id)===String(previous)))themeSelect.value=previous;
+  else if(visible[0])themeSelect.value=String(visible[0].id);
+
+  const counter=$('#essayThemeCount');
+  if(counter)counter.textContent=visible.length+' tema'+(visible.length===1?'':'s')+(axis==='all'?' disponíveis':' neste eixo');
   updateEssayPrompt();
-  $$('[data-theme]').forEach(b=>b.onclick=()=>{$('#essayTheme').value=b.dataset.theme;updateEssayPrompt();openPage('redacao');$('#essayText').focus()});
+}
+
+function fillThemes() {
+  const axisSelect=$('#essayAxis');
+  if(axisSelect){
+    const currentAxis=axisSelect.value||'all';
+    const axes=[...new Set(THEMES.map(t=>t.axis))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
+    axisSelect.innerHTML='<option value="all">Todos os eixos</option>'+axes.map(axis=>`<option value="${esc(axis)}">${esc(axis)}</option>`).join('');
+    axisSelect.value=axes.includes(currentAxis)?currentAxis:'all';
+    axisSelect.onchange=()=>renderEssayThemeOptions({keepSelection:false});
+  }
+
+  renderEssayThemeOptions({keepSelection:true});
+
+  const randomBtn=$('#randomEssayTheme');
+  if(randomBtn)randomBtn.onclick=()=>{
+    const axis=$('#essayAxis')?.value||'all';
+    const pool=axis==='all'?THEMES:THEMES.filter(t=>t.axis===axis);
+    if(!pool.length)return;
+    const current=Number($('#essayTheme').value);
+    const choices=pool.length>1?pool.filter(t=>t.id!==current):pool;
+    const picked=choices[Math.floor(Math.random()*choices.length)]||pool[0];
+    $('#essayTheme').value=String(picked.id);
+    updateEssayPrompt();
+    randomBtn.animate?.([{transform:'scale(.97)'},{transform:'scale(1)'}],{duration:180});
+  };
+
+  $('#themesGrid').innerHTML=THEMES.map(t=>`<article class="theme-card"><span class="axis">${esc(t.axis.toUpperCase())}</span><h3>${esc(t.title)}</h3><p>${esc(t.prompt)}</p><button class="outline-btn small" data-theme="${t.id}">Praticar tema →</button></article>`).join('');
+  $('[data-theme]').forEach(b=>b.onclick=()=>{
+    const t=THEMES.find(x=>String(x.id)===String(b.dataset.theme));
+    if(t&&$('#essayAxis'))$('#essayAxis').value=t.axis;
+    renderEssayThemeOptions({keepSelection:false});
+    $('#essayTheme').value=b.dataset.theme;
+    updateEssayPrompt();
+    openPage('redacao');
+    $('#essayText').focus();
+  });
 }
 function getEssayThemeData(){
   if($('#essayTheme').value==='custom'){
