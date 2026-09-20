@@ -266,17 +266,17 @@ function renderOnboardingStep(){
     1:{
       title:'Uma boa meta dá direção.',
       text:'Não precisa acertar o número perfeito. Use uma nota que represente o nível que você quer perseguir e eu ajusto o plano com seus dados reais.',
-      image:'./assets/nexo-expressions/confiante.webp'
+      image:window.NEXO_MASCOT_ASSETS?.head||''
     },
     2:{
       title:'Agora me diga onde aperta mais.',
       text:'Escolha no máximo duas áreas. A primeira vira seu diagnóstico inicial; depois o NEXO Core passa a usar seu desempenho real.',
-      image:'./assets/nexo-expressions/pensativo.webp'
+      image:window.NEXO_MASCOT_ASSETS?.head||''
     },
     3:{
       title:'O melhor plano é o que cabe na rotina.',
       text:'Eu prefiro 30 minutos consistentes a duas horas que nunca acontecem. Escolha um tempo que você consegue sustentar.',
-      image:'./assets/nexo-expressions/serio.webp'
+      image:window.NEXO_MASCOT_ASSETS?.head||''
     }
   }[ob.step];
   $('#onboardingMentorTitle').textContent=mentor.title;
@@ -750,7 +750,7 @@ function renderNexoCore(){
   const coreMood=rec
     ? (Number(rec.priority||0)>=70?'pensativo':Number(rec.mastery||0)>=70?'confiante':'serio')
     : 'pensativo';
-  const coreSrc=NEXO_MOOD_IMAGES?.[coreMood]||'./assets/nexo-expressions/pensativo.webp';
+  const coreSrc=NEXO_MOOD_IMAGES?.[coreMood]||window.NEXO_MASCOT_ASSETS?.head||'';
   $$('[data-core-avatar]').forEach(img=>{
     if(img.getAttribute('src')!==coreSrc)img.src=coreSrc;
   });
