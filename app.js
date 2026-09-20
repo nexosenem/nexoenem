@@ -1787,10 +1787,12 @@ function openPage(id) {
   if (id==='focos') renderFocus();
   if (id==='videoaulas') loadVideos();
   if (id==='materiais') loadMaterials();
-  if (id==='banco') renderBank();
+  if (id==='banco') { renderBank(); renderSavedQuestions(); }
+  if (id==='semana') loadNexoWeekPlan({silent:false});
   if (id==='redacao') {
     loadEssayThemeProgress({rerender:true}).catch(()=>{});
     updateOfficialEssaySheetAction().catch(()=>{});
+    loadEssayHistory().catch(()=>{});
   }
   if (id==='feedback') loadMyFeedback();
   if (id==='ranking') loadNexoJourney();
@@ -1865,11 +1867,13 @@ async function initApp(session) {
     loadNexoJourney({silent:true}),
     loadSystemModules({silent:true}),
     loadVideos({silent:true}),
-    loadMaterials({silent:true})
+    loadMaterials({silent:true}),
+    loadSavedQuestions({render:false}),
+    loadNexoWeekPlan({silent:true})
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
-      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais'];
+      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais','questões salvas','Semana NEXO'];
       console.error('bootstrap '+areas[index],result.reason);
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
@@ -1893,9 +1897,10 @@ async function initApp(session) {
   }
 
   await safeBootStep('temas',async()=>{
-    await loadEssayThemeProgress({rerender:false});
+    await Promise.all([loadEssayThemeProgress({rerender:false}),loadEssayHistory()]);
     fillThemes();
     updateOfficialEssaySheetAction();
+    renderSavedQuestions();
   });
   loadRecentAttempts().catch(err=>logClientError('recent_attempts',err,'recent_load'));
   await safeBootStep('banco',async()=>renderBank());
@@ -2248,6 +2253,7 @@ async function loadRecentAttempts() {
     </div>`).join('') : '<p style="color:var(--muted);font-size:12px">Seu histórico aparecerá aqui quando você começar a resolver.</p>';
   $('#recentAttempts').innerHTML = recentHtml;
   $('#mobileRecent').innerHTML = recentHtml;
+  decorateResumeStudySession();
 }
 
 function setSelectedArea(area) {
@@ -2292,6 +2298,7 @@ function resetSessionUI() {
   const previous=state.session;
   if(previous?.coreSessionId) closeNexoSession('abandoned',previous);
   stopQuestionBehaviorMonitor();
+  clearPersistedStudySession();
   state.session=null; state.current=null; state.answered=false; state.selectedOption=null; state.lastAnswer=null;
   $('#sessionSetup').classList.remove('hidden');
   $('#studyWorkspace').classList.add('hidden');
@@ -2357,6 +2364,7 @@ async function startStudySession(config) {
     $('#sessionAreaBadge').textContent=config.area||'Treino';
     $('#sessionTitle').textContent=config.topic ? config.topic : (config.subject||config.area||'Sessão');
     $('#sessionSubtitle').textContent=reviewMode?'Modo revisão: você já respondeu todas as questões novas deste filtro.':'Sua sessão está fixa neste conteúdo até você decidir trocar.';
+    persistStudySession();
     await showCurrentQuestion();
   }catch(err){
     console.error(err);logClientError('study_session',err,'session_build');
@@ -2420,6 +2428,7 @@ async function showCurrentQuestion() {
     await finishSession(); return;
   }
   state.current=state.session.queue[state.session.index];
+  persistStudySession();
   state.answered=false;state.selectedOption=null;state.lastAnswer=null;state.questionStartedAt=Date.now();
   startQuestionBehaviorMonitor(state.current);
   $('.question-mobile-actions')?.classList.remove('answered');
@@ -3566,6 +3575,7 @@ function renderSimulationReport(finished,report){
 
 async function finishSession() {
   stopQuestionBehaviorMonitor();
+  clearPersistedStudySession();
   const finished={...(state.session||{})};
   const reportId=finished.coreSessionId||null;
   if(state.session?.coreSessionId) await closeNexoSession('completed',state.session);
@@ -6480,6 +6490,7 @@ async function loadAdmin(){
   loadNexoHealth({silent:true});
   checkCloudinarySecurityStatus();
   loadAdminUsers();
+  loadAdminQuestionIssues();
   const [profiles,attempts,feedbacks,videosCount,materialsCount,progressRows,videosRows,materialsRows]=await Promise.all([
     client.from('profiles').select('*',{count:'exact',head:true}),
     client.from('question_attempts').select('*',{count:'exact',head:true}),
