@@ -477,7 +477,7 @@ body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
   background:linear-gradient(90deg,rgba(5,9,20,.97) 0%,rgba(5,9,20,.82) 27%,rgba(5,9,20,.38) 60%,rgba(5,9,20,.12) 100%),
              linear-gradient(0deg,rgba(5,9,20,.9) 0%,rgba(5,9,20,.04) 50%,rgba(5,9,20,.12) 100%)
 }
-.auth-brand,.auth-copy{position:relative!important;z-index:3!important}
+.auth-brand{position:relative!important;z-index:3!important}.auth-copy{position:absolute!important;left:6vw!important;bottom:7vh!important;z-index:3!important;max-width:590px!important}
 .auth-orbit[hidden]{display:none!important}
 
 @media(max-width:760px){
@@ -486,4 +486,11 @@ body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
     background:linear-gradient(90deg,rgba(5,9,20,.94) 0%,rgba(5,9,20,.62) 48%,rgba(5,9,20,.20) 100%),
                linear-gradient(0deg,rgba(5,9,20,.9) 0%,rgba(5,9,20,.06) 58%)
   }
+}
+
+/* Final auth layout correction */
+.auth-nexo-photo{opacity:1!important;visibility:visible!important}
+.auth-nexo-overlay{background:linear-gradient(90deg,rgba(5,9,20,.90) 0%,rgba(5,9,20,.58) 32%,rgba(5,9,20,.12) 70%,rgba(5,9,20,.05) 100%),linear-gradient(0deg,rgba(5,9,20,.55) 0%,rgba(5,9,20,0) 55%)!important}
+@media(max-width:760px){
+  .auth-copy{left:24px!important;right:24px!important;bottom:24px!important;max-width:360px!important}
 }
