@@ -1503,6 +1503,118 @@ async function launchNexoWeekTask(task){
   await startStudySession({mode:type==='review'?'review':'core',area:task.area||'',subject:task.subject||'',topic:task.topic||'',difficulty:'',visualOnly:false,size:Number(task.target_count||8)});
 }
 
+
+async function loadSavedQuestions({render=true}={}){
+  if(!state.user?.id)return state.savedQuestions;
+  try{
+    const {data,error}=await client.from('saved_questions').select('question_id').eq('user_id',state.user.id).order('created_at',{ascending:false});
+    if(error)throw error;
+    state.savedQuestions=new Set((data||[]).map(x=>Number(x.question_id)));
+    if(render)renderSavedQuestions();
+    updateCurrentQuestionSaveButton();
+    return state.savedQuestions;
+  }catch(err){
+    console.error('saved questions',err);
+    return state.savedQuestions;
+  }
+}
+function updateCurrentQuestionSaveButton(){
+  const btn=$('#saveCurrentQuestion');
+  if(!btn||!state.current)return;
+  const saved=state.savedQuestions.has(Number(state.current.id));
+  btn.textContent=saved?'★ Salva':'☆ Salvar questão';
+  btn.classList.toggle('is-saved',saved);
+}
+async function toggleSavedQuestion(questionId){
+  const id=Number(questionId);
+  if(!id||!state.user?.id)return;
+  const saved=state.savedQuestions.has(id);
+  try{
+    if(saved){
+      const {error}=await client.from('saved_questions').delete().eq('user_id',state.user.id).eq('question_id',id);
+      if(error)throw error;
+      state.savedQuestions.delete(id);
+      toast('Questão removida dos salvos.');
+    }else{
+      const {error}=await client.from('saved_questions').insert({user_id:state.user.id,question_id:id});
+      if(error)throw error;
+      state.savedQuestions.add(id);
+      toast('Questão salva no seu caderno.');
+    }
+    updateCurrentQuestionSaveButton();
+    renderSavedQuestions();
+  }catch(err){
+    console.error('toggle saved question',err);
+    toast('Não consegui atualizar seus salvos agora.','error');
+  }
+}
+function renderSavedQuestions(){
+  const list=$('#savedQuestionList'),count=$('#savedQuestionsCount');
+  if(count)count.textContent=state.savedQuestions.size+' salva'+(state.savedQuestions.size===1?'':'s');
+  if(!list)return;
+  const rows=(state.questionMeta||[]).filter(q=>state.savedQuestions.has(Number(q.id)));
+  list.innerHTML=rows.length?rows.map(q=>`<article class="saved-question-row"><span>★</span><div><b>${esc(q.topic||q.subject||'Questão ENEM')}</b><small>${esc(q.subject||q.area||'')} · ENEM ${esc(q.source_year||'')} · Q${esc(q.source_question_number||q.id)}</small></div><button data-saved-open="${q.id}">Abrir →</button></article>`).join(''):'<p style="color:var(--muted)">Você ainda não salvou nenhuma questão.</p>';
+  $('[data-saved-open]',list).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.savedOpen)));
+}
+
+function openQuestionIssueModal(questionId=state.current?.id){
+  if(!questionId)return;
+  state.questionReportTarget=Number(questionId);
+  $('#questionIssueDetails').value='';
+  $('#questionIssueType').value='gabarito';
+  $('#questionIssueModal').classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeQuestionIssueModal(){
+  $('#questionIssueModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+  state.questionReportTarget=null;
+}
+$('#closeQuestionIssue')?.addEventListener('click',closeQuestionIssueModal);
+$('#cancelQuestionIssue')?.addEventListener('click',closeQuestionIssueModal);
+$('#questionIssueModal')?.addEventListener('click',e=>{if(e.target===$('#questionIssueModal'))closeQuestionIssueModal()});
+$('#sendQuestionIssue')?.addEventListener('click',async()=>{
+  const questionId=Number(state.questionReportTarget||0);
+  if(!questionId)return;
+  const issue_type=$('#questionIssueType').value,details=$('#questionIssueDetails').value.trim(),btn=$('#sendQuestionIssue');
+  btn.disabled=true;btn.textContent='Enviando...';
+  try{
+    const {error}=await client.from('question_issue_reports').insert({user_id:state.user.id,question_id:questionId,issue_type,details:details||null});
+    if(error)throw error;
+    closeQuestionIssueModal();
+    toast('Reporte enviado. Obrigado por ajudar a revisar o banco.');
+  }catch(err){
+    console.error('question issue',err);
+    const msg=String(err?.message||err||'');
+    toast(msg.includes('duplicate')||msg.includes('unique')?'Você já tem um reporte aberto para esta questão.':'Não consegui enviar o reporte.','error');
+  }finally{btn.disabled=false;btn.textContent='Enviar reporte'}
+});
+async function loadAdminQuestionIssues(){
+  if(state.profile?.role!=='admin')return;
+  const target=$('#adminQuestionIssues');if(!target)return;
+  try{
+    const {data,error}=await client.from('question_issue_reports')
+      .select('id,question_id,issue_type,details,status,created_at,question:questions(area,subject,topic,source_year,source_question_number)')
+      .in('status',['open','reviewing']).order('created_at',{ascending:false}).limit(100);
+    if(error)throw error;
+    if($('#questionIssueCount'))$('#questionIssueCount').textContent=(data||[]).length+' abertos';
+    target.innerHTML=(data||[]).length?(data||[]).map(row=>`<div class="feedback-entry question-issue-admin"><span class="mini-avatar">!</span><div><b>${esc(String(row.issue_type||'outro').toUpperCase())} · Q${esc(row.question?.source_question_number||row.question_id)}</b><p>${esc(row.details||'Sem detalhes adicionais.')}</p><small>${esc(row.question?.subject||row.question?.area||'')} · ${esc(row.question?.topic||'')} · ${new Date(row.created_at).toLocaleString('pt-BR')}</small><div class="comment-actions"><button data-issue-open="${row.question_id}">Abrir questão</button><button data-issue-resolve="${row.id}">Resolver</button><button class="danger" data-issue-dismiss="${row.id}">Descartar</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum problema de questão aberto.</p>';
+    $('[data-issue-open]',target).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.issueOpen)));
+    $('[data-issue-resolve]',target).forEach(btn=>btn.onclick=()=>resolveQuestionIssue(Number(btn.dataset.issueResolve),'resolved'));
+    $('[data-issue-dismiss]',target).forEach(btn=>btn.onclick=()=>resolveQuestionIssue(Number(btn.dataset.issueDismiss),'dismissed'));
+  }catch(err){
+    console.error('admin question issues',err);
+    target.innerHTML='<p style="color:var(--muted)">Não foi possível carregar os reportes agora.</p>';
+  }
+}
+async function resolveQuestionIssue(id,status){
+  const note=prompt(status==='resolved'?'Observação da correção (opcional)':'Motivo do descarte (opcional)','')??'';
+  const {error}=await client.from('question_issue_reports').update({status,admin_note:note||null,resolved_at:new Date().toISOString(),resolved_by:state.user.id}).eq('id',Number(id));
+  if(error)return toast('Não foi possível atualizar o reporte.','error');
+  toast(status==='resolved'?'Reporte resolvido.':'Reporte descartado.');
+  loadAdminQuestionIssues();
+}
+
 function maintenanceModuleForPage(id){
   return ({
     questoes:'questions',
