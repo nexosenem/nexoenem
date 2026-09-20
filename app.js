@@ -328,7 +328,7 @@ async function getSeenIds() {
 
 async function fetchQuestions(filters={}) {
   let q = client.from('questions').select(
-    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop'
+    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop'
   ).eq('is_active',true).limit(500);
   if (filters.area) q=q.eq('area',filters.area);
   if (filters.subject) q=q.eq('subject',filters.subject);
@@ -408,9 +408,15 @@ async function showCurrentQuestion() {
   renderQuestion(state.current);
 }
 
+function localMediaPath(q){
+  if(q.media_path) return q.media_path;
+  const day=/1º dia/i.test(q.source_exam||'')?1:(/2º dia/i.test(q.source_exam||'')?2:null);
+  return day ? `./media/questions/${q.source_year}-d${day}-q${q.source_question_number}.webp` : null;
+}
+
 async function renderQuestion(q) {
   const card=$('#questionCard');
-  const visual = q.media_type && q.source_pdf_url && q.source_page && q.media_crop;
+  const visual = q.media_type && (localMediaPath(q) || (q.source_pdf_url && q.source_page && q.media_crop));
   card.innerHTML=`
     <div class="q-top">
       <div class="q-tags">
@@ -436,11 +442,64 @@ async function renderQuestion(q) {
   if(visual){
     const ok=await renderVisual(q);
     if(!ok && state.current?.id===q.id){
-      state.brokenVisual.add(Number(q.id));
-      toast('O recurso visual desta questão não carregou. Vou pular para evitar uma questão quebrada.','error');
-      await nextQuestion();
+      showVisualFallback(q);
     }
   }
+}
+
+function bindVisualZoom(stage){
+  if(innerWidth>760 || !stage) return;
+  stage.onclick=()=>{
+    const wrap=$('#visualWrap');
+    if(!wrap)return;
+    const zoom=wrap.classList.toggle('visual-zoom');
+    document.body.style.overflow=zoom?'hidden':'';
+  };
+}
+
+function loadLocalVisual(q){
+  return new Promise(resolve=>{
+    const path=localMediaPath(q);
+    if(!path) return resolve(false);
+    const img=new Image();
+    img.decoding='async';
+    img.onload=()=>{
+      const stage=$('#visualStage');
+      if(!stage || state.current?.id!==q.id) return resolve(false);
+      img.className='q-media-image';
+      img.alt='Recurso visual original da questão';
+      stage.innerHTML='';
+      stage.appendChild(img);
+      const head=$('#visualWrap .visual-head span:last-child');
+      if(head) head.textContent=innerWidth<=760?'Toque para ampliar':'Imagem da prova';
+      bindVisualZoom(stage);
+      resolve(true);
+    };
+    img.onerror=()=>resolve(false);
+    img.src=path;
+  });
+}
+
+function showVisualFallback(q){
+  state.brokenVisual.add(Number(q.id));
+  const stage=$('#visualStage');
+  const head=$('#visualWrap .visual-head span:last-child');
+  if(head) head.textContent='falha ao carregar';
+  if(stage){
+    stage.innerHTML=`<div class="visual-fallback">
+      <span>◌</span>
+      <b>O recurso visual não carregou.</b>
+      <p>A questão não será pulada automaticamente. Você pode tentar de novo ou pular manualmente.</p>
+      <div><button id="retryVisual" class="outline-btn small">Tentar novamente</button><button id="skipBrokenVisual" class="ghost-btn">Pular questão</button></div>
+    </div>`;
+    $('#retryVisual').onclick=async()=>{
+      stage.innerHTML='<div class="visual-loading"></div>';
+      const ok=await renderVisual(q);
+      if(!ok) showVisualFallback(q);
+    };
+    $('#skipBrokenVisual').onclick=()=>nextQuestion();
+  }
+  toast('O visual falhou, mas a sessão não vai mais avançar sozinha.','error');
 }
 
 async function getPdf(url) {
@@ -465,6 +524,8 @@ async function getPdf(url) {
 
 async function renderVisual(q) {
   try{
+    if(await loadLocalVisual(q)) return true;
+    if(!q.source_pdf_url || !q.source_page || !q.media_crop) return false;
     const pdf=await getPdf(q.source_pdf_url);
     const page=await pdf.getPage(Number(q.source_page));
     const scale=1.8;
@@ -488,14 +549,7 @@ async function renderVisual(q) {
     if(!stage) return false;
     stage.innerHTML='';stage.appendChild(canvas);
     const head=$('#visualWrap .visual-head span:last-child');if(head)head.textContent=innerWidth<=760?'Toque para ampliar':'INEP · prova original';
-    if(innerWidth<=760){
-      stage.onclick=()=>{
-        const wrap=$('#visualWrap');
-        if(!wrap)return;
-        const zoom=wrap.classList.toggle('visual-zoom');
-        document.body.style.overflow=zoom?'hidden':'';
-      };
-    }
+    bindVisualZoom(stage);
     return true;
   }catch(err){
     console.error('visual',err);
@@ -676,7 +730,7 @@ $('#bankSearch').addEventListener('input',renderBank);
 $('#bankArea').addEventListener('change',renderBank);
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){openPage('banco');$('#bankSearch').value=e.target.value;renderBank()}});
 async function openSingleQuestion(id){
-  const {data,error}=await client.from('questions').select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop').eq('id',id).single();
+  const {data,error}=await client.from('questions').select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop').eq('id',id).single();
   if(error)return toast('Não foi possível abrir a questão.','error');
   openPage('questoes');state.session={queue:[data],index:0,size:1,area:data.area,subject:data.subject};
   $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
