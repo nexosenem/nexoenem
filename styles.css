@@ -390,3 +390,77 @@ body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
   .nexo-welcome{grid-template-columns:68px 1fr;gap:10px}
   .nexo-welcome img{width:68px;height:82px}
 }
+
+
+/* Login hero — official Nexo image */
+.auth-visual{
+  background:
+    linear-gradient(90deg,rgba(5,9,20,.96) 0%,rgba(5,9,20,.86) 25%,rgba(5,9,20,.42) 56%,rgba(5,9,20,.16) 100%),
+    linear-gradient(0deg,rgba(5,9,20,.92) 0%,rgba(5,9,20,.10) 42%,rgba(5,9,20,.18) 100%),
+    url("./assets/nexo-login-hero.webp") center 42%/cover no-repeat;
+}
+.auth-visual:after{display:none}
+.auth-orbit{display:none}
+.auth-brand{filter:drop-shadow(0 5px 18px rgba(0,0,0,.45))}
+.auth-copy{
+  left:6vw;
+  bottom:8.5vh;
+  max-width:590px;
+  text-shadow:0 3px 18px rgba(0,0,0,.75)
+}
+.auth-copy h1{max-width:560px}
+.auth-copy p{max-width:560px;color:#c2ccdc}
+.auth-features span{
+  background:rgba(6,14,29,.74);
+  border-color:rgba(96,124,193,.42);
+  backdrop-filter:blur(10px)
+}
+.auth-panel{
+  background:
+    radial-gradient(circle at 10% 15%,rgba(91,73,255,.11),transparent 32%),
+    radial-gradient(circle at 95% 88%,rgba(42,188,255,.08),transparent 30%),
+    linear-gradient(180deg,#07101d,#040812)
+}
+.auth-card{
+  border-color:rgba(80,105,205,.52);
+  background:linear-gradient(180deg,rgba(9,19,36,.96),rgba(7,14,28,.96));
+  box-shadow:0 28px 90px rgba(0,0,0,.48),0 0 0 1px rgba(107,85,255,.05) inset
+}
+.auth-tabs{background:#091426;border-color:#23385c}
+.auth-tabs button.active{
+  background:linear-gradient(135deg,#1d3158,#213f74);
+  box-shadow:inset 0 0 0 1px rgba(98,128,211,.16)
+}
+.auth-card input{
+  background:#0a172a;
+  border-color:#223a61;
+  transition:border-color .18s ease,box-shadow .18s ease,background .18s ease
+}
+.auth-card input:focus{
+  border-color:#6782ff;
+  box-shadow:0 0 0 3px rgba(103,130,255,.12);
+  background:#0b1a31
+}
+.auth-card .primary-btn.wide{
+  background:linear-gradient(90deg,#f6f8ff,#a9c8ff 58%,#6fd8ff);
+  color:#0c1630;
+  box-shadow:0 10px 30px rgba(79,126,255,.20)
+}
+.auth-card .primary-btn.wide:hover{
+  box-shadow:0 12px 36px rgba(80,126,255,.32);
+  transform:translateY(-1px)
+}
+
+@media(max-width:760px){
+  .auth-visual{
+    min-height:330px;
+    background:
+      linear-gradient(90deg,rgba(5,9,20,.93) 0%,rgba(5,9,20,.68) 40%,rgba(5,9,20,.22) 100%),
+      linear-gradient(0deg,rgba(5,9,20,.90) 0%,rgba(5,9,20,.10) 58%),
+      url("./assets/nexo-login-hero.webp") 62% 42%/cover no-repeat;
+  }
+  .auth-copy{left:24px;right:24px;bottom:24px;max-width:390px}
+  .auth-copy h1{max-width:300px}
+  .auth-panel{padding-top:18px}
+  .auth-card{box-shadow:0 22px 60px rgba(0,0,0,.42)}
+}
