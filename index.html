@@ -1242,9 +1242,28 @@
   </div>
   <div id="toast" class="toast hidden"></div>
 
+  <script>
+    window.__nexoBootWatchdog=setTimeout(function(){
+      var boot=document.getElementById('boot');
+      if(!boot||boot.classList.contains('hidden'))return;
+      boot.classList.add('fade');
+      setTimeout(function(){boot.classList.add('hidden');},300);
+      var app=document.getElementById('app');
+      var auth=document.getElementById('authScreen');
+      if(app&&auth&&app.classList.contains('hidden')&&auth.classList.contains('hidden')){
+        auth.classList.remove('hidden');
+        var msg=document.getElementById('authMessage');
+        if(msg){
+          msg.textContent='A inicialização demorou mais que o esperado. Atualize a página; sua conta continua segura.';
+          msg.classList.remove('hidden');
+          msg.classList.add('error');
+        }
+      }
+    },10000);
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-58"></script>
+  <script src="./app.js?v=20260920-59"></script>
 </body>
 </html>
