@@ -937,12 +937,20 @@ function restoreDesktopSidebar(){
   setDesktopSidebarCollapsed(collapsed,false);
 }
 
+window.toggleDesktopSidebar=function(){
+  const collapsed=!document.body.classList.contains('sidebar-collapsed');
+  setDesktopSidebarCollapsed(collapsed,true);
+  return false;
+};
+
 function toggleMenu(open) {
   $('#sidebar').classList.toggle('open', open);
   $('#scrim').classList.toggle('hidden', !open);
 }
-$('#desktopSidebarToggle')?.addEventListener('click',()=>{
-  setDesktopSidebarCollapsed(!document.body.classList.contains('sidebar-collapsed'));
+$('#desktopSidebarToggle')?.addEventListener('click',e=>{
+  e.preventDefault();
+  e.stopPropagation();
+  window.toggleDesktopSidebar();
 });
 window.addEventListener('resize',()=>{
   if(innerWidth<=760){
@@ -1154,6 +1162,8 @@ async function initApp(session) {
   clearAuthMessage();
   $('#authScreen').classList.add('hidden');
   $('#app').classList.remove('hidden');
+  prepareDesktopSidebarLabels();
+  restoreDesktopSidebar();
   $('#niaButton')?.classList.add('hidden');
 
   const needsOnboarding=!state.profile.onboarding_completed_at;
