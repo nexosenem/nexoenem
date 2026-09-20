@@ -8194,3 +8194,93 @@ body.light .essay-theme-control select{background:#fff}
   #redacao .essay-flow-bar i{grid-row:1}
   #redacao .essay-structure-check{grid-template-columns:1fr}
 }
+
+
+/* =========================================================
+   Redação NEXO v4 · full theme title + completion
+   ========================================================= */
+#redacao .essay-theme-full-title{
+  display:grid;
+  gap:4px;
+  padding:11px 13px;
+  border:1px solid rgba(78,98,141,.22);
+  border-radius:12px;
+  background:rgba(255,255,255,.018);
+  overflow:hidden;
+}
+#redacao .essay-theme-full-title span{
+  color:#7f91aa;
+  font-size:6.5px;
+  font-weight:900;
+  letter-spacing:.75px
+}
+#redacao .essay-theme-full-title b{
+  color:#edf4ff;
+  font-size:10px;
+  line-height:1.45;
+  white-space:normal;
+  overflow-wrap:anywhere
+}
+#redacao .essay-theme-full-title.completed{
+  border-color:rgba(75,180,142,.22);
+  background:rgba(50,148,116,.055)
+}
+#redacao .essay-theme-full-title.completed span{color:#71d8b1}
+
+.theme-card.theme-completed{
+  opacity:.62;
+  border-color:rgba(74,174,137,.18)!important;
+  background:linear-gradient(160deg,rgba(19,48,44,.16),rgba(8,17,31,.86))!important
+}
+.theme-card.theme-completed::after{
+  content:"CONCLUÍDO";
+  position:absolute;
+  top:10px;
+  right:10px;
+  padding:4px 7px;
+  border:1px solid rgba(83,196,151,.18);
+  border-radius:999px;
+  color:#79d9b7;
+  background:rgba(43,129,101,.08);
+  font-size:6px;
+  font-weight:900;
+  letter-spacing:.55px
+}
+.theme-card{position:relative}
+.theme-card button:disabled{
+  cursor:default;
+  opacity:.72;
+  border-color:rgba(78,159,130,.2)!important;
+  color:#82cdb2!important
+}
+
+#redacao .essay-sheet-card{
+  display:grid;
+  gap:12px;
+  padding:15px;
+  border-radius:18px;
+  border:1px solid rgba(83,101,143,.22);
+  background:
+    radial-gradient(circle at 100% 0%,rgba(93,75,194,.08),transparent 42%),
+    linear-gradient(165deg,rgba(9,20,38,.98),rgba(6,14,28,.99))
+}
+#redacao .essay-sheet-card h3{margin:5px 0 6px;font-size:15px}
+#redacao .essay-sheet-card p{margin:0;color:#8192aa;font-size:7.5px;line-height:1.5}
+#redacao .essay-sheet-card button{min-height:42px;border-radius:11px;font-size:8px}
+#redacao .essay-sheet-card button:disabled{opacity:.5;cursor:not-allowed}
+
+@media(max-width:760px){
+  #redacao .essay-theme-full-title{
+    padding:12px 13px;
+    border-radius:13px
+  }
+  #redacao .essay-theme-full-title span{font-size:7px}
+  #redacao .essay-theme-full-title b{font-size:12px;line-height:1.38}
+  #redacao .essay-sheet-card{
+    padding:13px;
+    border-radius:16px
+  }
+  #redacao .essay-sheet-card h3{font-size:14px}
+  #redacao .essay-sheet-card p{font-size:7px}
+  #redacao .essay-sheet-card button{min-height:46px;font-size:9px}
+}
