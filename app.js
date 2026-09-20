@@ -127,6 +127,8 @@ const state = {
   activeViewer:null,
   progressSaveTimer:null,
   adminUsers:[],
+  systemModules:new Map(),
+  healthMonitorLoading:false,
   assistantIntents:[],
   core:null,
   journey:null,
@@ -1166,7 +1168,51 @@ async function refreshCurrentRole({silent=true}={}){
   }
 }
 
+async function loadSystemModules({silent=true}={}){
+  if(!state.user?.id)return state.systemModules;
+  try{
+    const {data,error}=await client.from('nexo_system_modules')
+      .select('module_key,label,maintenance,message,updated_at')
+      .order('label',{ascending:true});
+    if(error)throw error;
+    state.systemModules=new Map((data||[]).map(row=>[row.module_key,row]));
+    return state.systemModules;
+  }catch(err){
+    console.error('system modules',err);
+    if(!silent)toast('Não foi possível atualizar o status dos módulos.','error');
+    return state.systemModules;
+  }
+}
+
+function maintenanceInfo(key){
+  return state.systemModules?.get?.(key)||null;
+}
+
+function moduleInMaintenance(key){
+  return Boolean(maintenanceInfo(key)?.maintenance);
+}
+
+function blockMaintenance(key){
+  if(state.profile?.role==='admin'||!moduleInMaintenance(key))return false;
+  const info=maintenanceInfo(key)||{};
+  toast(info.message||((info.label||'Este módulo')+' está temporariamente em manutenção.'),'info');
+  return true;
+}
+
+function maintenanceModuleForPage(id){
+  return ({
+    questoes:'questions',
+    banco:'questions',
+    redacao:'essays',
+    ranking:'journey',
+    videoaulas:'content',
+    materiais:'content'
+  })[id]||null;
+}
+
 function openPage(id) {
+  const maintenanceKey=maintenanceModuleForPage(id);
+  if(maintenanceKey&&blockMaintenance(maintenanceKey))return;
   if (id === 'admin' && state.profile?.role !== 'admin') {
     toast('Essa área é restrita ao administrador.','error'); return;
   }
@@ -1246,11 +1292,12 @@ async function initApp(session) {
     loadDashboard(),
     loadNexoCore(),
     loadAssistantIntents(),
-    loadNexoJourney({silent:true})
+    loadNexoJourney({silent:true}),
+    loadSystemModules({silent:true})
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
-      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada'];
+      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos'];
       console.error('bootstrap '+areas[index],result.reason);
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
@@ -1545,6 +1592,7 @@ function renderNexoCore(){
 }
 
 async function startCoreRecommendation(){
+  if(blockMaintenance('core'))return;
   if(!state.core) await loadNexoCore();
   const rec=state.core?.recommended_action;
   if(!rec){
@@ -1704,6 +1752,8 @@ $('#startSession').onclick=async()=>{
 };
 
 async function startStudySession(config) {
+  if(blockMaintenance('questions'))return;
+  if(['core','adaptive'].includes(config?.mode)&&blockMaintenance('core'))return;
   const btn=$('#startSession'); if(btn){btn.disabled=true;btn.textContent='Montando sessão...';}
   try{
     if(!state.membership)await loadNexoMembership({silent:true});
@@ -1739,6 +1789,7 @@ async function startStudySession(config) {
 }
 
 async function startAdaptive() {
+  if(blockMaintenance('core'))return;
   if(!state.core) await loadNexoCore();
   const rec=state.core?.recommended_action;
   if(rec){
@@ -3252,6 +3303,7 @@ function essayScores(text){
   return scores.map(x=>Math.round(x/20)*20);
 }
 $('#analyzeEssay').onclick=async()=>{
+  if(blockMaintenance('essays'))return;
   if(!state.membership)await loadNexoMembership({silent:true});
   if(planUsageReached('essay'))return openNexoPlans('Sua correção gratuita de redação deste mês já foi usada.');
   const text=$('#essayText').value.trim();
@@ -4292,6 +4344,7 @@ $('#saveJourneyAvatar')?.addEventListener('click',async()=>{
 
 
 async function openQuestionComments(questionId){
+  if(blockMaintenance('community'))return;
   if(!questionId)return;
   $('#commentModal').dataset.questionId=String(questionId);
   $('#commentModal').classList.remove('hidden');
@@ -4319,6 +4372,7 @@ async function loadQuestionComments(questionId){
 }
 
 $('#sendComment').onclick=async()=>{
+  if(blockMaintenance('community'))return;
   const qid=Number($('#commentModal').dataset.questionId),body=$('#commentText').value.trim();
   if(!qid||body.length<2)return toast('Escreva um comentário antes de enviar.','error');
   const {error}=await client.from('question_comments').insert({question_id:qid,user_id:state.user.id,body});
@@ -4761,6 +4815,37 @@ function healthStatusText(status){
   return 'Verificando';
 }
 
+function renderOpsBars(target,series){
+  const el=$(target); if(!el)return;
+  const rows=Array.isArray(series)?series:[];
+  const max=Math.max(1,...rows.map(x=>Number(x.count||0)));
+  el.innerHTML=rows.length?rows.map((row,index)=>{
+    const count=Number(row.count||0);
+    const height=Math.max(count?8:3,Math.round(count/max*100));
+    const time=row.at?new Date(row.at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'}):'';
+    return '<span title="'+esc(time+' · '+count)+'"><i style="height:'+height+'%"></i><small>'+(index%3===0?esc(time):'')+'</small></span>';
+  }).join(''):'<div class="journey-empty">Sem dados no período.</div>';
+}
+
+function renderMaintenanceModules(modules){
+  const el=$('#opsMaintenanceModules'); if(!el)return;
+  const rows=Array.isArray(modules)?modules:[];
+  el.innerHTML=rows.length?rows.map(module=>{
+    const on=Boolean(module.maintenance);
+    return '<article class="ops-maintenance-row '+(on?'active':'')+'"><div><b>'+esc(module.label||module.module_key)+'</b><small>'+(on?esc(module.message||'Manutenção ativa'):'Operacional para alunos')+'</small></div><button data-maintenance-key="'+esc(module.module_key)+'" data-maintenance-enabled="'+(on?'0':'1')+'">'+(on?'Reabrir':'Manutenção')+'</button></article>';
+  }).join(''):'<p>Nenhum módulo configurado.</p>';
+  $$('[data-maintenance-key]',el).forEach(btn=>btn.onclick=async()=>{
+    const key=btn.dataset.maintenanceKey;
+    const enabled=btn.dataset.maintenanceEnabled==='1';
+    let message='';
+    if(enabled){
+      message=window.prompt('Mensagem que os alunos verão durante a manutenção:','Estamos fazendo uma manutenção rápida neste módulo. Tente novamente em alguns minutos.');
+      if(message===null)return;
+    }
+    await setNexoMaintenance(key,enabled,message||'');
+  });
+}
+
 function renderNexoHealth(payload){
   const services=Array.isArray(payload?.services)?payload.services:[];
   const grid=$('#nexoHealthGrid');
@@ -4782,11 +4867,13 @@ function renderNexoHealth(payload){
   const m=payload?.metrics||{};
   const metrics=$('#nexoHealthMetrics');
   if(metrics)metrics.innerHTML=[
-    [m.users,'usuários'],
-    [m.questions,'questões'],
-    [m.attempts,'respostas'],
-    [m.errors_last_15m,'erros / 15 min']
+    [m.users,'usuários'],[m.questions,'questões'],[m.attempts,'respostas'],[m.errors_last_15m,'erros / 15 min']
   ].map(([value,label])=>'<span><b>'+(value===null||value===undefined?'—':Number(value).toLocaleString('pt-BR'))+'</b><small>'+label+'</small></span>').join('');
+
+  if($('#opsActiveStudents'))$('#opsActiveStudents').textContent=m.active_students_15m??'—';
+  if($('#opsOpenSessions'))$('#opsOpenSessions').textContent=m.open_sessions??'—';
+  if($('#opsResponsesMinute'))$('#opsResponsesMinute').textContent=m.responses_per_minute??'—';
+  if($('#opsMaintenanceCount'))$('#opsMaintenanceCount').textContent=m.maintenance_modules??'—';
 
   const checked=$('#healthLastCheck');
   if(checked){
@@ -4796,8 +4883,38 @@ function renderNexoHealth(payload){
 
   const errors=$('#nexoHealthErrors');
   const recent=Array.isArray(payload?.recent_errors)?payload.recent_errors:[];
-  if(errors){
-    errors.innerHTML=recent.length?recent.map(row=>'<article><span>'+esc(row.area||'app')+'</span><div><b>'+esc(row.code||'runtime')+'</b><p>'+esc(row.message||'Erro sem mensagem')+'</p></div><time>'+new Date(row.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</time></article>').join(''):'<div class="health-no-errors">✓ Nenhum erro recente registrado.</div>';
+  if(errors)errors.innerHTML=recent.length?recent.map(row=>'<article><span>'+esc(row.area||'app')+'</span><div><b>'+esc(row.code||'runtime')+'</b><p>'+esc(row.message||'Erro sem mensagem')+'</p></div><time>'+new Date(row.created_at).toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'})+'</time></article>').join(''):'<div class="health-no-errors">✓ Nenhum erro recente registrado.</div>';
+
+  renderOpsBars('#opsErrorTrend',payload?.trends?.errors_6h||[]);
+  renderOpsBars('#opsResponseTrend',payload?.trends?.responses_60m||[]);
+
+  const modules=Array.isArray(payload?.modules)?payload.modules:[];
+  if(modules.length){
+    state.systemModules=new Map(modules.map(row=>[row.module_key,row]));
+    renderMaintenanceModules(modules);
+  }
+
+  const incidents=$('#opsIncidentList');
+  const rows=Array.isArray(payload?.incidents)?payload.incidents:[];
+  if(incidents)incidents.innerHTML=rows.length?rows.map(row=>{
+    const ops=row.type==='ops';
+    return '<article class="'+(ops?'ops-event':'error-event')+'"><span>'+(ops?'⚙':'!')+'</span><div><b>'+esc(row.area||'app')+' · '+esc(row.code||'evento')+'</b><p>'+esc(row.message||'Sem detalhes')+'</p></div><time>'+new Date(row.created_at).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'})+'</time></article>';
+  }).join(''):'<div class="health-no-errors">✓ Nenhum incidente recente.</div>';
+}
+
+async function setNexoMaintenance(moduleKey,enabled,message=''){
+  if(state.profile?.role!=='admin')return;
+  try{
+    const {data,error}=await client.functions.invoke('nexo-health',{
+      body:{action:'set_maintenance',module_key:moduleKey,enabled:Boolean(enabled),message}
+    });
+    if(error)throw error;
+    if(data?.error)throw new Error(data.error);
+    toast(enabled?'Manutenção ativada para este módulo.':'Módulo reaberto para os alunos.');
+    await Promise.all([loadSystemModules({silent:true}),loadNexoHealth({silent:true})]);
+  }catch(err){
+    console.error('maintenance control',err);
+    toast('Não foi possível alterar o modo de manutenção.','error');
   }
 }
 
@@ -4835,6 +4952,9 @@ setInterval(()=>{
     loadNexoHealth({silent:true});
   }
 },30000);
+setInterval(()=>{
+  if(state.user)loadSystemModules({silent:true});
+},60000);
 
 async function checkCloudinarySecurityStatus(){
   const el=$('#cloudinarySecurityStatus');
