@@ -227,7 +227,7 @@
                 <span data-nexo-today-status>CALIBRANDO</span>
                 <span data-nexo-today-time>~10 min</span>
               </div>
-              <button class="primary-btn full" data-nexo-today-action>Continuar →</button>
+              <div class="nexo-today-actions"><button class="primary-btn full" data-nexo-today-action>Continuar →</button><button class="ghost-btn" data-nexo-why>Por que isso?</button></div>
             </article>
 
             <article class="mobile-core-card nexo-core-card core-empty">
@@ -370,7 +370,7 @@
                   <span data-nexo-today-status>CALIBRANDO</span>
                   <span data-nexo-today-time>~10 min</span>
                 </div>
-                <button class="primary-btn" data-nexo-today-action>Continuar →</button>
+                <div class="nexo-today-actions"><button class="primary-btn" data-nexo-today-action>Continuar →</button><button class="ghost-btn" data-nexo-why>Por que isso?</button></div>
               </article>
 
               <article class="panel today-plan-card desktop-today-plan" data-today-plan>
@@ -686,6 +686,22 @@
               <span><b id="performanceCoreMetric">—</b><small>domínio do foco atual</small></span>
             </div>
           </article>
+          <div class="nexo-score-grid">
+            <article class="panel nexo-score-card">
+              <div class="panel-title"><div><b>NEXO Score</b><small>preparação atual em múltiplas dimensões</small></div><span id="nexoScoreConfidence">calibrando</span></div>
+              <div class="nexo-score-main"><strong id="nexoScoreValue">—</strong><span>/ 1000</span><small id="nexoScoreLabel">Construindo seu índice</small></div>
+              <div id="nexoScoreBreakdown" class="nexo-score-breakdown"></div>
+            </article>
+            <article class="panel personal-radar-card">
+              <div class="panel-title"><div><b>Radar Pessoal</b><small>frequência no ENEM × sua necessidade</small></div><span>prioridade para você</span></div>
+              <div id="personalRadarList" class="personal-radar-list"></div>
+            </article>
+          </div>
+          <article class="panel subtopic-mastery-panel">
+            <div class="panel-title"><div><b>Subassuntos</b><small>leitura estimada dos padrões dentro de cada tema</small></div><span id="subtopicConfidenceLabel">estimativa</span></div>
+            <div id="subtopicMasteryMap" class="subtopic-mastery-map"></div>
+          </article>
+
           <div class="stats-grid" id="statsGrid"></div>
           <article class="panel mastery-map-panel">
             <div class="panel-title"><div><b>Mapa NEXO de domínio</b><small>leitura acadêmica das 4 áreas</small></div><button class="outline-btn small" id="masteryMapTrain">Treinar prioridade →</button></div>
@@ -1422,6 +1438,18 @@
         <button id="viewerCheckpoint" class="outline-btn hidden">Checagem rápida · 2 questões</button>
         <button id="viewerPractice" class="primary-btn viewer-practice-btn">Treinar este assunto →</button>
       </footer>
+    </section>
+  </div>
+
+  <div id="recommendationWhyModal" class="guided-training-modal hidden" aria-modal="true" role="dialog">
+    <section class="guided-training-shell recommendation-why-shell">
+      <button id="closeRecommendationWhy" class="guided-close" aria-label="Fechar">×</button>
+      <div class="guided-professor">
+        <img src="./assets/nexo-family/bust-pensativo.avif" alt="Professor Nexo">
+        <div><span>RECOMENDAÇÃO EXPLICÁVEL</span><h3 id="recommendationWhyTitle">Por que este é seu próximo passo?</h3><p id="recommendationWhyText">O NEXO cruza prioridade do ENEM com seu desempenho e revisão.</p></div>
+      </div>
+      <div id="recommendationWhyFactors" class="recommendation-why-factors"></div>
+      <small>Você sempre pode ignorar a recomendação e escolher outro assunto.</small>
     </section>
   </div>
 
