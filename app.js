@@ -785,6 +785,10 @@ function isNexoPlus(){
   return Boolean(state.membership?.is_plus);
 }
 
+function isNexoUltra(){
+  return Boolean(state.membership?.is_ultra);
+}
+
 function planUsageReached(kind){
   const m=state.membership;
   if(!m||m.is_plus)return false;
@@ -793,7 +797,7 @@ function planUsageReached(kind){
     questions:['questions_today','questions_per_day'],
     core:['core_sessions_today','core_sessions_per_day'],
     arena:['arena_entries_week','arena_entries_per_week'],
-    essay:['essay_reviews_week','essay_reviews_per_week']
+    essay:['essay_reviews_month','essay_reviews_per_month']
   };
   const keys=map[kind];
   if(!keys)return false;
@@ -803,10 +807,10 @@ function planUsageReached(kind){
 
 function planLimitMessage(error){
   const msg=String(error?.message||error||'');
-  if(msg.includes('nexo_free_daily_question_limit'))return 'Você atingiu as 25 questões de hoje no plano Free. No Plus, as questões são ilimitadas.';
-  if(msg.includes('nexo_free_daily_core_limit'))return 'Você usou as 2 sessões NEXO Core de hoje no Free. O Plus libera sessões ilimitadas.';
+  if(msg.includes('nexo_free_daily_question_limit'))return 'Você atingiu as 10 questões de hoje no plano Free. No Plus, as questões são ilimitadas.';
+  if(msg.includes('nexo_free_daily_core_limit'))return 'Você usou a sessão NEXO Core de hoje no Free. O Plus libera sessões ilimitadas.';
   if(msg.includes('nexo_free_weekly_arena_limit'))return 'Sua entrada gratuita da Arena desta semana já foi usada. O Plus remove esse limite.';
-  if(msg.includes('nexo_free_weekly_essay_limit'))return 'Você já usou a correção de redação desta semana no Free. No Plus, as correções são ilimitadas.';
+  if(msg.includes('nexo_free_monthly_essay_limit'))return 'Você já usou a correção de redação deste mês no Free. No Plus, as correções são ilimitadas.';
   if(msg.includes('nexo_plus_required'))return 'Esse item é exclusivo do NEXO Plus.';
   return '';
 }
@@ -834,31 +838,33 @@ function setUsageBar(id,value,limit){
 function renderPlanExperience(){
   const m=state.membership;
   if(!m)return;
-  const plus=Boolean(m.is_plus),plan=plus?'PLUS':'FREE';
-  document.body.dataset.plan=plus?'plus':'free';
+  const ultra=Boolean(m.is_ultra),plus=Boolean(m.is_plus);
+  const plan=ultra?'ULTRA':plus?'PLUS':'FREE';
+  document.body.dataset.plan=ultra?'ultra':plus?'plus':'free';
   if($('#headerPlanBadge'))$('#headerPlanBadge').textContent=plan;
-  if($('#profilePlanLabel'))$('#profilePlanLabel').textContent='Plano '+(plus?'Plus':'Free');
-  if($('#profileRole'))$('#profileRole').textContent=state.profile?.role==='admin'?'Administrador':('Estudante · '+(plus?'Plus':'Free'));
+  if($('#profilePlanLabel'))$('#profilePlanLabel').textContent=ultra?'Acesso Ultra':('Plano '+(plus?'Plus':'Free'));
+  if($('#profileRole'))$('#profileRole').textContent=ultra?'Administrador · Ultra':('Estudante · '+(plus?'Plus':'Free'));
   if($('#currentPlanChip')){
-    $('#currentPlanChip').textContent='Plano '+(plus?'Plus':'Free');
-    $('#currentPlanChip').classList.toggle('plus',plus);
+    $('#currentPlanChip').textContent=ultra?'NEXO Ultra':('Plano '+(plus?'Plus':'Free'));
+    $('#currentPlanChip').classList.toggle('plus',plus&&!ultra);
+    $('#currentPlanChip').classList.toggle('ultra',ultra);
   }
 
   const u=m.usage||{},l=m.limits||{};
-  const fmt=(value,limit)=>plus?Number(value||0)+' · ilimitado':Number(value||0)+' / '+Number(limit||0);
+  const fmt=(value,limit)=>(plus||ultra)?Number(value||0)+' · ilimitado':Number(value||0)+' / '+Number(limit||0);
   if($('#planQuestionsUsage'))$('#planQuestionsUsage').textContent=fmt(u.questions_today,l.questions_per_day);
   if($('#planCoreUsage'))$('#planCoreUsage').textContent=fmt(u.core_sessions_today,l.core_sessions_per_day);
-  if($('#planEssayUsage'))$('#planEssayUsage').textContent=fmt(u.essay_reviews_week,l.essay_reviews_per_week);
+  if($('#planEssayUsage'))$('#planEssayUsage').textContent=fmt(u.essay_reviews_month,l.essay_reviews_per_month);
   if($('#planArenaUsage'))$('#planArenaUsage').textContent=fmt(u.arena_entries_week,l.arena_entries_per_week);
   setUsageBar('#planQuestionsBar',u.questions_today,l.questions_per_day);
   setUsageBar('#planCoreBar',u.core_sessions_today,l.core_sessions_per_day);
-  setUsageBar('#planEssayBar',u.essay_reviews_week,l.essay_reviews_per_week);
+  setUsageBar('#planEssayBar',u.essay_reviews_month,l.essay_reviews_per_month);
   setUsageBar('#planArenaBar',u.arena_entries_week,l.arena_entries_per_week);
-  if($('#planUsageStatus'))$('#planUsageStatus').textContent=plus?'Plus ativo · sem limites de uso':'limites reiniciam automaticamente';
+  if($('#planUsageStatus'))$('#planUsageStatus').textContent=ultra?'Ultra administrativo · tudo liberado':plus?'Plus ativo · sem limites de uso':'Free · limites reiniciam automaticamente';
   const request=$('#requestPlusBtn');
   if(request){
-    request.disabled=plus;
-    request.innerHTML=plus?'✓ NEXO Plus ativo':'Quero o NEXO Plus <span>→</span>';
+    request.disabled=plus||ultra;
+    request.innerHTML=ultra?'✓ NEXO Ultra ativo':plus?'✓ NEXO Plus ativo':'Quero o NEXO Plus <span>→</span>';
   }
 }
 
@@ -893,7 +899,7 @@ async function refreshCurrentRole({silent=true}={}){
 
     $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
-    if(roleLabel)roleLabel.textContent=isAdmin?'Administrador':('Estudante · '+(isNexoPlus()?'Plus':'Free'));
+    if(roleLabel)roleLabel.textContent=isAdmin?(isNexoUltra()?'Administrador · Ultra':'Administrador'):('Estudante · '+(isNexoPlus()?'Plus':'Free'));
 
     if(previousRole!==data.role&&!silent){
       toast(isAdmin?'Seu acesso de administrador foi liberado.':'Seu acesso de administrador foi removido.');
@@ -1343,8 +1349,8 @@ async function startStudySession(config) {
   const btn=$('#startSession'); if(btn){btn.disabled=true;btn.textContent='Montando sessão...';}
   try{
     if(!state.membership)await loadNexoMembership({silent:true});
-    if(planUsageReached('questions'))return openNexoPlans('Você atingiu o limite de questões de hoje no plano Free.');
-    if(config?.mode==='core'&&planUsageReached('core'))return openNexoPlans('Você já usou as 2 sessões NEXO Core disponíveis hoje no Free.');
+    if(planUsageReached('questions'))return openNexoPlans('Você atingiu as 10 questões disponíveis hoje no plano Free.');
+    if(config?.mode==='core'&&planUsageReached('core'))return openNexoPlans('Você já usou a sessão NEXO Core disponível hoje no Free.');
     if(config?.mode==='arena'&&planUsageReached('arena'))return openNexoPlans('Você já usou sua entrada gratuita da Arena nesta semana.');
     if(state.session?.coreSessionId) await closeNexoSession('abandoned',state.session);
     const all = await fetchQuestions(config);
@@ -2796,7 +2802,7 @@ function essayScores(text){
 }
 $('#analyzeEssay').onclick=async()=>{
   if(!state.membership)await loadNexoMembership({silent:true});
-  if(planUsageReached('essay'))return openNexoPlans('Sua correção gratuita de redação desta semana já foi usada.');
+  if(planUsageReached('essay'))return openNexoPlans('Sua correção gratuita de redação deste mês já foi usada.');
   const text=$('#essayText').value.trim();
   if(text.length<250)return toast('Escreva pelo menos 250 caracteres para receber uma análise.','error');
   const analyzeBtn=$('#analyzeEssay');
@@ -3401,31 +3407,10 @@ function renderJourneyHome(){
   const j=state.journey;
   if(!j?.profile)return;
   const p=j.profile;
-  const missions=j.missions||[];
-  const current=missions.find(x=>x.status==='completed')||missions.find(x=>x.status==='active');
-  const pct=clamp(Math.round(Number(p.xp_in_level||0)*100/Math.max(1,Number(p.xp_to_next||180))),0,100);
-  renderStudentAvatar($('#mobileJourneyAvatar'),p.avatar);
-  renderStudentAvatar($('#desktopJourneyAvatar'),p.avatar);
   renderStudentAvatar($('#headerJourneyAvatar'),p.avatar);
   renderStudentAvatar($('#avatar'),p.avatar);
   if($('#headerJourneyLevel'))$('#headerJourneyLevel').textContent='Nível '+p.level+' · '+(p.league||'Bronze');
   if($('#headerJourneyCoins'))$('#headerJourneyCoins').innerHTML=Number(p.coins||0).toLocaleString('pt-BR')+' <small>N¢</small>';
-  if($('#mobileJourneyLevel'))$('#mobileJourneyLevel').textContent='Nível '+p.level;
-  if($('#mobileJourneyLeague'))$('#mobileJourneyLeague').textContent=p.league||'Bronze';
-  if($('#mobileJourneyMission'))$('#mobileJourneyMission').textContent=current
-    ? (current.status==='completed'?'Recompensa pronta: '+current.title:current.title+' · '+missionProgressText(current))
-    : 'Missões concluídas. Continue sua evolução.';
-  if($('#mobileJourneyXpBar'))$('#mobileJourneyXpBar').style.width=pct+'%';
-  if($('#mobileJourneyCoins'))$('#mobileJourneyCoins').textContent=Number(p.coins||0).toLocaleString('pt-BR');
-  if($('#mobileJourneyStreak'))$('#mobileJourneyStreak').textContent=Number(p.streak_days||0);
-  if($('#desktopJourneyTitle'))$('#desktopJourneyTitle').textContent='Nível '+p.level+' · '+(p.league||'Bronze');
-  if($('#desktopJourneyMission'))$('#desktopJourneyMission').textContent=current
-    ? (current.status==='completed'?'Missão concluída: resgate sua recompensa.':current.title+' · '+missionProgressText(current))
-    : 'Você concluiu as missões disponíveis.';
-  if($('#desktopJourneyXpBar'))$('#desktopJourneyXpBar').style.width=pct+'%';
-  if($('#desktopJourneyCoins'))$('#desktopJourneyCoins').textContent=Number(p.coins||0).toLocaleString('pt-BR');
-  if($('#desktopJourneyStreak'))$('#desktopJourneyStreak').textContent=Number(p.streak_days||0)+'d';
-  if($('#desktopJourneyRank'))$('#desktopJourneyRank').textContent=p.rank_position?'#'+p.rank_position:'—';
 }
 
 function renderJourneyMissions(){
@@ -3479,7 +3464,7 @@ function renderJourneyBoards(){
       return `<div class="journey-rank-row ${mine?'mine':''}">
         <span class="journey-rank-pos">${Number(row.rank_position)<=3?['🥇','🥈','🥉'][Number(row.rank_position)-1]:'#'+row.rank_position}</span>
         <span class="journey-rank-avatar" data-rank-avatar="${index}"></span>
-        <div class="journey-rank-user"><b>${esc(row.full_name)}${mine?' · você':''}${row.plan==='plus'?'<i>NEXO PLUS</i>':''}</b><small>NV. ${Number(row.level||1)} · ${arena?Number(row.correct_answers||0)+' acertos na Arena':esc(row.league||'Bronze')}</small></div>
+        <div class="journey-rank-user"><b>${esc(row.full_name)}${mine?' · você':''}${row.plan==='ultra'?'<i>NEXO ULTRA</i>':row.plan==='plus'?'<i>NEXO PLUS</i>':''}</b><small>NV. ${Number(row.level||1)} · ${arena?Number(row.correct_answers||0)+' acertos na Arena':esc(row.league||'Bronze')}</small></div>
         <strong>${Number(row.points||0).toLocaleString('pt-BR')}<small> pts</small></strong>
       </div>`;
     }).join(''):'<div class="journey-empty">A competição começa quando os alunos pontuarem nesta semana.</div>';
@@ -3504,21 +3489,21 @@ function renderJourneyStore(){
   const j=state.journey||{};
   const owned=journeyInventorySet();
   const level=Number(j.profile?.level||1);
-  const plus=isNexoPlus();
+  const plus=isNexoPlus(),ultra=isNexoUltra();
   const el=$('#journeyStore');if(!el)return;
   const rarityIcon={comum:'•',incomum:'◆',raro:'✦','épico':'✧','lendário':'♕'};
   el.innerHTML=(j.catalog||[]).map(item=>{
-    const has=owned.has(item.item_code);
-    const plusLocked=Boolean(item.plus_only&&!plus);
-    const levelLocked=level<Number(item.unlock_level||1);
+    const has=ultra||owned.has(item.item_code);
+    const plusLocked=Boolean(item.plus_only&&!plus&&!ultra);
+    const levelLocked=!ultra&&level<Number(item.unlock_level||1);
     const locked=plusLocked||levelLocked;
-    const status=has?'NO INVENTÁRIO':plusLocked?'NEXO PLUS':levelLocked?'NÍVEL '+item.unlock_level:Number(item.price||0)+' N-Coins';
+    const status=ultra?'ULTRA · LIBERADO':has?'NO INVENTÁRIO':plusLocked?'NEXO PLUS':levelLocked?'NÍVEL '+item.unlock_level:Number(item.price||0)+' N-Coins';
     return `<article class="journey-store-item rarity-${esc(item.rarity)} ${has?'owned':''} ${plusLocked?'plus-locked':''}">
       <div class="store-item-visual"><span>${rarityIcon[item.rarity]||'✦'}</span><i>${item.plus_only?'PLUS · ':''}${esc(item.category)}</i></div>
       <div><small>${item.plus_only?'NEXO PLUS · ':''}${esc(item.rarity).toUpperCase()}</small><h4>${esc(item.name)}</h4><p>${esc(item.description)}</p></div>
       <div class="store-item-bottom">
         <span>${status}</span>
-        ${has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">Comprar</button>`}
+        ${ultra?'<button disabled>Ultra</button>':has?'<button disabled>Adquirido</button>':plusLocked?'<button data-open-plus>Ver Plus</button>':levelLocked?'<button disabled>Bloqueado</button>':`<button data-buy-item="${esc(item.item_code)}">Comprar</button>`}
       </div>
     </article>`;
   }).join('');
@@ -3557,11 +3542,11 @@ function renderAvatarBuilder(){
   const draft=normalizedAvatar(state.avatarDraft||state.journey?.profile?.avatar);
   state.avatarDraft=draft;
   renderStudentAvatar($('#avatarBuilderPreview'),draft);
-  const owned=journeyInventorySet(),plus=isNexoPlus();
+  const owned=journeyInventorySet(),plus=isNexoPlus(),ultra=isNexoUltra();
   $$('[data-avatar-field]').forEach(btn=>{
     const field=btn.dataset.avatarField,value=btn.dataset.avatarValue,item=btn.dataset.avatarItem;
-    const plusLocked=btn.dataset.plusStyle==='true'&&!plus;
-    const itemLocked=Boolean(item&&!owned.has(item));
+    const plusLocked=btn.dataset.plusStyle==='true'&&!plus&&!ultra;
+    const itemLocked=Boolean(item&&!owned.has(item)&&!ultra);
     const locked=plusLocked||itemLocked;
     btn.classList.toggle('active',draft[field]===value);
     btn.classList.toggle('locked',locked);
@@ -3683,7 +3668,7 @@ $$('[data-avatar-field]').forEach(btn=>btn.onclick=()=>{
 });
 
 $('#requestPlusBtn')?.addEventListener('click',async()=>{
-  if(isNexoPlus())return;
+  if(isNexoPlus()||isNexoUltra())return;
   const btn=$('#requestPlusBtn');
   btn.disabled=true;btn.textContent='Registrando interesse...';
   try{
@@ -3734,7 +3719,7 @@ async function loadQuestionComments(questionId){
   const {data,error}=await client.rpc('get_question_comments_v2',{p_question_id:Number(questionId)});
   if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
   $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
-    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
+    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.plan==='ultra'?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
   </article>`).join(''):'<div class="comment-empty">Ainda não há comentários. Seja o primeiro a compartilhar uma dúvida ou um jeito de resolver.</div>';
