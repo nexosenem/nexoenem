@@ -55,14 +55,18 @@ function toast(message, type='info') {
   toast.timer = setTimeout(()=>el.classList.add('hidden'), 2900);
 }
 
-function showAuthMessage(message, error=false) {
+function showAuthMessage(message, error=false, canResend=false) {
   const el = $('#authMessage');
   el.textContent = message;
   el.classList.remove('hidden','error');
   if (error) el.classList.add('error');
+  $('#resendConfirm').classList.toggle('hidden', !canResend);
 }
 
-function clearAuthMessage(){ $('#authMessage').classList.add('hidden'); }
+function clearAuthMessage(){
+  $('#authMessage').classList.add('hidden');
+  $('#resendConfirm').classList.add('hidden');
+}
 
 function initials(name='NEXO') {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -96,7 +100,14 @@ $('#loginForm').addEventListener('submit', async e => {
   btn.disabled = true; btn.textContent = 'Entrando...';
   const { error } = await client.auth.signInWithPassword({ email, password });
   btn.disabled = false; btn.innerHTML = 'Entrar <span>→</span>';
-  if (error) showAuthMessage(error.message, true);
+  if (error) {
+    const unconfirmed = /not confirmed/i.test(error.message || '');
+    showAuthMessage(
+      unconfirmed ? 'Seu e-mail ainda não foi confirmado. Abra a mensagem enviada pelo NEXO ENEM ou use o botão abaixo para reenviar.' : error.message,
+      true,
+      unconfirmed
+    );
+  }
 });
 
 $('#registerForm').addEventListener('submit', async e => {
@@ -113,11 +124,24 @@ $('#registerForm').addEventListener('submit', async e => {
   btn.disabled = false; btn.innerHTML = 'Criar conta <span>→</span>';
   if (error) return showAuthMessage(error.message, true);
   if (!data.session) {
-    showAuthMessage('Conta criada. Confirme o e-mail recebido e depois entre na plataforma.');
     setAuthTab('login');
     $('#loginEmail').value = email;
+    showAuthMessage('Conta criada. Falta apenas confirmar seu e-mail. Verifique a caixa de entrada e o spam.', false, true);
   }
 });
+
+$('#resendConfirm').onclick = async () => {
+  const email = ($('#loginEmail').value || $('#registerEmail').value || '').trim();
+  if (!email) return showAuthMessage('Digite seu e-mail para reenviar a confirmação.', true);
+  const btn = $('#resendConfirm');
+  btn.disabled = true;
+  btn.textContent = 'Reenviando...';
+  const { error } = await client.auth.resend({ type:'signup', email });
+  btn.disabled = false;
+  btn.textContent = 'Reenviar e-mail de confirmação';
+  if (error) return showAuthMessage(error.message, true, true);
+  showAuthMessage('Novo e-mail de confirmação enviado. Confira também a pasta de spam.', false, false);
+};
 
 $('#logoutBtn').onclick = async () => {
   await client.auth.signOut();
