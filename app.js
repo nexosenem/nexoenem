@@ -1222,7 +1222,7 @@ async function refreshCurrentRole({silent=true}={}){
     state.profile={...(state.profile||{}),...data};
     const isAdmin=data.role==='admin';
 
-    $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    $$$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
     if(roleLabel)roleLabel.textContent=isAdmin?(isNexoUltra()?'Administrador · Ultra':'Administrador'):('Estudante · '+(isNexoPlus()?'Plus':'Free'));
 
@@ -1336,7 +1336,7 @@ async function initApp(session) {
     if($('#menuEmail'))$('#menuEmail').textContent = state.user.email || '';
     if($('#profileRole'))$('#profileRole').textContent = state.profile.role === 'admin' ? (isNexoUltra()?'Administrador · Ultra':'Administrador') : ('Estudante · '+(isNexoPlus()?'Plus':'Free'));
     if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
-    $('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
+    $$('.admin-only').forEach(el=>el.classList.toggle('hidden',state.profile.role!=='admin'));
   });
   await safeBootStep('estilo',async()=>applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false));
   await safeBootStep('home',async()=>updateHomeExperience());
@@ -3965,7 +3965,7 @@ function renderStudentAvatar(target,avatarInput){
 
 function setJourneyTab(tab='missions'){
   state.journeyTab=tab;
-  $$('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
+  $$$('[data-journey-tab]').forEach(btn=>btn.classList.toggle('active',btn.dataset.journeyTab===tab));
   $$('[data-journey-panel]').forEach(panel=>panel.classList.toggle('active',panel.dataset.journeyPanel===tab));
   if(tab==='avatar')renderAvatarBuilder();
 }
@@ -4350,8 +4350,8 @@ async function startNexoArena(){
   }
 }
 
-$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
-$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
+$$('[data-journey-tab]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTab));
+$$('[data-wardrobe-filter]').forEach(btn=>btn.onclick=()=>{wardrobeFilter=btn.dataset.wardrobeFilter;$$('[data-wardrobe-filter]').forEach(x=>x.classList.toggle('active',x===btn));renderNexoWardrobe();});
 $('#wardrobeCategory')?.addEventListener('change',renderNexoWardrobe);
 $$('[data-journey-tab-target]').forEach(btn=>btn.onclick=()=>setJourneyTab(btn.dataset.journeyTabTarget));
 $('#refreshJourney')?.addEventListener('click',()=>loadNexoJourney());
