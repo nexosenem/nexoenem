@@ -893,7 +893,7 @@ async function refreshCurrentRole({silent=true}={}){
 
     $$('.admin-only').forEach(el=>el.classList.toggle('hidden',!isAdmin));
     const roleLabel=$('#profileRole');
-    if(roleLabel)roleLabel.textContent=isAdmin?'Administrador':'Estudante';
+    if(roleLabel)roleLabel.textContent=isAdmin?'Administrador':('Estudante · '+(isNexoPlus()?'Plus':'Free'));
 
     if(previousRole!==data.role&&!silent){
       toast(isAdmin?'Seu acesso de administrador foi liberado.':'Seu acesso de administrador foi removido.');
@@ -3567,9 +3567,11 @@ function renderAvatarBuilder(){
     btn.classList.toggle('locked',locked);
     btn.classList.toggle('plus-locked',plusLocked);
     btn.dataset.locked=locked?'true':'false';
-    const base=(btn.dataset.baseLabel||btn.textContent).replace(/\s*🔒$/,'').replace(/\s*PLUS$/i,'');
-    btn.dataset.baseLabel=base;
-    btn.textContent=locked?(base+(plusLocked?' PLUS':' 🔒')):base;
+    if(!btn.classList.contains('tone-swatch')){
+      const base=(btn.dataset.baseLabel||btn.textContent).replace(/\s*🔒$/,'').replace(/\s*PLUS$/i,'');
+      btn.dataset.baseLabel=base;
+      btn.textContent=locked?(base+(plusLocked?' PLUS':' 🔒')):base;
+    }
   });
 }
 
@@ -4303,8 +4305,8 @@ async function loadAdmin(){
     client.from('videos').select('*',{count:'exact',head:true}),
     client.from('materials').select('*',{count:'exact',head:true}),
     client.from('content_progress').select('content_type,content_id,completed'),
-    client.from('videos').select('id,title,area,subject,topic,is_published,created_at,video_url,cloudinary_public_id').order('created_at',{ascending:false}).limit(100),
-    client.from('materials').select('id,title,area,subject,topic,is_published,created_at,file_url,cloudinary_public_id,format').order('created_at',{ascending:false}).limit(100)
+    client.from('videos').select('id,title,area,subject,topic,is_published,plus_only,created_at,video_url,cloudinary_public_id').order('created_at',{ascending:false}).limit(100),
+    client.from('materials').select('id,title,area,subject,topic,is_published,plus_only,created_at,file_url,cloudinary_public_id,format').order('created_at',{ascending:false}).limit(100)
   ]);
   const totalViews=(progressRows.data||[]).length;
   $('#adminStats').innerHTML=[
@@ -4340,15 +4342,20 @@ function renderAdminContentList(type,rows,counts){
     const stat=counts.get(contentKey(type,row.id))||{views:0,completed:0};
     return `<div class="admin-content-row">
       <div><b>${esc(row.title)}</b><small>${esc([row.subject,row.topic].filter(Boolean).join(' · '))}</small><small>${stat.views} abertura(s) · ${stat.completed} conclusão(ões)</small></div>
-      <span class="status-pill ${row.is_published?'published':'draft'}">${row.is_published?'Publicado':'Oculto'}</span>
+      <div class="admin-content-flags">
+        <span class="status-pill ${row.is_published?'published':'draft'}">${row.is_published?'Publicado':'Oculto'}</span>
+        ${row.plus_only?'<span class="status-pill plus">PLUS</span>':'<span class="status-pill free">FREE</span>'}
+      </div>
       <div class="admin-content-actions">
         <button data-admin-edit="${type}:${row.id}">Editar</button>
+        <button data-admin-plus="${type}:${row.id}">${row.plus_only?'Tornar Free':'Tornar Plus'}</button>
         <button data-admin-toggle="${type}:${row.id}">${row.is_published?'Ocultar':'Publicar'}</button>
         <button class="danger" data-admin-delete="${type}:${row.id}">Remover</button>
       </div>
     </div>`;
   }).join(''):'<p style="color:var(--muted)">Nenhum conteúdo cadastrado.</p>';
   target.querySelectorAll('[data-admin-edit]').forEach(b=>b.onclick=()=>editAdminContent(b.dataset.adminEdit));
+  target.querySelectorAll('[data-admin-plus]').forEach(b=>b.onclick=()=>toggleAdminPlusContent(b.dataset.adminPlus));
   target.querySelectorAll('[data-admin-toggle]').forEach(b=>b.onclick=()=>toggleAdminContent(b.dataset.adminToggle));
   target.querySelectorAll('[data-admin-delete]').forEach(b=>b.onclick=()=>deleteAdminContent(b.dataset.adminDelete));
 }
@@ -4372,6 +4379,18 @@ async function editAdminContent(value){
   await loadAdmin();
   if(type==='video')loadVideos();else loadMaterials();
 }
+async function toggleAdminPlusContent(value){
+  const {type,id,table}=parseAdminContentKey(value);
+  const {data,error}=await client.from(table).select('plus_only').eq('id',id).single();
+  if(error)return toast('Não foi possível alterar o plano do conteúdo.','error');
+  const next=!Boolean(data.plus_only);
+  const {error:updateError}=await client.from(table).update({plus_only:next,updated_at:new Date().toISOString()}).eq('id',id);
+  if(updateError)return toast('Não foi possível alterar o plano do conteúdo.','error');
+  toast(next?'Conteúdo marcado como NEXO Plus.':'Conteúdo liberado no plano Free.');
+  await loadAdmin();
+  if(type==='video')loadVideos();else loadMaterials();
+}
+
 async function toggleAdminContent(value){
   const {type,id,table}=parseAdminContentKey(value);
   const {data,error}=await client.from(table).select('is_published').eq('id',id).single();
@@ -4411,7 +4430,7 @@ async function deleteAdminContent(value){
 $('#addVideo').onclick=async()=>{
   if(state.profile?.role!=='admin')return toast('Acesso restrito.','error');
   const title=$('#videoTitle').value.trim(),area=$('#videoArea').value,subject=$('#videoSubject').value.trim(),topic=$('#videoTopic').value.trim(),description=$('#videoDescription')?.value.trim()||'';
-  const external=$('#videoUrl').value.trim(),file=$('#videoFile').files[0];
+  const external=$('#videoUrl').value.trim(),file=$('#videoFile').files[0],plus_only=Boolean($('#videoPlusOnly')?.checked);
   if(!title||!subject||(!file&&!/^https?:\/\//i.test(external)))return toast('Preencha título, matéria e um arquivo ou URL válida.','error');
   if(file&&!/^video\//i.test(file.type||''))return toast('Selecione um arquivo de vídeo válido.','error');
 
@@ -4442,14 +4461,15 @@ $('#addVideo').onclick=async()=>{
       bytes:upload_bytes,
       duration_seconds:upload_duration,
       thumbnail_url:upload_thumbnail,
+      plus_only,
       created_by:state.user.id,is_published:true
     });
     if(error)throw error;
 
     status.textContent=file?'Videoaula publicada no Cloudinary com sucesso.':'Videoaula publicada com sucesso.';
     $('#videoTitle').value=$('#videoSubject').value=$('#videoTopic').value=$('#videoUrl').value='';if($('#videoDescription'))$('#videoDescription').value='';
-    $('#videoFile').value='';
-    toast('Videoaula publicada.');
+    $('#videoFile').value='';if($('#videoPlusOnly'))$('#videoPlusOnly').checked=false;
+    toast(plus_only?'Videoaula publicada como conteúdo Plus.':'Videoaula publicada.');
     await loadAdmin();
   }catch(err){
     console.error(err);
@@ -4466,6 +4486,7 @@ $('#addMaterial').onclick=async()=>{
   const subject=$('#materialSubject').value.trim();
   const topic=$('#materialTopic').value.trim();
   const description=$('#materialDescription').value.trim();
+  const plus_only=Boolean($('#materialPlusOnly')?.checked);
   const file=$('#materialFile').files[0];
 
   if(!title||!subject||!file)return toast('Preencha título, matéria e selecione um PDF ou imagem.','error');
@@ -4493,6 +4514,7 @@ $('#addMaterial').onclick=async()=>{
       resource_type:uploaded.resource_type||null,
       format:uploaded.format||(isPdf?'pdf':null),
       bytes:Number(uploaded.bytes||file.size||0)||null,
+      plus_only,
       created_by:state.user.id,
       is_published:true
     });
@@ -4500,8 +4522,8 @@ $('#addMaterial').onclick=async()=>{
 
     status.textContent='Material publicado no Cloudinary com sucesso.';
     $('#materialTitle').value=$('#materialSubject').value=$('#materialTopic').value=$('#materialDescription').value='';
-    $('#materialFile').value='';
-    toast('Material publicado.');
+    $('#materialFile').value='';if($('#materialPlusOnly'))$('#materialPlusOnly').checked=false;
+    toast(plus_only?'Material publicado como conteúdo Plus.':'Material publicado.');
     await loadAdmin();
   }catch(err){
     console.error(err);
