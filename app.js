@@ -3246,7 +3246,7 @@ async function loadErrorNotebook(){
 async function startErrorReview(){
   try{
     if(!state.membership)await loadNexoMembership({silent:true});
-    if(planUsageReached('questions'))return openNexoPlans('Você atingiu as 10 questões disponíveis hoje no plano Free.');
+    // Revisar erros também não consome cota até uma nova resposta ser confirmada.
     const ids=(state.errorReviewIds?.length?state.errorReviewIds:await loadErrorNotebook()).slice(0,5);
     if(!ids.length)return toast('Ainda não há erros recentes para revisar.');
     const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
