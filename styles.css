@@ -513,3 +513,63 @@ body.light .nia-msg.bot{background:#f1f5fa;color:#35465e}
   background:linear-gradient(145deg,rgba(72,54,171,.12),rgba(16,31,54,.45))!important
 }
 body.light .professor-essay-card{background:#f5f3ff!important}
+
+
+/* NEXO Core — adaptive recommendation layer */
+.nexo-core-card{
+  position:relative;overflow:hidden;
+  border-color:rgba(105,88,235,.48)!important;
+  background:
+    radial-gradient(circle at 100% 0%,rgba(72,205,255,.11),transparent 34%),
+    radial-gradient(circle at 0% 100%,rgba(116,77,255,.14),transparent 38%),
+    linear-gradient(155deg,rgba(10,20,38,.98),rgba(7,14,29,.98))!important
+}
+.nexo-core-card:before{
+  content:"";position:absolute;inset:auto -30px -45px auto;width:140px;height:140px;border-radius:50%;
+  border:1px solid rgba(102,90,244,.16);box-shadow:0 0 0 25px rgba(87,72,214,.035),0 0 0 52px rgba(68,189,233,.018);
+  pointer-events:none
+}
+.core-topline{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px;position:relative;z-index:1}
+.core-topline>span{font-size:9px;letter-spacing:2.4px;font-weight:850;color:#9d8cff}
+.core-topline>small{
+  font-size:8px;text-transform:uppercase;letter-spacing:1px;color:#6fe1ff;
+  border:1px solid rgba(67,205,240,.25);background:rgba(39,170,213,.08);border-radius:999px;padding:4px 7px
+}
+.core-main{display:grid;grid-template-columns:48px 1fr;gap:10px;align-items:start;position:relative;z-index:1}
+.core-avatar{
+  width:46px;height:46px;border-radius:15px;display:grid;place-items:center;font-size:19px;font-weight:900;color:#fff;
+  background:linear-gradient(145deg,#7658f0,#2b7bdc);box-shadow:0 8px 25px rgba(81,75,220,.28)
+}
+.core-main h3{font-size:15px;line-height:1.25;margin:0 0 5px}
+.core-main p{margin:0;color:var(--muted);font-size:10px;line-height:1.55}
+.core-metrics{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:12px 0;position:relative;z-index:1}
+.core-metrics span{
+  display:grid;place-items:center;gap:1px;min-width:0;padding:8px 5px;border-radius:10px;
+  background:rgba(13,26,47,.78);border:1px solid rgba(92,109,151,.18)
+}
+.core-metrics b{font-size:14px;color:#edf2ff}
+.core-metrics small{font-size:7px;color:#7f8ea8;text-transform:uppercase;letter-spacing:.6px}
+.nexo-core-card .primary-btn{position:relative;z-index:1;min-height:42px;font-size:10px}
+.nexo-core-card.core-empty .core-avatar{filter:saturate(.65);opacity:.8}
+.nexo-core-card.core-empty .core-topline>small{color:#a6b0c2;border-color:rgba(119,135,164,.22);background:rgba(119,135,164,.06)}
+body.light .nexo-core-card{
+  background:linear-gradient(155deg,#f7f5ff,#f4fbff)!important;
+  border-color:#c9c1ff!important
+}
+body.light .core-metrics span{background:#fff;border-color:#dde4ef}
+body.light .core-metrics b{color:#172238}
+
+.mobile-core-card{
+  padding:14px;border-radius:16px;border:1px solid rgba(105,88,235,.40);
+  box-shadow:0 12px 34px rgba(0,0,0,.12)
+}
+
+@media(max-width:760px){
+  .mobile-core-card .core-main{grid-template-columns:44px 1fr}
+  .mobile-core-card .core-avatar{width:42px;height:42px;border-radius:13px}
+  .mobile-core-card .core-main h3{font-size:13px}
+  .mobile-core-card .core-main p{font-size:9px}
+  .mobile-core-card .core-metrics{margin:10px 0 9px}
+  .mobile-core-card .core-metrics span{padding:7px 4px}
+  .mobile-core-card .core-metrics b{font-size:13px}
+}
