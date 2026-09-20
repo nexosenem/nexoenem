@@ -79,6 +79,7 @@ const state = {
   pdfCache:new Map(),
   visualCache:new Map(),
   videos:[],
+  materials:[],
   assistantIntents:[],
   core:null,
   lastSimulationReport:null,
@@ -553,6 +554,7 @@ function openPage(id) {
   if (id==='desempenho') renderPerformance();
   if (id==='focos') renderFocus();
   if (id==='videoaulas') loadVideos();
+  if (id==='materiais') loadMaterials();
   if (id==='banco') renderBank();
   if (id==='feedback') loadMyFeedback();
   if (id==='ranking') loadRanking();
@@ -1944,6 +1946,26 @@ function renderVideos(){
 }
 $('#videoSearch').addEventListener('input',renderVideos);
 
+async function loadMaterials(){
+  const {data,error}=await client.from('materials').select('*').eq('is_published',true).order('created_at',{ascending:false});
+  if(error){console.error(error);return}
+  state.materials=data||[];
+  renderMaterials();
+}
+function renderMaterials(){
+  const s=($('#materialSearch')?.value||'').toLowerCase().trim();
+  const list=state.materials.filter(m=>!s||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLowerCase().includes(s));
+  const grid=$('#materialGrid');
+  if(!grid)return;
+  grid.innerHTML=list.length?list.map(m=>{
+    const ext=String(m.format||'').toUpperCase();
+    const icon=ext==='PDF'?'PDF':'▧';
+    const size=m.bytes?(' · '+(m.bytes/1048576).toFixed(m.bytes>=10485760?0:1)+' MB'):'';
+    return `<article class="panel video-card"><div class="video-thumb">${icon}</div><div class="video-body"><b>${esc(m.title)}</b><small>${esc([m.area,m.subject,m.topic].filter(Boolean).join(' · '))}${size}</small>${m.description?'<p>'+esc(m.description)+'</p>':''}<a href="${esc(m.file_url||'')}" target="_blank" rel="noopener">Abrir material →</a></div></article>`;
+  }).join(''):'<article class="panel"><p style="color:var(--muted)">Nenhum material publicado ainda.</p></article>';
+}
+$('#materialSearch')?.addEventListener('input',renderMaterials);
+
 function renderBank(){
   const search=$('#bankSearch').value.toLowerCase().trim(),area=$('#bankArea').value;
   const list=state.questionMeta.filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search))).slice(0,150);
@@ -2441,14 +2463,15 @@ $$('[data-outfit]').forEach(b=>b.onclick=()=>applyNexoStyle(b.dataset.outfit,tru
 
 async function loadAdmin(){
   if(state.profile?.role!=='admin')return;
-  const [profiles,attempts,feedbacks,videos]=await Promise.all([
+  const [profiles,attempts,feedbacks,videos,materials]=await Promise.all([
     client.from('profiles').select('*',{count:'exact',head:true}),
     client.from('question_attempts').select('*',{count:'exact',head:true}),
     client.from('feedback').select('*',{count:'exact',head:true}),
-    client.from('videos').select('*',{count:'exact',head:true})
+    client.from('videos').select('*',{count:'exact',head:true}),
+    client.from('materials').select('*',{count:'exact',head:true})
   ]);
   $('#adminStats').innerHTML=[
-    ['Usuários',profiles.count||0],['Respostas',attempts.count||0],['Feedbacks',feedbacks.count||0],['Videoaulas',videos.count||0]
+    ['Usuários',profiles.count||0],['Respostas',attempts.count||0],['Feedbacks',feedbacks.count||0],['Videoaulas',videos.count||0],['Materiais',materials.count||0]
   ].map(x=>`<article class="admin-stat"><small>${x[0]}</small><b>${x[1]}</b></article>`).join('');
 
   const {data}=await client.from('feedback').select('id,rating,message,status,created_at,user_id').order('created_at',{ascending:false}).limit(60);
@@ -2495,6 +2518,58 @@ $('#addVideo').onclick=async()=>{
     console.error(err);
     status.textContent='Falha no upload/publicação: '+String(err?.message||err||'erro desconhecido');
     toast('Não foi possível publicar a videoaula.','error');
+  }
+};
+
+$('#addMaterial').onclick=async()=>{
+  if(state.profile?.role!=='admin')return toast('Acesso restrito.','error');
+
+  const title=$('#materialTitle').value.trim();
+  const area=$('#materialArea').value;
+  const subject=$('#materialSubject').value.trim();
+  const topic=$('#materialTopic').value.trim();
+  const description=$('#materialDescription').value.trim();
+  const file=$('#materialFile').files[0];
+
+  if(!title||!subject||!file)return toast('Preencha título, matéria e selecione um PDF ou imagem.','error');
+  const isPdf=file.type==='application/pdf'||/\.pdf$/i.test(file.name||'');
+  const isImage=/^image\//i.test(file.type||'');
+  if(!isPdf&&!isImage)return toast('Envie um PDF ou uma imagem.','error');
+
+  const status=$('#materialUploadStatus');
+  status.classList.remove('hidden');
+  status.textContent='Preparando envio para o Cloudinary...';
+
+  try{
+    const uploaded=await uploadToCloudinary(file,pct=>{
+      status.textContent=pct<100?`Enviando ao Cloudinary... ${pct}%`:'Upload concluído. Salvando no NEXO...';
+    });
+
+    const {error}=await client.from('materials').insert({
+      title,
+      description:description||null,
+      area,
+      subject,
+      topic:topic||null,
+      file_url:uploaded.secure_url,
+      cloudinary_public_id:uploaded.public_id||null,
+      resource_type:uploaded.resource_type||null,
+      format:uploaded.format||(isPdf?'pdf':null),
+      bytes:Number(uploaded.bytes||file.size||0)||null,
+      created_by:state.user.id,
+      is_published:true
+    });
+    if(error)throw error;
+
+    status.textContent='Material publicado no Cloudinary com sucesso.';
+    $('#materialTitle').value=$('#materialSubject').value=$('#materialTopic').value=$('#materialDescription').value='';
+    $('#materialFile').value='';
+    toast('Material publicado.');
+    await loadAdmin();
+  }catch(err){
+    console.error(err);
+    status.textContent='Falha no upload/publicação: '+String(err?.message||err||'erro desconhecido');
+    toast('Não foi possível publicar o material.','error');
   }
 };
 
