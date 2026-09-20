@@ -8439,14 +8439,18 @@ body.light .essay-theme-control select{background:#fff}
   /* Onboarding: o conteúdo é o único scroll.
      O botão Continuar volta para o fluxo normal e nunca cobre cabelo/roupa. */
   .nexo-onboarding{
+    height:100vh!important;
     height:100dvh!important;
+    min-height:100vh!important;
     min-height:100dvh!important;
     overflow:hidden!important;
   }
 
   .onboarding-shell{
+    height:100vh!important;
     height:100dvh!important;
     min-height:0!important;
+    max-height:100vh!important;
     max-height:100dvh!important;
     overflow:hidden!important;
     grid-template-rows:clamp(128px,20dvh,154px) minmax(0,1fr)!important;
