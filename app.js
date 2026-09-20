@@ -1662,10 +1662,24 @@ function renderEnemRadar(){
         '</article>';
       }).join('');
       $('[data-radar-train]',list).forEach(btn=>{
-        btn.onclick=()=>{
+        btn.onclick=async()=>{
+          if(btn.disabled)return;
           const key=decodeURIComponent(btn.dataset.radarTrain||'');
           const row=topics.find(item=>[item.area,item.subject,item.topic].join('||')===key);
-          if(row)startRadarTraining(row);
+          if(!row)return;
+          const previous=btn.innerHTML;
+          btn.disabled=true;
+          btn.textContent='Abrindo treino...';
+          try{
+            await startRadarTraining(row);
+          }catch(err){
+            console.error('radar train',err);
+            logClientError('enem_radar',err,'radar_train');
+            toast('Não consegui abrir esse treino agora.','error');
+          }finally{
+            btn.disabled=false;
+            btn.innerHTML=previous;
+          }
         };
       });
     }
@@ -1742,9 +1756,9 @@ function renderNexoWeekPlan(){
   const completed=Number(plan.completed||tasks.filter(t=>t.status==='completed').length||0);
   const total=Number(plan.total||tasks.length||7),pct=total?Math.round(completed*100/total):0;
   const today=(new Date().getDay()+6)%7;
-  $('[data-week-progress]').forEach(el=>el.textContent=completed+'/'+total);
-  $('[data-week-summary]').forEach(el=>el.textContent=tasks.length?'Plano de '+Number(plan.daily_minutes||state.profile?.daily_minutes||60)+' min/dia · '+completed+' de '+total+' missões concluídas.':'Complete seu diagnóstico para o NEXO montar a semana.');
-  $('[data-week-tasks]').forEach(el=>{
+  $$('[data-week-progress]').forEach(el=>el.textContent=completed+'/'+total);
+  $$('[data-week-summary]').forEach(el=>el.textContent=tasks.length?'Plano de '+Number(plan.daily_minutes||state.profile?.daily_minutes||60)+' min/dia · '+completed+' de '+total+' missões concluídas.':'Complete seu diagnóstico para o NEXO montar a semana.');
+  $$('[data-week-tasks]').forEach(el=>{
     const compact=el.closest('.mobile-week-card')?tasks.slice(0,3):tasks.slice(0,4);
     el.innerHTML=compact.length?compact.map(task=>`<button class="week-mini-task ${task.status==='completed'?'done':''} ${Number(task.day_index)===today?'today':''}" data-week-open="${task.id}"><span>${weekTaskIcon(task.task_type)}</span><div><b>${NEXO_WEEK_DAYS[Number(task.day_index)]||'Dia'} · ${esc(task.title)}</b><small>${esc(task.topic||task.subject||task.area||'Plano NEXO')} · ${Number(task.target_minutes||0)} min</small></div><i>${task.status==='completed'?'✓':'→'}</i></button>`).join(''):'<p class="week-loading">Faça algumas questões para liberar o plano semanal.</p>';
   });
@@ -1754,10 +1768,10 @@ function renderNexoWeekPlan(){
   const grid=$('#weekFullGrid');
   if(grid){
     grid.innerHTML=tasks.length?tasks.map(task=>`<article class="panel week-day-card ${task.status==='completed'?'done':''} ${Number(task.day_index)===today?'today':''}"><header><span>${String(Number(task.day_index)+1).padStart(2,'0')} · ${NEXO_WEEK_DAYS[Number(task.day_index)]||'Dia'}</span><b>${task.status==='completed'?'CONCLUÍDO':Number(task.day_index)===today?'HOJE':'PLANEJADO'}</b></header><div class="week-day-main"><span class="week-day-icon">${weekTaskIcon(task.task_type)}</span><div><h3>${esc(task.title)}</h3><p>${esc(task.topic||task.subject||task.area||'Atividade personalizada')}</p></div></div><div class="week-day-meta"><span>${Number(task.target_minutes||0)} min</span>${task.target_count?'<span>'+Number(task.target_count)+' item(ns)</span>':''}</div><div class="week-day-actions"><button class="outline-btn" data-week-launch="${task.id}">${weekTaskActionLabel(task.task_type)}</button><button class="primary-btn" data-week-complete="${task.id}" ${task.status==='completed'?'disabled':''}>${task.status==='completed'?'✓ Concluído':'Marcar concluído'}</button></div></article>`).join(''):'<article class="panel"><p style="color:var(--muted)">Ainda não há tarefas para esta semana.</p></article>';
-    $('[data-week-launch]',grid).forEach(btn=>btn.onclick=()=>{const task=tasks.find(t=>String(t.id)===String(btn.dataset.weekLaunch));if(task)launchNexoWeekTask(task)});
-    $('[data-week-complete]',grid).forEach(btn=>btn.onclick=()=>completeNexoWeekTask(Number(btn.dataset.weekComplete)));
+    $$('[data-week-launch]',grid).forEach(btn=>btn.onclick=()=>{const task=tasks.find(t=>String(t.id)===String(btn.dataset.weekLaunch));if(task)launchNexoWeekTask(task)});
+    $$('[data-week-complete]',grid).forEach(btn=>btn.onclick=()=>completeNexoWeekTask(Number(btn.dataset.weekComplete)));
   }
-  $('[data-week-open]').forEach(btn=>btn.onclick=()=>openPage('semana'));
+  $$('[data-week-open]').forEach(btn=>btn.onclick=()=>openPage('semana'));
 }
 async function completeNexoWeekTask(taskId){
   try{
@@ -1829,7 +1843,7 @@ function renderSavedQuestions(){
   if(!list)return;
   const rows=(state.questionMeta||[]).filter(q=>state.savedQuestions.has(Number(q.id)));
   list.innerHTML=rows.length?rows.map(q=>`<article class="saved-question-row"><span>★</span><div><b>${esc(q.topic||q.subject||'Questão ENEM')}</b><small>${esc(q.subject||q.area||'')} · ENEM ${esc(q.source_year||'')} · Q${esc(q.source_question_number||q.id)}</small></div><button data-saved-open="${q.id}">Abrir →</button></article>`).join(''):'<p style="color:var(--muted)">Você ainda não salvou nenhuma questão.</p>';
-  $('[data-saved-open]',list).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.savedOpen)));
+  $$('[data-saved-open]',list).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.savedOpen)));
 }
 
 function openQuestionIssueModal(questionId=state.current?.id){
@@ -1874,9 +1888,9 @@ async function loadAdminQuestionIssues(){
     if(error)throw error;
     if($('#questionIssueCount'))$('#questionIssueCount').textContent=(data||[]).length+' abertos';
     target.innerHTML=(data||[]).length?(data||[]).map(row=>`<div class="feedback-entry question-issue-admin"><span class="mini-avatar">!</span><div><b>${esc(String(row.issue_type||'outro').toUpperCase())} · Q${esc(row.question?.source_question_number||row.question_id)}</b><p>${esc(row.details||'Sem detalhes adicionais.')}</p><small>${esc(row.question?.subject||row.question?.area||'')} · ${esc(row.question?.topic||'')} · ${new Date(row.created_at).toLocaleString('pt-BR')}</small><div class="comment-actions"><button data-issue-open="${row.question_id}">Abrir questão</button><button data-issue-resolve="${row.id}">Resolver</button><button class="danger" data-issue-dismiss="${row.id}">Descartar</button></div></div></div>`).join(''):'<p style="color:var(--muted)">Nenhum problema de questão aberto.</p>';
-    $('[data-issue-open]',target).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.issueOpen)));
-    $('[data-issue-resolve]',target).forEach(btn=>btn.onclick=()=>resolveQuestionIssue(Number(btn.dataset.issueResolve),'resolved'));
-    $('[data-issue-dismiss]',target).forEach(btn=>btn.onclick=()=>resolveQuestionIssue(Number(btn.dataset.issueDismiss),'dismissed'));
+    $$('[data-issue-open]',target).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.issueOpen)));
+    $$('[data-issue-resolve]',target).forEach(btn=>btn.onclick=()=>resolveQuestionIssue(Number(btn.dataset.issueResolve),'resolved'));
+    $$('[data-issue-dismiss]',target).forEach(btn=>btn.onclick=()=>resolveQuestionIssue(Number(btn.dataset.issueDismiss),'dismissed'));
   }catch(err){
     console.error('admin question issues',err);
     target.innerHTML='<p style="color:var(--muted)">Não foi possível carregar os reportes agora.</p>';
@@ -1919,7 +1933,7 @@ function renderEssayHistory(){
     const scores=essayScoresFromRow(row),weak=scores.indexOf(Math.min(...scores))+1;
     return `<button class="essay-history-row" data-essay-history="${row.id}"><span class="essay-history-score">${Number(row.estimated_score||0)}</span><div><b>${esc(row.theme_title||'Redação')}</b><small>${new Date(row.created_at).toLocaleDateString('pt-BR')} · C${weak} para revisar${Number(row.version_number||1)>1?' · versão '+Number(row.version_number):''}</small></div><i>→</i></button>`;
   }).join(''):'<p style="color:var(--muted)">Seu histórico aparecerá aqui após a primeira correção.</p>';
-  $('[data-essay-history]',list).forEach(btn=>btn.onclick=()=>openEssayHistory(Number(btn.dataset.essayHistory)));
+  $$('[data-essay-history]',list).forEach(btn=>btn.onclick=()=>openEssayHistory(Number(btn.dataset.essayHistory)));
 }
 function openEssayHistory(id){
   const row=(state.essayHistory||[]).find(x=>Number(x.id)===Number(id));if(!row)return;
