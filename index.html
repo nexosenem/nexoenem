@@ -90,6 +90,15 @@
             <div class="auth-input-wrap"><i>◌</i><input id="registerName" type="text" autocomplete="name" required maxlength="80" placeholder="Como quer ser chamado?"></div>
           </label>
 
+          <div class="register-avatar-choice">
+            <div class="auth-label-row"><span>Seu personagem</span><small>Você personaliza os detalhes depois</small></div>
+            <div class="register-base-grid">
+              <button type="button" data-register-base="masc"><span>♂</span><b>Masculino</b></button>
+              <button type="button" data-register-base="fem"><span>♀</span><b>Feminino</b></button>
+              <button type="button" data-register-base="neutral" class="active"><span>◇</span><b>Neutro</b></button>
+            </div>
+          </div>
+
           <label>
             <span>E-mail</span>
             <div class="auth-input-wrap"><i>@</i><input id="registerEmail" type="email" inputmode="email" autocomplete="email" required placeholder="seu@email.com"></div>
@@ -657,6 +666,21 @@
                   <button data-avatar-field="hair" data-avatar-value="bun">Coque</button>
                   <button data-avatar-field="hair" data-avatar-value="fringe">Franja</button>
                   <button data-avatar-field="hair" data-avatar-value="buzz">Raspado</button>
+                  <button data-avatar-field="hair" data-avatar-value="braids" data-avatar-item="hair_braids">Tranças</button>
+                  <button data-avatar-field="hair" data-avatar-value="locs" data-avatar-item="hair_locs">Locs</button>
+                  <button data-avatar-field="hair" data-avatar-value="fade" data-avatar-item="hair_fade" data-avatar-bases="masc">Fade</button>
+                  <button data-avatar-field="hair" data-avatar-value="quiff" data-avatar-item="hair_quiff" data-avatar-bases="masc">Quiff</button>
+                  <button data-avatar-field="hair" data-avatar-value="bob" data-avatar-item="hair_bob" data-avatar-bases="fem">Bob</button>
+                  <button data-avatar-field="hair" data-avatar-value="layered" data-avatar-item="hair_layered" data-avatar-bases="fem">Camadas</button>
+                  <button data-avatar-field="hair" data-avatar-value="sidecut" data-avatar-item="hair_sidecut" data-avatar-bases="neutral">Sidecut</button>
+                  <button data-avatar-field="hair" data-avatar-value="wolf" data-avatar-item="hair_wolf" data-avatar-bases="fem,neutral">Wolf Cut 🔒</button>
+                  <button data-avatar-field="hair" data-avatar-value="twintails" data-avatar-item="hair_twintails" data-avatar-bases="fem">Twin Tails 🔒</button>
+                  <button data-avatar-field="hair" data-avatar-value="textured" data-avatar-item="hair_textured" data-avatar-bases="masc">Texturizado 🔒</button>
+                  <button data-avatar-field="hair" data-avatar-value="mohawk" data-avatar-item="hair_mohawk" data-avatar-bases="masc,neutral">Mohawk 🔒</button>
+                  <button data-avatar-field="hair" data-avatar-value="hologram" data-avatar-item="hair_hologram" data-plus-style="true">Hologram Plus</button>
+                  <button data-avatar-field="hair" data-avatar-value="celestial" data-avatar-item="hair_celestial" data-avatar-bases="fem" data-plus-style="true">Celestial Plus</button>
+                  <button data-avatar-field="hair" data-avatar-value="onyx" data-avatar-item="hair_onyx" data-avatar-bases="masc" data-plus-style="true">Onyx Plus</button>
+                  <button data-avatar-field="hair" data-avatar-value="flux" data-avatar-item="hair_flux" data-avatar-bases="neutral" data-plus-style="true">Flux Plus</button>
                 </div></div>
 
                 <div class="avatar-option-group"><span>Cor do cabelo</span><div>
@@ -669,29 +693,51 @@
                 </div></div>
 
                 <div class="avatar-option-group"><span>Roupa</span><div>
-                  <button data-avatar-field="outfit" data-avatar-value="purple">Moletom roxo</button>
-                  <button data-avatar-field="outfit" data-avatar-value="blue">Moletom azul</button>
+                  <button data-avatar-field="outfit" data-avatar-value="purple">Moletom Roxo</button>
+                  <button data-avatar-field="outfit" data-avatar-value="blue">Moletom Azul</button>
                   <button data-avatar-field="outfit" data-avatar-value="teal">Verde NEXO</button>
+                  <button data-avatar-field="outfit" data-avatar-value="black" data-avatar-item="outfit_black">Black</button>
+                  <button data-avatar-field="outfit" data-avatar-value="white" data-avatar-item="outfit_white">Ice</button>
+                  <button data-avatar-field="outfit" data-avatar-value="lavender" data-avatar-item="outfit_lavender" data-avatar-bases="fem,neutral">Lavanda</button>
+                  <button data-avatar-field="outfit" data-avatar-value="navy" data-avatar-item="outfit_navy" data-avatar-bases="masc,neutral">Navy</button>
+                  <button data-avatar-field="outfit" data-avatar-value="rose" data-avatar-item="outfit_rose" data-avatar-bases="fem">Rose</button>
+                  <button data-avatar-field="outfit" data-avatar-value="varsity" data-avatar-item="outfit_varsity" data-avatar-bases="masc">Varsity</button>
+                  <button data-avatar-field="outfit" data-avatar-value="street" data-avatar-item="outfit_street" data-avatar-bases="neutral">Street</button>
+                  <button data-avatar-field="outfit" data-avatar-value="academy" data-avatar-item="outfit_academy">Academy 🔒</button>
+                  <button data-avatar-field="outfit" data-avatar-value="pastel" data-avatar-item="outfit_pastel" data-avatar-bases="fem,neutral">Pastel 🔒</button>
+                  <button data-avatar-field="outfit" data-avatar-value="urban" data-avatar-item="outfit_urban" data-avatar-bases="masc,neutral">Urban 🔒</button>
                   <button data-avatar-field="outfit" data-avatar-value="cyan" data-avatar-item="outfit_cyan">Ciano 🔒</button>
                   <button data-avatar-field="outfit" data-avatar-value="focus" data-avatar-item="outfit_focus">Jaqueta Focus 🔒</button>
-                  <button data-avatar-field="outfit" data-avatar-value="gold" data-avatar-item="outfit_gold" data-plus-style="true">Elite Plus 🔒</button>
-                  <button data-avatar-field="outfit" data-avatar-value="aurora" data-avatar-item="outfit_aurora" data-plus-style="true">Aurora Plus 🔒</button>
+                  <button data-avatar-field="outfit" data-avatar-value="gold" data-avatar-item="outfit_gold" data-plus-style="true">Elite Plus</button>
+                  <button data-avatar-field="outfit" data-avatar-value="aurora" data-avatar-item="outfit_aurora" data-plus-style="true">Aurora Plus</button>
+                  <button data-avatar-field="outfit" data-avatar-value="celestial" data-avatar-item="outfit_celestial" data-avatar-bases="fem,neutral" data-plus-style="true">Celestial Plus</button>
+                  <button data-avatar-field="outfit" data-avatar-value="phantom" data-avatar-item="outfit_phantom" data-avatar-bases="masc,neutral" data-plus-style="true">Phantom Plus</button>
+                  <button data-avatar-field="outfit" data-avatar-value="royal" data-avatar-item="outfit_royal" data-plus-style="true">Royal Plus</button>
                 </div></div>
 
                 <div class="avatar-option-group"><span>Acessório</span><div>
                   <button data-avatar-field="accessory" data-avatar-value="none">Nenhum</button>
                   <button data-avatar-field="accessory" data-avatar-value="glasses">Óculos</button>
+                  <button data-avatar-field="accessory" data-avatar-value="cap" data-avatar-item="acc_cap">Boné 🔒</button>
+                  <button data-avatar-field="accessory" data-avatar-value="ribbon" data-avatar-item="acc_ribbon" data-avatar-bases="fem">Laço 🔒</button>
+                  <button data-avatar-field="accessory" data-avatar-value="chain" data-avatar-item="acc_chain" data-avatar-bases="masc">Corrente 🔒</button>
+                  <button data-avatar-field="accessory" data-avatar-value="pin" data-avatar-item="acc_pin" data-avatar-bases="neutral">Pin Core 🔒</button>
                   <button data-avatar-field="accessory" data-avatar-value="headphones" data-avatar-item="acc_headphones">Headset 🔒</button>
                   <button data-avatar-field="accessory" data-avatar-value="tiara" data-avatar-item="acc_tiara">Tiara Aurora 🔒</button>
-                  <button data-avatar-field="accessory" data-avatar-value="star" data-avatar-item="acc_star" data-plus-style="true">Stellar Plus 🔒</button>
-                  <button data-avatar-field="accessory" data-avatar-value="crown" data-avatar-item="acc_crown" data-plus-style="true">Coroa Plus 🔒</button>
+                  <button data-avatar-field="accessory" data-avatar-value="halo" data-avatar-item="acc_halo" data-plus-style="true">Halo Plus</button>
+                  <button data-avatar-field="accessory" data-avatar-value="earrings" data-avatar-item="acc_earrings" data-avatar-bases="fem" data-plus-style="true">Earrings Plus</button>
+                  <button data-avatar-field="accessory" data-avatar-value="visor" data-avatar-item="acc_visor" data-avatar-bases="masc" data-plus-style="true">Visor Plus</button>
+                  <button data-avatar-field="accessory" data-avatar-value="star" data-avatar-item="acc_star" data-plus-style="true">Stellar Plus</button>
+                  <button data-avatar-field="accessory" data-avatar-value="crown" data-avatar-item="acc_crown" data-plus-style="true">Coroa Plus</button>
                 </div></div>
 
                 <div class="avatar-option-group"><span>Moldura</span><div>
                   <button data-avatar-field="frame" data-avatar-value="basic">Padrão</button>
                   <button data-avatar-field="frame" data-avatar-value="neon" data-avatar-item="frame_neon">Neon 🔒</button>
                   <button data-avatar-field="frame" data-avatar-value="cosmic" data-avatar-item="frame_cosmic" data-plus-style="true">Cósmica Plus 🔒</button>
-                  <button data-avatar-field="frame" data-avatar-value="diamond" data-avatar-item="frame_diamond" data-plus-style="true">Diamante Plus 🔒</button>
+                  <button data-avatar-field="frame" data-avatar-value="level" data-avatar-item="frame_level">Evolução 🔒</button>
+                  <button data-avatar-field="frame" data-avatar-value="diamond" data-avatar-item="frame_diamond" data-plus-style="true">Diamante Plus</button>
+                  <button data-avatar-field="frame" data-avatar-value="ultraviolet" data-avatar-item="frame_ultraviolet" data-plus-style="true">Ultraviolet Plus</button>
                 </div></div>
 
                 <div class="avatar-option-group"><span>Ambiente</span><div>
@@ -699,13 +745,16 @@
                   <button data-avatar-field="background" data-avatar-value="midnight" data-avatar-item="bg_midnight">Meia-noite 🔒</button>
                   <button data-avatar-field="background" data-avatar-value="library" data-avatar-item="bg_library">Biblioteca Neon 🔒</button>
                   <button data-avatar-field="background" data-avatar-value="aurora" data-avatar-item="bg_aurora" data-plus-style="true">Aurora Plus 🔒</button>
-                  <button data-avatar-field="background" data-avatar-value="lab" data-avatar-item="bg_lab" data-plus-style="true">Laboratório Plus 🔒</button>
+                  <button data-avatar-field="background" data-avatar-value="study" data-avatar-item="bg_study">Mesa de Estudos 🔒</button>
+                  <button data-avatar-field="background" data-avatar-value="lab" data-avatar-item="bg_lab" data-plus-style="true">Laboratório Plus</button>
+                  <button data-avatar-field="background" data-avatar-value="skyline" data-avatar-item="bg_skyline" data-plus-style="true">Skyline Plus</button>
                 </div></div>
 
                 <div class="avatar-option-group"><span>Aura</span><div>
                   <button data-avatar-field="aura" data-avatar-value="none">Sem aura</button>
                   <button data-avatar-field="aura" data-avatar-value="blue" data-avatar-item="aura_blue">Aura Focus 🔒</button>
-                  <button data-avatar-field="aura" data-avatar-value="purple" data-avatar-item="aura_purple" data-plus-style="true">Aura Core Plus 🔒</button>
+                  <button data-avatar-field="aura" data-avatar-value="purple" data-avatar-item="aura_purple" data-plus-style="true">Aura Core Plus</button>
+                  <button data-avatar-field="aura" data-avatar-value="gold" data-avatar-item="aura_gold" data-plus-style="true">Aura Gold Plus</button>
                 </div></div>
 
                 <button class="primary-btn wide" id="saveJourneyAvatar">Salvar personagem</button>
@@ -947,7 +996,7 @@
         <div class="onboarding-mentor-copy">
           <span>PROFESSOR NEXO</span>
           <h3 id="onboardingMentorTitle">Vamos montar seu ponto de partida.</h3>
-          <p id="onboardingMentorText">São só três escolhas. Eu uso isso para criar sua primeira recomendação antes mesmo de conhecer todo o seu histórico.</p>
+          <p id="onboardingMentorText">Primeiro você cria sua identidade NEXO. Depois eu uso suas metas e rotina para montar o plano inicial.</p>
         </div>
       </aside>
 
@@ -957,13 +1006,53 @@
             <span class="eyebrow">NEXO CORE · CONFIGURAÇÃO INICIAL</span>
             <h2 id="onboardingTitle">Seu plano começa por você.</h2>
           </div>
-          <span id="onboardingStepLabel" class="onboarding-step-label">1 de 3</span>
+          <span id="onboardingStepLabel" class="onboarding-step-label">1 de 4</span>
         </header>
 
         <div class="onboarding-progress"><i id="onboardingProgress"></i></div>
 
-        <section class="onboarding-step" data-onboarding-step="1">
-          <span class="onboarding-question">01 · META</span>
+        <section class="onboarding-step onboarding-avatar-step" data-onboarding-step="1">
+          <span class="onboarding-question">01 · SEU PERSONAGEM</span>
+          <h3>Monte sua identidade NEXO.</h3>
+          <p>Escolha uma base e personalize com os itens gratuitos iniciais. Novos estilos são desbloqueados conforme você evolui.</p>
+
+          <div class="onboarding-avatar-builder">
+            <div class="onboarding-avatar-preview" id="onboardingAvatarPreview"></div>
+            <div class="onboarding-avatar-controls">
+              <div class="onboarding-avatar-group">
+                <span>Base</span>
+                <div>
+                  <button type="button" data-onboarding-avatar-field="base" data-onboarding-avatar-value="masc">Masculino</button>
+                  <button type="button" data-onboarding-avatar-field="base" data-onboarding-avatar-value="fem">Feminino</button>
+                  <button type="button" data-onboarding-avatar-field="base" data-onboarding-avatar-value="neutral">Neutro</button>
+                </div>
+              </div>
+              <div class="onboarding-avatar-group">
+                <span>Tom de pele</span>
+                <div class="onboarding-tone-row">
+                  <button type="button" data-onboarding-avatar-field="skin" data-onboarding-avatar-value="tone1" aria-label="Tom 1"><i class="tone-01"></i></button>
+                  <button type="button" data-onboarding-avatar-field="skin" data-onboarding-avatar-value="tone2" aria-label="Tom 2"><i class="tone-02"></i></button>
+                  <button type="button" data-onboarding-avatar-field="skin" data-onboarding-avatar-value="tone3" aria-label="Tom 3"><i class="tone-03"></i></button>
+                  <button type="button" data-onboarding-avatar-field="skin" data-onboarding-avatar-value="tone4" aria-label="Tom 4"><i class="tone-04"></i></button>
+                  <button type="button" data-onboarding-avatar-field="skin" data-onboarding-avatar-value="tone5" aria-label="Tom 5"><i class="tone-05"></i></button>
+                  <button type="button" data-onboarding-avatar-field="skin" data-onboarding-avatar-value="tone6" aria-label="Tom 6"><i class="tone-06"></i></button>
+                </div>
+              </div>
+              <div class="onboarding-avatar-group">
+                <span>Cabelo inicial</span>
+                <div id="onboardingHairChoices"></div>
+              </div>
+              <div class="onboarding-avatar-group">
+                <span>Roupa inicial</span>
+                <div id="onboardingOutfitChoices"></div>
+              </div>
+            </div>
+          </div>
+          <div class="onboarding-unlock-note">✦ Alguns itens são exclusivos da base escolhida. Outros chegam com nível, missões e NEXO Plus.</div>
+        </section>
+
+        <section class="onboarding-step hidden" data-onboarding-step="2">
+          <span class="onboarding-question">02 · META</span>
           <h3>Qual nota você quer perseguir no ENEM?</h3>
           <p>Não é uma promessa nem uma cobrança. É uma referência para o NEXO ajustar intensidade e ritmo.</p>
 
@@ -984,8 +1073,8 @@
           </div>
         </section>
 
-        <section class="onboarding-step hidden" data-onboarding-step="2">
-          <span class="onboarding-question">02 · DIFICULDADES</span>
+        <section class="onboarding-step hidden" data-onboarding-step="3">
+          <span class="onboarding-question">03 · DIFICULDADES</span>
           <h3>Quais áreas mais precisam da sua atenção?</h3>
           <p>Escolha uma ou duas. A primeira será usada no seu diagnóstico inicial.</p>
 
@@ -998,8 +1087,8 @@
           <small id="onboardingAreaHint" class="onboarding-inline-hint">Escolha pelo menos uma área.</small>
         </section>
 
-        <section class="onboarding-step hidden" data-onboarding-step="3">
-          <span class="onboarding-question">03 · ROTINA</span>
+        <section class="onboarding-step hidden" data-onboarding-step="4">
+          <span class="onboarding-question">04 · ROTINA</span>
           <h3>Quanto tempo cabe de verdade no seu dia?</h3>
           <p>Escolha um tempo sustentável. O NEXO prefere constância real a um cronograma impossível.</p>
 
@@ -1087,6 +1176,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-54"></script>
+  <script src="./app.js?v=20260920-55"></script>
 </body>
 </html>
