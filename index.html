@@ -12,7 +12,7 @@
   <link rel="preload" as="image" href="./assets/nexo-expressions/confiante.avif" type="image/avif">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-66">
+  <link rel="stylesheet" href="./styles.css?v=20260920-67">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -854,7 +854,24 @@
           </div>
 
           <div class="journey-panel" data-journey-panel="store">
-            <div class="journey-section-head"><div><span class="eyebrow">LOJA NEXO</span><h3>Gaste N-Coins só em personalização.</h3></div><p>O sistema nunca vende vantagem acadêmica: moedas servem apenas para cosméticos.</p></div>
+            <div class="journey-section-head store-section-head">
+              <div><span class="eyebrow">LOJA NEXO · COSMÉTICOS</span><h3>Compre só o que realmente pertence à Loja.</h3></div>
+              <div class="store-wallet"><small>SEU SALDO</small><b id="storeCoinBalance">0 N¢</b></div>
+            </div>
+            <p class="store-intro">Itens iniciais e recompensas por nível são liberados automaticamente. Aqui aparecem apenas cosméticos compráveis com N-Coins.</p>
+            <div class="store-summary" id="storeSummary"></div>
+            <div class="store-toolbar">
+              <div class="store-filters">
+                <button class="active" data-store-filter="all">Todos</button>
+                <button data-store-filter="affordable">Posso comprar</button>
+                <button data-store-filter="plus">Plus</button>
+                <button data-store-filter="owned">Adquiridos</button>
+              </div>
+              <select id="storeCategory" aria-label="Filtrar categoria da loja">
+                <option value="all">Todas as categorias</option>
+              </select>
+            </div>
+            <div id="storeNotice" class="store-notice"></div>
             <div id="journeyStore" class="journey-store-grid"></div>
           </div>
 
@@ -914,8 +931,8 @@
         </section>
 
         <section class="page" id="admin">
-          <div class="admin-ultra-strip"><span>◆</span><div><b>NEXO ULTRA · ACESSO ADMINISTRATIVO</b><small>Recursos, conteúdo premium e catálogo de avatar totalmente liberados para administradores.</small></div></div>
-          <div class="page-head"><div><span class="eyebrow gold">ADMINISTRAÇÃO · NEXO ULTRA</span><h2>Área do Admin</h2><p>Administradores têm acesso Ultra: sem limites, conteúdo premium e todos os cosméticos liberados.</p></div><div class="admin-ultra-badge">ULTRA</div></div>
+          <div class="admin-ultra-strip"><span>◆</span><div><b>NEXO · CONTROLE ADMINISTRATIVO</b><small>Cargo administrativo e plano comercial são independentes. O Admin controla a plataforma; Free, Plus e Ultra controlam os benefícios da conta.</small></div></div>
+          <div class="page-head"><div><span class="eyebrow gold">ADMINISTRAÇÃO · NEXO</span><h2>Área do Admin</h2><p>Gerencie conteúdo, saúde da plataforma, cargos e planos sem misturar permissão administrativa com assinatura.</p></div><div class="admin-ultra-badge">ADMIN</div></div>
           <div class="admin-stats" id="adminStats"></div>
 
           <article class="panel admin-health-panel">
@@ -1356,6 +1373,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-72"></script>
+  <script src="./app.js?v=20260920-73"></script>
 </body>
 </html>
