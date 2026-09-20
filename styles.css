@@ -6123,3 +6123,398 @@ body.light .onboarding-avatar-group button{background:#fff;border-color:#dce3ed;
     margin:0 auto;
   }
 }
+
+
+/* =========================================================
+   NEXO DESKTOP CLEANUP v1
+   Organiza a home desktop sem alterar a composição mobile.
+   ========================================================= */
+@media(min-width:1181px){
+  :root{--sidebar:220px}
+
+  .sidebar{
+    width:var(--sidebar)!important;
+    padding:22px 14px 18px!important;
+  }
+  .brand{margin-bottom:24px!important}
+  .brand-logo{width:44px!important;height:44px!important}
+  .brand h1{font-size:21px!important}
+  .side-nav{gap:4px!important}
+  .nav-item{
+    min-height:45px!important;
+    padding:9px 10px!important;
+    border-radius:11px!important;
+  }
+
+  .shell{margin-left:var(--sidebar)!important}
+
+  .topbar{
+    height:70px!important;
+    min-height:70px!important;
+    grid-template-columns:180px minmax(320px,680px) minmax(260px,1fr)!important;
+    gap:16px!important;
+    padding:10px 24px!important;
+    background:rgba(5,10,20,.88)!important;
+  }
+  .topbar-profile{
+    max-width:180px!important;
+  }
+  .profile-copy b{font-size:13px!important}
+  .profile-copy small{font-size:9px!important}
+  .topbar .search{
+    width:100%!important;
+    max-width:680px!important;
+    height:44px!important;
+  }
+  .topbar .top-actions{
+    gap:8px!important;
+  }
+  .header-journey-pill{
+    min-width:188px!important;
+    max-width:220px!important;
+    height:46px!important;
+  }
+
+  main{
+    padding:20px 22px 42px!important;
+  }
+
+  #inicio .dashboard-grid{
+    width:100%!important;
+    max-width:1400px!important;
+    grid-template-columns:minmax(0,1fr) 318px!important;
+    gap:18px!important;
+    align-items:start!important;
+  }
+
+  .dashboard-main{
+    display:grid!important;
+    gap:16px!important;
+    min-width:0!important;
+  }
+
+  .dashboard-side{
+    gap:16px!important;
+    position:sticky!important;
+    top:90px!important;
+    align-self:start!important;
+  }
+
+  /* HERO: menos esmagado e sem recortes estranhos */
+  #inicio .hero-card{
+    min-height:350px!important;
+    height:auto!important;
+    grid-template-columns:minmax(0,1.12fr) minmax(290px,.88fr)!important;
+    border-radius:20px!important;
+    overflow:hidden!important;
+  }
+  #inicio .hero-copy{
+    padding:32px 34px!important;
+    justify-content:center!important;
+  }
+  #inicio .hero-copy .eyebrow{
+    font-size:9px!important;
+    letter-spacing:3px!important;
+  }
+  #inicio .hero-copy h1{
+    font-size:46px!important;
+    line-height:1.02!important;
+    letter-spacing:-1.7px!important;
+    margin:13px 0 14px!important;
+    max-width:540px!important;
+  }
+  #inicio .hero-copy p{
+    max-width:560px!important;
+    margin:0 0 20px!important;
+    font-size:13px!important;
+    line-height:1.65!important;
+  }
+  #inicio .hero-actions{
+    display:flex!important;
+    align-items:center!important;
+    gap:9px!important;
+    flex-wrap:wrap!important;
+    max-width:620px!important;
+  }
+  #inicio .hero-actions button{
+    min-height:44px!important;
+    padding:10px 16px!important;
+    font-size:11px!important;
+  }
+
+  #inicio .hero-nexo-art{
+    min-height:350px!important;
+    border-left:1px solid rgba(89,101,206,.12)!important;
+  }
+  #inicio .home-nexo-mascot[data-nexo-family="hero"]{
+    width:min(300px,82%)!important;
+    height:92%!important;
+    max-height:330px!important;
+    left:50%!important;
+    bottom:0!important;
+    object-fit:contain!important;
+    object-position:center bottom!important;
+    transform:translateX(-50%)!important;
+    border-radius:0!important;
+    padding:0!important;
+    background:transparent!important;
+  }
+  #inicio .hero-nexo-art:before{
+    width:310px!important;
+    height:310px!important;
+  }
+  #inicio .hero-nexo-aura{
+    width:250px!important;
+    height:250px!important;
+  }
+  #inicio .hero-chip-top{
+    top:18px!important;
+    right:18px!important;
+  }
+  #inicio .hero-chip-bottom,
+  #inicio .hero-nexo-art blockquote{
+    display:none!important;
+  }
+
+  /* Plano do dia vira o segundo bloco principal, com leitura mais clara */
+  #inicio .desktop-today-plan{
+    margin:0!important;
+    padding:18px 20px!important;
+    border-radius:18px!important;
+  }
+  #inicio .desktop-today-plan .today-plan-head h3{
+    font-size:20px!important;
+  }
+  #inicio .desktop-today-plan>p{
+    font-size:11.5px!important;
+    line-height:1.5!important;
+  }
+  #inicio .desktop-today-plan .today-plan-blocks{
+    grid-template-columns:repeat(4,minmax(0,1fr))!important;
+    gap:8px!important;
+  }
+  #inicio .desktop-today-plan .today-plan-block{
+    min-height:88px!important;
+    grid-template-columns:32px 1fr!important;
+    grid-template-rows:auto auto!important;
+    gap:5px 8px!important;
+    align-items:start!important;
+    padding:11px!important;
+  }
+  #inicio .desktop-today-plan .today-plan-block>span{
+    width:31px!important;
+    height:31px!important;
+  }
+  #inicio .desktop-today-plan .today-plan-block>div{
+    min-width:0!important;
+  }
+  #inicio .desktop-today-plan .today-plan-block b{
+    font-size:11px!important;
+  }
+  #inicio .desktop-today-plan .today-plan-block small{
+    font-size:8.5px!important;
+    line-height:1.35!important;
+  }
+  #inicio .desktop-today-plan .today-plan-block strong{
+    grid-column:2!important;
+    justify-self:start!important;
+    font-size:9px!important;
+  }
+  #inicio .desktop-today-plan>[data-today-start]{
+    width:max-content!important;
+    min-width:150px!important;
+    margin-top:12px!important;
+  }
+
+  /* Conteúdos: hierarquia mais simples */
+  #inicio .subject-grid{
+    margin-top:0!important;
+    gap:10px!important;
+  }
+  #inicio .subject-card{
+    min-height:116px!important;
+    padding:14px!important;
+    grid-template-columns:44px 1fr!important;
+    border-radius:14px!important;
+  }
+  #inicio .subject-icon{
+    width:42px!important;
+    height:42px!important;
+    font-size:18px!important;
+  }
+  #inicio .subject-card div b{font-size:13px!important}
+  #inicio .subject-card div small{font-size:9.5px!important}
+  #inicio .subject-card i{
+    font-size:9px!important;
+    padding:5px 9px!important;
+  }
+
+  #inicio .feature-grid{
+    margin-top:0!important;
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:10px!important;
+  }
+  #inicio .feature-card{
+    min-height:104px!important;
+    padding:14px!important;
+    grid-template-columns:42px minmax(0,1fr) auto!important;
+    align-items:center!important;
+    gap:0 11px!important;
+  }
+  #inicio .feature-card>span{
+    width:40px!important;
+    height:40px!important;
+  }
+  #inicio .feature-card b{font-size:12px!important}
+  #inicio .feature-card small{
+    font-size:9.5px!important;
+    line-height:1.4!important;
+  }
+  #inicio .feature-card i{
+    grid-column:3!important;
+    grid-row:1!important;
+    align-self:center!important;
+    margin:0!important;
+    white-space:nowrap!important;
+    font-size:8.5px!important;
+    padding:6px 9px!important;
+  }
+
+  #inicio .home-lower{
+    margin-top:0!important;
+    grid-template-columns:1.1fr .9fr!important;
+    gap:10px!important;
+  }
+  #inicio .quick-panel{
+    grid-column:1/-1!important;
+    display:grid!important;
+    grid-template-columns:minmax(180px,.65fr) 1fr 1fr!important;
+    align-items:center!important;
+    gap:10px!important;
+  }
+  #inicio .quick-panel .panel-title{
+    grid-column:1!important;
+    margin:0!important;
+  }
+  #inicio .quick-panel>p{
+    display:none!important;
+  }
+  #inicio .quick-option{
+    margin:0!important;
+  }
+
+  /* Lateral: três cards com proporção consistente */
+  #inicio .dashboard-side>.panel{
+    border-radius:18px!important;
+    padding:17px!important;
+    overflow:hidden!important;
+  }
+  #inicio .progress-panel h3,
+  #inicio .weakness-panel h3{
+    font-size:15px!important;
+    margin-bottom:13px!important;
+  }
+  #inicio .progress-row{
+    grid-template-columns:104px 1fr!important;
+    gap:12px!important;
+    margin-bottom:13px!important;
+  }
+  #inicio .progress-panel .donut{
+    width:94px!important;
+    height:94px!important;
+  }
+  #inicio .progress-panel .donut b{font-size:20px!important}
+  #inicio .legend{gap:8px!important}
+  #inicio .legend span{font-size:9.5px!important}
+
+  #inicio .nexo-core-card .core-topline{
+    margin-bottom:12px!important;
+  }
+  #inicio .nexo-core-card .core-main{
+    grid-template-columns:54px 1fr!important;
+    gap:10px!important;
+  }
+  #inicio .nexo-core-card .core-avatar{
+    width:54px!important;
+    height:54px!important;
+    border-radius:15px!important;
+  }
+  #inicio .nexo-core-card .core-main h3{
+    font-size:13px!important;
+    line-height:1.3!important;
+    margin:0 0 4px!important;
+  }
+  #inicio .nexo-core-card .core-main p{
+    font-size:9px!important;
+    line-height:1.45!important;
+  }
+  #inicio .nexo-core-card .core-metrics{
+    gap:7px!important;
+    margin:13px 0!important;
+  }
+  #inicio .nexo-core-card .core-metrics span{
+    min-height:62px!important;
+    padding:9px 5px!important;
+  }
+  #inicio .nexo-core-card .core-metrics b{
+    font-size:16px!important;
+  }
+  #inicio .nexo-core-card .core-metrics small{
+    font-size:7px!important;
+  }
+
+  #inicio .weakness-panel{
+    max-height:260px!important;
+  }
+  #inicio .weak-row{
+    grid-template-columns:minmax(0,1fr) 78px 30px!important;
+    gap:7px!important;
+    font-size:9px!important;
+  }
+
+  /* Chat não cobre mais a coluna direita */
+  .nia-button{
+    width:54px!important;
+    height:54px!important;
+    right:26px!important;
+    bottom:24px!important;
+    border-radius:18px!important;
+  }
+  .nia-panel{
+    right:26px!important;
+    bottom:88px!important;
+  }
+}
+
+/* notebooks / desktop compacto */
+@media(min-width:761px) and (max-width:1180px){
+  main{padding:18px!important}
+
+  #inicio .dashboard-grid{
+    max-width:100%!important;
+    grid-template-columns:1fr!important;
+    gap:16px!important;
+  }
+  #inicio .dashboard-side{
+    position:static!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:12px!important;
+  }
+  #inicio .hero-card{
+    min-height:330px!important;
+    grid-template-columns:minmax(0,1fr) 320px!important;
+  }
+  #inicio .hero-copy h1{
+    font-size:40px!important;
+  }
+  #inicio .home-nexo-mascot[data-nexo-family="hero"]{
+    width:270px!important;
+    max-height:310px!important;
+  }
+  #inicio .feature-grid{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  #inicio .desktop-today-plan .today-plan-blocks{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+}
