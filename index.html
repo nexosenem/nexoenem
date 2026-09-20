@@ -9,7 +9,7 @@
   <link rel="manifest" href="./manifest.webmanifest">
   <meta name="description" content="NEXO ENEM — plataforma de estudos com 500 questões reais, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
-  <link rel="stylesheet" href="./styles.css?v=20260920-24">
+  <link rel="stylesheet" href="./styles.css?v=20260920-25">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -373,10 +373,27 @@
             <div><span class="eyebrow">ANÁLISES · NEXO CORE</span><h2>Meu Desempenho</h2><p>Mais do que porcentagens: veja onde você está evoluindo e qual conteúdo merece atenção agora.</p></div>
             <div class="page-nexo-mentor"><img src="./assets/nexo-expressions/confiante.webp" alt="Professor Nexo"><span><b>Leitura inteligente</b><small>domínio • ritmo • prioridades</small></span></div>
           </div>
+          <article class="panel performance-core-hero" id="performanceCoreHero">
+            <div class="performance-core-copy">
+              <span class="eyebrow">LEITURA DO NEXO CORE</span>
+              <h3 id="performanceCoreTitle">Construindo sua leitura de desempenho</h3>
+              <p id="performanceCoreText">Quanto mais você responde, mais preciso fica o diagnóstico do que revisar, manter e acelerar.</p>
+              <div class="performance-core-actions">
+                <button class="primary-btn" id="performanceCoreStart">Treinar recomendação</button>
+                <button class="outline-btn" data-page="focos">Ver prioridades</button>
+              </div>
+            </div>
+            <div class="performance-core-mascot">
+              <img id="performanceCoreMascot" src="./assets/nexo-expressions/confiante.webp" alt="Professor Nexo">
+              <span><b id="performanceCoreMetric">—</b><small>domínio do foco atual</small></span>
+            </div>
+          </article>
           <div class="stats-grid" id="statsGrid"></div>
-          <div class="analysis-grid">
-            <article class="panel"><h3>Desempenho por área</h3><div id="areaPerformance" class="performance-list"></div></article>
-            <article class="panel"><h3>Últimas respostas</h3><div id="performanceTimeline" class="timeline"></div></article>
+          <div class="analysis-grid performance-analysis-grid">
+            <article class="panel"><div class="panel-title"><b>Desempenho por área</b><small>visão acumulada</small></div><div id="areaPerformance" class="performance-list"></div></article>
+            <article class="panel"><div class="panel-title"><b>Ritmo recente</b><small>últimos 7 dias</small></div><div id="performanceMomentum" class="performance-momentum"></div></article>
+            <article class="panel performance-span"><div class="panel-title"><b>Últimas respostas</b><small>histórico recente</small></div><div id="performanceTimeline" class="timeline"></div></article>
+            <article class="panel"><div class="panel-title"><b>Últimas sessões</b><small>questões e simulados</small></div><div id="sessionHistory" class="session-history"></div></article>
           </div>
         </section>
 
@@ -392,8 +409,22 @@
         </section>
 
         <section class="page" id="simulados">
-          <div class="page-head"><div><span class="eyebrow">SIMULADOS</span><h2>Simulados</h2><p>Escolha uma área ou uma prova mista; a ordem fica fixa durante o simulado.</p></div></div>
-          <div class="sim-grid">
+          <div class="page-head nexo-page-head">
+            <div><span class="eyebrow">SIMULADOS · NEXO CORE</span><h2>Simulados</h2><p>Treine decisão, tempo e resistência. No final, o Professor Nexo transforma seu resultado em um plano de revisão.</p></div>
+            <div class="page-nexo-mentor"><img src="./assets/nexo-expressions/confiante.webp" alt="Professor Nexo"><span><b>Pós-prova inteligente</b><small>ritmo • erros • próximos focos</small></span></div>
+          </div>
+          <article class="panel simulation-hero">
+            <div class="simulation-hero-copy">
+              <span class="eyebrow">MODO PROVA</span>
+              <h3>Não é só terminar. É descobrir onde você perde pontos.</h3>
+              <p>O NEXO registra tempo por questão, acertos, erros e assunto para entregar um relatório ao fim da sessão.</p>
+              <div class="simulation-badges"><span>cronômetro por questão</span><span>relatório pós-prova</span><span>plano de revisão</span></div>
+            </div>
+            <div class="simulation-hero-mascot"><img src="./assets/nexo-expressions/serio.webp" alt="Professor Nexo"><small>Professor Nexo</small></div>
+          </article>
+          <div class="sim-grid sim-grid-premium">
+            <button class="sim-card sim-featured" data-sim-mode="adaptive"><span>✦</span><b>NEXO Core</b><small>20 questões adaptadas ao seu perfil</small><i>Recomendado</i></button>
+            <button class="sim-card" data-sim-mode="mixed"><span>EN</span><b>Misto ENEM</b><small>30 questões de todas as áreas</small></button>
             <button class="sim-card" data-sim-area="Linguagens"><span>A</span><b>Linguagens</b><small>20 questões</small></button>
             <button class="sim-card" data-sim-area="Ciências Humanas"><span>◎</span><b>Humanas</b><small>20 questões</small></button>
             <button class="sim-card" data-sim-area="Ciências da Natureza"><span>⌬</span><b>Natureza</b><small>20 questões</small></button>
@@ -540,6 +571,6 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
-  <script src="./app.js?v=20260920-23"></script>
+  <script src="./app.js?v=20260920-24"></script>
 </body>
 </html>
