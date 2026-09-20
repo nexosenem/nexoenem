@@ -1,4 +1,4 @@
-const NEXO_CACHE='nexo-v7-20260920-1';
+const NEXO_CACHE='nexo-v7-20260920-2';
 const SHELL=[
   './',
   './index.html',
@@ -68,6 +68,12 @@ self.addEventListener('fetch',event=>{
   }
 
   const path=url.pathname.toLowerCase();
+  const coreAsset=path.endsWith('/app.js')||path.endsWith('/styles.css')||path.endsWith('/index.html');
+  if(coreAsset){
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
   const cacheable=
     path.endsWith('.css')||
     path.endsWith('.js')||
