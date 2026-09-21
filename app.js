@@ -1691,8 +1691,16 @@ window.toggleDesktopSidebar=function(){
 };
 
 function toggleMenu(open) {
-  $('#sidebar').classList.toggle('open', open);
-  $('#scrim').classList.toggle('hidden', !open);
+  const isOpen=Boolean(open);
+  $('#sidebar')?.classList.toggle('open',isOpen);
+  $('#scrim')?.classList.toggle('hidden',!isOpen);
+  document.body.classList.toggle('mobile-menu-open',isOpen&&innerWidth<=760);
+
+  const contextBar=$('#nexoContextBar');
+  if(contextBar){
+    contextBar.classList.toggle('menu-hidden',isOpen&&innerWidth<=760);
+    contextBar.setAttribute('aria-hidden',String(isOpen&&innerWidth<=760));
+  }
 }
 $('#desktopSidebarToggle')?.addEventListener('click',e=>{
   e.preventDefault();
