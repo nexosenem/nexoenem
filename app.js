@@ -2818,8 +2818,11 @@ async function initApp(session) {
 }
 
 function registerNexoServiceWorker(){
-  if(!('serviceWorker' in navigator)||location.protocol!=='https:')return;
-  window.addEventListener('load',()=>navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('service worker',err)),{once:true});
+  const localDev=location.hostname==='localhost'||location.hostname==='127.0.0.1';
+  if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&!localDev))return;
+  const register=()=>navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('service worker',err));
+  if(document.readyState==='complete')register();
+  else window.addEventListener('load',register,{once:true});
 }
 registerNexoServiceWorker();
 
