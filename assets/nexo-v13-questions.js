@@ -77,6 +77,24 @@
         return '<article class="'+status+'"><b>'+('ABCDE'[i]||'?')+'</b><div><strong>'+v13E(opt)+'</strong><p>'+v13E(note)+'</p></div></article>';
       }).join('');
     panel.appendChild(section);
+    const levels=document.createElement('section');
+    levels.className='v13-explain-levels';
+    levels.innerHTML='<div class="v13-section-head"><span>COMO VOCÊ QUER REVISAR?</span><small>mesma questão, profundidades diferentes</small></div><div><button type="button" data-v13-explain="quick">Resposta rápida</button><button type="button" data-v13-explain="full">Explicação completa</button><button type="button" data-v13-explain="zero">Me ensine do zero</button></div>';
+    panel.appendChild(levels);
+    levels.querySelectorAll('[data-v13-explain]').forEach(btn=>btn.onclick=()=>{
+      const mode=btn.dataset.v13Explain;
+      if(mode==='quick'){
+        const msg=editorial||('Gabarito '+('ABCDE'[correct]||'?')+'. Revise o comando e identifique o elemento decisivo que elimina as demais alternativas.');
+        toast(msg,'info');
+        return;
+      }
+      if(typeof openProfessorNexo==='function'){
+        const prompt=mode==='full'
+          ? 'Explique esta questão completa, passo a passo, mostrando por que a alternativa correta funciona e onde as demais perdem força.'
+          : 'Me ensine o conteúdo desta questão do zero, em linguagem simples, sem assumir que eu já sei a matéria. Depois conecte o conceito à questão.';
+        openProfessorNexo(prompt);
+      }
+    });
   }
 
   if(typeof oldSubmit==='function'){
