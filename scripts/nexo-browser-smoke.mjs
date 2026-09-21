@@ -145,10 +145,17 @@ async function runProfile(browser,name,viewport){
         ['subjects',host.querySelector('.mobile-subject-grid')],
         ['actions',host.querySelector('.mobile-action-grid')],
         ['nav',host.querySelector('.mobile-bottom')],
-        ...[...host.querySelectorAll('.subject-card')].map((el,i)=>['subject-'+i,el]),
+        ...[...host.querySelectorAll('.subject-card div')].map((el,i)=>['subject-text-'+i,el]),
         ...[...host.querySelectorAll('.command-stats span')].map((el,i)=>['stat-'+i,el])
       ];
       const overflow=targets.filter(([,el])=>el&&el.scrollWidth>el.clientWidth+2).map(([name,el])=>({name,scrollWidth:el.scrollWidth,clientWidth:el.clientWidth}));
+      const clippedText=[...host.querySelectorAll('.subject-card')].flatMap((card,i)=>{
+        const cardRect=card.getBoundingClientRect();
+        return [...card.querySelectorAll('b,small')].filter(el=>{
+          const r=el.getBoundingClientRect();
+          return r.right>cardRect.right-8||r.left<cardRect.left+8||r.bottom>cardRect.bottom-6;
+        }).map(el=>({card:i,text:el.textContent}));
+      });
       const css=el=>Number.parseFloat(getComputedStyle(el).fontSize)||0;
       const sizes={
         context:css(host.querySelector('.nexo-context-bar b')),
@@ -160,9 +167,9 @@ async function runProfile(browser,name,viewport){
       };
       const hostOverflow=host.scrollWidth>host.clientWidth+2;
       host.remove();
-      return {overflow,hostOverflow,sizes};
+      return {overflow,clippedText,hostOverflow,sizes};
     });
-    if(typographyTest.hostOverflow||typographyTest.overflow.length)failures.push(name+': UI polish gerou overflow horizontal: '+JSON.stringify(typographyTest));
+    if(typographyTest.hostOverflow||typographyTest.overflow.length||typographyTest.clippedText.length)failures.push(name+': UI polish gerou overflow/corte de texto: '+JSON.stringify(typographyTest));
     if(typographyTest.sizes.context<12.5)failures.push(name+': fonte do balão ainda pequena');
     if(typographyTest.sizes.commandTitle<19)failures.push(name+': título do cockpit ainda pequeno');
     if(typographyTest.sizes.subject<13.5)failures.push(name+': títulos das matérias ainda pequenos');
