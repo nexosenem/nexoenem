@@ -4,6 +4,7 @@
   const oldSubmit=window.submitAnswer;
 
   function mountConfidence(){
+    if(state.session?.examMode)return;
     const wrap=document.querySelector('.confirm-answer-wrap');
     if(!wrap||document.querySelector('#v13Confidence'))return;
     const box=document.createElement('div');
@@ -99,6 +100,7 @@
 
   if(typeof oldSubmit==='function'){
     window.submitAnswer=async function(option){
+      if(state.session?.examMode){await oldSubmit(option);return}
       if(!v13State().confidence){
         toast('Marque se você tem certeza, está em dúvida ou chutou antes de confirmar.','info');
         document.querySelector('#v13Confidence')?.classList.add('attention');
