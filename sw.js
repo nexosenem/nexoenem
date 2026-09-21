@@ -1,4 +1,4 @@
-const NEXO_CACHE='nexo-v13-20260921-2';
+const NEXO_CACHE='nexo-v13-20260921-3';
 const SHELL=[
   './',
   './index.html',
@@ -15,7 +15,8 @@ const SHELL=[
   './assets/nexo-v13-repertoire.js?v=20260921-2',
   './assets/nexo-v13-calendar.js?v=20260921-2',
   './assets/nexo-v13-tutor.js?v=20260921-2',
-'./assets/nexo-v13-ui.js?v=20260921-2',
+  './assets/nexo-v13-search-errors.js?v=20260921-2',
+  './assets/nexo-v13-ui.js?v=20260921-2',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',
