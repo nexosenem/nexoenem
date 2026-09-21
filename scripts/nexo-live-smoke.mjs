@@ -11,6 +11,7 @@ const candidates=[...new Set([
   'https://nexo-enem.miguelcomprarshein222.workers.dev/'
 ])];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+const SUPABASE_HEALTH_URL='https://xeesttjsvscuqkeytmdz.supabase.co/auth/v1/health';
 
 async function fetchText(url,timeout=12000){
   const ctl=new AbortController();
@@ -105,10 +106,14 @@ async function browserProfile(browser,base,name,viewport){
       wrappers:{render:false,submit:false,essay:false,tutor:false,notebook:false},
       duplicateIds:[],
       sw:false,
+      supabaseGlobal:false,
+      pdfjsGlobal:false,
       screenVisible:false,
       wiringError:null
     };
     try{
+      result.supabaseGlobal=Boolean(window.supabase?.createClient);
+      result.pdfjsGlobal=Boolean(window.pdfjsLib);
       result.sharedState=typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13;
       result.wrappers.render=typeof window.renderQuestion==='function'&&/mountConfidence/.test(String(window.renderQuestion));
       result.wrappers.submit=typeof window.submitAnswer==='function'&&/v13State/.test(String(window.submitAnswer));
@@ -140,6 +145,8 @@ async function browserProfile(browser,base,name,viewport){
 
   const failures=[];
   if(!first.hardening||!first.v13Core)failures.push('V13 não carregou');
+  if(!first.supabaseGlobal)failures.push('SDK Supabase não carregou');
+  if(!first.pdfjsGlobal)failures.push('PDF.js não carregou');
   if(!first.sharedState)failures.push('state/client não compartilhados');
   if(first.wiringError)failures.push('wiring: '+first.wiringError);
   for(const [key,val] of Object.entries(first.wrappers))if(!val)failures.push('wrapper '+key+' inativo');
@@ -158,10 +165,13 @@ async function browserProfile(browser,base,name,viewport){
 
 const live=await discoverLive();
 const assetFailures=await verifyAssets(live.base,live.index.text);
+const supabaseHealth=await fetchText(SUPABASE_HEALTH_URL);
+if(!supabaseHealth.ok)assetFailures.push('Supabase health HTTP '+supabaseHealth.status);
 console.log('LIVE_URL='+live.base);
 console.log('APP_VERSION='+expectedApp);
 console.log('CF_CACHE_STATUS='+(live.index.headers['cf-cache-status']||''));
 console.log('SERVER='+(live.index.headers.server||''));
+console.log('SUPABASE_HEALTH='+(supabaseHealth.ok?'OK':'FAIL '+supabaseHealth.status));
 
 const browser=await chromium.launch({headless:true});
 let profiles;
