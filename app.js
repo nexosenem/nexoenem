@@ -1,4 +1,3 @@
-(() => {
 'use strict';
 
 const SUPABASE_URL = 'https://xeesttjsvscuqkeytmdz.supabase.co';
@@ -9297,4 +9296,3 @@ window.addEventListener('resize',()=>{if(innerWidth>760)toggleMenu(false)});
 // Importante: inicia a restauração da sessão somente após todo o arquivo ter
 // terminado de declarar NEXO_EMOTIONS, imagens, Jornada e demais constantes.
 queueMicrotask(startAuthBootstrap);
-})();
