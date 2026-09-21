@@ -46,3 +46,24 @@ async function v13Boot(){
 document.addEventListener('DOMContentLoaded',()=>{let n=0;const t=setInterval(async()=>{n++;try{if(await v13Boot())clearInterval(t)}catch(e){console.warn('v13 boot',e)}if(n>30)clearInterval(t)},700)});
 
 document.addEventListener('click',e=>{const nav=e.target.closest?.('[data-page="semana"],[data-nav="semana"]');if(nav)setTimeout(()=>window.v13RenderWeekRoute?.(),100)});
+
+(function(){
+  const old=window.loadErrorNotebook;
+  if(typeof old!=='function')return;
+  const labels={concept:'conteúdo',interpretation:'interpretação',calculation:'cálculo',attention:'atenção',time:'tempo',guess:'chute',sure:'certeza',unsure:'dúvida'};
+  window.loadErrorNotebook=async function(){
+    const ids=await old();
+    if(!ids?.length||!state.user?.id)return ids;
+    const {data,error}=await client.from('nexo_attempt_reflections').select('question_id,confidence,error_reason,created_at').in('question_id',ids).order('created_at',{ascending:false});
+    if(error)return ids;
+    const seen=new Set();
+    for(const r of data||[]){
+      const id=Number(r.question_id);if(seen.has(id))continue;seen.add(id);
+      const row=document.querySelector('[data-error-open="'+id+'"]')?.closest('.error-note-row');if(!row||row.querySelector('.v13-error-meta'))continue;
+      const meta=document.createElement('span');meta.className='v13-error-meta';
+      const reason=labels[r.error_reason]||r.error_reason||'causa não marcada',conf=labels[r.confidence]||r.confidence||'';
+      meta.textContent=reason+(conf?' · '+conf:'');row.querySelector('div')?.appendChild(meta);
+    }
+    return ids;
+  };
+})();
