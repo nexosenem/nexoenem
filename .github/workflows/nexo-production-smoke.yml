@@ -49,3 +49,7 @@ jobs:
 
       - name: Browser runtime smoke
         run: node scripts/nexo-browser-smoke.mjs
+
+      - name: Public Cloudflare runtime smoke
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: node scripts/nexo-live-smoke.mjs
