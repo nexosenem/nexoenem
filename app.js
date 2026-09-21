@@ -4576,7 +4576,8 @@ async function submitAnswer(option) {
     loadNexoJourney({silent:true}),
     loadNexoWeekPlan({silent:true}),
     loadTopicMastery(),
-    loadSubtopicMastery()
+    loadSubtopicMastery(),
+    loadDueReviewItems()
   ]).then(()=>{ if($('.page.active')?.id==='desempenho')renderV3Intelligence(); }).catch(err=>console.error('refresh after answer',err));
 }
 
