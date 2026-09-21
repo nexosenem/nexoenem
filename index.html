@@ -617,7 +617,7 @@
               </div>
 
               <div class="essay-writing-shell">
-                <textarea id="essayText" rows="20" placeholder="Comece pela introdução: contextualize o tema, apresente sua tese e indique os caminhos da argumentação..."></textarea>
+                <textarea id="essayText" aria-label="Texto da redação" rows="20" placeholder="Comece pela introdução: contextualize o tema, apresente sua tese e indique os caminhos da argumentação..."></textarea>
               </div>
 
               <div class="essay-structure-check">
@@ -788,11 +788,11 @@
 
         <section class="page" id="materiais">
           <div class="page-head nexo-content-head"><div><span class="eyebrow">NEXO CONTEÚDO</span><h2>Biblioteca NEXO</h2><p>Aulas, resumos e materiais estratégicos organizados pelo Radar NEXO.</p></div><div class="content-head-badge"><b>RADAR → AULA → TREINO</b><small>estude na ordem que mais faz sentido para o ENEM</small></div></div>
-          <div class="filter-line content-filter-line"><input id="materialSearch" class="text-input" placeholder="Buscar aula, resumo, matéria ou tema..."><button id="materialFavoritesOnly" class="outline-btn">☆ Favoritos</button></div>
+          <div class="filter-line content-filter-line"><input id="materialSearch" aria-label="Buscar materiais" class="text-input" placeholder="Buscar aula, resumo, matéria ou tema..."><button id="materialFavoritesOnly" class="outline-btn">☆ Favoritos</button></div>
           <div class="library-filter-deck">
-            <select id="materialStatusFilter"><option value="">Todos os estados</option><option value="new">Novo</option><option value="learning">Aprendendo</option><option value="training">Em treino</option><option value="review">Revisar</option><option value="mastered">Dominado</option></select>
-            <select id="materialTypeFilter"><option value="">Todos os tipos</option><option value="lesson">Aula</option><option value="summary">Resumo</option><option value="tips">Macetes</option></select>
-            <select id="materialPriorityFilter"><option value="">Toda prioridade</option><option value="high">Alta prioridade</option><option value="transversal">Fundamentos</option></select>
+            <select id="materialStatusFilter" aria-label="Filtrar materiais por status"><option value="">Todos os estados</option><option value="new">Novo</option><option value="learning">Aprendendo</option><option value="training">Em treino</option><option value="review">Revisar</option><option value="mastered">Dominado</option></select>
+            <select id="materialTypeFilter" aria-label="Filtrar materiais por tipo"><option value="">Todos os tipos</option><option value="lesson">Aula</option><option value="summary">Resumo</option><option value="tips">Macetes</option></select>
+            <select id="materialPriorityFilter" aria-label="Filtrar materiais por prioridade"><option value="">Toda prioridade</option><option value="high">Alta prioridade</option><option value="transversal">Fundamentos</option></select>
             <button id="materialQuickFive" class="outline-btn">⚡ Tenho 5 min</button>
             <button id="materialClearFilters" class="ghost-btn">Limpar filtros</button>
           </div>
@@ -929,7 +929,7 @@
         <section class="page" id="banco">
           <div class="page-head"><div><span class="eyebrow">BANCO</span><h2>Banco de Questões</h2><p>Acervo ENEM de 2009 a 2025, organizado por área, matéria e assunto.</p></div></div>
           <div class="panel">
-            <div class="bank-filters"><input id="bankSearch" class="text-input" placeholder="Pesquisar tema ou matéria..."><select id="bankArea"><option value="">Todas as áreas</option><option>Linguagens</option><option>Ciências Humanas</option><option>Ciências da Natureza</option><option>Matemática</option></select></div>
+            <div class="bank-filters"><input id="bankSearch" aria-label="Buscar no banco de questões" class="text-input" placeholder="Pesquisar tema ou matéria..."><select id="bankArea" aria-label="Filtrar banco de questões por área"><option value="">Todas as áreas</option><option>Linguagens</option><option>Ciências Humanas</option><option>Ciências da Natureza</option><option>Matemática</option></select></div>
             <div id="bankList" class="bank-list"></div>
           </div>
           <article class="panel saved-questions-panel">
@@ -1029,11 +1029,11 @@
             <div class="study-groups-layout">
               <section class="panel study-group-create">
                 <div class="panel-title"><div><b>Criar grupo</b><small>você recebe um código para convidar</small></div></div>
-                <input id="studyGroupName" class="text-input" maxlength="60" placeholder="Nome do grupo">
-                <textarea id="studyGroupDescription" rows="3" maxlength="500" placeholder="Objetivo do grupo (opcional)"></textarea>
+                <input id="studyGroupName" aria-label="Nome do grupo de estudo" class="text-input" maxlength="60" placeholder="Nome do grupo">
+                <textarea id="studyGroupDescription" aria-label="Descrição do grupo de estudo" rows="3" maxlength="500" placeholder="Objetivo do grupo (opcional)"></textarea>
                 <button id="createStudyGroup" class="primary-btn wide">Criar grupo →</button>
                 <div class="study-group-divider"><span>ou</span></div>
-                <input id="studyGroupCode" class="text-input" maxlength="8" placeholder="Código do grupo">
+                <input id="studyGroupCode" aria-label="Código do grupo de estudo" class="text-input" maxlength="8" placeholder="Código do grupo">
                 <button id="joinStudyGroup" class="outline-btn wide">Entrar com código</button>
               </section>
               <section class="panel study-group-list-card">
@@ -1394,7 +1394,7 @@
                 <button id="refreshAdminUsers" class="outline-btn">Atualizar contas</button>
               </div>
               <div class="admin-team-search">
-                <input id="adminUserSearch" class="text-input" type="search" placeholder="Buscar por nome ou e-mail...">
+                <input id="adminUserSearch" aria-label="Buscar usuário no painel administrativo" class="text-input" type="search" placeholder="Buscar por nome ou e-mail...">
               </div>
               <div id="adminUserList" class="admin-user-list"><div class="admin-user-empty">Carregando contas...</div></div>
             </article>
@@ -1595,7 +1595,7 @@
     <div class="community-sheet question-note-sheet">
       <div class="community-head"><div><span class="eyebrow">CADERNO PESSOAL</span><h3>Minha nota desta questão</h3></div><button id="closeQuestionNote" class="icon-btn">×</button></div>
       <p id="questionNoteMeta" class="question-note-meta">Escreva o que você quer lembrar quando esta questão voltar.</p>
-      <textarea id="questionNoteText" rows="7" maxlength="3000" placeholder="Ex.: eu sabia a fórmula, mas converti minutos para horas errado..."></textarea>
+      <textarea id="questionNoteText" aria-label="Anotação pessoal da questão" rows="7" maxlength="3000" placeholder="Ex.: eu sabia a fórmula, mas converti minutos para horas errado..."></textarea>
       <div class="question-note-actions"><button id="deleteQuestionNote" class="ghost-btn danger">Excluir nota</button><button id="saveQuestionNote" class="primary-btn">Salvar nota</button></div>
     </div>
   </div>
@@ -1605,7 +1605,7 @@
       <div class="community-head"><div><span class="eyebrow">COMUNIDADE</span><h3>Comentários da questão</h3></div><button id="closeComments" class="icon-btn">×</button></div>
       <div id="questionComments" class="question-comments"></div>
       <div class="comment-compose">
-        <textarea id="commentText" rows="3" maxlength="1200" placeholder="Compartilhe uma dúvida, explicação ou jeito de resolver..."></textarea>
+        <textarea id="commentText" aria-label="Comentário sobre a questão" rows="3" maxlength="1200" placeholder="Compartilhe uma dúvida, explicação ou jeito de resolver..."></textarea>
         <button id="sendComment" class="primary-btn">Comentar</button>
       </div>
     </div>
@@ -1824,7 +1824,7 @@
     </div>
 
     <div class="nia-compose">
-      <input id="niaInput" maxlength="320" placeholder="Pergunte ao Professor Nexo...">
+      <input id="niaInput" aria-label="Mensagem para o Professor Nexo" maxlength="320" placeholder="Pergunte ao Professor Nexo...">
       <button id="niaSend" aria-label="Enviar para o Nexo">→</button>
     </div>
   </aside>
@@ -1870,6 +1870,6 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
   <script src="./assets/nexo-runtime-compat.js?v=20260920-1"></script>
-  <script src="./app.js?v=20260921-1"></script>
+  <script src="./app.js?v=20260921-2"></script>
 </body>
 </html>
