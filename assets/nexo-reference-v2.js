@@ -42,7 +42,8 @@ function resumeStudy(){
   $('#continueStudy')?.click();
 }
 function focusMode(){
-  $('#desktopFocusMode')?.click()||$('#mobileFocusMode')?.click();
+  const trigger=$('#desktopFocusMode')||$('#mobileFocusMode');
+  trigger?.click();
 }
 
 function action(label,icon,sub,handler){
@@ -211,15 +212,21 @@ function buildBottomNav(){
     nav.appendChild(b);
   });
   document.body.appendChild(nav);
+  syncShellVisibility();
   return nav;
 }
 
+function syncShellVisibility(){
+  const nav=$('.nrx-bottom-nav');
+  if(nav)nav.hidden=$('#app')?.classList.contains('hidden')!==false;
+}
 function syncBottom(){
   const active=$('.page.active')?.id||'inicio';
-  $$('[data-nrx-bottom]').forEach(b=>{
+  $('[data-nrx-bottom]').forEach(b=>{
     const p=b.dataset.nrxBottom;
     b.classList.toggle('active',p===active||(p==='materiais'&&active==='videoaulas'));
   });
+  syncShellVisibility();
 }
 
 function addMobileChrome(){
@@ -308,7 +315,7 @@ function syncWeakness(){
 function syncAll(){syncIdentity();syncProgress();syncWeakness();syncBottom();placeSearch()}
 
 function observe(){
-  const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#inicio'];
+  const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#inicio','#app'];
   targets.forEach(sel=>{
     const el=$(sel);if(!el)return;
     new MutationObserver(()=>syncAll()).observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
