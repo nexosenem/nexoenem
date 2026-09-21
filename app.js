@@ -1716,7 +1716,7 @@ window.addEventListener('resize',()=>{
   }
 });
 
-$('#mobileMenu')?.addEventListener('click',()=>toggleMenu(true));
+// mobileMenu legado removido: a navegação responsiva atual usa sidebar + bottom nav.
 $('#closeMenu')?.addEventListener('click',()=>toggleMenu(false));
 $('#scrim')?.addEventListener('click',()=>toggleMenu(false));
 $('#moreMobile')?.addEventListener('click',()=>toggleMenu(true));
