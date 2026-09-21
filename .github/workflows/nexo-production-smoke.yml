@@ -1,0 +1,41 @@
+name: NEXO Production Smoke
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Static production smoke
+        run: node scripts/nexo-smoke.mjs
+
+      - name: Serve static app
+        run: |
+          python3 -m http.server 4173 >/tmp/nexo-http.log 2>&1 &
+          echo $! > /tmp/nexo-http.pid
+          sleep 2
+
+      - name: HTTP shell smoke
+        run: |
+          curl --fail --silent --show-error http://127.0.0.1:4173/ >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/app.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/assets/nexo-v13-hardening.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/assets/nexo-v13-ui.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/assets/nexo-v13-search-errors.js >/dev/null
+          curl --fail --silent --show-error http://127.0.0.1:4173/sw.js >/dev/null
