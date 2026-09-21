@@ -1,44 +1,58 @@
 # NEXO ENEM
 
-Plataforma de estudos conectada a **Cloudflare + GitHub + Supabase**.
+Plataforma de estudos para o ENEM conectada a **Cloudflare + GitHub + Supabase**.
 
-## Estrutura atual
+## Estado atual
 
-- 500 questões reais extraídas dos cadernos ENEM enviados
-- 125 questões em cada grande área
-- 104 questões com recurso visual genuíno, revisado e armazenado
-- login e cadastro via Supabase Auth
-- progresso sincronizado por usuário
-- gabaritos privados no banco
-- correção de questão feita por RPC segura
-- sessões fixas por área/matéria/dificuldade
-- modo de questões visuais
-- treino adaptativo pelos temas com maior taxa de erro
-- redações salvas por usuário
-- videoaulas com upload para Supabase Storage
-- feedback integrado ao painel do administrador
-- ranking sem exposição de e-mail
-- modo claro/escuro
-- layout desktop e mobile com navegação inferior
-- manifesto de web app para uso no celular
+- acervo bruto com 3.060 registros de questões, cobrindo 2009 a 2025
+- 2.891 questões ativas após a quarentena automática de itens com alternativas inválidas
+- 160 questões visuais ativas com imagem associada
+- gabaritos privados no banco e correção de respostas por RPC
+- sessões por área, matéria, dificuldade e foco adaptativo
+- NEXO Core com recomendação de estudo baseada em desempenho
+- Radar ENEM e priorização de conteúdos
+- revisão espaçada, caderno de erros, questões salvas e anotações pessoais
+- simulados, plano semanal, modo foco e grupos de estudo
+- redações salvas com análise automática orientativa das cinco competências
+- 51 materiais NEXO publicados em HTML, com expansão de cobertura em andamento
+- feedback, comentários, denúncias e painel administrativo
+- gamificação, avatar, missões, loja e ranking
+- modo claro/escuro, PWA e layout responsivo para desktop e mobile
 
-## Banco de dados
+A antiga área de videoaulas está aposentada da navegação atual. O foco de conteúdo é **Aulas NEXO + PDFs/resumos + treino ligado às questões**.
 
-Projeto Supabase: `xeesttjsvscuqkeytmdz`.
+## Qualidade do banco de questões
 
-Tabelas principais:
-`profiles`, `questions`, `question_keys`, `question_attempts`, `essays`, `videos`, `feedback`.
+Itens com menos de cinco alternativas utilizáveis ficam fora da rotação até serem recuperados a partir da fonte oficial. Eles não são apagados, para preservar rastreabilidade.
 
-O gabarito não fica em `questions`. Ele é mantido em `question_keys`, sem permissão de leitura pelo cliente. O navegador envia a alternativa para `submit_answer()` e recebe somente o resultado após a resposta.
+O frontend também ignora questões inativas ao retomar sessões antigas ou abrir revisões. Questões visuais exigem uma fonte de imagem válida antes de serem tratadas como visuais.
 
-## Administração
+Ainda existe uma fila de normalização do acervo histórico para reconciliar duplicações entre diferentes cadernos/cores do ENEM sem perder itens válidos.
 
-A área administrativa só é renderizada para perfis com `role = 'admin'`.
-A identidade do proprietário configurada no banco recebe esse papel no cadastro; os demais usuários entram como `student`.
+## Redação
 
-## Recursos visuais
+A nota exibida pelo sistema é uma **estimativa automática de treino**, não uma correção oficial do Inep. A análise usa sinais de estrutura, aderência ao tema, argumentação, coesão, variedade lexical e elementos da proposta de intervenção, com penalidades para repetição excessiva e textos curtos.
 
-As 104 questões com recurso visual genuíno possuem uma imagem WebP revisada armazenada no Supabase. O front carrega essa imagem diretamente; PDF.js e a Edge Function `pdf-proxy` ficam apenas como fallback. Questões sem recurso gráfico verdadeiro são exibidas somente como texto e nenhuma questão avança automaticamente por falha de imagem.
+O objetivo do recurso é orientar a próxima revisão. Uma camada de correção humana pode ser adicionada futuramente para avaliações mais próximas da correção oficial.
+
+## Conteúdo
+
+Os materiais publicados atualmente cobrem principalmente Matemática e um conjunto inicial de Português, Literatura, Língua Estrangeira, História, Geografia, Biologia, Física e Química.
+
+A expansão prioritária inclui Filosofia, Sociologia, Artes, Educação Física, Tecnologia e Comunicação e conteúdos interdisciplinares de Humanas e Natureza.
+
+## Segurança
+
+- Row Level Security (RLS) está habilitado nas tabelas sensíveis.
+- O gabarito não é legível diretamente pelo cliente.
+- RPCs administrativas verificam privilégio de administrador.
+- Funções internas de trigger não são expostas ao cliente.
+- Views internas do Radar não ficam disponíveis para leitura direta pelo navegador.
+- Edge Functions administrativas e de arquivos exigem autenticação.
+
+## PWA e cache
+
+O Service Worker usa estratégia network-first para HTML/CSS/JavaScript principal e stale-while-revalidate para recursos estáticos. O cache de produção é versionado junto dos assets do deploy para evitar servir uma versão antiga do aplicativo depois de uma atualização.
 
 ## Deploy
 
