@@ -13,6 +13,8 @@ const assert=(cond,name,detail='')=>cond?ok(name,detail):fail(name,detail);
 const index=read('index.html');
 const sw=read('sw.js');
 const app=read('app.js');
+const compat=read('assets/nexo-runtime-compat.js');
+const headers=read('_headers');
 
 assert(!index.includes('\\n'),'HTML sem \\n literal');
 assert((index.match(/id="viewerNote"/g)||[]).length===1,'viewerNote único');
@@ -62,7 +64,13 @@ assert(order.every(x=>x>=0)&&order.every((x,i)=>i===0||x>order[i-1]),'Ordem segu
 const emptyImages=[...index.matchAll(/<img[^>]*\ssrc=""[^>]*>/g)].map(m=>m[0].slice(0,120));
 assert(emptyImages.length===0,'Sem imagens com src vazio',emptyImages.join(' | '));
 
-assert(/function\s+logClientError\s*\(/.test(app),'Telemetria de erro disponível');
+const badCollectionSelectors=[...app.matchAll(/(?<!\\$)\\$\\([^()\\n]*\\)\\.(forEach|find|filter)\\s*\\(/g)].map(m=>m[0]);
+assert(badCollectionSelectors.length===0,'Seletores de coleção usam $',badCollectionSelectors.join(' | '));
+assert(!/Element\\.prototype\\.forEach/.test(compat),'Sem monkey patch em Element.prototype.forEach');
+assert(/\\/index\\.html[\\s\\S]*Cache-Control: no-cache/.test(headers),'HTML força revalidação de cache');
+assert(/\\/sw\\.js[\\s\\S]*Cache-Control: no-cache/.test(headers)&&/Service-Worker-Allowed: \\//.test(headers),'Service Worker sem cache velho');
+
+assert(/function\\s+logClientError\\s*\\(/.test(app),'Telemetria de erro disponível');
 assert(/serviceWorker\.register\(['"]\.\/sw\.js['"]\)/.test(app),'Service Worker registrado');
 assert(/window\.addEventListener\(['"]online['"]/.test(app)&&/window\.addEventListener\(['"]offline['"]/.test(app),'Tratamento online/offline presente');
 assert(index.includes('nexo-v13-search-errors.js'),'Busca universal publicada');
