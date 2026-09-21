@@ -9879,7 +9879,7 @@ textarea{line-height:1.55}
     top:58px;margin:0 8px 8px;padding:8px;
     grid-template-columns:1fr auto;gap:6px;border-radius:14px
   }
-  .nexo-context-bar>div{padding:4px 7px}.nexo-context-bar>div:nth-child(2){display:none}.nexo-context-bar>div+div{border-left:0}
+  .nexo-context-bar>div{padding:4px 7px}.nexo-context-bar>div:nth-of-type(2){display:none}.nexo-context-bar>div+div{border-left:0}
   .nexo-context-bar span{font-size:8px}.nexo-context-bar b{font-size:11px}
   .nexo-context-bar button{min-height:42px;font-size:10px}
   .smart-review-head{grid-template-columns:1fr}.smart-review-head h3{font-size:20px}.smart-review-head p{font-size:13px}
@@ -9953,4 +9953,26 @@ body[data-motion="reduced"] *,body[data-motion="reduced"] *:before,body[data-mot
   font-size:.8rem;
   line-height:1.45;
   opacity:.86;
+}
+
+/* Fechar guia de contexto no mobile */
+.nexo-context-bar.is-dismissed{display:none!important}
+.nexo-context-close{display:none!important}
+@media(max-width:760px){
+  .nexo-context-bar{padding-right:48px}
+  .nexo-context-bar .nexo-context-close{
+    display:grid!important;
+    position:absolute;top:8px;right:8px;z-index:4;
+    width:32px;height:32px;min-height:32px;padding:0;
+    place-items:center;
+    border:1px solid rgba(150,165,195,.24);
+    border-radius:50%;
+    background:rgba(7,17,32,.88);
+    color:#dfe7f5;
+    font-size:20px;line-height:1;font-weight:500;
+    box-shadow:0 6px 18px rgba(0,0,0,.18);
+    cursor:pointer;
+    -webkit-tap-highlight-color:transparent
+  }
+  .nexo-context-bar .nexo-context-close:active{transform:scale(.94);background:rgba(24,38,62,.96)}
 }
