@@ -4473,12 +4473,12 @@ async function submitAnswer(option) {
     }
   }catch(error){
     console.error('submit_answer',error);
-    logClientError('questions',error,'submit_answer');
     state.answered=false;
     if(state.current)startQuestionBehaviorMonitor(state.current,behaviorSnapshot);
-    $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
+    $('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
     if(handlePlanLimitError(error))return;
+    logClientError('questions',error,'submit_answer');
     const msg=error?.message==='timeout_submit_answer'
       ? 'A correção demorou demais. Tente confirmar novamente.'
       : 'Não foi possível corrigir a resposta. Tente novamente.';
