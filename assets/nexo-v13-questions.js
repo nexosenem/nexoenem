@@ -88,7 +88,7 @@
       }
       const q=state.current;
       await oldSubmit(option);
-      if(state.lastAnswer&&q?.id===state.current?.id){
+      if(state.answered&&state.lastAnswer&&q?.id===state.current?.id){
         await saveReflection(q,Boolean(state.lastAnswer.correct));
         if(!state.session?.examMode)mountAnswerAudit();
       }
