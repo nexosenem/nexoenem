@@ -147,6 +147,18 @@ async function browserProfile(browser,base,name,viewport){
 
   const failures=[];
   if(!first.hardening||!first.v13Core)failures.push('V13 não carregou');
+  if(name==='mobile'){
+    const closeTest=await page.evaluate(()=>{
+      const bar=document.querySelector('#nexoContextBar');
+      const btn=document.querySelector('#contextClose');
+      if(!bar||!btn)return {button:Boolean(btn),dismissed:false};
+      bar.classList.remove('is-dismissed');
+      btn.click();
+      return {button:true,dismissed:bar.classList.contains('is-dismissed')&&getComputedStyle(bar).display==='none'};
+    });
+    if(!closeTest.button)failures.push('botão X do guia de contexto não existe');
+    if(!closeTest.dismissed)failures.push('botão X não fechou o guia de contexto');
+  }
   if(!first.supabaseGlobal)failures.push('SDK Supabase não carregou');
   if(!first.pdfjsGlobal)failures.push('PDF.js não carregou');
   if(!first.sharedState)failures.push('state/client não compartilhados');
