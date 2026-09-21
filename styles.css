@@ -10256,6 +10256,8 @@ button{
     min-width:0!important
   }
   .mobile-subject-grid .subject-card{
+    display:flex!important;
+    align-items:center!important;
     width:100%!important;
     max-width:100%!important;
     min-width:0!important;
@@ -10263,17 +10265,22 @@ button{
     padding:14px!important;
     overflow:hidden!important;
     border-radius:18px!important;
-    grid-template-columns:48px minmax(0,1fr)!important;
     gap:11px!important
   }
   .mobile-subject-grid .subject-icon{
+    flex:0 0 48px!important;
     width:48px!important;
     height:48px!important;
     border-radius:14px!important;
     font-size:23px!important
   }
   .mobile-subject-grid .subject-card div{
-    min-width:0!important
+    flex:1 1 0!important;
+    width:auto!important;
+    min-width:0!important;
+    max-width:100%!important;
+    white-space:normal!important;
+    overflow:hidden!important
   }
   .mobile-subject-grid .subject-card div b{
     font-size:15px!important;
@@ -10401,10 +10408,10 @@ button{
   .command-stats small{font-size:10.5px!important}
   .mobile-subject-grid .subject-card{
     min-height:106px!important;
-    padding:12px!important;
-    grid-template-columns:44px minmax(0,1fr)!important
+    padding:12px!important
   }
   .mobile-subject-grid .subject-icon{
+    flex-basis:44px!important;
     width:44px!important;
     height:44px!important;
     font-size:21px!important
