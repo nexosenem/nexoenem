@@ -51,6 +51,7 @@ async function runProfile(browser,name,viewport){
       wrappers:{render:false,submit:false,essay:false,tutor:false,notebook:false},
       wiringError:null,
       siteSearch:false,
+      searchActionWorks:false,
       searchSamples:[],
       percentTones:false,
       percentToneMap:[]
@@ -70,6 +71,11 @@ async function runProfile(browser,name,viewport){
       const queries=['perfil de evolução','professor nexo','caderno de erros','simulado','radar enem'];
       result.searchSamples=queries.map(q=>({q,items:typeof buildGlobalSearchResults==='function'?buildGlobalSearchResults(q).filter(x=>x.type==='action').map(x=>x.actionId):[]}));
       result.siteSearch=result.searchSamples.every(x=>x.items.length>0)&&typeof runSiteSearchAction==='function';
+      if(result.siteSearch){
+        runSiteSearchAction('evolucao');
+        result.searchActionWorks=Boolean(document.querySelector('#desempenho')?.classList.contains('active'));
+        if(typeof openPage==='function')openPage('inicio');
+      }
 
       const toneHost=document.createElement('div');
       toneHost.innerHTML='<b>39%</b><b>40%</b><b>79%</b><b>80%</b><b>100%</b>';
@@ -196,6 +202,7 @@ async function runProfile(browser,name,viewport){
   if(!first.sharedState)failures.push(name+': state/client não estão compartilhados com o V13');
   if(!first.essayEngine)failures.push(name+': motor de redação V13 não respondeu com 5 competências válidas');
   if(!first.siteSearch)failures.push(name+': pesquisa interna não encontrou todas as áreas/funções esperadas: '+JSON.stringify(first.searchSamples));
+  if(!first.searchActionWorks)failures.push(name+': ação pesquisada não abriu a página Meu perfil de evolução');
   if(!first.percentTones)failures.push(name+': faixas de porcentagem incorretas: '+JSON.stringify(first.percentToneMap));
   for(const [key,active] of Object.entries(first.wrappers))if(!active)failures.push(name+': wrapper V13 inativo: '+key);
 
