@@ -75,6 +75,8 @@ assert(/serviceWorker\.register\(['"]\.\/sw\.js['"]\)/.test(app),'Service Worker
 assert(/window\.addEventListener\(['"]online['"]/.test(app)&&/window\.addEventListener\(['"]offline['"]/.test(app),'Tratamento online/offline presente');
 assert(index.includes('nexo-v13-search-errors.js'),'Busca universal publicada');
 assert(index.includes('nexo-v13-hardening.js'),'Hardening publicado');
+assert(index.includes('id="contextClose"'),'Botão fechar do contexto publicado');
+assert(/function\s+closeNexoContextBar\s*\(/.test(app),'Ação fechar do contexto disponível');
 
 console.log('\nNEXO Production Smoke');
 console.log('=====================');
