@@ -5246,7 +5246,7 @@ function renderSmartReviewQueue(){
     '</article>';
   }).join('');
   $('[data-review-original]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.reviewOriginal)));
-  $('[data-review-similar]',el).forEach(btn=>btn.onclick=()=>startSimilarQuestionById(Number(btn.dataset.reviewSimilar)));
+  $$('[data-review-similar]',el).forEach(btn=>btn.onclick=()=>startSimilarQuestionById(Number(btn.dataset.reviewSimilar)));
 }
 $('#startSmartReview')?.addEventListener('click',async()=>{
   if(!state.dueReviewItems.length)await loadDueReviewItems();
