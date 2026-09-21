@@ -1584,10 +1584,74 @@ globalSearch.addEventListener('keydown',e=>{
   }
 });
 
+function getSiteSearchActions(){
+  const actions=[
+    {id:'inicio',title:'Início',meta:'Voltar para a página inicial',icon:'⌂',keywords:['home','inicio','início','pagina inicial','começo'],run:()=>openPage('inicio')},
+    {id:'evolucao',title:'Meu perfil de evolução',meta:'Desempenho, domínio, relatório e pontos de melhoria',icon:'▥',keywords:['perfil de evolucao','perfil de evolução','evolucao','evolução','meu desempenho','desempenho','progresso','estatisticas','estatísticas'],run:()=>openPage('desempenho')},
+    {id:'focos',title:'Meus focos',meta:'Prioridades e pontos fracos para estudar',icon:'◎',keywords:['focos','prioridades','pontos fracos','fraquezas','dificuldades'],run:()=>openPage('focos')},
+    {id:'questoes',title:'Resolver questões',meta:'Abrir treino de questões',icon:'✓',keywords:['questoes','questões','resolver','treinar','exercicios','exercícios'],run:()=>openPage('questoes')},
+    {id:'adaptativo',title:'Treino adaptativo',meta:'Começar uma sessão ajustada ao seu desempenho',icon:'✦',keywords:['treino adaptativo','adaptativo','sessao adaptativa','sessão adaptativa','estudar agora'],run:()=>{openPage('questoes');return startAdaptive()}},
+    {id:'redacao',title:'Redação',meta:'Escrever, corrigir e revisar redações',icon:'✎',keywords:['redacao','redação','texto dissertativo','competencias','competências'],run:()=>openPage('redacao')},
+    {id:'temas',title:'Temas de redação',meta:'Explorar propostas para treinar',icon:'▧',keywords:['temas','tema de redacao','tema de redação','propostas de redacao','propostas de redação'],run:()=>openPage('temas')},
+    {id:'simulados',title:'Simulados ENEM',meta:'Provas, sprints e treino em modo exame',icon:'▤',keywords:['simulado','simulados','prova','modo prova','mini enem','sprint'],run:()=>openPage('simulados')},
+    {id:'semana',title:'Semana NEXO',meta:'Plano semanal e próximos estudos',icon:'◫',keywords:['semana','plano semanal','cronograma','calendario','calendário','rotina de estudo'],run:()=>openPage('semana')},
+    {id:'radar',title:'Radar ENEM',meta:'Assuntos mais recorrentes e prioridades',icon:'◉',keywords:['radar','radar enem','o que mais cai','recorrencia','recorrência','prioridades enem'],run:()=>openPage('radar')},
+    {id:'materiais',title:'Materiais e biblioteca',meta:'PDFs, aulas e conteúdos do NEXO',icon:'▧',keywords:['materiais','biblioteca','pdf','pdfs','conteudos','conteúdos','aulas'],run:()=>openPage('materiais')},
+    {id:'videoaulas',title:'Videoaulas',meta:'Abrir biblioteca de vídeos',icon:'▶',keywords:['video','vídeo','videos','vídeos','videoaula','videoaulas','vídeoaulas'],run:()=>openPage('videoaulas')},
+    {id:'banco',title:'Banco de questões',meta:'Explorar e filtrar o acervo',icon:'▦',keywords:['banco','banco de questoes','banco de questões','acervo','questoes salvas','questões salvas'],run:()=>openPage('banco')},
+    {id:'jornada',title:'NEXO Jornada',meta:'Nível, missões, ranking, avatar e N-Coins',icon:'♕',keywords:['jornada','ranking','nivel','nível','missoes','missões','avatar','n-coins','ncoins','gamificacao','gamificação'],run:()=>openPage('ranking')},
+    {id:'planos',title:'Planos Free & Plus',meta:'Ver seu plano e recursos disponíveis',icon:'＋',keywords:['plano','planos','plus','assinatura','premium','free'],run:()=>openPage('planos')},
+    {id:'feedback',title:'Feedback',meta:'Enviar sugestão ou relatar experiência',icon:'◌',keywords:['feedback','sugestao','sugestão','opinar','reportar problema'],run:()=>openPage('feedback')},
+    {id:'professor',title:'Professor Nexo',meta:'Abrir o assistente de estudos',icon:'✦',keywords:['professor','professor nexo','assistente','tutor','ajuda','tirar duvida','tirar dúvida'],run:()=>openProfessorNexo()},
+    {id:'foco',title:'Modo Foco',meta:'Iniciar uma sessão sem distrações',icon:'◉',keywords:['modo foco','foco','timer','temporizador','pomodoro','concentracao','concentração'],run:()=>openFocusMode()},
+    {id:'erros',title:'Caderno de erros',meta:'Revisar questões erradas e suas causas',icon:'×',keywords:['caderno de erros','erros','questoes erradas','questões erradas','revisar erros','meus erros'],run:()=>{openPage('desempenho');setTimeout(()=>document.querySelector('#v13Errors')?.scrollIntoView({behavior:'smooth',block:'start'}),120)}},
+    {id:'dominio',title:'Mapa de domínio',meta:'Ver seu domínio por assunto',icon:'◎',keywords:['mapa de dominio','mapa de domínio','dominio','domínio','mastery','nivel por assunto','nível por assunto'],run:()=>{openPage('desempenho');setTimeout(()=>document.querySelector('#v13Mastery')?.scrollIntoView({behavior:'smooth',block:'start'}),120)}},
+    {id:'relatorio',title:'Relatório semanal',meta:'Ver sua evolução dos últimos 7 dias',icon:'▥',keywords:['relatorio semanal','relatório semanal','relatorio','relatório','ultimos 7 dias','últimos 7 dias'],run:()=>{openPage('desempenho');setTimeout(()=>document.querySelector('#v13Weekly')?.scrollIntoView({behavior:'smooth',block:'start'}),120)}},
+    {id:'conta',title:'Minha conta e perfil',meta:'Abrir informações da sua conta',icon:'●',keywords:['minha conta','conta','meu perfil','perfil','usuario','usuário','email'],run:()=>{document.querySelector('#profileMenu')?.classList.remove('hidden')}},
+    {id:'experiencia',title:'Configurações de experiência',meta:'Fonte, contraste, movimento e economia de dados',icon:'⚙',keywords:['configuracoes','configurações','acessibilidade','fonte','tamanho da fonte','contraste','movimento','economia de dados','aparencia','aparência'],run:()=>document.querySelector('#openExperienceSettings')?.click()},
+    {id:'preferencias',title:'Preferências de estudo',meta:'Curso, instituição, prova e duração das sessões',icon:'⚙',keywords:['preferencias','preferências','curso alvo','faculdade','instituicao','instituição','data da prova','duracao da sessao','duração da sessão'],run:()=>typeof window.v13OpenPrefs==='function'?window.v13OpenPrefs():null},
+    {id:'feynman',title:'Recordação ativa / Feynman',meta:'Explique um assunto para testar sua lembrança',icon:'◇',keywords:['feynman','recordacao ativa','recordação ativa','explicar assunto','lembranca','lembrança','active recall'],run:()=>{const topic=state.core?.weakest_topic||state.core?.recommended_action?.topic||state.current?.topic||'';if(topic&&typeof window.v13OpenRecall==='function')return window.v13OpenRecall(state.current?.area||'',state.current?.subject||'',topic);toast('Abra um assunto ou faça algumas questões para o NEXO escolher um tema para recordação ativa.','info')}}
+  ];
+  if(state.profile?.role==='admin')actions.push({id:'admin',title:'Área do Admin',meta:'Saúde, conteúdo e operação do NEXO',icon:'♛',keywords:['admin','administracao','administração','painel admin','saude do sistema','saúde do sistema'],run:()=>openPage('admin')});
+  return actions;
+}
+function buildSiteSearchActionResults(query){
+  const q=normalizeTextKey(query).trim();
+  if(q.length<2)return [];
+  const tokens=q.split(/\s+/).filter(Boolean);
+  return getSiteSearchActions().map(action=>{
+    const title=normalizeTextKey(action.title);
+    const aliases=(action.keywords||[]).map(normalizeTextKey);
+    const hay=[title,...aliases,normalizeTextKey(action.meta||'')].join(' ');
+    const allTokens=tokens.every(token=>hay.includes(token));
+    if(!hay.includes(q)&&!allTokens)return null;
+    let score=5;
+    if(title===q)score=12;
+    else if(title.startsWith(q))score=11;
+    else if(aliases.some(alias=>alias===q))score=10;
+    else if(aliases.some(alias=>alias.startsWith(q)))score=9;
+    else if(hay.includes(q))score=8;
+    return {type:'action',actionId:action.id,title:action.title,meta:action.meta,icon:action.icon,score};
+  }).filter(Boolean).sort((a,b)=>b.score-a.score||a.title.localeCompare(b.title,'pt-BR'));
+}
+function runSiteSearchAction(id){
+  const action=getSiteSearchActions().find(item=>item.id===id);
+  if(!action)return false;
+  try{
+    const result=action.run?.();
+    logProductEvent('search_action_open',{action:id},'search');
+    return result??true;
+  }catch(err){
+    console.error('search action',id,err);
+    toast('Não consegui abrir essa função agora.','error');
+    return false;
+  }
+}
+
 function buildGlobalSearchResults(query){
   const q=normalizeTextKey(query).trim();
   if(q.length<2)return [];
-  const out=[];
+  const out=[...buildSiteSearchActionResults(q)];
   for(const item of state.materials||[]){
     const hay=normalizeTextKey([item.title,item.subject,item.topic,item.area].join(' '));
     if(hay.includes(q))out.push({type:'material',title:item.title,meta:[item.subject,item.topic,materialKind(item).label].filter(Boolean).join(' · '),id:item.id,score:hay.startsWith(q)?3:2});
@@ -1615,19 +1679,62 @@ function renderGlobalSearchResults(query){
   const items=buildGlobalSearchResults(query);
   state.globalSearchItems=items;
   if(!items.length){box.innerHTML=query.trim().length>=2?'<div class="search-empty">Nada encontrado. Tente outro termo.</div>':'';box.classList.toggle('hidden',!query.trim());return}
-  const icons={material:'▣',topic:'◎',subtopic:'◇',essay:'✎'};
-  box.innerHTML=items.map((item,index)=>'<button data-global-result="'+index+'"><span>'+icons[item.type]+'</span><div><b>'+esc(item.title)+'</b><small>'+esc(item.meta||'')+'</small></div><i>→</i></button>').join('');
+  const icons={action:'→',material:'▣',topic:'◎',subtopic:'◇',essay:'✎'};
+  box.innerHTML=items.map((item,index)=>'<button data-global-result="'+index+'" data-search-kind="'+esc(item.type)+'"><span>'+(item.icon||icons[item.type]||'→')+'</span><div><b>'+esc(item.title)+'</b><small>'+esc(item.meta||'')+'</small></div><i>→</i></button>').join('');
   box.classList.remove('hidden');
   $$('[data-global-result]',box).forEach(btn=>btn.onclick=async()=>{
     const item=state.globalSearchItems[Number(btn.dataset.globalResult)];if(!item)return;
     box.classList.add('hidden');globalSearch.value='';setMobileSearchOpen(false,{focus:false});
     logProductEvent('search_result_open',{type:item.type},'search');
+    if(item.type==='action')return runSiteSearchAction(item.actionId);
     if(item.type==='material'){openPage('materiais');await loadMaterials({silent:true});return openContentViewer('material',item.id)}
     if(item.type==='topic'){const lesson=topicLesson(item.topic,item.subject);return lesson?openLibraryTopic(item.subject,item.topic):(openPage('questoes'),startStudySession({mode:'search',subject:item.subject,topic:item.topic,radarTopic:item.topic,size:5,difficulty:'',visualOnly:false}))}
     if(item.type==='subtopic'){const lesson=(state.materials||[]).find(m=>m.topic===item.topic&&materialKind(m).key==='lesson');return lesson?openLibraryTopic(lesson.subject,item.topic):(openPage('questoes'),startStudySession({mode:'search',topic:item.topic,size:5,difficulty:'',visualOnly:false}))}
     if(item.type==='essay'){openPage('redacao');if($('#essayAxis'))$('#essayAxis').value=item.axis;renderEssayThemeOptions({keepSelection:false});if($('#essayTheme'))$('#essayTheme').value=String(item.themeId);updateEssayPrompt();$('#essayText')?.focus();}
   });
 }
+function nexoPercentTone(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)||n<0||n>100)return '';
+  if(n<=39)return 'low';
+  if(n<=79)return 'mid';
+  return 'high';
+}
+function nexoApplyPercentTones(root=document){
+  const scope=root?.querySelectorAll?root:document;
+  const selector='b,strong,em,span,small,.focus-score,.weak-row b,.donut b,.v13-stats b,.v13-mastery-grid strong,.study-report-score b,.study-report-metrics b';
+  const nodes=scope.querySelectorAll(selector);
+  nodes.forEach(el=>{
+    if(el.closest('style,script'))return;
+    const text=String(el.textContent||'').replace(/\s+/g,' ').trim();
+    const matches=[...text.matchAll(/(-?\d{1,3}(?:[.,]\d+)?)\s*%/g)];
+    el.classList.remove('nexo-score-low','nexo-score-mid','nexo-score-high');
+    delete el.dataset.scoreTone;
+    if(matches.length!==1||text.length>56)return;
+    const value=Number(matches[0][1].replace(',','.'));
+    const tone=nexoPercentTone(value);
+    if(!tone)return;
+    el.classList.add('nexo-score-'+tone);
+    el.dataset.scoreTone=tone;
+  });
+}
+let nexoPercentToneQueued=false;
+function scheduleNexoPercentTones(){
+  if(nexoPercentToneQueued)return;
+  nexoPercentToneQueued=true;
+  requestAnimationFrame(()=>{
+    nexoPercentToneQueued=false;
+    nexoApplyPercentTones(document.querySelector('.page.active')||document);
+    nexoApplyPercentTones(document.querySelector('#niaPanel')||document.createElement('div'));
+    nexoApplyPercentTones(document.querySelector('#v13Modal')||document.createElement('div'));
+  });
+}
+const nexoPercentObserver=new MutationObserver(scheduleNexoPercentTones);
+nexoPercentObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
+scheduleNexoPercentTones();
+window.nexoApplyPercentTones=nexoApplyPercentTones;
+window.nexoPercentTone=nexoPercentTone;
+
 let globalSearchTimer=null;
 globalSearch.addEventListener('input',e=>{
   clearTimeout(globalSearchTimer);

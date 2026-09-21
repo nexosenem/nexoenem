@@ -49,7 +49,11 @@ async function runProfile(browser,name,viewport){
       sharedState:false,
       essayEngine:false,
       wrappers:{render:false,submit:false,essay:false,tutor:false,notebook:false},
-      wiringError:null
+      wiringError:null,
+      siteSearch:false,
+      searchSamples:[],
+      percentTones:false,
+      percentToneMap:[]
     };
     try{
       result.sharedState=typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13;
@@ -63,6 +67,17 @@ async function runProfile(browser,name,viewport){
         'escolas e governos podem promover acompanhamento, formação docente e inclusão, a fim de reduzir barreiras e garantir direitos. ').repeat(4);
       const scores=window.essayScores(sample);
       result.essayEngine=Array.isArray(scores)&&scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200);
+      const queries=['perfil de evolução','professor nexo','caderno de erros','simulado','radar enem'];
+      result.searchSamples=queries.map(q=>({q,items:typeof buildGlobalSearchResults==='function'?buildGlobalSearchResults(q).filter(x=>x.type==='action').map(x=>x.actionId):[]}));
+      result.siteSearch=result.searchSamples.every(x=>x.items.length>0)&&typeof runSiteSearchAction==='function';
+
+      const toneHost=document.createElement('div');
+      toneHost.innerHTML='<b>39%</b><b>40%</b><b>79%</b><b>80%</b><b>100%</b>';
+      document.body.appendChild(toneHost);
+      if(typeof window.nexoApplyPercentTones==='function')window.nexoApplyPercentTones(toneHost);
+      result.percentToneMap=[...toneHost.querySelectorAll('b')].map(el=>({text:el.textContent,tone:el.dataset.scoreTone||'',classes:[...el.classList]}));
+      result.percentTones=JSON.stringify(result.percentToneMap.map(x=>x.tone))===JSON.stringify(['low','mid','mid','high','high']);
+      toneHost.remove();
     }catch(err){result.wiringError=String(err?.message||err);}
 
     const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
@@ -180,6 +195,8 @@ async function runProfile(browser,name,viewport){
   if(first.wiringError)failures.push(name+': wiring V13 lançou erro: '+first.wiringError);
   if(!first.sharedState)failures.push(name+': state/client não estão compartilhados com o V13');
   if(!first.essayEngine)failures.push(name+': motor de redação V13 não respondeu com 5 competências válidas');
+  if(!first.siteSearch)failures.push(name+': pesquisa interna não encontrou todas as áreas/funções esperadas: '+JSON.stringify(first.searchSamples));
+  if(!first.percentTones)failures.push(name+': faixas de porcentagem incorretas: '+JSON.stringify(first.percentToneMap));
   for(const [key,active] of Object.entries(first.wrappers))if(!active)failures.push(name+': wrapper V13 inativo: '+key);
 
   await load('reload');
