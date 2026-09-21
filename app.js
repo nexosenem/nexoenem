@@ -2658,6 +2658,12 @@ function renderNexoContextBar(id=$('.page.active')?.id||'inicio'){
   const btn=$('#contextNextAction');
   if(btn)btn.onclick=plan.action||(()=>{});
 }
+function closeNexoContextBar(){
+  const bar=$('#nexoContextBar');
+  if(!bar)return;
+  bar.classList.add('is-dismissed');
+}
+$('#contextClose')?.addEventListener('click',closeNexoContextBar);
 function openPage(id) {
   const featureByPage={desempenho:'v3_intelligence',simulados:'v4_exam_strategy',redacao:'v5_essay_intelligence',ranking:'v6_community'};
   const requiredFlag=featureByPage[id];
