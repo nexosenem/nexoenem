@@ -1,6 +1,6 @@
 /* NEXO V13 · production hardening and in-browser diagnostics */
 (function(){
-  const VERSION='2026.09.21-hardening-1';
+  const VERSION='2026.09.21-hardening-2';
   const REQUIRED=['v13State','v13LoadPrefs','v13LoadBrief','v13OpenRecall','v13OpenSearch','v13LoadErrors','v13Boot'];
   const ASSETS=[
     './assets/nexo-v13.css','./assets/nexo-v13-core.js','./assets/nexo-v13-planner.js',
@@ -10,6 +10,27 @@
     './manifest.webmanifest','./sw.js'
   ];
   const dedupe=new Map();
+  const BUFFER_KEY='nexo-preauth-errors';
+
+  function bufferError(area,code,message){
+    try{
+      const rows=JSON.parse(sessionStorage.getItem(BUFFER_KEY)||'[]');
+      rows.push({area,code,message:String(message||'').slice(0,500),at:new Date().toISOString()});
+      sessionStorage.setItem(BUFFER_KEY,JSON.stringify(rows.slice(-20)));
+    }catch(_){}
+  }
+
+  async function flushBufferedErrors(){
+    try{
+      if(typeof state==='undefined'||!state?.user?.id||typeof logClientError!=='function')return;
+      const rows=JSON.parse(sessionStorage.getItem(BUFFER_KEY)||'[]');
+      if(!rows.length)return;
+      sessionStorage.removeItem(BUFFER_KEY);
+      for(const row of rows){
+        await logClientError(row.area||'boot',new Error(row.message||'buffered error'),row.code||'preauth_error');
+      }
+    }catch(_){}
+  }
 
   function report(area,error,code){
     const message=String(error?.message||error||'unknown').slice(0,500);
@@ -18,9 +39,10 @@
     if(now-last<30000)return;
     dedupe.set(key,now);
     try{
-      if(typeof logClientError==='function')logClientError(area,new Error(message),code);
-      else console.warn('[NEXO hardening]',code,message);
-    }catch(_){}
+      if(typeof state!=='undefined'&&state?.user?.id&&typeof logClientError==='function')logClientError(area,new Error(message),code);
+      else bufferError(area,code,message);
+      console.warn('[NEXO hardening]',code,message);
+    }catch(_){bufferError(area,code,message)}
   }
 
   window.addEventListener('error',event=>{
@@ -150,6 +172,7 @@
 
   let mounted=false;
   setInterval(async()=>{
+    try{await flushBufferedErrors()}catch(_){}
     if(mounted)return;
     try{mounted=await mountAdminDiagnostics()}catch(err){report('diagnostics',err,'diagnostics_mount')}
   },1400);
