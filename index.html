@@ -203,6 +203,13 @@
         </div>
       </header>
 
+      <section id="nexoContextBar" class="nexo-context-bar">
+        <div><span>ONDE ESTOU</span><b id="contextWhere">Início</b></div>
+        <div><span>POR QUE AGORA</span><b id="contextWhy">Organizando seu próximo passo</b></div>
+        <div><span>PRÓXIMO</span><b id="contextNext">Continuar plano</b></div>
+        <button id="contextNextAction">Ir →</button>
+      </section>
+
       <main>
         <section class="page active" id="inicio">
           <div class="mobile-home">
@@ -744,6 +751,14 @@
               <div id="reviewQueue" class="review-queue"><p style="color:var(--muted)">Nenhuma revisão pendente agora.</p></div>
             </article>
           </div>
+          <article class="panel smart-review-panel">
+            <div class="panel-title"><div><b>Revisão Inteligente V2</b><small>erros que voltam no momento certo</small></div><span id="smartReviewCount">0 para hoje</span></div>
+            <div class="smart-review-head">
+              <div><span class="eyebrow">MEMÓRIA NEXO</span><h3>Nem todo erro deve voltar imediatamente.</h3><p>O NEXO agenda a questão original, prioriza recorrência e oferece uma questão parecida antes da repetição.</p></div>
+              <button id="startSmartReview" class="primary-btn">Começar revisão →</button>
+            </div>
+            <div id="smartReviewQueue" class="smart-review-queue"><p class="learning-empty">Sua fila será construída conforme você erra e revisa questões.</p></div>
+          </article>
           <article class="panel profile-evolution-panel">
             <div class="panel-title"><div><b>Meu perfil de evolução</b><small>atividade, consistência, domínio e ritmo</small></div><button class="outline-btn small" data-page="ranking">Ver Jornada →</button></div>
             <div id="profileEvolution" class="profile-evolution-grid"></div>
@@ -773,7 +788,15 @@
 
         <section class="page" id="materiais">
           <div class="page-head nexo-content-head"><div><span class="eyebrow">NEXO CONTEÚDO</span><h2>Biblioteca NEXO</h2><p>Aulas, resumos e materiais estratégicos organizados pelo Radar NEXO.</p></div><div class="content-head-badge"><b>RADAR → AULA → TREINO</b><small>estude na ordem que mais faz sentido para o ENEM</small></div></div>
-          <div class="filter-line content-filter-line"><input id="materialSearch" class="text-input" placeholder="Buscar aula, resumo, matéria ou tema..."><button id="materialFavoritesOnly" class="outline-btn">☆ Favoritos</button></div><div id="materialSubjectNav" class="material-subject-nav" aria-label="Matérias da Biblioteca NEXO"></div><div id="materialLibraryMeta" class="material-library-meta"></div>
+          <div class="filter-line content-filter-line"><input id="materialSearch" class="text-input" placeholder="Buscar aula, resumo, matéria ou tema..."><button id="materialFavoritesOnly" class="outline-btn">☆ Favoritos</button></div>
+          <div class="library-filter-deck">
+            <select id="materialStatusFilter"><option value="">Todos os estados</option><option value="new">Novo</option><option value="learning">Aprendendo</option><option value="training">Em treino</option><option value="review">Revisar</option><option value="mastered">Dominado</option></select>
+            <select id="materialTypeFilter"><option value="">Todos os tipos</option><option value="lesson">Aula</option><option value="summary">Resumo</option><option value="tips">Macetes</option></select>
+            <select id="materialPriorityFilter"><option value="">Toda prioridade</option><option value="high">Alta prioridade</option><option value="transversal">Fundamentos</option></select>
+            <button id="materialQuickFive" class="outline-btn">⚡ Tenho 5 min</button>
+            <button id="materialClearFilters" class="ghost-btn">Limpar filtros</button>
+          </div>
+          <div id="materialSubjectNav" class="material-subject-nav" aria-label="Matérias da Biblioteca NEXO"></div><div id="materialLibraryMeta" class="material-library-meta"></div>
           <div class="video-grid" id="materialGrid"></div>
         </section>
 
@@ -882,6 +905,23 @@
               <p id="weekFullSummary">O NEXO usa suas prioridades reais e o tempo diário informado no onboarding.</p>
             </div>
             <div class="week-full-score"><b id="weekFullProgress">0%</b><small>da semana concluída</small></div>
+          </article>
+          <article class="panel long-range-plan">
+            <div class="long-range-copy">
+              <span class="eyebrow">ROTA ATÉ O ENEM</span>
+              <h3 id="studyPhaseLabel">Calculando sua fase...</h3>
+              <p id="studyPhaseDescription">O NEXO ajusta a proporção entre aprender, revisar e simular conforme a prova se aproxima.</p>
+              <div class="long-range-actions">
+                <button id="studyMode30" class="outline-btn">Tenho 30 min</button>
+                <button id="studyModeEve" class="outline-btn">Modo véspera</button>
+                <button id="studyModeIntensive" class="outline-btn">Modo intensivo</button>
+                <button id="startRecoveryPlan" class="primary-btn hidden">Retomar sem sobrecarga →</button>
+              </div>
+            </div>
+            <div class="long-range-score">
+              <strong id="daysToEnem">—</strong><span>dias</span><small>até o 1º domingo</small>
+            </div>
+            <div id="longRangePlan" class="long-range-plan-grid"></div>
           </article>
           <div id="weekFullGrid" class="week-full-grid"><article class="panel"><p style="color:var(--muted)">Carregando sua semana...</p></article></div>
         </section>
@@ -1517,6 +1557,7 @@
         </label>
         <button id="viewerComplete" class="outline-btn">Marcar como concluído</button>
         <button id="viewerCheckpoint" class="outline-btn hidden">Checagem rápida · 2 questões</button>
+        <button id="viewerAskNexo" class="outline-btn">✦ Perguntar sobre esta aula</button>
         <button id="viewerPractice" class="primary-btn viewer-practice-btn">Treinar este assunto →</button>
       </footer>
     </section>
@@ -1548,6 +1589,15 @@
       </div>
       <small>O NEXO recomenda o conteúdo, mas você continua no controle da sua rota.</small>
     </section>
+  </div>
+
+  <div id="questionNoteModal" class="community-modal hidden" aria-modal="true" role="dialog">
+    <div class="community-sheet question-note-sheet">
+      <div class="community-head"><div><span class="eyebrow">CADERNO PESSOAL</span><h3>Minha nota desta questão</h3></div><button id="closeQuestionNote" class="icon-btn">×</button></div>
+      <p id="questionNoteMeta" class="question-note-meta">Escreva o que você quer lembrar quando esta questão voltar.</p>
+      <textarea id="questionNoteText" rows="7" maxlength="3000" placeholder="Ex.: eu sabia a fórmula, mas converti minutos para horas errado..."></textarea>
+      <div class="question-note-actions"><button id="deleteQuestionNote" class="ghost-btn danger">Excluir nota</button><button id="saveQuestionNote" class="primary-btn">Salvar nota</button></div>
+    </div>
   </div>
 
   <div id="commentModal" class="community-modal hidden" aria-modal="true" role="dialog">
