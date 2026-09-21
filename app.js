@@ -4251,11 +4251,17 @@ function buildAnswerExplanation(q,data,selected){
   else if(q.area==='Ciências da Natureza') method='Relacione o fenômeno descrito ao princípio científico central e elimine alternativas que contradizem causa, unidade ou mecanismo.';
   else if(q.area==='Linguagens') method='Volte ao trecho que responde ao comando e confira qual alternativa é sustentada pelo texto, pelo gênero ou pelo efeito de linguagem.';
   else method='Localize no texto o conceito histórico, geográfico, filosófico ou sociológico que o comando exige e descarte extrapolações.';
-  const whyWrong=data.correct ? 'Sua escolha coincide com o gabarito oficial.' : `Você marcou ${'ABCDE'[selected]} (“${selectedText}”). Essa opção não atende completamente ao que o comando pede; compare-a com ${'ABCDE'[correct]} (“${correctText}”), que é a alternativa compatível com o gabarito oficial.`;
+  const hasEditorialExplanation=Boolean(String(data.explanation||'').trim());
+  const whyWrong=data.correct
+    ? 'Sua escolha coincide com o gabarito cadastrado.'
+    : hasEditorialExplanation
+      ? `Você marcou ${'ABCDE'[selected]} (“${selectedText}”). Compare seu raciocínio com ${'ABCDE'[correct]} (“${correctText}”) usando a resolução abaixo.`
+      : `Você marcou ${'ABCDE'[selected]} (“${selectedText}”) e o gabarito cadastrado é ${'ABCDE'[correct]} (“${correctText}”). Esta questão ainda não possui uma resolução editorial específica; por isso o NEXO não vai inventar um motivo para a alternativa estar errada.`;
   return {
-    summary:data.explanation||`Gabarito oficial: alternativa ${'ABCDE'[correct]}.`,
+    summary:hasEditorialExplanation?data.explanation:`Gabarito cadastrado: alternativa ${'ABCDE'[correct]}. Resolução detalhada ainda em revisão editorial.`,
     whyWrong,
-    method:`${method} O ponto de revisão desta questão é “${topic}”.`
+    method:`${method} O ponto de revisão desta questão é “${topic}”.`,
+    hasEditorialExplanation
   };
 }
 
