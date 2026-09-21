@@ -12,6 +12,7 @@ const SHELL=[
   './assets/nexo-v13-essay.js?v=20260921-1',
   './assets/nexo-v13-recall.js?v=20260921-1',
   './assets/nexo-v13-content.js?v=20260921-1',
+  './assets/nexo-v13-repertoire.js?v=20260921-1',
   './assets/nexo-v13-calendar.js?v=20260921-1',
   './assets/nexo-v13-tutor.js?v=20260921-1',
   './assets/nexo-v13-ui.js?v=20260921-1',
