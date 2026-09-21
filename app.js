@@ -291,6 +291,9 @@ const state = {
   personalRadar:[],
   learningIntelligence:null,
   recommendationExplanation:null,
+  dueReviewItems:[],
+  questionNoteTarget:null,
+  libraryQuickFive:false,
   featureFlags:new Map(),
   globalSearchItems:[],
   lastStudyAt:null,
@@ -2663,7 +2666,8 @@ async function initApp(session) {
     loadTopicMastery(),
     loadSavedQuestions({render:false}),
     loadNexoWeekPlan({silent:true}),
-    loadFeatureFlags()
+    loadFeatureFlags(),
+    loadDueReviewItems()
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
@@ -4447,6 +4451,8 @@ async function submitAnswer(option) {
       $('#sessionSubtitle').textContent='Primeiro resolva 3 questões parecidas. A questão original fica no Caderno de Erros para voltar depois.';
     }
   };
+  $('#similarAfterError')?.addEventListener('click',()=>startSimilarQuestionById(state.current.id));
+  $('#questionPersonalNote')?.addEventListener('click',()=>openQuestionNote(state.current.id));
   $('#saveCurrentQuestion').onclick=()=>toggleSavedQuestion(state.current.id);
   updateCurrentQuestionSaveButton();
   $('#reportCurrentQuestion').onclick=()=>openQuestionIssueModal(state.current.id);
@@ -5091,6 +5097,132 @@ $$('[data-nexo-why]').forEach(btn=>btn.addEventListener('click',openRecommendati
 $('#closeRecommendationWhy')?.addEventListener('click',closeRecommendationWhy);
 $('#recommendationWhyModal')?.addEventListener('click',e=>{if(e.target===$('#recommendationWhyModal'))closeRecommendationWhy()});
 
+
+async function loadDueReviewItems(){
+  if(!state.user?.id)return [];
+  try{
+    const {data,error}=await client.from('nexo_review_items')
+      .select('question_id,topic,interval_days,streak,lapses,next_review_at,last_result,status,question:questions(id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop)')
+      .eq('status','scheduled')
+      .lte('next_review_at',new Date().toISOString())
+      .order('next_review_at',{ascending:true})
+      .limit(20);
+    if(error)throw error;
+    state.dueReviewItems=(data||[]).map(row=>{
+      const radar=(state.radarTopics||[]).find(r=>String(r.topic||'')===String(row.topic||row.question?.topic||''));
+      const overdue=Math.max(0,Math.floor((Date.now()-new Date(row.next_review_at||Date.now()).getTime())/86400000));
+      const priority=Math.round(Math.min(100,35+Number(row.lapses||0)*14+overdue*4+Number(radar?.nexo_priority_score||0)*.35));
+      return {...row,priority,overdue};
+    }).sort((a,b)=>b.priority-a.priority);
+    renderSmartReviewQueue();
+    return state.dueReviewItems;
+  }catch(err){
+    console.error('due review items',err);
+    logClientError('review',err,'due_review_load');
+    return [];
+  }
+}
+
+function renderSmartReviewQueue(){
+  const el=$('#smartReviewQueue'),count=$('#smartReviewCount');
+  if(!el)return;
+  const rows=state.dueReviewItems||[];
+  if(count)count.textContent=rows.length+' para hoje';
+  if(!rows.length){
+    el.innerHTML='<div class="smart-review-empty"><span>✓</span><div><b>Nenhuma questão original vencida.</b><small>Quando uma questão errada chegar ao momento certo, ela aparece aqui.</small></div></div>';
+    return;
+  }
+  el.innerHTML=rows.slice(0,8).map((row,index)=>{
+    const q=row.question||{};
+    return '<article class="smart-review-row">'+
+      '<span class="smart-review-rank">'+String(index+1).padStart(2,'0')+'</span>'+
+      '<div class="smart-review-copy"><small>'+esc(q.subject||q.area||'Revisão')+'</small><b>'+esc(q.topic||row.topic||'Questão ENEM')+'</b><p>'+(Number(row.lapses||0)>1?'Erro recorrente · ':'')+(row.overdue?'atrasada '+row.overdue+' dia(s) · ':'')+'intervalo '+Number(row.interval_days||1)+' dia(s)</p></div>'+
+      '<strong>'+row.priority+'</strong>'+
+      '<div class="smart-review-actions"><button data-review-similar="'+Number(row.question_id)+'">≈ Parecida</button><button data-review-original="'+Number(row.question_id)+'">Original →</button></div>'+
+    '</article>';
+  }).join('');
+  $('[data-review-original]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.reviewOriginal)));
+  $('[data-review-similar]',el).forEach(btn=>btn.onclick=()=>startSimilarQuestionById(Number(btn.dataset.reviewSimilar)));
+}
+$('#startSmartReview')?.addEventListener('click',async()=>{
+  if(!state.dueReviewItems.length)await loadDueReviewItems();
+  const first=state.dueReviewItems[0];
+  if(!first)return toast('Sua revisão inteligente está em dia.');
+  startSimilarQuestionById(Number(first.question_id));
+});
+
+async function startSimilarQuestionById(questionId){
+  try{
+    let source=state.current&&Number(state.current.id)===Number(questionId)?state.current:null;
+    if(!source){
+      const {data,error}=await client.from('questions')
+        .select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop')
+        .eq('id',Number(questionId)).single();
+      if(error)throw error;
+      source=data;
+    }
+    const all=await fetchQuestions({area:source.area||'',subject:source.subject||'',topic:source.topic||''});
+    const targetSub=inferQuestionSubtopic(source);
+    const similar=shuffle((all||[]).filter(q=>Number(q.id)!==Number(source.id)))
+      .sort((a,b)=>Number(inferQuestionSubtopic(b)===targetSub)-Number(inferQuestionSubtopic(a)===targetSub))[0];
+    if(!similar)return toast('Ainda não encontrei outra questão parecida nesse recorte.','info');
+    openPage('questoes');
+    if(state.session?.coreSessionId)await closeNexoSession('abandoned',state.session);
+    const config={mode:'similar_after_error',area:similar.area||'',subject:similar.subject||'',topic:similar.topic||'',size:1};
+    const coreSessionId=await beginNexoSession(config,1);
+    state.session={...config,queue:[similar],index:0,size:1,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
+    $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
+    $('#sessionAreaBadge').textContent='QUESTÃO PARECIDA';
+    $('#sessionTitle').textContent=targetSub||similar.topic||similar.subject||'Treino de transferência';
+    $('#sessionSubtitle').textContent='Resolva um problema parecido antes de voltar à questão original.';
+    updateStudyNavigation(state.session);
+    await showCurrentQuestion();
+  }catch(err){
+    console.error('similar question',err);
+    toast('Não consegui abrir uma questão parecida agora.','error');
+  }
+}
+
+async function openQuestionNote(questionId=state.current?.id){
+  const id=Number(questionId||0);if(!id)return;
+  state.questionNoteTarget=id;
+  const q=state.current&&Number(state.current.id)===id?state.current:null;
+  $('#questionNoteMeta').textContent=q
+    ? (q.subject||q.area||'Questão')+' · '+(q.topic||'')+(q.source_year?' · ENEM '+q.source_year:'')
+    : 'Escreva o que você quer lembrar quando esta questão voltar.';
+  $('#questionNoteText').value='';
+  try{
+    const {data,error}=await client.from('question_notes').select('note').eq('question_id',id).maybeSingle();
+    if(!error&&data?.note)$('#questionNoteText').value=data.note;
+  }catch(_){}
+  $('#questionNoteModal')?.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  setTimeout(()=>$('#questionNoteText')?.focus(),60);
+}
+function closeQuestionNote(){
+  $('#questionNoteModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+  state.questionNoteTarget=null;
+}
+$('#closeQuestionNote')?.addEventListener('click',closeQuestionNote);
+$('#questionNoteModal')?.addEventListener('click',e=>{if(e.target===$('#questionNoteModal'))closeQuestionNote()});
+$('#saveQuestionNote')?.addEventListener('click',async()=>{
+  const id=Number(state.questionNoteTarget||0),note=$('#questionNoteText')?.value.trim()||'';
+  if(!id)return;
+  if(!note)return toast('Escreva uma nota antes de salvar.','error');
+  const {error}=await client.from('question_notes').upsert({
+    user_id:state.user.id,question_id:id,note,updated_at:new Date().toISOString()
+  },{onConflict:'user_id,question_id'});
+  if(error)return toast('Não consegui salvar sua nota.','error');
+  closeQuestionNote();toast('Nota salva no seu Caderno de Erros.');
+});
+$('#deleteQuestionNote')?.addEventListener('click',async()=>{
+  const id=Number(state.questionNoteTarget||0);if(!id)return;
+  const {error}=await client.from('question_notes').delete().eq('question_id',id);
+  if(error)return toast('Não consegui excluir sua nota.','error');
+  closeQuestionNote();toast('Nota excluída.');
+});
+
 function classifyAttemptPattern(a){
   if(a?.is_correct)return null;
   const duration=Number(a?.duration_seconds||0);
@@ -5193,7 +5325,7 @@ function renderProfileEvolution(){
 }
 
 async function renderPerformance() {
-  const [, , , intel]=await Promise.all([loadDashboard(),loadNexoCore(),loadErrorNotebook(),loadLearningIntelligence(),loadTopicMastery(),loadNexoJourney({silent:true}),loadMaterials({silent:true}),loadSubtopicMastery(),loadEssayHistory(),loadEnemRadar({silent:true})]);
+  const [, , , intel]=await Promise.all([loadDashboard(),loadNexoCore(),loadErrorNotebook(),loadLearningIntelligence(),loadTopicMastery(),loadNexoJourney({silent:true}),loadMaterials({silent:true}),loadSubtopicMastery(),loadEssayHistory(),loadEnemRadar({silent:true}),loadDueReviewItems()]);
   const d=state.dashboard||{attempts:0,correct:0,accuracy:0,by_area:[]};
   const core=state.core||{};
   const momentum=core.momentum||{};
@@ -5203,6 +5335,7 @@ async function renderPerformance() {
   renderReviewQueue();
   renderProfileEvolution();
   renderV3Intelligence();
+  renderSmartReviewQueue();
 
   const {data:sessions,error:sessionError}=await client.from('nexo_study_sessions')
     .select('id,mode,area,subject,topic,planned_count,answered_count,correct_count,total_duration_seconds,status,started_at,ended_at')
