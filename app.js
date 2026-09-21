@@ -2577,7 +2577,7 @@ async function resumePersistedStudySession(){
   if(!saved)return toast('Não há sessão pendente.');
   try{
     const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
-    const {data,error}=await client.from('questions').select(fields).in('id',saved.ids);
+    const {data,error}=await client.from('questions').select(fields).in('id',saved.ids).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
     const queue=saved.ids.map(id=>byId.get(Number(id))).filter(Boolean);
@@ -3699,8 +3699,8 @@ function startQuestionBehaviorMonitor(q,seed=null){
 
 async function renderQuestion(q) {
   const card=$('#questionCard');
-  if(q.media_type) await ensureMediaPath(q);
-  const visual = Boolean(q.media_type && q.media_path);
+  if(q.media_type || q.media_path) await ensureMediaPath(q);
+  const visual = Boolean(q.media_path || (q.media_type && q.source_pdf_url && q.source_page && q.media_crop));
   card.innerHTML=`
     <div class="q-top">
       <div class="q-tags">
@@ -4512,6 +4512,7 @@ async function submitAnswer(option) {
       <button id="askNexoAboutQuestion">✦ Perguntar ao Nexo</button>
       <button id="reviewQuestionTopic">↻ ${data.correct?'Consolidar tema':'Treinar 3 semelhantes'}</button>
       <button id="saveCurrentQuestion">☆ Salvar questão</button>
+      <button id="questionPersonalNote">✎ Anotar</button>
       <button id="reportCurrentQuestion">⚑ Reportar problema</button>
       <button id="openComments">💬 Comentários</button>
       <button id="nextAfterAnswer" class="next-action">Próxima questão →</button>
@@ -4563,7 +4564,6 @@ async function submitAnswer(option) {
       $('#sessionSubtitle').textContent='Primeiro resolva 3 questões parecidas. A questão original fica no Caderno de Erros para voltar depois.';
     }
   };
-  $('#similarAfterError')?.addEventListener('click',()=>startSimilarQuestionById(state.current.id));
   $('#questionPersonalNote')?.addEventListener('click',()=>openQuestionNote(state.current.id));
   $('#saveCurrentQuestion').onclick=()=>toggleSavedQuestion(state.current.id);
   updateCurrentQuestionSaveButton();
@@ -4782,7 +4782,7 @@ async function startReviewQuestionIds(ids,finished={}){
   if(!clean.length)return toast('Nenhum erro desta sessão para revisar.','info');
   try{
     const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
-    const {data,error}=await client.from('questions').select(fields).in('id',clean);
+    const {data,error}=await client.from('questions').select(fields).in('id',clean).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
     const queue=clean.map(id=>byId.get(id)).filter(Boolean);
@@ -5053,7 +5053,7 @@ async function startErrorReview(){
     const ids=(state.errorReviewIds?.length?state.errorReviewIds:await loadErrorNotebook()).slice(0,5);
     if(!ids.length)return toast('Ainda não há erros recentes para revisar.');
     const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
-    const {data,error}=await client.from('questions').select(fields).in('id',ids);
+    const {data,error}=await client.from('questions').select(fields).in('id',ids).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
     const queue=ids.map(id=>byId.get(Number(id))).filter(Boolean);
@@ -5917,18 +5917,79 @@ $('#officialEssayGuideBtn')?.addEventListener('click',()=>{
   window.open(OFFICIAL_ENEM_ESSAY_SHEET.officialReference,'_blank','noopener,noreferrer');
 });
 
-function essayScores(text){
-  const words=text.match(/\S+/g)||[],count=words.length,paras=text.split(/\n\s*\n/).filter(x=>x.trim()).length;
-  const connectors=(text.match(/\b(portanto|além disso|contudo|assim|desse modo|nesse sentido|porém|todavia|consequentemente|logo|dessa forma)\b/gi)||[]).length;
-  const proposal=/\b(estado|governo|escola|sociedade|mídia|empresas|família|ministério|prefeitura)\b/i.test(text)&&/\b(deve|devem|promover|criar|ampliar|garantir|implementar|investir)\b/i.test(text);
+const ESSAY_STOPWORDS=new Set([
+  'a','as','o','os','e','de','da','das','do','dos','em','no','na','nos','nas','um','uma','uns','umas',
+  'para','por','com','sem','que','se','ao','aos','à','às','como','mais','menos','muito','muita','muitos','muitas',
+  'ser','são','foi','sua','seu','suas','seus','esse','essa','este','esta','isso','isto','sobre','entre','também',
+  'texto','tema','proposta','produza','redação','dissertativo','argumentativo','partir','acerca','relação'
+]);
+function normalizeEssayWord(value=''){
+  return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase();
+}
+function essayMetrics(text,theme={}){
+  const rawWords=text.match(/\S+/g)||[];
+  const tokens=(normalizeEssayWord(text).match(/[a-z]+/g)||[]).filter(w=>w.length>1);
+  const meaningful=tokens.filter(w=>w.length>=4&&!ESSAY_STOPWORDS.has(w));
+  const uniqueMeaningful=new Set(meaningful);
+  const frequencies=new Map();
+  meaningful.forEach(w=>frequencies.set(w,(frequencies.get(w)||0)+1));
+  const dominant=Math.max(0,...frequencies.values());
+  const lexicalDiversity=meaningful.length?uniqueMeaningful.size/meaningful.length:0;
+  const dominantShare=meaningful.length?dominant/meaningful.length:1;
+  const paras=text.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean);
+  const sentences=text.split(/[.!?]+/).map(x=>x.trim()).filter(Boolean);
+  const avgSentence=sentences.length?rawWords.length/sentences.length:rawWords.length;
+  const connectorMatches=normalizeEssayWord(text).match(/\b(portanto|alem disso|contudo|assim|desse modo|nesse sentido|porem|todavia|consequentemente|logo|dessa forma|ademais|entretanto|porque|pois|embora|enquanto|primeiramente|finalmente)\b/g)||[];
+  const connectorDiversity=new Set(connectorMatches).size;
+  const argumentMarkers=(normalizeEssayWord(text).match(/\b(porque|pois|devido|causa|consequencia|consequentemente|portanto|evidencia|demonstra|revela|resulta|impacto|problema)\b/g)||[]).length;
+  const thesis=/\b(portanto|assim|desse modo|diante disso|e necessario|e preciso|torna-se|deve-se)\b/i.test(normalizeEssayWord(text));
+
+  const themeText=normalizeEssayWord((theme?.title||'')+' '+(theme?.prompt||''));
+  const themeTokens=[...new Set((themeText.match(/[a-z]+/g)||[]).filter(w=>w.length>=5&&!ESSAY_STOPWORDS.has(w)))];
+  const textSet=new Set(meaningful);
+  const themeHits=themeTokens.filter(w=>textSet.has(w)).length;
+  const themeCoverage=themeTokens.length?themeHits/themeTokens.length:.5;
+
+  const normalized=normalizeEssayWord(text);
+  const proposal={
+    actor:/\b(estado|governo|escola|sociedade|midia|empresas|familia|ministerio|prefeitura|ong|ongs|comunidade|poder publico|instituicoes)\b/i.test(normalized),
+    action:/\b(deve|devem|promover|criar|ampliar|garantir|implementar|investir|oferecer|realizar|fiscalizar|capacitar|desenvolver|incentivar)\b/i.test(normalized),
+    means:/\b(por meio de|mediante|atraves de|com a criacao|campanhas|programas|politicas publicas|investimentos|formacao|fiscalizacao|parcerias)\b/i.test(normalized),
+    purpose:/\b(a fim de|para que|com o objetivo de|visando|de modo a|com a finalidade de)\b/i.test(normalized),
+    detail:/\b(por exemplo|especialmente|sobretudo|tais como|incluindo|isto e|ou seja)\b/i.test(normalized)
+  };
+  const proposalElements=Object.values(proposal).filter(Boolean).length;
   const punctuation=(text.match(/[.;:!?]/g)||[]).length;
-  const scores=[
-    clamp(80+Math.min(100,count*.42)+Math.min(20,punctuation),40,200),
-    clamp(70+Math.min(110,count*.43)+(paras>=3?20:0),40,200),
-    clamp(70+Math.min(80,count*.28)+Math.min(50,connectors*8),40,200),
-    clamp(70+Math.min(90,connectors*11)+(paras>=4?30:0),40,200),
-    clamp(60+(proposal?110:20)+Math.min(30,count*.08),40,200)
+  return {rawWords,tokens,meaningful,lexicalDiversity,dominantShare,paras,sentences,avgSentence,connectorMatches,connectorDiversity,argumentMarkers,thesis,themeCoverage,themeHits,themeTokenCount:themeTokens.length,proposal,proposalElements,punctuation};
+}
+function essayScores(text,theme={}){
+  const m=essayMetrics(text,theme);
+  const words=m.rawWords.length;
+  const structureBonus=m.paras.length>=4&&m.paras.length<=6?40:m.paras.length>=3?20:0;
+  const sentenceControl=m.avgSentence>=8&&m.avgSentence<=32?40:m.avgSentence<=42?20:0;
+  const lexicalBonus=m.lexicalDiversity>=.48?40:m.lexicalDiversity>=.36?20:0;
+  const punctuationBonus=m.punctuation>=Math.max(6,Math.floor(words/35))?20:0;
+  const themeBonus=m.themeCoverage>=.30?100:m.themeCoverage>=.18?80:m.themeCoverage>=.08?50:20;
+  const argumentBonus=Math.min(60,m.argumentMarkers*10)+(m.thesis?20:0);
+  const cohesionBonus=Math.min(120,m.connectorDiversity*20);
+  const proposalBonus=Math.min(180,m.proposalElements*36);
+
+  let scores=[
+    clamp(60+sentenceControl+lexicalBonus+punctuationBonus,40,180),
+    clamp(40+themeBonus+(words>=160?40:words>=100?20:0),40,200),
+    clamp(40+structureBonus+argumentBonus+(m.lexicalDiversity>=.36?20:0),40,180),
+    clamp(40+cohesionBonus+(m.paras.length>=4?20:0),40,200),
+    clamp(20+proposalBonus,40,200)
   ];
+
+  const suspiciousRepetition=m.lexicalDiversity<.22||m.dominantShare>.12;
+  if(suspiciousRepetition)scores=scores.map(x=>Math.min(x,80));
+  if(words<120)scores=scores.map(x=>Math.min(x,120));
+  if(words<80)scores=scores.map(x=>Math.min(x,80));
+  if(m.themeCoverage<.05&&m.themeTokenCount>=3){
+    scores[1]=Math.min(scores[1],80);
+    scores[2]=Math.min(scores[2],100);
+  }
   return scores.map(x=>Math.round(x/20)*20);
 }
 $('#analyzeEssay').onclick=async()=>{
@@ -5940,20 +6001,20 @@ $('#analyzeEssay').onclick=async()=>{
   if($('#essayTheme').value!=='custom'&&essayThemeCompleted(selectedTheme)){
     return toast('Esse tema já foi concluído. Escolha ou sorteie um tema novo.','info');
   }
-  if(text.length<250)return toast('Escreva pelo menos 250 caracteres para receber uma análise.','error');
+  if($('#essayTheme').value==='custom' && !$('#customEssayTheme').value.trim()){
+    return toast('Escreva o tema personalizado antes de analisar.','error');
+  }
+  const essayWordCount=(text.match(/\S+/g)||[]).length;
+  if(essayWordCount<80)return toast('Para estimar as 5 competências, escreva pelo menos 80 palavras.','error');
   const analyzeBtn=$('#analyzeEssay');
   analyzeBtn.disabled=true;
   analyzeBtn.textContent='Professor Nexo está lendo...';
   const loader=$('#essayLoader');loader.classList.remove('hidden');
   const msgs=['Avaliando estrutura e repertório.','Analisando coesão e progressão textual.','Verificando argumentação.','Estimando as cinco competências.','Salvando seu histórico.'];let i=0;
   const timer=setInterval(()=>{$('#loaderText').textContent=msgs[++i%msgs.length]},520);
-  await sleep(2300);
-  const scores=essayScores(text),total=scores.reduce((a,b)=>a+b,0);
-  const t=getEssayThemeData();
-  if($('#essayTheme').value==='custom' && !$('#customEssayTheme').value.trim()){
-    clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.textContent='Analisar e salvar';
-    return toast('Escreva o tema personalizado antes de analisar.','error');
-  }
+  await sleep(350);
+  const t=selectedTheme;
+  const scores=essayScores(text,t),total=scores.reduce((a,b)=>a+b,0);
   const feedback={
     strength:scores[3]>=160?'Boa presença de mecanismos de coesão e encadeamento.':'A estrutura está identificável; vale tornar a progressão entre parágrafos ainda mais explícita.',
     priority:scores.indexOf(Math.min(...scores))+1,
@@ -5988,20 +6049,17 @@ $('#analyzeEssay').onclick=async()=>{
   showEssayResult(text,scores,total);
 };
 
-function buildDetailedEssayReview(text,scores){
-  const words=text.match(/\S+/g)||[];
-  const paras=text.split(/\n\s*\n/).filter(x=>x.trim());
-  const sentences=text.split(/[.!?]+/).map(x=>x.trim()).filter(Boolean);
-  const connectors=(text.match(/\b(portanto|além disso|contudo|assim|desse modo|nesse sentido|porém|todavia|consequentemente|logo|dessa forma|ademais)\b/gi)||[]).length;
-  const intervention=/\b(estado|governo|escola|sociedade|mídia|empresas|família|ministério|prefeitura)\b/i.test(text)&&/\b(deve|devem|promover|criar|ampliar|garantir|implementar|investir)\b/i.test(text);
-  const avg=sentences.length?Math.round(words.length/sentences.length):words.length;
-  const thesis=/\b(portanto|assim|desse modo|diante disso|é necessário|é preciso|torna-se)\b/i.test(text);
+function buildDetailedEssayReview(text,scores,theme=getEssayThemeData()){
+  const m=essayMetrics(text,theme);
+  const avg=Math.round(m.avgSentence||0);
   const notes=[];
-  notes.push(paras.length>=4?'A estrutura em parágrafos está próxima do formato esperado para uma dissertação-argumentativa.':'Organize melhor a arquitetura do texto: introdução, dois desenvolvimentos e conclusão costuma ser uma base segura.');
-  notes.push(connectors>=5?'Você usa conectivos com boa frequência; agora vale variar e conferir se cada um expressa a relação lógica correta.':'A ligação entre as ideias pode ficar mais explícita. Use conectivos de causa, contraste, consequência e conclusão sem repeti-los demais.');
-  notes.push(avg>28?'Algumas frases estão longas. Quebre períodos muito extensos para reduzir ambiguidade e erros de pontuação.':'O tamanho médio dos períodos está controlado, o que favorece clareza.');
-  notes.push(intervention?'Há sinais de proposta de intervenção com agente e ação. Complete com meio, finalidade e detalhamento sempre que faltar.':'A conclusão precisa deixar mais claro quem fará o quê, por qual meio e com qual finalidade.');
-  return {paras:paras.length,words:words.length,connectors,intervention,thesis,notes};
+  notes.push(m.paras.length>=4&&m.paras.length<=6?'A divisão em parágrafos está compatível com uma dissertação-argumentativa de treino.':'Revise a arquitetura do texto: introdução, desenvolvimento da tese e conclusão precisam ficar claramente separados.');
+  notes.push(m.connectorDiversity>=5?'Há variedade razoável de conectivos; confira agora se cada um expressa a relação lógica correta.':'A coesão pode ficar mais explícita: varie conectivos de causa, contraste, consequência e conclusão.');
+  notes.push(avg>32?'Alguns períodos estão longos. Dividi-los pode reduzir ambiguidade e problemas de pontuação.':'O tamanho médio dos períodos não acendeu um alerta automático de clareza.');
+  notes.push(m.proposalElements>=4?'A intervenção contém vários elementos esperados. Confira se agente, ação, meio, finalidade e detalhamento estão realmente completos e coerentes.':'A proposta de intervenção ainda parece incompleta: explicite agente, ação, meio/modo, finalidade e detalhamento.');
+  if(m.themeTokenCount>=3)notes.push(m.themeCoverage>=.18?'O vocabulário do texto mantém ligação detectável com a proposta.':'A ligação lexical com o tema está baixa; releia a proposta para evitar tangenciamento.');
+  if(m.lexicalDiversity<.28||m.dominantShare>.10)notes.push('Há repetição lexical acima do esperado; varie o vocabulário e evite repetir a mesma palavra ou ideia em excesso.');
+  return {paras:m.paras.length,words:m.rawWords.length,connectors:m.connectorMatches.length,connectorDiversity:m.connectorDiversity,intervention:m.proposalElements>=2,proposalElements:m.proposalElements,themeCoverage:m.themeCoverage,lexicalDiversity:m.lexicalDiversity,thesis:m.thesis,notes};
 }
 
 function showEssayResult(text,scores,total){
@@ -6028,6 +6086,7 @@ function showEssayResult(text,scores,total){
           <span class="eyebrow">CORREÇÃO ORIENTATIVA · PROFESSOR NEXO</span>
           <h3>${scoreLabel}</h3>
           <p>Seu texto sobre “${esc(t.title)}” já foi transformado em um plano de revisão. A prioridade agora é a ${shortComps[weak]}.</p>
+          <div class="essay-estimate-notice">Estimativa automática orientativa: não substitui a correção oficial do Inep nem uma leitura humana detalhada. Use a nota como faixa de treino e priorize os comentários por competência.</div>
           <div class="essay-meta-chips">
             <span>${review.words} palavras</span>
             <span>${review.paras} parágrafo(s)</span>
