@@ -1,20 +1,21 @@
 /* NEXO V13 · universal search and error notebook */
 async function v13Search(term){
   const q=String(term||'').trim();
-  if(q.length<2)return {questions:[],materials:[],videos:[]};
+  if(q.length<2)return {actions:[],questions:[],materials:[],videos:[]};
   const clean=q.replace(/[^\p{L}\p{N}\s-]/gu,' ').replace(/\s+/g,' ').trim();
-  if(clean.length<2)return {questions:[],materials:[],videos:[]};
+  if(clean.length<2)return {actions:[],questions:[],materials:[],videos:[]};
+  const actions=typeof buildSiteSearchActionResults==='function'?buildSiteSearchActionResults(clean).slice(0,8):[];
   const like='%'+clean+'%';
   const [a,b,c]=await Promise.all([
     client.from('questions').select('id,area,subject,topic,prompt,source_year,source_question_number').or('topic.ilike.'+like+',subject.ilike.'+like+',prompt.ilike.'+like).eq('is_active',true).limit(8),
     client.from('materials').select('id,title,area,subject,topic').eq('is_published',true).or('title.ilike.'+like+',topic.ilike.'+like+',subject.ilike.'+like).limit(6),
     client.from('videos').select('id,title,area,subject,topic').eq('is_published',true).or('title.ilike.'+like+',topic.ilike.'+like+',subject.ilike.'+like).limit(6)
   ]);
-  return {questions:a.data||[],materials:b.data||[],videos:c.data||[]};
+  return {actions,questions:a.data||[],materials:b.data||[],videos:c.data||[]};
 }
 
 function v13OpenSearch(){
-  v13Modal('Busca universal','<div class="v13-search"><input id="v13SearchInput" autocomplete="off" placeholder="Busque assunto, questão ou material..."><div id="v13SearchResults"><div class="v13-empty">Digite pelo menos 2 caracteres.</div></div></div>');
+  v13Modal('Busca universal','<div class="v13-search"><input id="v13SearchInput" autocomplete="off" placeholder="Busque área, função, assunto, questão ou material..."><div id="v13SearchResults"><div class="v13-empty">Digite pelo menos 2 caracteres.</div></div></div>');
   const input=document.querySelector('#v13SearchInput'),out=document.querySelector('#v13SearchResults');
   let timer;
   input.focus();
@@ -25,10 +26,18 @@ function v13OpenSearch(){
       if(q.length<2){out.innerHTML='<div class="v13-empty">Digite pelo menos 2 caracteres.</div>';return}
       out.innerHTML='<div class="v13-empty">Buscando…</div>';
       const r=await v13Search(q),sections=[];
+      if(r.actions.length)sections.push('<section class="v13-search-actions"><span>ÁREAS E FUNÇÕES DO NEXO</span>'+r.actions.map(function(x){return '<button data-v13-action="'+v13E(x.actionId)+'"><b><i>'+v13E(x.icon||'→')+'</i>'+v13E(x.title)+'</b><small>'+v13E(x.meta||'Abrir função')+'</small></button>'}).join('')+'</section>');
       if(r.questions.length)sections.push('<section><span>QUESTÕES</span>'+r.questions.map(function(x){return '<button data-v13-q="'+x.id+'"><b>'+v13E(x.subject||x.area)+'</b><small>'+v13E(x.topic||'')+' · ENEM '+v13E(x.source_year||'')+'</small><p>'+v13E(String(x.prompt||'').slice(0,180))+'</p></button>'}).join('')+'</section>');
       if(r.materials.length)sections.push('<section><span>MATERIAIS</span>'+r.materials.map(function(x){return '<button data-v13-m="'+x.id+'"><b>'+v13E(x.title)+'</b><small>'+v13E(x.topic||x.subject||x.area||'')+'</small></button>'}).join('')+'</section>');
       if(r.videos.length)sections.push('<section><span>VIDEOAULAS</span>'+r.videos.map(function(x){return '<button data-v13-v="'+x.id+'"><b>'+v13E(x.title)+'</b><small>'+v13E(x.topic||x.subject||x.area||'')+'</small></button>'}).join('')+'</section>');
       out.innerHTML=sections.join('')||'<div class="v13-empty">Nenhum resultado encontrado.</div>';
+      out.querySelectorAll('[data-v13-action]').forEach(function(btn){
+        btn.onclick=function(){
+          const id=btn.dataset.v13Action;
+          v13Close();
+          if(typeof runSiteSearchAction==='function')runSiteSearchAction(id);
+        };
+      });
       out.querySelectorAll('[data-v13-q]').forEach(function(btn){
         btn.onclick=async function(){
           const res=await client.from('questions').select('id,area,subject,topic').eq('id',Number(btn.dataset.v13Q)).maybeSingle();
