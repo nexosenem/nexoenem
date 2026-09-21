@@ -1693,6 +1693,48 @@ function renderGlobalSearchResults(query){
     if(item.type==='essay'){openPage('redacao');if($('#essayAxis'))$('#essayAxis').value=item.axis;renderEssayThemeOptions({keepSelection:false});if($('#essayTheme'))$('#essayTheme').value=String(item.themeId);updateEssayPrompt();$('#essayText')?.focus();}
   });
 }
+function nexoPercentTone(value){
+  const n=Number(value);
+  if(!Number.isFinite(n)||n<0||n>100)return '';
+  if(n<=39)return 'low';
+  if(n<=79)return 'mid';
+  return 'high';
+}
+function nexoApplyPercentTones(root=document){
+  const scope=root?.querySelectorAll?root:document;
+  const selector='b,strong,em,span,small,.focus-score,.weak-row b,.donut b,.v13-stats b,.v13-mastery-grid strong,.study-report-score b,.study-report-metrics b';
+  const nodes=scope.querySelectorAll(selector);
+  nodes.forEach(el=>{
+    if(el.closest('style,script'))return;
+    const text=String(el.textContent||'').replace(/\s+/g,' ').trim();
+    const matches=[...text.matchAll(/(-?\d{1,3}(?:[.,]\d+)?)\s*%/g)];
+    el.classList.remove('nexo-score-low','nexo-score-mid','nexo-score-high');
+    delete el.dataset.scoreTone;
+    if(matches.length!==1||text.length>56)return;
+    const value=Number(matches[0][1].replace(',','.'));
+    const tone=nexoPercentTone(value);
+    if(!tone)return;
+    el.classList.add('nexo-score-'+tone);
+    el.dataset.scoreTone=tone;
+  });
+}
+let nexoPercentToneQueued=false;
+function scheduleNexoPercentTones(){
+  if(nexoPercentToneQueued)return;
+  nexoPercentToneQueued=true;
+  requestAnimationFrame(()=>{
+    nexoPercentToneQueued=false;
+    nexoApplyPercentTones(document.querySelector('.page.active')||document);
+    nexoApplyPercentTones(document.querySelector('#niaPanel')||document.createElement('div'));
+    nexoApplyPercentTones(document.querySelector('#v13Modal')||document.createElement('div'));
+  });
+}
+const nexoPercentObserver=new MutationObserver(scheduleNexoPercentTones);
+nexoPercentObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
+scheduleNexoPercentTones();
+window.nexoApplyPercentTones=nexoApplyPercentTones;
+window.nexoPercentTone=nexoPercentTone;
+
 let globalSearchTimer=null;
 globalSearch.addEventListener('input',e=>{
   clearTimeout(globalSearchTimer);
