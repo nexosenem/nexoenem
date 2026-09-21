@@ -111,12 +111,34 @@ async function browserProfile(browser,base,name,viewport){
       supabaseGlobal:false,
       pdfjsGlobal:false,
       screenVisible:false,
-      wiringError:null
+      wiringError:null,
+      siteSearch:false,
+      searchSamples:[],
+      percentTones:false,
+      percentToneMap:[]
     };
     try{
       result.supabaseGlobal=Boolean(window.supabase?.createClient);
       result.pdfjsGlobal=Boolean(window.pdfjsLib);
       result.sharedState=typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13;
+      const queries=['perfil de evolução','professor nexo','caderno de erros','simulado','radar enem'];
+      result.searchSamples=queries.map(q=>({
+        q,
+        items:typeof buildGlobalSearchResults==='function'
+          ? buildGlobalSearchResults(q).filter(x=>x.type==='action').map(x=>x.actionId)
+          : []
+      }));
+      result.siteSearch=result.searchSamples.every(x=>x.items.length>0)&&typeof runSiteSearchAction==='function';
+      const toneHost=document.createElement('div');
+      toneHost.innerHTML='<b>39%</b><b>40%</b><b>79%</b><b>80%</b><b>100%</b>';
+      document.body.appendChild(toneHost);
+      if(typeof window.nexoApplyPercentTones==='function')window.nexoApplyPercentTones(toneHost);
+      result.percentToneMap=[...toneHost.querySelectorAll('b')].map(el=>({
+        text:el.textContent,
+        tone:el.dataset.scoreTone||''
+      }));
+      result.percentTones=JSON.stringify(result.percentToneMap.map(x=>x.tone))===JSON.stringify(['low','mid','mid','high','high']);
+      toneHost.remove();
       result.wrappers.render=typeof window.renderQuestion==='function'&&/mountConfidence/.test(String(window.renderQuestion));
       result.wrappers.submit=typeof window.submitAnswer==='function'&&/v13State/.test(String(window.submitAnswer));
       result.wrappers.essay=typeof window.essayScores==='function'&&/rubric/.test(String(window.essayScores));
@@ -142,7 +164,9 @@ async function browserProfile(browser,base,name,viewport){
     v13Core:typeof window.v13State==='function',
     sharedState:typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13,
     renderWrapped:typeof window.renderQuestion==='function'&&/mountConfidence/.test(String(window.renderQuestion)),
-    submitWrapped:typeof window.submitAnswer==='function'&&/v13State/.test(String(window.submitAnswer))
+    submitWrapped:typeof window.submitAnswer==='function'&&/v13State/.test(String(window.submitAnswer)),
+    siteSearch:typeof buildGlobalSearchResults==='function'&&typeof runSiteSearchAction==='function',
+    percentTones:typeof window.nexoApplyPercentTones==='function'
   }));
 
   const failures=[];
@@ -159,7 +183,9 @@ async function browserProfile(browser,base,name,viewport){
     if(!closeTest.button)failures.push('botão X do guia de contexto não existe');
     if(!closeTest.dismissed)failures.push('botão X não fechou o guia de contexto');
   }
-  if(!first.supabaseGlobal)failures.push('SDK Supabase não carregou');
+  if(!first.siteSearch)failures.push('pesquisa interna do deploy público não encontrou todas as ações esperadas: '+JSON.stringify(first.searchSamples));
+  if(!first.percentTones)failures.push('faixas de porcentagem do deploy público incorretas: '+JSON.stringify(first.percentToneMap));
+    if(!first.supabaseGlobal)failures.push('SDK Supabase não carregou');
   if(!first.pdfjsGlobal)failures.push('PDF.js não carregou');
   if(!first.sharedState)failures.push('state/client não compartilhados');
   if(first.wiringError)failures.push('wiring: '+first.wiringError);
@@ -168,6 +194,7 @@ async function browserProfile(browser,base,name,viewport){
   if(!first.screenVisible)failures.push('nenhuma tela principal visível');
   if(first.duplicateIds.length)failures.push('IDs duplicados '+first.duplicateIds.join(','));
   if(!second.hardening||!second.v13Core||!second.sharedState||!second.renderWrapped||!second.submitWrapped)failures.push('reload/PWA perdeu wiring');
+  if(!second.siteSearch||!second.percentTones)failures.push('reload/PWA perdeu busca interna ou cores percentuais');
   const realErrors=[...new Set(pageErrors.filter(x=>!/ResizeObserver loop/i.test(x)))];
   if(realErrors.length)failures.push('pageerror '+realErrors.join(' | '));
   if(badResponses.length)failures.push('HTTP ruim '+[...new Set(badResponses)].join(' | '));
