@@ -36,10 +36,13 @@ function v13ToggleFocus(){
 function v13Inject(){
   const home=document.querySelector('#inicio');if(home&&!document.querySelector('#v13Brief')){const x=document.createElement('section');x.id='v13Brief';x.className='panel v13-panel';home.insertBefore(x,home.children[1]||null)}
   const perf=document.querySelector('#desempenho');if(perf&&!document.querySelector('#v13Mastery')){const a=document.createElement('section');a.id='v13Mastery';a.className='panel v13-panel';const b=document.createElement('section');b.id='v13Weekly';b.className='panel v13-panel';perf.append(a,b)}
+  const week=document.querySelector('#semana');if(week&&!document.querySelector('#v13WeekRoute')){const w=document.createElement('section');w.id='v13WeekRoute';w.className='panel v13-panel';week.insertBefore(w,week.children[1]||null)}
   const admin=document.querySelector('#admin');if(admin&&!document.querySelector('#v13AdminQuality')){const a=document.createElement('section');a.id='v13AdminQuality';a.className='panel v13-panel';admin.append(a)}
   const q=document.querySelector('#questoes .page-head');if(q&&!document.querySelector('#v13FocusToggle')){const b=document.createElement('button');b.id='v13FocusToggle';b.className='outline-btn';b.textContent='◷ Modo foco';b.onclick=v13ToggleFocus;q.appendChild(b)}
 }
 async function v13Boot(){
-  if(!state?.user?.id)return false;v13Inject();await v13LoadPrefs();await Promise.all([v13LoadBrief(),v13LoadWeekly()]);await v13LoadAdminQuality();return true;
+  if(!state?.user?.id)return false;v13Inject();await v13LoadPrefs();await Promise.all([v13LoadBrief(),v13LoadWeekly()]);if(typeof v13RenderWeekRoute==='function')v13RenderWeekRoute();await v13LoadAdminQuality();return true;
 }
 document.addEventListener('DOMContentLoaded',()=>{let n=0;const t=setInterval(async()=>{n++;try{if(await v13Boot())clearInterval(t)}catch(e){console.warn('v13 boot',e)}if(n>30)clearInterval(t)},700)});
+
+document.addEventListener('click',e=>{const nav=e.target.closest?.('[data-page="semana"],[data-nav="semana"]');if(nav)setTimeout(()=>window.v13RenderWeekRoute?.(),100)});
