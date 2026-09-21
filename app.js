@@ -2624,7 +2624,7 @@ function contextPlanForPage(id=$('.page.active')?.id||'inicio'){
     return {where:'Biblioteca · '+(state.materialSubject||'conteúdos'),why:'Transformar prioridade em entendimento antes do treino',next:top?.topic||'Continuar matéria',action:()=>top?.topic?openLibraryTopic(top.subject||state.materialSubject,top.topic):null};
   }
   if(id==='desempenho'){
-    return {where:'Desempenho',why:'Descobrir onde seu próximo minuto rende mais',next:top?.topic||'Treinar prioridade',action:()=>top?.topic?startStudySession({mode:'core',area:top.area||'',subject:top.subject||'',topic:top.topic||'',radarTopic:top.topic||'',size:5,difficulty:'',visualOnly:false}):startAdaptive()};
+    return {where:'Desempenho',why:'Descobrir onde seu próximo minuto rende mais',next:top?.topic||'Treinar prioridade',action:()=>{if(top?.topic){openPage('questoes');return startStudySession({mode:'core',area:top.area||'',subject:top.subject||'',topic:top.topic||'',radarTopic:top.topic||'',size:5,difficulty:'',visualOnly:false})}return startAdaptive()}};
   }
   if(id==='redacao'){
     return {where:'Redação'+(essay?' · '+essay.trainer.code:''),why:essay?'Sua competência mais fraca merece um treino específico':'Construir histórico por competência',next:essay?'Treinar '+essay.trainer.code:'Escrever uma redação',action:()=>{if(essay){state.essayTrainingCompetency=essay.index;renderEssayIntelligenceV5();$('#essayCompetencyPlan')?.scrollIntoView({behavior:'smooth'})}else $('#essayText')?.focus()}};
@@ -5021,9 +5021,10 @@ async function loadErrorNotebook(){
   state.errorReviewIds=rows.map(x=>Number(x.question_id||x.question?.id)).filter(Boolean);
   el.innerHTML=rows.length?rows.map((item,index)=>{
     const q=item.question||{};
-    return '<article class="error-note-row"><span class="error-note-index">'+String(index+1).padStart(2,'0')+'</span><div><b>'+esc(q.topic||q.subject||'Questão ENEM')+'</b><small>'+esc(q.subject||q.area||'')+(q.source_year?' · ENEM '+esc(q.source_year):'')+(q.source_question_number?' · Q'+esc(q.source_question_number):'')+'</small></div><div class="error-note-actions"><button data-error-open="'+Number(item.question_id||q.id)+'">Refazer</button><button data-error-topic="'+esc(q.topic||'')+'" data-error-area="'+esc(q.area||'')+'" data-error-subject="'+esc(q.subject||'')+'">Treinar tema</button></div></article>';
+    return '<article class="error-note-row"><span class="error-note-index">'+String(index+1).padStart(2,'0')+'</span><div><b>'+esc(q.topic||q.subject||'Questão ENEM')+'</b><small>'+esc(q.subject||q.area||'')+(q.source_year?' · ENEM '+esc(q.source_year):'')+(q.source_question_number?' · Q'+esc(q.source_question_number):'')+'</small></div><div class="error-note-actions"><button data-error-open="'+Number(item.question_id||q.id)+'">Refazer</button><button data-error-note="'+Number(item.question_id||q.id)+'">Minha nota</button><button data-error-topic="'+esc(q.topic||'')+'" data-error-area="'+esc(q.area||'')+'" data-error-subject="'+esc(q.subject||'')+'">Treinar tema</button></div></article>';
   }).join(''):'<div class="journey-empty">Nenhum erro recente por aqui. Continue treinando para alimentar sua revisão inteligente.</div>';
-  $$('[data-error-open]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.errorOpen)));
+  $('[data-error-open]',el).forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.errorOpen)));
+  $('[data-error-note]',el).forEach(btn=>btn.onclick=()=>openQuestionNote(Number(btn.dataset.errorNote)));
   $$('[data-error-topic]',el).forEach(btn=>btn.onclick=async()=>{
     openPage('questoes');
     await startStudySession({mode:'review_topic',area:btn.dataset.errorArea||'',subject:btn.dataset.errorSubject||'',topic:btn.dataset.errorTopic||'',difficulty:'',visualOnly:false,size:6});
@@ -5175,6 +5176,8 @@ function renderV3Intelligence(){
 function buildRecommendationExplanation(){
   const saved=readPersistedStudySession();
   if(saved)return {title:'Continuar a sessão preserva seu contexto.',text:'Você já começou uma sessão e interromper agora criaria troca de contexto desnecessária.',factors:[['CONTINUIDADE','sessão em andamento'],['RESTANTE',Math.max(1,Number(saved.size||0)-Number(saved.index||0))+' questões'],['OBJETIVO',saved.topic||saved.subject||saved.area||'treino atual']]};
+  const dueQuestion=state.dueReviewItems?.[0];
+  if(dueQuestion)return {title:'Esta revisão chegou no intervalo certo.',text:'A questão original foi agendada após um erro anterior. O NEXO recomenda transferência primeiro e repetição depois.',factors:[['TEMA',dueQuestion.question?.topic||dueQuestion.topic||'revisão'],['LAPSOS',String(Number(dueQuestion.lapses||1))],['PRIORIDADE',String(Number(dueQuestion.priority||0))+'/100']]};
   const review=spacedReviewCandidate();
   if(review)return {title:'Este assunto chegou na hora de revisar.',text:'O intervalo de revisão venceu e uma sessão curta ajuda a proteger retenção.',factors:[['DOMÍNIO',Math.round(review.meta.score||0)+'%'],['INTERVALO',review.meta.intervalDays+' dia(s)'],['ÚLTIMO CONTATO',review.days+' dia(s) atrás']]};
   const rec=state.core?.recommended_action;
@@ -6332,6 +6335,7 @@ function renderNexoToday(){
     .filter(x=>Number(x.p.progress_percent||0)>0&&!x.p.completed)
     .sort((a,b)=>new Date(b.p.last_opened_at||0)-new Date(a.p.last_opened_at||0))[0];
   const review=spacedReviewCandidate();
+  const dueQuestion=state.dueReviewItems?.[0]||null;
   const rec=state.core?.recommended_action||null;
   const radarMath=(state.radarTopics||[]).filter(r=>r.area==='Matemática').sort((a,b)=>Number(b.nexo_priority_score||0)-Number(a.nexo_priority_score||0));
   const firstIncomplete=radarMath.find(r=>topicLearningMeta(r.topic,r.subject).key!=='mastered');
@@ -6357,6 +6361,12 @@ function renderNexoToday(){
     text='Faz '+phase.inactiveDays+' dias desde seu último estudo registrado. Não vou empilhar tarefas atrasadas: começamos pequeno e recalculamos a rota.';
     status='RETOMADA INTELIGENTE';time='~20 min';mood='acolhedor';
     action=()=>startRecoverySession();actionLabel='Retomar sem sobrecarga →';
+  }else if(dueQuestion){
+    const q=dueQuestion.question||{};
+    title='Revisão inteligente: '+(q.topic||dueQuestion.topic||'questão anterior')+'.';
+    text='Esta questão que você errou chegou ao intervalo certo. Primeiro tente uma parecida e depois volte à original.';
+    status='MEMÓRIA NEXO';time='~6 min';mood='serio';
+    action=()=>startSimilarQuestionById(Number(dueQuestion.question_id));actionLabel='Treinar uma parecida →';
   }else if(review){
     title='Hora de revisar '+review.item.topic+'.';
     text='Faz '+review.days+' dia(s) desde o último contato. Seu intervalo atual de revisão é '+review.meta.intervalDays+' dia(s).';
