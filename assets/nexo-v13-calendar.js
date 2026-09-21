@@ -36,7 +36,7 @@
     if(item.type==='essay'){openPage('redacao');toast('Rota aberta: pratique uma redação e foque na competência mais fraca.');return}
     if(item.type==='simulation'){openPage('simulados');toast('Rota aberta: escolha o simulado compatível com seu tempo.');return}
     if(item.type==='recall'&&item.topic){v13OpenRecall(item.topic.area||'',item.topic.subject||'',item.topic.topic||item.topic.subject||'');return}
-    if(item.type==='review'&&typeof startSmartReview==='function'){openPage('desempenho');startSmartReview();return}
+    if(item.type==='review'){openPage('desempenho');setTimeout(()=>document.querySelector('#startSmartReview')?.click(),80);return}
     const t=item.topic;
     openPage('questoes');
     if(t){await startStudySession({mode:'week_route',area:t.area||'',subject:t.subject||'',topic:t.topic||'',difficulty:'',visualOnly:false,size:item.minutes<=20?6:item.minutes<=35?10:15})}
