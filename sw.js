@@ -1,10 +1,21 @@
-const NEXO_CACHE='nexo-v8-20260921-3';
+const NEXO_CACHE='nexo-v13-20260921-2';
 const SHELL=[
   './',
   './index.html',
   './styles.css?v=20260921-1',
   './app.js?v=20260921-4',
   './assets/nexo-runtime-compat.js',
+  './assets/nexo-v13.css?v=20260921-2',
+  './assets/nexo-v13-core.js?v=20260921-2',
+  './assets/nexo-v13-planner.js?v=20260921-2',
+  './assets/nexo-v13-questions.js?v=20260921-2',
+  './assets/nexo-v13-essay.js?v=20260921-2',
+  './assets/nexo-v13-recall.js?v=20260921-2',
+  './assets/nexo-v13-content.js?v=20260921-2',
+  './assets/nexo-v13-repertoire.js?v=20260921-2',
+  './assets/nexo-v13-calendar.js?v=20260921-2',
+  './assets/nexo-v13-tutor.js?v=20260921-2',
+'./assets/nexo-v13-ui.js?v=20260921-2',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',

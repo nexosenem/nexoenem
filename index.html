@@ -13,6 +13,7 @@
   <meta name="description" content="NEXO ENEM — plataforma de estudos com acervo ENEM de 2009 a 2025, redação, desempenho e treino adaptativo.">
   <title>NEXO ENEM</title>
   <link rel="stylesheet" href="./styles.css?v=20260921-1">
+  <link rel="stylesheet" href="./assets/nexo-v13.css?v=20260921-2">
 </head>
 <body>
   <div id="boot" class="boot-screen">
@@ -1546,6 +1547,7 @@
       <div id="contentViewerBody" class="content-viewer-body"></div>
       <footer class="content-viewer-actions">
         <button id="viewerFavorite" class="outline-btn">☆ Favoritar</button>
+        <button id="viewerNote" class="outline-btn">✎ Anotar</button>
         <label id="viewerSpeedWrap" class="viewer-speed">Velocidade
           <select id="viewerSpeed">
             <option value="0.75">0.75x</option>
@@ -1621,6 +1623,9 @@
           <option value="texto">Texto ou enunciado com problema</option>
           <option value="alternativas">Alternativas duplicadas ou erradas</option>
           <option value="explicacao">Explicação precisa de revisão</option>
+          <option value="fonte">Fonte / ano / número incorreto</option>
+          <option value="corte_visual">Imagem ou gráfico cortado</option>
+          <option value="duplicada">Questão parece duplicada</option>
           <option value="outro">Outro problema</option>
         </select>
       </label>
@@ -1871,5 +1876,15 @@
   <script src="./assets/nexo-mascot.js?v=20260920-3"></script>
   <script src="./assets/nexo-runtime-compat.js?v=20260920-1"></script>
   <script src="./app.js?v=20260921-4"></script>
+  <script src="./assets/nexo-v13-core.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-planner.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-questions.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-essay.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-recall.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-content.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-repertoire.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-calendar.js?v=20260921-2"></script>
+  <script src="./assets/nexo-v13-tutor.js?v=20260921-2"></script>
+<script src="./assets/nexo-v13-ui.js?v=20260921-2"></script>
 </body>
 </html>

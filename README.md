@@ -21,6 +21,22 @@ Plataforma de estudos para o ENEM conectada a **Cloudflare + GitHub + Supabase**
 
 A antiga área de videoaulas está aposentada da navegação atual. O foco de conteúdo é **Aulas NEXO + PDFs/resumos + treino ligado às questões**.
 
+## Learning Engine V13
+
+A camada V13 adiciona ao fluxo atual, sem substituir o núcleo estável:
+
+- confiança antes da resposta (certeza, dúvida ou chute) e diagnóstico da causa do erro
+- antecipação da revisão espaçada quando o aluno demonstra incerteza, inclusive em acertos por chute
+- plano adaptativo de 15, 30 ou 60 minutos e rota autoajustável de 7 dias
+- mapa de domínio e relatório comparativo dos últimos 7 dias
+- recordação ativa/Feynman por tópico, usada como sinal adicional de prioridade
+- modos do Professor Nexo: socrático, simples, rigoroso, só pistas, revisão e prova
+- rubrica orientativa de redação V13 com sinais explicáveis de tema, argumentação, coesão e intervenção
+- auditoria contínua da qualidade das questões e integração automática de reportes de alunos
+- anotações persistentes por material/vídeo, preferências de acessibilidade, economia de dados e modo foco
+
+A camada adaptativa combina desempenho, tempo/comportamento, confiança e recordação ativa. Os sinais automáticos são explicáveis e não substituem correção humana quando a tarefa exige julgamento editorial.
+
 ## Qualidade do banco de questões
 
 Itens com menos de cinco alternativas utilizáveis ficam fora da rotação até serem recuperados a partir da fonte oficial. Eles não são apagados, para preservar rastreabilidade.
