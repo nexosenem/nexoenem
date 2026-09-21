@@ -9916,3 +9916,24 @@ body.light .nexo-context-bar b{color:#27364c}
 body.light .smart-review-row,body.light .long-range-plan-grid article,body.light .library-filter-deck select,body.light .essay-repertoire-list article,body.light .essay-argument-list article{background:#fff}
 body[data-contrast="high"] .panel,body[data-contrast="high"] .nexo-context-bar,body[data-contrast="high"] button{border-width:2px}
 body[data-motion="reduced"] *,body[data-motion="reduced"] *:before,body[data-motion="reduced"] *:after{animation-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important;transition-duration:.001ms!important}
+
+
+/* Mobile menu must cover context bar */
+@media(max-width:760px){
+  body.mobile-menu-open .nexo-context-bar,
+  .nexo-context-bar.menu-hidden{
+    display:none!important;
+  }
+
+  body.mobile-menu-open{
+    overflow:hidden;
+  }
+
+  body.mobile-menu-open .sidebar{
+    z-index:140!important;
+  }
+
+  body.mobile-menu-open #scrim{
+    z-index:130!important;
+  }
+}
