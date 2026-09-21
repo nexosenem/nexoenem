@@ -52,8 +52,8 @@ const missingV13Cache=expectedV13.filter(name=>!sw.includes(name));
 assert(missingV13Cache.length===0,'Todos os módulos V13 no PWA',missingV13Cache.join(', '));
 
 const order=[
-  index.indexOf('./app.js'),
   index.indexOf('nexo-v13-hardening.js'),
+  index.indexOf('./app.js'),
   index.indexOf('nexo-v13-core.js'),
   index.indexOf('nexo-v13-ui.js')
 ];
