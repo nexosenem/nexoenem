@@ -72,7 +72,7 @@
       if(root&&!root.querySelector('.v13-essay-disclaimer')){
         const d=document.createElement('div');d.className='v13-essay-disclaimer';
         d.innerHTML='<b>Correção orientativa V13</b><span>Use a análise para revisão e reescrita. A nota real do ENEM depende da banca oficial e pode divergir desta estimativa.</span>';
-        root.prepend(d);
+        root.prepend(d);const r=buildDetailedEssayReview(text,scores).v13||{};const diag=document.createElement('div');diag.className='v13-essay-diagnostics';diag.innerHTML='<span><b>'+Number(r.theme_match||0)+'%</b>Aderência ao tema</span><span><b>'+Number(r.causal_links||0)+'</b>Relações causais</span><span><b>'+Number(r.intervention_parts||0)+'/5</b>Intervenção</span><span><b>'+Number(r.avg_sentence||0)+'</b>Palavras/período</span>';d.after(diag);
       }
     };
   }
