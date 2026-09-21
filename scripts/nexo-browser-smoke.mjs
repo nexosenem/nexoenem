@@ -45,8 +45,26 @@ async function runProfile(browser,name,viewport){
       authVisible:!document.querySelector('#authScreen')?.classList.contains('hidden'),
       appVisible:!document.querySelector('#app')?.classList.contains('hidden'),
       duplicateIds:[],
-      serviceWorker:false
+      serviceWorker:false,
+      sharedState:false,
+      essayEngine:false,
+      wrappers:{render:false,submit:false,essay:false,tutor:false,notebook:false},
+      wiringError:null
     };
+    try{
+      result.sharedState=typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13;
+      result.wrappers.render=typeof window.renderQuestion==='function'&&/mountConfidence/.test(String(window.renderQuestion));
+      result.wrappers.submit=typeof window.submitAnswer==='function'&&/v13State/.test(String(window.submitAnswer));
+      result.wrappers.essay=typeof window.essayScores==='function'&&/rubric/.test(String(window.essayScores));
+      result.wrappers.tutor=typeof window.niaAnswer==='function'&&/v13State/.test(String(window.niaAnswer));
+      result.wrappers.notebook=typeof window.loadErrorNotebook==='function'&&/nexo_attempt_reflections/.test(String(window.loadErrorNotebook));
+      const sample=('A educação pública é essencial para a cidadania. Portanto, o Estado deve ampliar políticas de formação e acesso. '+
+        'Além disso, desigualdades sociais afetam oportunidades e exigem ações coordenadas. Por meio de programas permanentes, '+
+        'escolas e governos podem promover acompanhamento, formação docente e inclusão, a fim de reduzir barreiras e garantir direitos. ').repeat(4);
+      const scores=window.essayScores(sample);
+      result.essayEngine=Array.isArray(scores)&&scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200);
+    }catch(err){result.wiringError=String(err?.message||err);}
+
     const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
     result.duplicateIds=[...new Set(ids.filter((id,i)=>ids.indexOf(id)!==i))];
     if('serviceWorker' in navigator){
@@ -66,16 +84,24 @@ async function runProfile(browser,name,viewport){
   if(!first.authVisible&&!first.appVisible)failures.push(name+': nenhuma tela principal ficou visível');
   if(first.duplicateIds.length)failures.push(name+': IDs duplicados em runtime: '+first.duplicateIds.join(', '));
   if(!first.serviceWorker)failures.push(name+': Service Worker não ficou ativo');
+  if(first.wiringError)failures.push(name+': wiring V13 lançou erro: '+first.wiringError);
+  if(!first.sharedState)failures.push(name+': state/client não estão compartilhados com o V13');
+  if(!first.essayEngine)failures.push(name+': motor de redação V13 não respondeu com 5 competências válidas');
+  for(const [key,active] of Object.entries(first.wrappers))if(!active)failures.push(name+': wrapper V13 inativo: '+key);
 
   await load('reload');
 
   const second=await page.evaluate(()=>({
     hardening:typeof window.nexoRunProductionDiagnostics==='function',
     v13Core:typeof window.v13State==='function',
+    sharedState:typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13,
+    renderWrapped:typeof window.renderQuestion==='function'&&/mountConfidence/.test(String(window.renderQuestion)),
+    submitWrapped:typeof window.submitAnswer==='function'&&/v13State/.test(String(window.submitAnswer)),
     authVisible:!document.querySelector('#authScreen')?.classList.contains('hidden'),
     appVisible:!document.querySelector('#app')?.classList.contains('hidden')
   }));
   if(!second.hardening||!second.v13Core)failures.push(name+': módulos V13 falharam após reload/PWA');
+  if(!second.sharedState||!second.renderWrapped||!second.submitWrapped)failures.push(name+': wiring V13 falhou após reload/PWA');
   if(!second.authVisible&&!second.appVisible)failures.push(name+': boot falhou após reload/PWA');
 
   const benignPageErrors=[
