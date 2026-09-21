@@ -2807,6 +2807,7 @@ function openPage(id) {
   if (id==='admin') { loadAdmin(); loadAdminProductAnalytics(); }
   renderNexoContextBar(id);
   if(id==='semana')renderLongRangePlan();
+  if(typeof scheduleNexoPercentTones==='function')scheduleNexoPercentTones();
 }
 $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{
   e.preventDefault();
