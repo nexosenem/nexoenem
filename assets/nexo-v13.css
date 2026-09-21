@@ -43,3 +43,8 @@ html{font-size:calc(16px * var(--nexo-font-scale))}
 .v13-week-route span,.v13-week-route small{font-size:9px;color:var(--muted)}.v13-week-route b{font-size:12px;line-height:1.35}
 @media(max-width:980px){.v13-week-route{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:560px){.v13-week-route{grid-template-columns:1fr}.v13-week-route button{min-height:auto}}
+
+.v13-note-context{display:grid;gap:3px;padding:12px;border-radius:14px;background:rgba(99,230,255,.045);border:1px solid rgba(99,230,255,.12)}
+.v13-note-context span{font-size:9px;letter-spacing:.13em;color:var(--cyan,#63e6ff);font-weight:800}.v13-note-context b{font-size:14px}.v13-note-context small{font-size:10px;color:var(--muted)}
+#v13ContentNoteText{width:100%;resize:vertical;border-radius:14px;border:1px solid rgba(255,255,255,.1);background:rgba(0,0,0,.16);color:inherit;padding:12px;line-height:1.55}
+.v13-note-actions{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
