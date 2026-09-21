@@ -3354,6 +3354,54 @@ async function fetchQuestions(filters={}) {
   return rows.filter(x=>radarKeys.has(String(x.source_year)+'::'+String(x.source_question_number)));
 }
 
+async function fetchQuestionsResilient(filters={}){
+  const attempts=[];
+  const keys=new Set();
+  const add=(candidate,relaxed)=>{
+    const normalized={...candidate};
+    const key=JSON.stringify([
+      normalized.area||'',normalized.subject||'',normalized.topic||'',
+      normalized.radarTopic||'',normalized.fallbackTopic||'',
+      normalized.difficulty||'',Boolean(normalized.visualOnly)
+    ]);
+    if(keys.has(key))return;
+    keys.add(key);
+    attempts.push({filters:normalized,relaxed:[...relaxed]});
+  };
+
+  let current={...filters};
+  const relaxed=[];
+  add(current,relaxed);
+
+  if(current.visualOnly){
+    current={...current,visualOnly:false};
+    relaxed.push('somente questões visuais');
+    add(current,relaxed);
+  }
+  if(current.difficulty){
+    current={...current,difficulty:''};
+    relaxed.push('dificuldade');
+    add(current,relaxed);
+  }
+  if(current.radarTopic||current.topic){
+    current={...current,radarTopic:'',topic:'',fallbackTopic:''};
+    relaxed.push('tópico');
+    add(current,relaxed);
+  }
+  if(current.subject){
+    current={...current,subject:''};
+    relaxed.push('matéria');
+    add(current,relaxed);
+  }
+
+  for(const attempt of attempts){
+    const rows=await fetchQuestions(attempt.filters);
+    if(rows.length)return {rows,filters:attempt.filters,relaxed:attempt.relaxed};
+  }
+  return {rows:[],filters:{...filters},relaxed:[]};
+}
+
+
 $('#startSession').onclick=async()=>{
   if(!state.selectedArea) return toast('Escolha uma área antes de começar.','error');
   await startStudySession({
@@ -3439,7 +3487,7 @@ function renderExamRegisteredAnswer(option,duration){
   $('.question-mobile-actions')?.classList.add('answered');
 }
 
-async function startStudySession(config) {
+async function startStudySession(config={}) {
   if(blockMaintenance('questions'))return;
   if(['core','adaptive'].includes(config?.mode)&&blockMaintenance('core'))return;
   const btn=$('#startSession'); if(btn){btn.disabled=true;btn.textContent='Montando sessão...';}
@@ -3450,7 +3498,10 @@ async function startStudySession(config) {
     if(config?.mode==='core'&&planUsageReached('core'))return openNexoPlans('Você já usou a sessão NEXO Core disponível hoje no Free.');
     if(config?.mode==='arena'&&planUsageReached('arena'))return openNexoPlans('Você já usou sua entrada gratuita da Arena nesta semana.');
     if(state.session?.coreSessionId) await closeNexoSession('abandoned',state.session);
-    const all = await fetchQuestions(config);
+    const requestedConfig={...config};
+    const resolvedQuestions=await fetchQuestionsResilient(config);
+    const all=resolvedQuestions.rows;
+    const effectiveConfig={...config,...resolvedQuestions.filters};
     const seen = await getSeenIds();
     const requested=Math.max(1,Number(config.size||10));
     let fresh = shuffle(all.filter(x=>!seen.has(Number(x.id))));
@@ -3464,14 +3515,20 @@ async function startStudySession(config) {
     if(!fresh.length) throw new Error('Nenhuma questão encontrada com esses filtros.');
     const size=Math.min(requested,fresh.length);
     const queue=fresh.slice(0,size);
-    const coreSessionId=await beginNexoSession(config,queue.length);
-    state.session={...config,mode:config.mode||'manual',queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,examStartedAt:config.examMode?Date.now():null,paceAlerts:{},resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
-    logProductEvent('study_session_start',{mode:config.mode||'manual',area:config.area||null,subject:config.subject||null,topic:config.topic||null,size:queue.length,exam_mode:Boolean(config.examMode)},'questoes');
+    const coreSessionId=await beginNexoSession(effectiveConfig,queue.length);
+    state.session={...effectiveConfig,mode:effectiveConfig.mode||'manual',requestedConfig,filterFallbacks:resolvedQuestions.relaxed,queue,index:0,size:queue.length,reviewMode,coreSessionId,correctStreak:0,wrongStreak:0,answeredCount:0,examStartedAt:effectiveConfig.examMode?Date.now():null,paceAlerts:{},resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
+    logProductEvent('study_session_start',{mode:effectiveConfig.mode||'manual',area:effectiveConfig.area||null,subject:effectiveConfig.subject||null,topic:effectiveConfig.topic||null,requested_subject:requestedConfig.subject||null,requested_topic:requestedConfig.topic||null,filter_fallbacks:resolvedQuestions.relaxed,size:queue.length,exam_mode:Boolean(effectiveConfig.examMode)},'questoes');
     $('#sessionSetup').classList.add('hidden');
     $('#studyWorkspace').classList.remove('hidden');
-    $('#sessionAreaBadge').textContent=config.area||'Treino';
-    $('#sessionTitle').textContent=config.topic ? config.topic : (config.subject||config.area||'Sessão');
-    $('#sessionSubtitle').textContent=reviewMode?'Modo revisão: você já respondeu todas as questões novas deste filtro.':'Sua sessão está fixa neste conteúdo até você decidir trocar.';
+    $('#sessionAreaBadge').textContent=effectiveConfig.area||'Treino';
+    $('#sessionTitle').textContent=effectiveConfig.topic ? effectiveConfig.topic : (effectiveConfig.subject||effectiveConfig.area||'Sessão');
+    const sessionNotes=[];
+    if(resolvedQuestions.relaxed.length){
+      sessionNotes.push('O NEXO ampliou o recorte removendo '+resolvedQuestions.relaxed.join(', ')+' para encontrar questões válidas'+(effectiveConfig.area?' sem sair de '+effectiveConfig.area:'')+'.');
+    }
+    sessionNotes.push(reviewMode?'Modo revisão: você já respondeu todas as questões novas deste filtro.':'Sua sessão está fixa neste conteúdo até você decidir trocar.');
+    $('#sessionSubtitle').textContent=sessionNotes.join(' ');
+    if(resolvedQuestions.relaxed.length)toast('Ajustei o filtro para montar uma sessão válida sem sair da área escolhida.','info');
     updateStudyNavigation(state.session);
     persistStudySession();
     ensureExamClock();
