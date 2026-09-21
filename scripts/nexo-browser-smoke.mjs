@@ -84,6 +84,18 @@ async function runProfile(browser,name,viewport){
   if(!first.authVisible&&!first.appVisible)failures.push(name+': nenhuma tela principal ficou visível');
   if(first.duplicateIds.length)failures.push(name+': IDs duplicados em runtime: '+first.duplicateIds.join(', '));
   if(!first.serviceWorker)failures.push(name+': Service Worker não ficou ativo');
+  if(name==='mobile'){
+    const closeTest=await page.evaluate(()=>{
+      const bar=document.querySelector('#nexoContextBar');
+      const btn=document.querySelector('#contextClose');
+      if(!bar||!btn)return {button:Boolean(btn),dismissed:false};
+      bar.classList.remove('is-dismissed');
+      btn.click();
+      return {button:true,dismissed:bar.classList.contains('is-dismissed')&&getComputedStyle(bar).display==='none'};
+    });
+    if(!closeTest.button)failures.push(name+': botão X do guia de contexto não existe');
+    if(!closeTest.dismissed)failures.push(name+': botão X não fechou o guia de contexto');
+  }
   if(first.wiringError)failures.push(name+': wiring V13 lançou erro: '+first.wiringError);
   if(!first.sharedState)failures.push(name+': state/client não estão compartilhados com o V13');
   if(!first.essayEngine)failures.push(name+': motor de redação V13 não respondeu com 5 competências válidas');
