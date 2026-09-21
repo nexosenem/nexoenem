@@ -845,6 +845,8 @@ function buildTodayPlan(){
 
 function renderTodayPlan(){
   renderNexoCommandCenter();
+  renderLongRangePlan();
+  renderNexoContextBar($('.page.active')?.id||'inicio');
   const plan=buildTodayPlan();
   $$('[data-today-plan]').forEach(card=>{
     const total=card.querySelector('[data-today-total]');
@@ -876,6 +878,57 @@ function renderTodayPlan(){
   });
 }
 
+
+
+function phaseDistribution(phase){
+  if(phase.key==='eve')return {learn:5,review:45,questions:20,simulation:30};
+  if(phase.key==='final')return {learn:10,review:35,questions:25,simulation:30};
+  if(phase.key==='consolidate')return {learn:20,review:30,questions:35,simulation:15};
+  if(phase.key==='post')return {learn:0,review:20,questions:0,simulation:0};
+  return {learn:35,review:20,questions:35,simulation:10};
+}
+function renderLongRangePlan(){
+  const phase=studyPhaseMeta(),dist=phaseDistribution(phase);
+  if($('#studyPhaseLabel'))$('#studyPhaseLabel').textContent=phase.label;
+  if($('#studyPhaseDescription'))$('#studyPhaseDescription').textContent=phase.description+(phase.recovery?' Você ficou '+phase.inactiveDays+' dia(s) sem registro, então o plano reduz a carga de retomada.':'');
+  if($('#daysToEnem'))$('#daysToEnem').textContent=phase.days>0?phase.days:'—';
+  const grid=$('#longRangePlan');
+  if(grid)grid.innerHTML=[
+    ['Aprender',dist.learn,'conteúdo novo'],
+    ['Revisar',dist.review,'memória e erros'],
+    ['Questões',dist.questions,'aplicação'],
+    ['Simular',dist.simulation,'estratégia de prova']
+  ].map(x=>'<article><span>'+x[0]+'</span><strong>'+x[1]+'%</strong><i><em style="width:'+x[1]+'%"></em></i><small>'+x[2]+'</small></article>').join('');
+  $('#startRecoveryPlan')?.classList.toggle('hidden',!phase.recovery);
+}
+async function startTimedStudyMode(mode){
+  if(mode==='recovery')return startRecoverySession();
+  if(mode==='eve'){
+    openPage('simulados');
+    setTimeout(()=>document.querySelector('[data-sim-mode="sprint"]')?.click(),60);
+    return;
+  }
+  const top=buildPersonalRadar()[0]||state.core?.recommended_action||{};
+  const config={
+    mode:mode==='intensive'?'intensive':'quick30',
+    area:top.area||'',subject:top.subject||'',topic:top.topic||'',
+    radarTopic:top.topic||'',fallbackTopic:top.topic||'',
+    difficulty:'',visualOnly:false,size:mode==='intensive'?15:5
+  };
+  openPage('questoes');
+  await startStudySession(config);
+  if(state.session){
+    $('#sessionAreaBadge').textContent=mode==='intensive'?'INTENSIVO':'30 MIN';
+    $('#sessionTitle').textContent=top.topic||top.subject||top.area||'Plano NEXO';
+    $('#sessionSubtitle').textContent=mode==='intensive'
+      ?'Bloco maior para um dia de estudo forte. Pare se a qualidade cair.'
+      :'Sessão curta para caber na sua rotina sem perder continuidade.';
+  }
+}
+$('#studyMode30')?.addEventListener('click',()=>startTimedStudyMode('30'));
+$('#studyModeEve')?.addEventListener('click',()=>startTimedStudyMode('eve'));
+$('#studyModeIntensive')?.addEventListener('click',()=>startTimedStudyMode('intensive'));
+$('#startRecoveryPlan')?.addEventListener('click',()=>startTimedStudyMode('recovery'));
 
 function starterAvatarForBase(base='neutral'){
   const normalized=['masc','fem','neutral'].includes(base)?base:'neutral';
@@ -2208,6 +2261,7 @@ async function loadNexoWeekPlan({silent=true}={}){
   }
 }
 function renderNexoWeekPlan(){
+  renderLongRangePlan();
   const plan=state.weekPlan||{},tasks=Array.isArray(plan.tasks)?plan.tasks:[];
   const completed=Number(plan.completed||tasks.filter(t=>t.status==='completed').length||0);
   const total=Number(plan.total||tasks.length||7),pct=total?Math.round(completed*100/total):0;
@@ -2550,6 +2604,53 @@ function maintenanceModuleForPage(id){
   })[id]||null;
 }
 
+
+function contextPlanForPage(id=$('.page.active')?.id||'inicio'){
+  const saved=readPersistedStudySession();
+  const rec=state.core?.recommended_action||null;
+  const top=state.personalRadar?.[0]||buildPersonalRadar?.()?.[0]||null;
+  const essay=typeof essayPrioritySignal==='function'?essayPrioritySignal():null;
+  const phase=studyPhaseMeta();
+  if(id==='questoes'){
+    const topic=state.session?.topic||state.session?.subject||state.session?.area||'Questões';
+    return {
+      where:state.session?'Questões · '+topic:'Questões · montar sessão',
+      why:state.session?.examMode?'Treinar decisão e ritmo em condição de prova':state.session?'Aplicar o conteúdo e alimentar seu diagnóstico':'Escolher um recorte para treinar sem dispersão',
+      next:state.answered?'Próxima questão':state.session?'Responder com calma':'Montar sessão',
+      action:()=>state.answered?nextQuestion():state.session?$('#questionCard')?.scrollIntoView({behavior:'smooth'}):$('#sessionSetup')?.scrollIntoView({behavior:'smooth'})
+    };
+  }
+  if(id==='materiais'){
+    return {where:'Biblioteca · '+(state.materialSubject||'conteúdos'),why:'Transformar prioridade em entendimento antes do treino',next:top?.topic||'Continuar matéria',action:()=>top?.topic?openLibraryTopic(top.subject||state.materialSubject,top.topic):null};
+  }
+  if(id==='desempenho'){
+    return {where:'Desempenho',why:'Descobrir onde seu próximo minuto rende mais',next:top?.topic||'Treinar prioridade',action:()=>top?.topic?startStudySession({mode:'core',area:top.area||'',subject:top.subject||'',topic:top.topic||'',radarTopic:top.topic||'',size:5,difficulty:'',visualOnly:false}):startAdaptive()};
+  }
+  if(id==='redacao'){
+    return {where:'Redação'+(essay?' · '+essay.trainer.code:''),why:essay?'Sua competência mais fraca merece um treino específico':'Construir histórico por competência',next:essay?'Treinar '+essay.trainer.code:'Escrever uma redação',action:()=>{if(essay){state.essayTrainingCompetency=essay.index;renderEssayIntelligenceV5();$('#essayCompetencyPlan')?.scrollIntoView({behavior:'smooth'})}else $('#essayText')?.focus()}};
+  }
+  if(id==='simulados'){
+    return {where:'Simulados · '+phase.label,why:'Treinar conteúdo, ritmo e decisão juntos',next:phase.key==='eve'?'Sprint 5 questões':'Mini ENEM',action:()=>document.querySelector(phase.key==='eve'?'[data-sim-mode="sprint"]':'[data-sim-mode="mini"]')?.click()};
+  }
+  if(id==='semana'){
+    return {where:'Semana NEXO · '+phase.label,why:phase.description,next:phase.recovery?'Retomar leve':'Plano de hoje',action:()=>phase.recovery?startRecoverySession():startTimedStudyMode('30')};
+  }
+  if(id==='ranking'){
+    return {where:'NEXO Jornada',why:'Recompensar consistência e progresso real',next:'Missões de hoje',action:()=>setJourneyTab('missions')};
+  }
+  if(saved)return {where:'Início',why:'Preservar o contexto que você já começou',next:'Continuar sessão',action:()=>resumePersistedStudySession()};
+  if(rec)return {where:'Início · '+phase.label,why:rec.reason||'O Core cruzou seu desempenho e prioridade',next:rec.topic||rec.subject||'Treino recomendado',action:()=>startCoreRecommendation()};
+  return {where:'Início · '+phase.label,why:'Construir dados suficientes para personalizar sua rota',next:'Começar diagnóstico',action:()=>{openPage('questoes');resetSessionUI()}};
+}
+function renderNexoContextBar(id=$('.page.active')?.id||'inicio'){
+  const bar=$('#nexoContextBar');if(!bar)return;
+  const plan=contextPlanForPage(id);
+  if($('#contextWhere'))$('#contextWhere').textContent=plan.where;
+  if($('#contextWhy'))$('#contextWhy').textContent=plan.why;
+  if($('#contextNext'))$('#contextNext').textContent=plan.next;
+  const btn=$('#contextNextAction');
+  if(btn)btn.onclick=plan.action||(()=>{});
+}
 function openPage(id) {
   const featureByPage={desempenho:'v3_intelligence',simulados:'v4_exam_strategy',redacao:'v5_essay_intelligence',ranking:'v6_community'};
   const requiredFlag=featureByPage[id];
@@ -2584,6 +2685,8 @@ function openPage(id) {
   if (id==='ranking') loadNexoJourney();
   if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
   if (id==='admin') { loadAdmin(); loadAdminProductAnalytics(); }
+  renderNexoContextBar(id);
+  if(id==='semana')renderLongRangePlan();
 }
 $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{
   e.preventDefault();
@@ -3435,6 +3538,7 @@ async function showCurrentQuestion() {
   $('#sessionProgress').style.width=`${Math.round((state.session.index/state.session.size)*100)}%`;
   $('#questionCard').innerHTML='<div class="question-loading"><div class="pulse-block"></div><div class="pulse-line"></div><div class="pulse-line short"></div></div>';
   renderQuestion(state.current);
+  renderNexoContextBar('questoes');
 }
 
 function localMediaPath(q){
@@ -6565,6 +6669,19 @@ $('#viewerCheckpoint')?.addEventListener('click',()=>{
   const v=state.activeViewer;
   if(v?.type==='material'&&v.item)startContentPractice(v.item,true,2);
 });
+$('#viewerAskNexo')?.addEventListener('click',()=>{
+  const v=state.activeViewer;if(!v?.item)return;
+  let selected='';
+  try{
+    const frame=$('#contentViewerBody iframe');
+    selected=String(frame?.contentWindow?.getSelection?.()?.toString?.()||'').trim().slice(0,900);
+  }catch(_){}
+  const topic=v.item.topic||v.item.subject||v.item.title||'este conteúdo';
+  const prompt=selected
+    ? 'Estou estudando '+topic+'. Explique este trecho em linguagem simples, dê um exemplo no estilo ENEM e termine com uma pergunta curta para eu conferir se entendi. Trecho: “'+selected+'”'
+    : 'Estou estudando '+topic+'. Me explique o ponto central em linguagem simples, dê um exemplo no estilo ENEM, um erro comum e uma pergunta curta de checagem. Não entregue respostas de uma questão que eu ainda não respondi.';
+  openProfessorNexo(prompt);
+});
 
 async function loadVideos({silent=false}={}) {
   const grid=$('#videoGrid');
@@ -6680,6 +6797,10 @@ function materialSequence(item){
 function renderMaterials(){
   const search=($('#materialSearch')?.value||'').toLocaleLowerCase('pt-BR').trim();
   const favoritesOnly=$('#materialFavoritesOnly')?.classList.contains('active');
+  const statusFilter=$('#materialStatusFilter')?.value||'';
+  const typeFilter=$('#materialTypeFilter')?.value||'';
+  const priorityFilter=$('#materialPriorityFilter')?.value||'';
+  const quickFive=Boolean(state.libraryQuickFive);
   const all=state.materials||[];
   const subjects=[...new Set(all.map(m=>m.subject||m.area).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'pt-BR'));
   if(!state.materialSubject||!subjects.includes(state.materialSubject))state.materialSubject=subjects[0]||'';
@@ -6700,7 +6821,16 @@ function renderMaterials(){
   const subjectItems=all
     .filter(m=>(m.subject||m.area)===state.materialSubject)
     .filter(m=>(!search||[m.title,m.area,m.subject,m.topic,m.description].filter(Boolean).join(' ').toLocaleLowerCase('pt-BR').includes(search)))
-    .filter(m=>!favoritesOnly||favoriteContent('material',m.id));
+    .filter(m=>!favoritesOnly||favoriteContent('material',m.id))
+    .filter(m=>!statusFilter||topicLearningMeta(m.topic,m.subject).key===statusFilter)
+    .filter(m=>!typeFilter||materialKind(m).key===typeFilter)
+    .filter(m=>{
+      if(!priorityFilter)return true;
+      const radar=materialRadarMeta(m);
+      if(priorityFilter==='transversal')return Boolean(radar?.transversal);
+      return Number(radar?.score||0)>=60;
+    })
+    .filter(m=>!quickFive||['summary','tips'].includes(materialKind(m).key));
 
   const grid=$('#materialGrid');
   if(!grid)return;
@@ -6790,6 +6920,26 @@ function renderMaterials(){
 }
 $('#materialSearch')?.addEventListener('input',renderMaterials);
 $('#materialFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active');renderMaterials()});
+$('#materialStatusFilter')?.addEventListener('change',renderMaterials);
+$('#materialTypeFilter')?.addEventListener('change',renderMaterials);
+$('#materialPriorityFilter')?.addEventListener('change',renderMaterials);
+$('#materialQuickFive')?.addEventListener('click',e=>{
+  state.libraryQuickFive=!state.libraryQuickFive;
+  e.currentTarget.classList.toggle('active',state.libraryQuickFive);
+  e.currentTarget.textContent=state.libraryQuickFive?'✓ Modo 5 min':'⚡ Tenho 5 min';
+  renderMaterials();
+});
+$('#materialClearFilters')?.addEventListener('click',()=>{
+  if($('#materialSearch'))$('#materialSearch').value='';
+  if($('#materialStatusFilter'))$('#materialStatusFilter').value='';
+  if($('#materialTypeFilter'))$('#materialTypeFilter').value='';
+  if($('#materialPriorityFilter'))$('#materialPriorityFilter').value='';
+  state.libraryQuickFive=false;
+  $('#materialQuickFive')?.classList.remove('active');
+  if($('#materialQuickFive'))$('#materialQuickFive').textContent='⚡ Tenho 5 min';
+  $('#materialFavoritesOnly')?.classList.remove('active');
+  renderMaterials();
+});
 
 function renderBank(){
   const search=$('#bankSearch').value.toLowerCase().trim(),area=$('#bankArea').value;
