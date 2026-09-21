@@ -2,6 +2,8 @@ import fs from 'node:fs';
 import { chromium } from 'playwright';
 
 const index=fs.readFileSync('index.html','utf8');
+const appSource=fs.readFileSync('app.js','utf8');
+const supabasePublishableKey=appSource.match(/const SUPABASE_KEY = '([^']+)'/)?.[1]||'';
 const expectedApp=index.match(/app\.js\?v=([^"]+)/)?.[1]||'';
 const expectedHardening=index.match(/nexo-v13-hardening\.js\?v=([^"]+)/)?.[1]||'';
 const envUrls=(process.env.NEXO_PUBLIC_URL||'').split(',').map(x=>x.trim()).filter(Boolean);
@@ -13,11 +15,11 @@ const candidates=[...new Set([
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const SUPABASE_HEALTH_URL='https://xeesttjsvscuqkeytmdz.supabase.co/auth/v1/health';
 
-async function fetchText(url,timeout=12000){
+async function fetchText(url,timeout=12000,extraHeaders={}){
   const ctl=new AbortController();
   const t=setTimeout(()=>ctl.abort(),timeout);
   try{
-    const res=await fetch(url,{cache:'no-store',headers:{'cache-control':'no-cache'},signal:ctl.signal,redirect:'follow'});
+    const res=await fetch(url,{cache:'no-store',headers:{'cache-control':'no-cache',...extraHeaders},signal:ctl.signal,redirect:'follow'});
     const text=await res.text();
     return {ok:res.ok,status:res.status,url:res.url,text,headers:Object.fromEntries(res.headers.entries())};
   }catch(err){
@@ -165,7 +167,7 @@ async function browserProfile(browser,base,name,viewport){
 
 const live=await discoverLive();
 const assetFailures=await verifyAssets(live.base,live.index.text);
-const supabaseHealth=await fetchText(SUPABASE_HEALTH_URL);
+const supabaseHealth=await fetchText(SUPABASE_HEALTH_URL,12000,supabasePublishableKey?{apikey:supabasePublishableKey}:{});
 if(!supabaseHealth.ok)assetFailures.push('Supabase health HTTP '+supabaseHealth.status);
 console.log('LIVE_URL='+live.base);
 console.log('APP_VERSION='+expectedApp);
