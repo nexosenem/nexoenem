@@ -1,0 +1,865 @@
+/* NEXO Minimal UI — 2026-09-21
+   Camada visual: mantém HTML, IDs, eventos e funcionalidades existentes.
+   Objetivo: reduzir ruído, preservar identidade roxo/azul e o mascote NEXO. */
+
+:root{
+  --sidebar:218px;
+  --radius:14px;
+  --panel:#0b1424;
+  --panel-2:#0d1829;
+  --line:rgba(137,151,188,.14);
+  --text:#f4f7ff;
+  --muted:#8d9bb2;
+  --cyan:#61dcff;
+  --purple:#7b61ff;
+  --nexo-surface:rgba(11,20,36,.82);
+  --nexo-surface-2:rgba(14,25,44,.72);
+  --nexo-border:rgba(132,146,181,.14);
+  --nexo-glow:0 16px 44px rgba(0,0,0,.18);
+}
+
+html{scroll-behavior:smooth}
+body{
+  background:
+    radial-gradient(circle at 78% -8%,rgba(91,72,220,.08),transparent 30%),
+    #060b14;
+}
+body.light{
+  --nexo-surface:rgba(255,255,255,.9);
+  --nexo-surface-2:rgba(247,249,253,.94);
+  --nexo-border:rgba(28,46,78,.1);
+  background:#f4f7fb;
+}
+
+/* Base: mais espaço útil, menos efeitos */
+.panel,
+.feature-card,
+.subject-card,
+.quick-option,
+.nexo-core-card,
+.nexo-today-live,
+.today-plan-card,
+.nexo-learning-trail,
+.nexo-week-card,
+.nexo-command-center,
+.mobile-study-card,
+.mobile-performance-card,
+.mobile-theme-card{
+  box-shadow:none!important;
+}
+
+.panel,
+.nexo-core-card,
+.nexo-today-live,
+.today-plan-card,
+.nexo-learning-trail,
+.nexo-week-card,
+.nexo-command-center,
+.mobile-study-card,
+.mobile-performance-card,
+.mobile-theme-card{
+  border-color:var(--nexo-border)!important;
+  background:var(--nexo-surface)!important;
+  backdrop-filter:blur(14px);
+}
+
+button,.nav-item,.feature-card,.subject-card,.quick-option{
+  -webkit-tap-highlight-color:transparent;
+}
+button:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible{
+  outline:2px solid rgba(99,214,255,.62);
+  outline-offset:2px;
+}
+
+/* Sidebar desktop */
+.sidebar{
+  width:var(--sidebar)!important;
+  padding:14px 11px 12px!important;
+  background:rgba(6,12,23,.96)!important;
+  border-right:1px solid rgba(128,143,180,.12)!important;
+  box-shadow:none!important;
+}
+.brand{padding:4px 8px 13px!important}
+.brand>span:last-child small{opacity:.62}
+.side-nav{
+  display:flex!important;
+  flex-direction:column;
+  gap:2px!important;
+  overflow-y:auto;
+  overscroll-behavior:contain;
+  padding-right:2px;
+  scrollbar-width:thin;
+}
+.nav-item{
+  min-height:36px;
+  padding:7px 9px!important;
+  border-radius:9px!important;
+  gap:9px!important;
+  font-size:11px!important;
+  letter-spacing:-.05px;
+}
+.nav-item span{
+  width:22px!important;
+  height:22px!important;
+  border:0!important;
+  border-radius:7px!important;
+  background:rgba(255,255,255,.035);
+  color:#aeb9cd!important;
+}
+.nav-item:hover{
+  transform:none!important;
+  background:rgba(255,255,255,.045)!important;
+}
+.nav-item.active{
+  background:rgba(113,87,255,.13)!important;
+  color:#f7f8ff!important;
+  box-shadow:inset 2px 0 0 #8067ff!important;
+}
+.nav-item.active span{
+  background:rgba(120,92,255,.18);
+  color:#dcd5ff!important;
+}
+.sidebar-quote{
+  padding:11px 9px!important;
+  border-color:rgba(122,96,255,.17)!important;
+  background:rgba(109,82,235,.055)!important;
+  box-shadow:none!important;
+  font-size:10px;
+  line-height:1.35;
+}
+.sidebar-quote small{margin-top:7px!important;letter-spacing:2.5px!important;font-size:7px!important}
+.desktop-sidebar-toggle{
+  box-shadow:none!important;
+}
+
+/* Estrutura principal */
+.shell{margin-left:var(--sidebar)!important}
+.topbar{
+  height:66px!important;
+  padding:10px 18px!important;
+  gap:11px!important;
+  background:rgba(6,11,20,.84)!important;
+  border-bottom:1px solid rgba(126,140,175,.1)!important;
+  box-shadow:none!important;
+}
+body.light .topbar{background:rgba(249,251,254,.9)!important}
+.topbar-profile{
+  padding:3px 6px 3px 2px!important;
+  border-radius:10px;
+}
+.avatar{
+  width:36px!important;
+  height:36px!important;
+  border-width:1px!important;
+}
+.profile-copy b{font-size:11px!important}
+.profile-copy small{font-size:8px!important}
+.search{
+  max-width:650px!important;
+  height:42px!important;
+  border-radius:11px!important;
+  padding:0 13px!important;
+  background:rgba(14,24,41,.66)!important;
+  border-color:rgba(132,146,180,.15)!important;
+  box-shadow:none!important;
+}
+.search:focus-within{
+  border-color:rgba(117,91,255,.48)!important;
+  background:rgba(15,26,45,.92)!important;
+}
+.search input{font-size:12px}
+.icon-btn{
+  width:38px!important;
+  height:38px!important;
+  border-radius:10px!important;
+  border-color:rgba(132,146,180,.13)!important;
+  background:rgba(14,24,41,.58)!important;
+  box-shadow:none!important;
+}
+.header-journey-pill{
+  min-height:40px!important;
+  border-color:rgba(131,108,247,.18)!important;
+  background:rgba(93,69,202,.07)!important;
+  box-shadow:none!important;
+}
+.header-journey-copy span{font-size:7px!important}
+.header-journey-copy b{font-size:9px!important}
+
+.nexo-context-bar{
+  min-height:38px!important;
+  margin:9px 18px 0!important;
+  padding:6px 10px!important;
+  border-radius:10px!important;
+  border-color:rgba(132,146,180,.1)!important;
+  background:rgba(9,17,30,.66)!important;
+  box-shadow:none!important;
+}
+.nexo-context-bar>div{min-width:0}
+.nexo-context-bar>div span{font-size:6.5px!important;letter-spacing:1px!important;opacity:.65}
+.nexo-context-bar>div b{
+  font-size:8.5px!important;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+#contextNextAction{
+  min-height:29px!important;
+  padding:6px 10px!important;
+  border-radius:8px!important;
+}
+
+main{padding:15px 18px 28px!important}
+.page-head{margin:4px auto 14px!important}
+.page-head h2{font-size:27px!important;letter-spacing:-.8px}
+
+/* Home desktop: hero mais limpo */
+.dashboard-grid{
+  max-width:1380px!important;
+  grid-template-columns:minmax(0,1fr) 286px!important;
+  gap:12px!important;
+}
+.hero-card{
+  min-height:264px!important;
+  border-radius:16px!important;
+  border-color:rgba(121,96,244,.24)!important;
+  background:
+    linear-gradient(90deg,rgba(8,14,27,.98),rgba(9,17,33,.95) 56%,rgba(17,20,53,.86))!important;
+  box-shadow:none!important;
+}
+.hero-card:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(90deg,transparent 46%,rgba(111,81,246,.045));
+}
+.hero-copy{padding:26px 30px!important}
+.hero-copy h1{
+  max-width:620px;
+  font-size:40px!important;
+  line-height:1.02!important;
+  letter-spacing:-1.7px!important;
+  margin:9px 0 10px!important;
+}
+.hero-copy h1 span{
+  background:linear-gradient(90deg,#b8aeff,#72d9ff);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+}
+.hero-copy p{
+  font-size:11.5px!important;
+  line-height:1.55!important;
+  color:#9aa9bf!important;
+  max-width:610px!important;
+}
+.hero-actions{gap:8px!important}
+.primary-btn,.outline-btn,.ghost-btn{
+  min-height:38px;
+  padding:9px 14px!important;
+  border-radius:10px!important;
+  font-size:10.5px!important;
+  box-shadow:none!important;
+}
+.primary-btn{
+  background:linear-gradient(135deg,#7157ff,#5b6fff)!important;
+  color:#fff!important;
+}
+.primary-btn:hover,.outline-btn:hover,.ghost-btn:hover{
+  transform:translateY(-1px)!important;
+}
+.outline-btn{
+  background:rgba(255,255,255,.025)!important;
+  border-color:rgba(124,104,237,.32)!important;
+}
+.hero-nexo-art{
+  background:
+    radial-gradient(circle at 60% 42%,rgba(87,85,255,.2),transparent 42%),
+    transparent!important;
+}
+.home-nexo-mascot{
+  filter:drop-shadow(0 18px 30px rgba(30,23,95,.34));
+}
+.hero-nexo-chip{
+  border-color:rgba(136,116,247,.22)!important;
+  background:rgba(7,12,25,.58)!important;
+  backdrop-filter:blur(10px);
+  box-shadow:none!important;
+}
+.hero-art blockquote{opacity:.74!important}
+
+/* Cards principais */
+.desktop-nexo-today,
+.desktop-today-plan,
+.desktop-learning-trail,
+.desktop-week-card,
+.desktop-command-center{
+  margin-top:10px!important;
+  padding:13px 14px!important;
+  border-radius:13px!important;
+}
+.nexo-today-professor img{box-shadow:none!important}
+.nexo-today-professor h3,
+.today-plan-head h3,
+.trail-head h3,
+.nexo-week-head h3,
+.command-head h3{
+  font-size:13px!important;
+  letter-spacing:-.2px;
+}
+.nexo-today-professor p,
+.today-plan-card>p,
+.nexo-week-card>p{
+  font-size:9px!important;
+  line-height:1.45!important;
+  color:var(--muted)!important;
+}
+.nexo-today-actions,
+.today-plan-card .primary-btn{
+  margin-top:8px!important;
+}
+
+/* Áreas do ENEM: mesma informação, menos blocos gritantes */
+.subject-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:9px!important;
+  margin-top:10px!important;
+}
+.subject-card{
+  min-height:92px!important;
+  padding:12px!important;
+  grid-template-columns:38px 1fr!important;
+  border:1px solid var(--nexo-border)!important;
+  background:var(--nexo-surface-2)!important;
+  box-shadow:none!important;
+}
+.subject-card:hover{
+  transform:translateY(-1px)!important;
+  border-color:rgba(117,93,237,.35)!important;
+  filter:none!important;
+}
+.subject-icon{
+  width:36px!important;
+  height:36px!important;
+  border-radius:10px!important;
+  font-size:16px!important;
+  background:rgba(115,91,236,.11)!important;
+}
+.subject-card div b{font-size:11px!important}
+.subject-card div small{font-size:8px!important;color:var(--muted)!important}
+.subject-card i{
+  display:none!important;
+}
+.subject-card.blue .subject-icon{color:#70d8ff}
+.subject-card.green .subject-icon{color:#71dfb5}
+.subject-card.purple .subject-icon{color:#b098ff}
+.subject-card.orange .subject-icon{color:#ffc278}
+
+/* Atalhos */
+.feature-grid{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:9px!important;
+  margin-top:9px!important;
+}
+.feature-card{
+  min-height:106px!important;
+  padding:12px!important;
+  border-radius:12px!important;
+  background:var(--nexo-surface)!important;
+}
+.feature-card>span{
+  width:34px!important;
+  height:34px!important;
+  border-radius:9px!important;
+  font-size:14px!important;
+  background:rgba(117,89,240,.12)!important;
+}
+.feature-card b{font-size:10.5px!important}
+.feature-card small{
+  font-size:8px!important;
+  line-height:1.42!important;
+  color:var(--muted)!important;
+}
+.feature-card i{
+  border:0!important;
+  padding:0!important;
+  text-align:left!important;
+  color:#9f91ff!important;
+  font-size:8px!important;
+}
+
+/* Parte inferior e lateral */
+.home-lower{
+  gap:9px!important;
+  margin-top:9px!important;
+}
+.home-lower .panel,
+.dashboard-side .panel{
+  padding:12px!important;
+  border-radius:12px!important;
+}
+.panel-title{margin-bottom:7px!important}
+.panel-title b{font-size:10px}
+.panel-title button{font-size:8px!important}
+.quick-panel p{font-size:9px!important}
+.quick-option{
+  margin-top:6px!important;
+  padding:8px!important;
+  border-radius:9px!important;
+  background:rgba(255,255,255,.02)!important;
+}
+.quick-option>span{
+  width:29px!important;
+  height:29px!important;
+  border-radius:8px!important;
+}
+.quick-option b{font-size:9px}
+.quick-option small{font-size:7.5px!important}
+.dashboard-side{gap:9px!important}
+.progress-panel,.weakness-panel{padding:13px!important}
+.progress-panel h3,.weakness-panel h3{font-size:11px!important;margin-bottom:10px!important}
+.progress-row{
+  grid-template-columns:90px 1fr!important;
+  gap:8px!important;
+}
+.donut{
+  width:82px!important;
+  height:82px!important;
+}
+.donut:after{inset:8px!important}
+.donut b{font-size:18px!important}
+.legend{gap:6px!important}
+.weak-row{
+  grid-template-columns:1fr 82px 32px!important;
+  margin:8px 0!important;
+}
+
+/* Demais páginas: mesma identidade e menos caixas pesadas */
+.question-card,
+.essay-editor,
+.essay-result,
+.performance-core-hero,
+.simulation-hero,
+.materials-hero,
+.radar-hero,
+.week-hero{
+  border-radius:14px!important;
+  box-shadow:none!important;
+}
+.question-card{padding:18px!important}
+.q-context,.essay-prompt{
+  background:rgba(255,255,255,.025)!important;
+  border-color:rgba(116,94,238,.5)!important;
+}
+.q-option{
+  border-radius:10px!important;
+  background:rgba(255,255,255,.02)!important;
+}
+.q-option:hover:not(:disabled){
+  transform:none!important;
+  background:rgba(111,86,235,.07)!important;
+}
+.global-search-results,
+.profile-menu,
+.v13-modal>section,
+.community-sheet,
+.guided-training-shell,
+.content-viewer-shell{
+  box-shadow:0 20px 60px rgba(0,0,0,.34)!important;
+  border-color:rgba(135,149,184,.16)!important;
+}
+
+/* Percentuais: baixa/vermelho, média/amarelo, alta/verde.
+   Classes podem ser aplicadas pelo JS; fallback mantém a cor atual. */
+.nexo-score-low{color:#ff7b82!important}
+.nexo-score-mid{color:#f4c95d!important}
+.nexo-score-high{color:#5ed6a5!important}
+
+/* Mobile */
+@media(max-width:760px){
+  :root{--radius:13px}
+
+  body{
+    background:
+      radial-gradient(circle at 90% 0,rgba(102,77,234,.08),transparent 34%),
+      #060b14!important;
+  }
+
+  .sidebar{width:min(300px,86vw)!important}
+  .shell{margin-left:0!important}
+
+  .topbar{
+    height:58px!important;
+    padding:8px 11px!important;
+    gap:8px!important;
+  }
+  .topbar-profile-slot{
+    flex:0 0 auto;
+  }
+  .topbar-profile .profile-copy,
+  .topbar-profile .profile-caret{
+    display:none!important;
+  }
+  .topbar-profile{padding:0!important}
+  .avatar{
+    width:34px!important;
+    height:34px!important;
+  }
+
+  /* Pesquisa continua visível e vira o centro da navegação */
+  .topbar .search{
+    display:flex!important;
+    order:2;
+    flex:1 1 auto!important;
+    min-width:0;
+    height:38px!important;
+    margin:0!important;
+    padding:0 10px!important;
+  }
+  .topbar .search input{
+    font-size:10px!important;
+    min-width:0;
+  }
+  .top-actions{
+    order:3;
+    gap:5px!important;
+  }
+  .top-actions .header-journey-pill{
+    display:none!important;
+  }
+  .top-actions .icon-btn{
+    width:34px!important;
+    height:34px!important;
+  }
+
+  .nexo-context-bar{
+    margin:6px 10px 0!important;
+    min-height:34px!important;
+    padding:5px 7px!important;
+    display:grid!important;
+    grid-template-columns:minmax(0,1fr) auto!important;
+    gap:7px!important;
+  }
+  .nexo-context-bar>div:nth-of-type(2),
+  .nexo-context-bar>div:nth-of-type(3){
+    display:none!important;
+  }
+  .nexo-context-bar>div:first-of-type b{
+    font-size:8px!important;
+  }
+  #contextNextAction{
+    min-height:27px!important;
+    font-size:8px!important;
+    padding:5px 8px!important;
+  }
+  .nexo-context-close{display:none!important}
+
+  main{
+    padding:9px 10px calc(84px + env(safe-area-inset-bottom))!important;
+  }
+  .mobile-home{
+    display:grid!important;
+    gap:9px!important;
+  }
+
+  .mobile-hero{
+    min-height:218px!important;
+    margin:0!important;
+    padding:17px 15px!important;
+    border:1px solid rgba(123,98,245,.22)!important;
+    border-radius:16px!important;
+    background:
+      radial-gradient(circle at 84% 24%,rgba(79,82,255,.16),transparent 35%),
+      linear-gradient(145deg,#091224,#0a1222)!important;
+    box-shadow:none!important;
+    overflow:hidden;
+  }
+  .mobile-hero .eyebrow{
+    font-size:7px!important;
+    letter-spacing:1.7px!important;
+  }
+  .mobile-hero h1{
+    font-size:27px!important;
+    line-height:1.04!important;
+    max-width:68%!important;
+    letter-spacing:-1px!important;
+    margin:8px 0!important;
+  }
+  .mobile-hero p{
+    max-width:61%!important;
+    font-size:9px!important;
+    line-height:1.45!important;
+    color:#91a0b7!important;
+  }
+  .mobile-hero>.primary-btn{
+    position:absolute;
+    left:15px;
+    bottom:14px;
+    z-index:5;
+    min-height:34px!important;
+    padding:7px 12px!important;
+  }
+  .mobile-nexo-stage{
+    right:-12px!important;
+    width:48%!important;
+  }
+  .mobile-nexo-stage img{
+    width:145px!important;
+    height:190px!important;
+    right:-4px!important;
+    bottom:0!important;
+    object-fit:cover!important;
+    object-position:center bottom!important;
+    filter:drop-shadow(0 18px 28px rgba(31,23,110,.32));
+  }
+  .nexo-float-chip{
+    opacity:.6!important;
+    font-size:6px!important;
+    padding:4px 6px!important;
+  }
+
+  /* Cada bloco passa a respirar como uma seção, sem card sobre card */
+  .mobile-nexo-today,
+  .mobile-core-card,
+  .mobile-today-plan,
+  .mobile-learning-trail,
+  .mobile-week-card,
+  .mobile-command-center,
+  .mobile-study-card,
+  .mobile-performance-card,
+  .mobile-theme-card{
+    margin:0!important;
+    padding:11px!important;
+    border-radius:12px!important;
+  }
+  .nexo-today-professor{
+    grid-template-columns:42px 1fr!important;
+    gap:8px!important;
+  }
+  .nexo-today-professor img{
+    width:42px!important;
+    height:42px!important;
+    border-radius:11px!important;
+  }
+  .nexo-today-professor h3,
+  .mobile-core-card h3,
+  .today-plan-head h3,
+  .trail-head h3,
+  .nexo-week-head h3,
+  .command-head h3,
+  .mobile-section-head h3{
+    font-size:11px!important;
+    line-height:1.25!important;
+  }
+  .nexo-today-professor p,
+  .mobile-core-card p,
+  .mobile-today-plan>p,
+  .mobile-week-card>p{
+    font-size:8px!important;
+    line-height:1.4!important;
+  }
+  .core-metrics,
+  .command-stats{
+    gap:5px!important;
+  }
+  .core-metrics span,
+  .command-stats span{
+    padding:7px!important;
+    border-radius:9px!important;
+    background:rgba(255,255,255,.02)!important;
+  }
+
+  .mobile-section{
+    margin:0!important;
+    padding:10px 0 0!important;
+  }
+  .mobile-section-head{
+    margin-bottom:7px!important;
+  }
+  .mobile-section-head .eyebrow{
+    font-size:6.5px!important;
+    letter-spacing:1.4px!important;
+  }
+
+  /* Áreas em uma faixa compacta, preservando as 4 */
+  .mobile-subject-grid{
+    display:grid!important;
+    grid-template-columns:1fr 1fr!important;
+    gap:7px!important;
+  }
+  .mobile-subject{
+    min-height:64px!important;
+    padding:9px!important;
+    grid-template-columns:31px 1fr!important;
+    border-radius:11px!important;
+  }
+  .mobile-subject .subject-icon{
+    width:31px!important;
+    height:31px!important;
+    font-size:13px!important;
+  }
+  .mobile-subject div b{font-size:9.5px!important}
+  .mobile-subject div small{font-size:7px!important}
+
+  /* Atalhos: 3 colunas de ícones, visual mais próximo de app */
+  .mobile-action-grid{
+    display:grid!important;
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  .mobile-action-grid>button{
+    min-height:86px!important;
+    padding:9px 7px!important;
+    display:flex!important;
+    flex-direction:column!important;
+    justify-content:center!important;
+    align-items:center!important;
+    gap:6px!important;
+    text-align:center!important;
+    border-radius:11px!important;
+    border:1px solid var(--nexo-border)!important;
+    background:var(--nexo-surface)!important;
+    box-shadow:none!important;
+  }
+  .mobile-action-grid>button>span{
+    width:34px!important;
+    height:34px!important;
+    border-radius:10px!important;
+    display:grid!important;
+    place-items:center!important;
+    background:rgba(116,89,239,.12)!important;
+    color:#bcb0ff!important;
+    font-size:15px!important;
+  }
+  .mobile-action-grid b{
+    font-size:8px!important;
+    line-height:1.2!important;
+  }
+  .mobile-action-grid small{
+    display:none!important;
+  }
+
+  .mobile-quick-row{gap:7px!important}
+  .mobile-quick-row>button{
+    min-height:54px!important;
+    padding:8px!important;
+    border-radius:10px!important;
+    box-shadow:none!important;
+  }
+
+  .mobile-performance-main{
+    gap:10px!important;
+  }
+  .mobile-donut{
+    width:74px!important;
+    height:74px!important;
+  }
+  .mobile-performance-stats{
+    gap:5px!important;
+  }
+  .mobile-performance-stats span{
+    padding:7px!important;
+    border-radius:9px!important;
+  }
+
+  .mobile-theme-card{
+    min-height:92px!important;
+  }
+
+  /* Barra inferior */
+  .mobile-bottom{
+    left:8px!important;
+    right:8px!important;
+    bottom:calc(8px + env(safe-area-inset-bottom))!important;
+    width:auto!important;
+    min-height:58px!important;
+    padding:5px 6px!important;
+    border:1px solid rgba(139,151,184,.15)!important;
+    border-radius:17px!important;
+    background:rgba(7,13,24,.9)!important;
+    backdrop-filter:blur(20px)!important;
+    box-shadow:0 14px 38px rgba(0,0,0,.28)!important;
+  }
+  .mobile-bottom button{
+    border-radius:11px!important;
+    min-height:46px!important;
+  }
+  .mobile-bottom button span{
+    font-size:15px!important;
+  }
+  .mobile-bottom button small{
+    font-size:6.8px!important;
+  }
+  .mobile-bottom button.active{
+    background:rgba(112,83,238,.13)!important;
+    color:#cfc6ff!important;
+  }
+
+  /* Páginas internas */
+  .page-head{
+    margin:3px 0 10px!important;
+    align-items:flex-start!important;
+  }
+  .page-head h2{font-size:22px!important}
+  .page-head p{font-size:9px!important;line-height:1.45}
+  .question-card{padding:12px!important}
+  .q-prompt{font-size:16px!important;line-height:1.55!important}
+  .q-option{
+    padding:10px!important;
+    gap:8px!important;
+  }
+  .q-option span{
+    width:27px!important;
+    height:27px!important;
+  }
+  .essay-layout{gap:9px!important}
+  .v13-search-button{
+    right:12px!important;
+    bottom:82px!important;
+    width:40px!important;
+    height:40px!important;
+    padding:0!important;
+    justify-content:center!important;
+    border-radius:12px!important;
+    box-shadow:none!important;
+  }
+}
+
+@media(min-width:761px) and (max-width:1100px){
+  :root{--sidebar:202px}
+  .dashboard-grid{grid-template-columns:1fr!important}
+  .dashboard-side{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  .hero-copy h1{font-size:35px!important}
+  .feature-grid,.subject-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+}
+
+/* Respeita preferências de experiência existentes */
+body[data-motion="reduced"] *,
+body.reduce-motion *{
+  transition-duration:.01ms!important;
+  animation-duration:.01ms!important;
+  animation-iteration-count:1!important;
+}
+
+body.light .panel,
+body.light .nexo-core-card,
+body.light .nexo-today-live,
+body.light .today-plan-card,
+body.light .nexo-learning-trail,
+body.light .nexo-week-card,
+body.light .nexo-command-center,
+body.light .mobile-study-card,
+body.light .mobile-performance-card,
+body.light .mobile-theme-card,
+body.light .feature-card,
+body.light .subject-card{
+  background:rgba(255,255,255,.94)!important;
+  border-color:rgba(35,53,86,.09)!important;
+}
+body.light .search{background:#fff!important}
+body.light .mobile-bottom{background:rgba(255,255,255,.92)!important}
