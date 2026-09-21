@@ -64,6 +64,23 @@
     return {paras:r.paras,words:r.words,connectors:r.connectors,intervention:r.interventionParts>=3,thesis:r.thesis>0,notes,v13:{theme_match:Math.round(r.themeMatch*100),causal_links:r.causal,avg_sentence:r.avgSentence,intervention_parts:r.interventionParts}};
   };
 
+  function paragraphSignals(text){
+    const paras=String(text||'').split(/\n\s*\n|\n{2,}/).map(x=>x.trim()).filter(Boolean);
+    return paras.map((p,i)=>{
+      const n=v13N(p),words=wordsOf(p).length,conn=uniqueHits(n,connectors),cause=countHits(n,causal),th=countHits(n,thesis);
+      const inter=[countHits(n,agents)>0,countHits(n,actions)>0,countHits(n,means)>0,countHits(n,goals)>0,countHits(n,details)>0].filter(Boolean).length;
+      const sentences=p.split(/[.!?]+/).map(x=>x.trim()).filter(Boolean);
+      const avg=sentences.length?Math.round(words/sentences.length):words;
+      let label='Desenvolvimento',note='';
+      if(i===0){label='Introdução';note=th?'Tese ou direcionamento argumentativo identificado.':'Deixe a tese e os eixos do desenvolvimento mais explícitos.'}
+      else if(i===paras.length-1){label='Conclusão';note=inter>=4?'Intervenção com boa cobertura de elementos.':'Confira agente, ação, meio, finalidade e detalhamento.'}
+      else{note=cause>=1?'Há explicação causal ou relação de consequência.':'Evite apenas afirmar: explique causa, mecanismo e consequência.'}
+      if(avg>32)note+=' Há períodos longos; considere dividi-los.';
+      if(conn===0&&i>0)note+=' A conexão com o parágrafo anterior pode ficar mais explícita.';
+      return {index:i+1,label,words,connectors:conn,causal:cause,intervention:inter,note};
+    });
+  }
+
   const oldShow=window.showEssayResult;
   if(typeof oldShow==='function'){
     window.showEssayResult=function(text,scores,total){
@@ -72,7 +89,7 @@
       if(root&&!root.querySelector('.v13-essay-disclaimer')){
         const d=document.createElement('div');d.className='v13-essay-disclaimer';
         d.innerHTML='<b>Correção orientativa V13</b><span>Use a análise para revisão e reescrita. A nota real do ENEM depende da banca oficial e pode divergir desta estimativa.</span>';
-        root.prepend(d);const r=buildDetailedEssayReview(text,scores).v13||{};const diag=document.createElement('div');diag.className='v13-essay-diagnostics';diag.innerHTML='<span><b>'+Number(r.theme_match||0)+'%</b>Aderência ao tema</span><span><b>'+Number(r.causal_links||0)+'</b>Relações causais</span><span><b>'+Number(r.intervention_parts||0)+'/5</b>Intervenção</span><span><b>'+Number(r.avg_sentence||0)+'</b>Palavras/período</span>';d.after(diag);
+        root.prepend(d);const r=buildDetailedEssayReview(text,scores).v13||{};const diag=document.createElement('div');diag.className='v13-essay-diagnostics';diag.innerHTML='<span><b>'+Number(r.theme_match||0)+'%</b>Aderência ao tema</span><span><b>'+Number(r.causal_links||0)+'</b>Relações causais</span><span><b>'+Number(r.intervention_parts||0)+'/5</b>Intervenção</span><span><b>'+Number(r.avg_sentence||0)+'</b>Palavras/período</span>';d.after(diag);const ps=paragraphSignals(text);if(ps.length){const pr=document.createElement('section');pr.className='v13-paragraph-review';pr.innerHTML='<div class="v13-section-head"><span>LEITURA POR PARÁGRAFO</span><small>diagnóstico estrutural</small></div>'+ps.map(x=>'<article><b>P'+x.index+' · '+v13E(x.label)+'</b><span>'+x.words+' palavras · '+x.connectors+' conectivo(s)</span><p>'+v13E(x.note)+'</p></article>').join('');diag.after(pr)};
       }
     };
   }
