@@ -12,7 +12,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 12
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,6 +24,12 @@ jobs:
 
       - name: Static production smoke
         run: node scripts/nexo-smoke.mjs
+
+      - name: Install Playwright
+        run: npm install --no-save --no-package-lock playwright@1.55.0
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
 
       - name: Serve static app
         run: |
@@ -39,3 +45,6 @@ jobs:
           curl --fail --silent --show-error http://127.0.0.1:4173/assets/nexo-v13-ui.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/assets/nexo-v13-search-errors.js >/dev/null
           curl --fail --silent --show-error http://127.0.0.1:4173/sw.js >/dev/null
+
+      - name: Browser runtime smoke
+        run: node scripts/nexo-browser-smoke.mjs
