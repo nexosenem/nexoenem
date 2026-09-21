@@ -43,7 +43,7 @@ function v13Inject(){
 async function v13Boot(){
   if(!state?.user?.id)return false;v13Inject();await v13LoadPrefs();await Promise.all([v13LoadBrief(),v13LoadWeekly()]);if(typeof v13RenderWeekRoute==='function')v13RenderWeekRoute();await v13LoadAdminQuality();return true;
 }
-document.addEventListener('DOMContentLoaded',()=>{let n=0;const t=setInterval(async()=>{n++;try{if(await v13Boot())clearInterval(t)}catch(e){console.warn('v13 boot',e)}if(n>30)clearInterval(t)},700)});
+document.addEventListener('DOMContentLoaded',()=>{let activeUser='',busy=false;setInterval(async()=>{const id=state?.user?.id||'';if(!id){activeUser='';return}if(id===activeUser||busy)return;busy=true;try{if(activeUser&&id!==activeUser)state.v13={confidence:null,prefs:null,mastery:[],brief:null,lastReflection:null};if(await v13Boot())activeUser=id}catch(e){console.warn('v13 boot',e)}finally{busy=false}},700)});
 
 document.addEventListener('click',e=>{const nav=e.target.closest?.('[data-page="semana"],[data-nav="semana"]');if(nav)setTimeout(()=>window.v13RenderWeekRoute?.(),100)});
 
