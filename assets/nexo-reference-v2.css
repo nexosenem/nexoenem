@@ -515,7 +515,7 @@ body.nexo-reference-ui .q-option:hover:not(:disabled){transform:none!important}
   .nrx-mobile-search-slot .search input{font-size:9.5px!important}
 
   /* Existing bottom bar replaced with the reference navigation. */
-  body.nexo-reference-ui .mobile-bottom{display:none!important}
+  body.nexo-reference-ui #app>.mobile-bottom{display:none!important}
   .nrx-bottom-nav{
     position:fixed;z-index:75;
     left:8px;right:8px;bottom:calc(7px + env(safe-area-inset-bottom));
@@ -554,3 +554,5 @@ body.light.nexo-reference-ui .nrx-mob-continue{
   background:#fff!important;border-color:rgba(42,55,81,.1)!important;
 }
 body.light.nexo-reference-ui .nrx-ring:after{background:#fff}
+
+.nrx-bottom-nav[hidden]{display:none!important}
