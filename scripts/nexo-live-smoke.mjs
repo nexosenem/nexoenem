@@ -113,6 +113,7 @@ async function browserProfile(browser,base,name,viewport){
       screenVisible:false,
       wiringError:null,
       siteSearch:false,
+      searchActionWorks:false,
       searchSamples:[],
       percentTones:false,
       percentToneMap:[]
@@ -129,6 +130,11 @@ async function browserProfile(browser,base,name,viewport){
           : []
       }));
       result.siteSearch=result.searchSamples.every(x=>x.items.length>0)&&typeof runSiteSearchAction==='function';
+      if(result.siteSearch){
+        runSiteSearchAction('evolucao');
+        result.searchActionWorks=Boolean(document.querySelector('#desempenho')?.classList.contains('active'));
+        if(typeof openPage==='function')openPage('inicio');
+      }
       const toneHost=document.createElement('div');
       toneHost.innerHTML='<b>39%</b><b>40%</b><b>79%</b><b>80%</b><b>100%</b>';
       document.body.appendChild(toneHost);
@@ -184,6 +190,7 @@ async function browserProfile(browser,base,name,viewport){
     if(!closeTest.dismissed)failures.push('botão X não fechou o guia de contexto');
   }
   if(!first.siteSearch)failures.push('pesquisa interna do deploy público não encontrou todas as ações esperadas: '+JSON.stringify(first.searchSamples));
+  if(!first.searchActionWorks)failures.push('ação pesquisada do deploy público não abriu Meu perfil de evolução');
   if(!first.percentTones)failures.push('faixas de porcentagem do deploy público incorretas: '+JSON.stringify(first.percentToneMap));
     if(!first.supabaseGlobal)failures.push('SDK Supabase não carregou');
   if(!first.pdfjsGlobal)failures.push('PDF.js não carregou');
