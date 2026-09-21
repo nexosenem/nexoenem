@@ -9937,3 +9937,20 @@ body[data-motion="reduced"] *,body[data-motion="reduced"] *:before,body[data-mot
     z-index:130!important;
   }
 }
+
+
+/* Auditoria 2026-09-21: recurso de videoaulas retirado do produto atual. */
+.retired-video-feature{display:none!important}
+
+/* A nota automática de redação é uma referência de treino, não correção oficial. */
+.essay-estimate-notice{
+  margin-top:14px;
+  max-width:720px;
+  padding:11px 13px;
+  border:1px solid color-mix(in srgb,var(--line) 72%,transparent);
+  border-radius:12px;
+  background:color-mix(in srgb,var(--surface-2) 86%,transparent);
+  font-size:.8rem;
+  line-height:1.45;
+  opacity:.86;
+}
