@@ -1190,18 +1190,27 @@ async function runProfile(browser,name,viewport){
         id:-812345,area:'Matemática',subject:'Matemática',topic:'Porcentagem',
         difficulty:2,source_year:2025,source_exam:'ENEM',source_question_number:77,
         source_reference:'',base_text:'',prompt:'Pergunta mock',options:['A','B','C','D','E'],
-        media_type:'',media_path:'',source_pdf_url:'',source_page:null,media_crop:null
+        media_type:'',media_path:'',source_pdf_url:'',source_page:null,media_crop:null,
+        has_visual:false,visual_status:'ready'
+      };
+      const brokenVisual={
+        ...fakeQuestion,id:-812347,source_question_number:79,
+        base_text:'Observe a imagem a seguir.',prompt:'De acordo com a imagem, responda.',
+        has_visual:true,visual_status:'repair'
       };
       state.questionMeta=[
         fakeQuestion,
-        {...fakeQuestion,id:-812346,area:'Linguagens',subject:'Português',topic:'Interpretação',source_question_number:78}
+        {...fakeQuestion,id:-812346,area:'Linguagens',subject:'Português',topic:'Interpretação',source_question_number:78},
+        brokenVisual
       ];
       window.showCurrentQuestion=async()=>{calls.singleQuestion++};
       client.from=(table)=>{
         if(table==='questions'){
+          let requestedId=null;
           const chain={
-            select(){return chain},eq(){return chain},
-            async single(){return {data:fakeQuestion,error:null}}
+            select(){return chain},
+            eq(column,value){if(column==='id')requestedId=Number(value);return chain},
+            async single(){return {data:requestedId===brokenVisual.id?brokenVisual:fakeQuestion,error:null}}
           };
           return chain;
         }
@@ -1226,12 +1235,19 @@ async function runProfile(browser,name,viewport){
       if(area){area.value='Matemática';area.dispatchEvent(new Event('change',{bubbles:true}))}
       await wait(20);
       const areaRows=[...document.querySelectorAll('#bankList [data-bank]')];
+      const repairVisible=Boolean(document.querySelector('#bankList [data-bank="'+brokenVisual.id+'"]'));
       areaRows[0]?.click();
       await wait(45);
+      const openedOk=Boolean(calls.singleQuestion===1&&active()==='questoes'&&Number(state.session?.queue?.[0]?.id)===fakeQuestion.id);
+      const beforeBroken=calls.singleQuestion;
+      await openSingleQuestion(brokenVisual.id);
+      await wait(25);
       result.bank={
         searchFiltered:searchRows.length===1&&Number(searchRows[0]?.dataset.bank)===fakeQuestion.id,
         areaFiltered:areaRows.length===1&&Number(areaRows[0]?.dataset.bank)===fakeQuestion.id,
-        opened:Boolean(calls.singleQuestion===1&&active()==='questoes'&&Number(state.session?.queue?.[0]?.id)===fakeQuestion.id)
+        repairHidden:!repairVisible,
+        repairRejected:calls.singleQuestion===beforeBroken,
+        opened:openedOk
       };
 
       if(typeof openPage==='function')openPage('feedback');
@@ -1267,7 +1283,7 @@ async function runProfile(browser,name,viewport){
   if(simBad.length||!moduleInteractionTest.simulations?.area)moduleInteractionFailures.push('simulados='+JSON.stringify(moduleInteractionTest.simulations));
   const plannerBad=(moduleInteractionTest.planner?.checks||[]).filter(x=>!x.called||x.route!=='questoes'||![5,15].includes(x.size));
   if(plannerBad.length||!moduleInteractionTest.planner?.eve)moduleInteractionFailures.push('planner='+JSON.stringify(moduleInteractionTest.planner));
-  if(!moduleInteractionTest.bank?.searchFiltered||!moduleInteractionTest.bank?.areaFiltered||!moduleInteractionTest.bank?.opened)moduleInteractionFailures.push('banco='+JSON.stringify(moduleInteractionTest.bank));
+  if(!moduleInteractionTest.bank?.searchFiltered||!moduleInteractionTest.bank?.areaFiltered||!moduleInteractionTest.bank?.repairHidden||!moduleInteractionTest.bank?.repairRejected||!moduleInteractionTest.bank?.opened)moduleInteractionFailures.push('banco='+JSON.stringify(moduleInteractionTest.bank));
   if(!moduleInteractionTest.feedback?.inserted||!moduleInteractionTest.feedback?.row||!moduleInteractionTest.feedback?.cleared||!moduleInteractionTest.feedback?.rendered)moduleInteractionFailures.push('feedback='+JSON.stringify(moduleInteractionTest.feedback));
   if(moduleInteractionFailures.length)failures.push(name+': interações reais de módulos falharam: '+moduleInteractionFailures.join(' | '));
 
