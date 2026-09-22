@@ -361,8 +361,11 @@ function buildReferenceProfileTools(){
 }
 function syncReferenceAccess(){
   const adminShortcut=$('#profileAdminShortcut');
-  const adminVisible=Boolean(adminShortcut&&!adminShortcut.classList.contains('hidden'));
-  $$('[data-nrx-admin-tool]').forEach(el=>el.classList.toggle('hidden',!adminVisible));
+  const hasProfile=typeof state!=='undefined'&&Boolean(state?.profile);
+  const adminVisible=hasProfile
+    ? state.profile.role==='admin'
+    : Boolean(adminShortcut&&!adminShortcut.classList.contains('hidden'));
+  $('[data-nrx-admin-tool]').forEach(el=>el.classList.toggle('hidden',!adminVisible));
 }
 function buildReferenceSidebar(){
   const sidebar=$('#sidebar');

@@ -570,18 +570,19 @@ async function runProfile(browser,name,viewport){
       profile:state.profile?{...state.profile}:null,
       shortcutClass:shortcut?.className||''
     };
+    const wait=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     if(app)app.classList.remove('hidden');
     if(auth)auth.classList.add('hidden');
 
     if(!state.profile)state.profile={role:'student'};
     state.profile.role='student';
     shortcut?.classList.add('hidden');
-    if(typeof syncReferenceAccess==='function')syncReferenceAccess();
+    await wait();
     const studentHidden=[...document.querySelectorAll('[data-nrx-admin-tool]')].every(el=>el.classList.contains('hidden'));
 
     state.profile.role='admin';
     shortcut?.classList.remove('hidden');
-    if(typeof syncReferenceAccess==='function')syncReferenceAccess();
+    await wait();
     const adminButtons=[...document.querySelectorAll('[data-nrx-admin-tool]')];
     const adminVisible=adminButtons.length>0&&adminButtons.some(el=>!el.classList.contains('hidden'));
     const button=adminButtons.find(el=>el.closest('.nrx-side-more-panel'))||adminButtons[0];
@@ -591,13 +592,17 @@ async function runProfile(browser,name,viewport){
 
     if(prev.profile)state.profile=prev.profile;else state.profile=null;
     if(shortcut)shortcut.className=prev.shortcutClass;
-    if(typeof syncReferenceAccess==='function')syncReferenceAccess();
-    const restoredHidden=[...document.querySelectorAll('[data-nrx-admin-tool]')].every(el=>el.classList.contains('hidden'));
+    await wait();
+    const restoredShouldShow=prev.profile?.role==='admin';
+    const restoredButtons=[...document.querySelectorAll('[data-nrx-admin-tool]')];
+    const restoredVisible=restoredButtons.some(el=>!el.classList.contains('hidden'));
+    const restoredOk=restoredShouldShow?restoredVisible:restoredButtons.every(el=>el.classList.contains('hidden'));
+
     pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
     if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
-    return {studentHidden,adminVisible,opened,restoredHidden,count:adminButtons.length};
+    return {studentHidden,adminVisible,opened,restoredOk,restoredShouldShow,count:adminButtons.length};
   });
-  if(!adminAccessTest.studentHidden||!adminAccessTest.adminVisible||!adminAccessTest.opened||!adminAccessTest.restoredHidden)
+  if(!adminAccessTest.studentHidden||!adminAccessTest.adminVisible||!adminAccessTest.opened||!adminAccessTest.restoredOk)
     failures.push(name+': permissão/acesso da Área do Admin regrediu: '+JSON.stringify(adminAccessTest));
 
   markStage('home-shortcuts');

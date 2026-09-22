@@ -9054,16 +9054,20 @@ setInterval(()=>{
 
 async function checkCloudinarySecurityStatus(){
   const el=$('#cloudinarySecurityStatus');
-  if(!el)return;
+  if(!el)return false;
   el.className='cloudinary-security-status checking';
   el.textContent='Verificando proteção dos uploads...';
-  const auth=await getCloudinaryUploadAuth();
-  if(auth){
+  try{
+    const auth=await getCloudinaryUploadAuth();
+    if(!auth)throw new Error('Assinatura indisponível.');
     el.className='cloudinary-security-status safe';
     el.textContent='✓ Upload assinado ativo — arquivos protegidos por autenticação de administrador.';
-  }else{
+    return true;
+  }catch(err){
+    console.warn('Cloudinary security status',err);
     el.className='cloudinary-security-status warning';
-    el.textContent='⚠ Upload assinado indisponível. Confira o CLOUDINARY_API_SECRET no Supabase antes de enviar arquivos.';
+    el.textContent='⚠ Upload assinado indisponível. Confira a configuração segura antes de enviar arquivos.';
+    return false;
   }
 }
 
