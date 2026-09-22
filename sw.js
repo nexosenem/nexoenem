@@ -1,15 +1,15 @@
-const NEXO_CACHE='nexo-v16-20260922-24';
+const NEXO_CACHE='nexo-v16-20260922-25';
 const SHELL=[
   './',
   './index.html',
   './manifest.webmanifest',
   './styles.css?v=20260921-4',
-  './app.js?v=20260922-7',
+  './app.js?v=20260922-8',
   './assets/nexo-runtime-compat.js?v=20260921-2',
   './assets/nexo-v13-hardening.js?v=20260921-2',
   './assets/nexo-v13.css?v=20260921-3',
   './assets/nexo-reference-v2.css?v=20260922-20',
-  './assets/nexo-v15-ui.css?v=20260922-4',
+  './assets/nexo-v15-ui.css?v=20260922-5',
   './assets/nexo-v13-core.js?v=20260921-2',
   './assets/nexo-v13-planner.js?v=20260921-2',
   './assets/nexo-v13-questions.js?v=20260921-2',
