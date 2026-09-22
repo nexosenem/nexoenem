@@ -410,8 +410,8 @@ function syncContinueCard(){
     title=recent.querySelector('b')?.textContent?.trim()||title;
     sub=recent.querySelector('small')?.textContent?.trim()||sub;
   }
-  $('[data-nrx-continue-title]').forEach(el=>el.textContent=title);
-  $('[data-nrx-continue-sub]').forEach(el=>el.textContent=sub);
+  $$('[data-nrx-continue-title]').forEach(el=>el.textContent=title);
+  $$('[data-nrx-continue-sub]').forEach(el=>el.textContent=sub);
 }
 function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncSideNav();syncBottom();placeSearch()}
 
