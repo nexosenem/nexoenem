@@ -241,6 +241,8 @@ async function runProfile(browser,name,viewport){
       overflow:document.documentElement.scrollWidth>innerWidth+3,
       bottomMounted:Boolean(bottom),
       bottomVisible:Boolean(bottom&&getComputedStyle(bottom).display!=='none'&&!bottom.hidden),
+      bottomLabels:bottom?[...bottom.querySelectorAll('small')].map(x=>x.textContent.trim()):[],
+      contextVisible:Boolean(document.querySelector('#nexoContextBar')&&getComputedStyle(document.querySelector('#nexoContextBar')).display!=='none'),
       searchInMobileSlot:Boolean(search?.closest('.nrx-mobile-search-slot')),
       heroLoaded:Boolean(heroImg?.complete&&heroImg?.naturalWidth>0),
       originalHomeHidden:[...document.querySelectorAll('#inicio>.mobile-home,#inicio>.dashboard-grid')].every(el=>getComputedStyle(el).display==='none')
@@ -258,6 +260,8 @@ async function runProfile(browser,name,viewport){
   if(referenceUiTest.overflow)failures.push(name+': interface de referência criou overflow horizontal');
   if(!referenceUiTest.originalHomeHidden)failures.push(name+': home antiga continua visível junto da referência');
   if(name==='mobile'&&!referenceUiTest.bottomVisible)failures.push(name+': barra inferior de referência não ficou visível');
+  if(name==='mobile'&&referenceUiTest.bottomLabels.join('|')!=='Início|Questões|Redação|Desempenho|Mais')failures.push(name+': barra inferior perdeu a navegação principal/área Mais: '+referenceUiTest.bottomLabels.join('|'));
+  if(!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto na referência');
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
 
@@ -274,7 +278,7 @@ async function runProfile(browser,name,viewport){
     pages.forEach(p=>p.classList.toggle('active',p.id==='inicio'));
     await new Promise(r=>requestAnimationFrame(r));
 
-    const expected=['focos','radar','banco','temas','feedback','ranking','planos'];
+    const expected=['materiais','simulados','semana','focos','radar','banco','temas','feedback','ranking','store','avatar','planos','nexo','settings'];
     const side=[...document.querySelectorAll('.nrx-side-more-panel [data-nrx-target]')].map(x=>x.dataset.nrxTarget);
     const profile=[...document.querySelectorAll('.nrx-profile-tools [data-nrx-target]')].map(x=>x.dataset.nrxTarget);
     const missingSide=expected.filter(x=>!side.includes(x));
@@ -286,6 +290,14 @@ async function runProfile(browser,name,viewport){
     const actionButtons=mobile?[...document.querySelectorAll('.nrx-mobile .nrx-mob-action')].filter(visible):[];
     const minTouch=actionButtons.length?Math.min(...actionButtons.map(el=>el.getBoundingClientRect().height)):0;
     const actionCount=actionButtons.length;
+    let moreOpened=true;
+    if(mobile){
+      document.querySelector('[data-nrx-bottom="more"]')?.click();
+      await new Promise(r=>setTimeout(r,20));
+      const sidebar=document.querySelector('#sidebar');
+      moreOpened=Boolean(document.body.classList.contains('mobile-menu-open')&&sidebar?.classList.contains('open'));
+      document.querySelector('#closeMenu')?.click();
+    }
     const hero=document.querySelector(mobile?'.nrx-mob-hero h1':'.nrx-hero h1');
     const heroFont=hero?parseFloat(getComputedStyle(hero).fontSize):0;
     const result={
@@ -293,7 +305,7 @@ async function runProfile(browser,name,viewport){
       moreToggle:Boolean(document.querySelector('.nrx-side-more-toggle')),
       profileTools:Boolean(document.querySelector('.nrx-profile-tools')),
       notificationWired:Boolean(document.querySelector('#notificationBtn')),
-      actionCount
+      actionCount,moreOpened
     };
     pages.forEach(p=>p.classList.toggle('active',prev.active.includes(p.id)));
     if(app)app.className=prev.app;
@@ -304,6 +316,7 @@ async function runProfile(browser,name,viewport){
   if(referenceAccessTest.missingProfile.length)failures.push(name+': recursos antigos ausentes do Perfil: '+referenceAccessTest.missingProfile.join(', '));
   if(!referenceAccessTest.moreToggle)failures.push(name+': acesso Mais recursos não foi montado');
   if(!referenceAccessTest.profileTools)failures.push(name+': recursos secundários não foram preservados no Perfil');
+  if(name==='mobile'&&!referenceAccessTest.moreOpened)failures.push(name+': botão Mais não abriu o menu completo');
   if(referenceAccessTest.overflowing.length)failures.push(name+': cards da referência com overflow: '+referenceAccessTest.overflowing.join(', '));
   if(name==='mobile'&&referenceAccessTest.actionCount<8)failures.push(name+': atalhos principais móveis ausentes: '+referenceAccessTest.actionCount+'/8');
   if(name==='mobile'&&referenceAccessTest.minTouch<44)failures.push(name+': alvo de toque principal menor que 44px');
