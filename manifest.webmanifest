@@ -1,10 +1,11 @@
 {
-  "name": "NEXO ENEM",
-  "short_name": "NEXO ENEM",
-  "description": "Plataforma de estudos para o ENEM",
+  "name": "Nexo — Estudos para o ENEM",
+  "short_name": "Nexo",
+  "description": "Plataforma de estudos para o ENEM com questões, redação, revisão e aprendizagem adaptativa.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#050914",
   "theme_color": "#070b18",
-  "orientation": "portrait-primary"
+  "orientation": "portrait-primary",
+  "scope": "/"
 }
