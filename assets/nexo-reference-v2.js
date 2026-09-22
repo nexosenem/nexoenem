@@ -547,7 +547,7 @@ function syncContinueCard(){
   $$('[data-nrx-continue-title]').forEach(el=>el.textContent=title);
   $$('[data-nrx-continue-sub]').forEach(el=>el.textContent=sub);
 }
-function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncSideNav();syncBottom();placeSearch()}
+function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncLegacyHomeTools();syncSideNav();syncBottom();placeSearch()}
 
 function observe(){
   const targets=['#profileName','#profileAdminShortcut','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#studyWorkspace','#inicio','#app'];
@@ -625,29 +625,53 @@ function buildReferenceInternalActions(){
   }
 }
 
+function clickLegacyHome(selector){
+  const target=$$(selector).find(el=>!el.closest?.('.nrx-home'));
+  target?.click();
+}
+function openReferenceContext(){
+  const bar=$('#nexoContextBar');
+  if(!bar)return;
+  bar.classList.remove('is-dismissed');
+  document.body.classList.add('nrx-context-open');
+  try{if(typeof renderNexoContextBar==='function')renderNexoContextBar($('.page.active')?.id||'inicio')}catch(_){}
+}
+function closeReferenceContext(){
+  document.body.classList.remove('nrx-context-open');
+}
+function syncLegacyHomeTools(){
+  const srcTitle=$$('[data-nexo-today-title]').find(el=>!el.closest?.('.nrx-home'))?.textContent?.trim();
+  const srcText=$$('[data-nexo-today-text]').find(el=>!el.closest?.('.nrx-home'))?.textContent?.trim();
+  $$('[data-nrx-home-now-title]').forEach(el=>el.textContent=srcTitle||'Seu próximo melhor passo');
+  $$('[data-nrx-home-now-text]').forEach(el=>el.textContent=srcText||'O NEXO está conectando seu conteúdo, treino e desempenho.');
+}
 function augmentProfileMenu(){
   const menu=$('#profileMenu');
   if(!menu||$('.nrx-profile-extra',menu))return;
-  const box=document.createElement('div');
+  const box=document.createElement('section');
   box.className='nrx-profile-extra';
+  box.innerHTML='<div class="nrx-profile-extra-head"><span>✦ NEXO HOJE</span><b data-nrx-home-now-title>Seu próximo melhor passo</b><small data-nrx-home-now-text>O NEXO está conectando seu conteúdo, treino e desempenho.</small></div><div class="nrx-profile-extra-grid"></div>';
+  const grid=$('.nrx-profile-extra-grid',box);
   const defs=[
-    ['◉','Radar ENEM',()=>go('radar')],
-    ['▦','Banco de Questões',()=>go('banco')],
-    ['▧','Temas de Redação',()=>go('temas')],
-    ['◌','Feedback',()=>go('feedback')],
-    ['✦','NEXO Jornada',()=>go('ranking')],
-    ['＋','Free & Plus',()=>go('planos')],
-    ['☾','Trocar tema',()=>$('#themeToggle')?.click()]
+    ['next','▶','Próximo passo',()=>clickLegacyHome('[data-nexo-today-action]')],
+    ['why','?','Por que isso?',()=>clickLegacyHome('[data-nexo-why]')],
+    ['core','✦','NEXO Core',()=>clickLegacyHome('[data-core-start]')],
+    ['today','▦','Plano de hoje',()=>clickLegacyHome('[data-today-start]')],
+    ['mission','▥','Missão NEXO',()=>clickLegacyHome('[data-command-start]')],
+    ['visual','◉','Questões visuais',()=>$('#quickVisual')?.click()],
+    ['ten','10','Sessão rápida',()=>$('#quickTen')?.click()],
+    ['guide','?','Guia da página',openReferenceContext]
   ];
-  defs.forEach(([icon,label,run])=>{
+  defs.forEach(([key,icon,label,run])=>{
     const b=document.createElement('button');
-    b.type='button';
-    b.innerHTML='<span>'+icon+'</span>'+label;
+    b.type='button';b.dataset.nrxHomeTool=key;
+    b.innerHTML='<span>'+icon+'</span><b>'+label+'</b>';
     b.addEventListener('click',()=>{menu.classList.add('hidden');run()});
-    box.appendChild(b);
+    grid.appendChild(b);
   });
   const logout=$('#logoutBtn',menu);
-  if(logout)menu.insertBefore(box,logout); else menu.appendChild(box);
+  if(logout)menu.insertBefore(box,logout);else menu.appendChild(box);
+  syncLegacyHomeTools();
 }
 
 function applyReferenceCopy(){
@@ -675,6 +699,9 @@ function applyReferenceCopy(){
     if(p)p.textContent='Escreva, corrija e evolua.';
   }
 }
+$('#contextClose')?.addEventListener('click',closeReferenceContext);
+document.addEventListener('keydown',e=>{if(e.key==='Escape')closeReferenceContext()});
+
 function init(){
   const home=$('#inicio');
   if(!home||$('.nrx-desktop',home))return;

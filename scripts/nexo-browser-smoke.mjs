@@ -255,6 +255,31 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&!utilityTest.notificationVisible)failures.push(name+': notificações continuam escondidas no topo móvel');
   if(name==='mobile'&&!utilityTest.profileScrollable)failures.push(name+': painel Perfil pode cortar recursos no celular');
 
+  const legacyCapabilityTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen'),profile=document.querySelector('#profileMenu');
+    const prev={app:app?.className||'',auth:auth?.className||'',profile:profile?.className||''};
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    if(profile)profile.classList.remove('hidden');
+    const expected=['next','why','core','today','mission','visual','ten','guide'];
+    const tools=[...document.querySelectorAll('[data-nrx-home-tool]')].map(x=>x.dataset.nrxHomeTool);
+    const missing=expected.filter(x=>!tools.includes(x));
+    const guide=document.querySelector('[data-nrx-home-tool="guide"]');
+    guide?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const context=document.querySelector('#nexoContextBar');
+    const contextVisible=Boolean(context&&getComputedStyle(context).display!=='none'&&context.getBoundingClientRect().width>0);
+    document.querySelector('#contextClose')?.click();
+    const contextClosed=!document.body.classList.contains('nrx-context-open');
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    if(profile)profile.className=prev.profile;
+    return {missing,contextVisible,contextClosed};
+  });
+  if(legacyCapabilityTest.missing.length)failures.push(name+': ações exclusivas da home antiga ficaram inacessíveis: '+legacyCapabilityTest.missing.join(', '));
+  if(!legacyCapabilityTest.contextVisible||!legacyCapabilityTest.contextClosed)failures.push(name+': guia contextual não abre/fecha corretamente na interface minimalista');
+
+
 
 
   if(!first.hardening)failures.push(name+': hardening não carregou');
@@ -386,7 +411,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   await context.close();
 }
 
