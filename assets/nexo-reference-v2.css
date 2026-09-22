@@ -764,3 +764,11 @@ body.light.nexo-reference-ui .nrx-side-account{
   border-color:rgba(94,73,191,.14);
   color:#172239;
 }
+
+/* Mobile header reference order */
+@media(max-width:760px){
+  .nrx-mobile-brand{order:1}
+  .nrx-mobile-crown{order:2;margin-left:auto}
+  body.nexo-reference-ui .top-actions{order:3!important;margin-left:0!important}
+  .nrx-mobile-menu{display:none!important}
+}
