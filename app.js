@@ -4090,12 +4090,23 @@ function likelyNeedsQuestionVisual(q){
   return subject==='artes'&&/\b(escultura|pintura|gravura|obra|museu|museum|acervo|instalacao)\b/.test(text);
 }
 function hasAccessibleVisualDescription(q){
-  const text=String([q?.base_text,q?.prompt].filter(Boolean).join(' ')).toLocaleLowerCase('pt-BR');
+  const raw=String([q?.base_text,q?.prompt].filter(Boolean).join('\n'));
+  const text=raw.toLocaleLowerCase('pt-BR');
   if(!text)return false;
   if(/descri[cç][aã]o acess[ií]vel/.test(text))return true;
   if(/representa[cç][aã]o (?:acess[ií]vel|textual)/.test(text))return true;
-  // Some imported official items transcribe all values of a table/graph into the
-  // statement. Keep only clearly data-rich descriptions as a non-image fallback.
+
+  // Some official imports fully transcribe tables/frames into the statement.
+  // Accept only strongly structured text: many line breaks plus a semantic table
+  // header. This keeps photographs, maps, diagrams and non-described charts blocked.
+  const lineBreaks=(raw.match(/\n/g)||[]).length;
+  const transcribedTable=/(tabela|quadro)/i.test(raw)
+    &&lineBreaks>=8
+    &&/(resultado|pre[cç]o|pot[eê]ncia|velocidade|etapa|processo|descri[cç][aã]o|cidade|aparelho|componente)/i.test(raw);
+  if(transcribedTable)return true;
+
+  // Data-rich graph/table descriptions can also be sufficient when all values are
+  // explicitly present in text.
   const numeric=(text.match(/\d+(?:[.,]\d+)?/g)||[]).length;
   return numeric>=6&&/(gr[aá]fico|tabela|quadro).{0,120}(apresenta|mostra|dados|valores|classifica|teste|resultado)/.test(text);
 }
