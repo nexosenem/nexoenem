@@ -8,7 +8,7 @@ const expectedApp=index.match(/app\.js\?v=([^"]+)/)?.[1]||'';
 const expectedHardening=index.match(/nexo-v13-hardening\.js\?v=([^"]+)/)?.[1]||'';
 const expectedReferenceJs=index.match(/nexo-reference-v2\.js\?v=([^"]+)/)?.[1]||'';
 const expectedReferenceCss=index.match(/nexo-reference-v2\.css\?v=([^"]+)/)?.[1]||'';
-const PUBLIC_PRODUCTION_URL='https://rarshein222.workers.dev/';
+const PUBLIC_PRODUCTION_URL='https://nexosenem.miguelcomprarshein222.workers.dev/';
 const candidates=[PUBLIC_PRODUCTION_URL];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const SUPABASE_HEALTH_URL='https://xeesttjsvscuqkeytmdz.supabase.co/auth/v1/health';
