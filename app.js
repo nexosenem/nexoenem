@@ -2529,6 +2529,85 @@ async function resolveQuestionIssue(id,status){
   loadAdminQuestionIssues();
 }
 
+function closeAdminExplanationModal(){
+  $('#adminExplanationModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+  state.adminExplanationTarget=null;
+}
+function openAdminExplanationModal(row){
+  if(state.profile?.role!=='admin'||!row)return;
+  state.adminExplanationTarget=row;
+  const modal=$('#adminExplanationModal');
+  if(!modal)return;
+  const meta=$('#adminExplanationQuestionMeta');
+  if(meta)meta.textContent=[
+    'ENEM '+(row.source_year||''),
+    'Q'+(row.source_question_number||row.question_id),
+    row.subject||row.area||'',
+    row.topic||''
+  ].filter(Boolean).join(' · ');
+  const text=$('#adminExplanationText');
+  if(text)text.value='';
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  setTimeout(()=>text?.focus(),40);
+}
+async function loadAdminExplanationQueue(){
+  if(state.profile?.role!=='admin')return;
+  const target=$('#adminExplanationQueue');if(!target)return;
+  try{
+    const {data,error}=await client.rpc('get_admin_explanation_queue',{p_limit:80});
+    if(error)throw error;
+    const rows=data||[];
+    if($('#adminExplanationCount'))$('#adminExplanationCount').textContent=rows.length+' pendente'+(rows.length===1?'':'s');
+    target.innerHTML=rows.length?rows.map(row=>{
+      const attempts=Number(row.attempts||0),wrong=Number(row.wrong||0),reports=Number(row.open_reports||0);
+      const errRate=attempts?Math.round((wrong/attempts)*100):0;
+      return `<div class="feedback-entry admin-editorial-row">
+        <span class="mini-avatar">✎</span>
+        <div>
+          <b>ENEM ${esc(row.source_year||'')} · Q${esc(row.source_question_number||row.question_id)} · ${esc(row.subject||row.area||'')}</b>
+          <p>${esc(row.topic||'Conteúdo em revisão')}</p>
+          <small>${attempts} tentativa${attempts===1?'':'s'} · ${errRate}% de erro${reports?' · '+reports+' reporte'+(reports===1?'':'s')+' de explicação':''}</small>
+          <div class="comment-actions">
+            <button data-editorial-open="${row.question_id}">Abrir questão</button>
+            <button data-editorial-write="${row.question_id}">Adicionar resolução</button>
+          </div>
+        </div>
+      </div>`;
+    }).join(''):'<p class="learning-empty">Todas as questões ativas possuem resolução editorial validada.</p>';
+    const byId=new Map(rows.map(row=>[Number(row.question_id),row]));
+    target.querySelectorAll('[data-editorial-open]').forEach(btn=>btn.onclick=()=>openSingleQuestion(Number(btn.dataset.editorialOpen)));
+    target.querySelectorAll('[data-editorial-write]').forEach(btn=>btn.onclick=()=>openAdminExplanationModal(byId.get(Number(btn.dataset.editorialWrite))));
+  }catch(err){
+    console.error('admin explanation queue',err);
+    target.innerHTML='<p class="learning-empty">Não foi possível carregar a fila editorial agora.</p>';
+  }
+}
+$('#closeAdminExplanation')?.addEventListener('click',closeAdminExplanationModal);
+$('#cancelAdminExplanation')?.addEventListener('click',closeAdminExplanationModal);
+$('#adminExplanationModal')?.addEventListener('click',e=>{if(e.target===$('#adminExplanationModal'))closeAdminExplanationModal()});
+$('#saveAdminExplanation')?.addEventListener('click',async()=>{
+  const row=state.adminExplanationTarget;
+  const text=$('#adminExplanationText')?.value?.trim()||'';
+  const btn=$('#saveAdminExplanation');
+  if(!row)return;
+  if(text.length<40)return toast('Escreva uma resolução editorial mais completa antes de salvar.','error');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    const {error}=await client.rpc('admin_set_question_explanation',{p_question_id:Number(row.question_id),p_explanation:text});
+    if(error)throw error;
+    closeAdminExplanationModal();
+    toast('Resolução editorial validada e publicada.');
+    await loadAdminExplanationQueue();
+  }catch(err){
+    console.error('save editorial explanation',err);
+    toast('Não foi possível salvar a resolução editorial.','error');
+  }finally{
+    btn.disabled=false;btn.textContent='Salvar resolução validada';
+  }
+});
+
 
 
 async function loadAdminProductAnalytics(){
@@ -4645,11 +4724,13 @@ function buildAnswerExplanation(q,data,selected){
       ? `Você marcou ${'ABCDE'[selected]} (“${selectedText}”). Compare seu raciocínio com ${'ABCDE'[correct]} (“${correctText}”) usando a resolução editorial abaixo.`
       : `Você marcou ${'ABCDE'[selected]} (“${selectedText}”) e o gabarito é ${'ABCDE'[correct]} (“${correctText}”). A resolução editorial específica ainda está em revisão; por isso o NEXO não vai inventar uma justificativa que não foi validada.`;
   return {
-    summary:hasEditorialExplanation?rawExplanation:`Gabarito: alternativa ${'ABCDE'[correct]}. Resolução específica em revisão editorial.`,
+    summary:hasEditorialExplanation?rawExplanation:`Gabarito oficial: alternativa ${'ABCDE'[correct]}. A resolução específica desta questão ainda está na fila editorial; abaixo o NEXO mostra um método seguro para revisar o tipo de raciocínio exigido.`,
     whyWrong,
     method:`${method} O ponto de revisão desta questão é “${topic}”.`,
     hasEditorialExplanation,
-    explanationStatus:hasEditorialExplanation?'editorial':'pending'
+    explanationStatus:hasEditorialExplanation?'editorial':'pending',
+    explanationHeading:hasEditorialExplanation?'Por que essa é a resposta?':'Gabarito confirmado',
+    explanationLabel:hasEditorialExplanation?'RESOLUÇÃO EDITORIAL VALIDADA':'GABARITO OFICIAL · RESOLUÇÃO EM REVISÃO'
   };
 }
 
@@ -4882,9 +4963,10 @@ async function submitAnswer(option) {
     </div>
 
     <div class="answer-learning-grid">
-      <article class="learning-block primary-learning">
+      <article class="learning-block primary-learning ${detail.hasEditorialExplanation?'editorial-ready':'editorial-pending'}">
         <span>01 · ENTENDA</span>
-        <h5>Por que essa é a resposta?</h5>
+        <small class="answer-editorial-status">${esc(detail.explanationLabel)}</small>
+        <h5>${esc(detail.explanationHeading)}</h5>
         <p>${esc(detail.summary)}</p>
       </article>
       <article class="learning-block">
@@ -9454,6 +9536,7 @@ async function loadAdmin(){
   checkCloudinarySecurityStatus();
   loadAdminUsers();
   loadAdminQuestionIssues();
+  loadAdminExplanationQueue();
   const [profiles,attempts,feedbacks,videosCount,materialsCount,progressRows,videosRows,materialsRows]=await Promise.all([
     client.from('profiles').select('*',{count:'exact',head:true}),
     client.from('question_attempts').select('*',{count:'exact',head:true}),
