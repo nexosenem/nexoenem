@@ -117,7 +117,12 @@ assert(renderVisualBlock.indexOf('if(await loadStoredVisual(q)) return true;')>=
 assert(renderVisualBlock.includes("q.external_media_files?.length && await loadExternalVisual(q)"),'Mídia recuperada externamente evita round-trip desnecessário');
 assert(cssV15.includes('.q-media-gallery')&&cssV15.includes('.q-option-media'),'Design V15 suporta galeria e alternativas visuais');
 assert(uiV15.includes("typeof openProfessorNexo==='function'")&&uiV15.includes("$('#niaButton')?.click()"),'Professor Nexo contextual possui abertura direta e fallback');
-assert(!app.includes('options,media_type,media_path,source_pdf_url,source_page,media_crop'),'Filas de questões não carregam Base64 antecipadamente');
+const fetchQuestionsBlock=app.slice(app.indexOf('async function fetchQuestions(filters={})'),app.indexOf('async function fetchQuestionsResilient'));
+assert(fetchQuestionsBlock.includes('media_path'),'Fila leve conhece caminho de mídia sem buscar o blob visual');
+assert(!fetchQuestionsBlock.includes('data_uri'),'Filas de questões não carregam Base64 antecipadamente');
+assert(app.includes('function hasAccessibleVisualDescription')&&app.includes('function questionVisualCanBeResolved'),'Integridade visual filtra questões irresolvíveis sem apagar descrições acessíveis');
+assert(app.includes('Este recurso visual é necessário para responder.')&&app.includes("b.disabled=true"),'Questão visual quebrada bloqueia resposta em vez de penalizar o aluno');
+assert(cssV15.includes('.visual-accessible-fallback')&&cssV15.includes('.q-option:disabled'),'UI V15 diferencia descrição acessível de visual quebrado');
 assert(uiV15.includes('v15AdvancedQuestionSetup')&&uiV15.includes('v15LibraryFilters'),'Filtros avançados V15 usam divulgação progressiva');
 assert(uiV15.includes('v15MaterialTabs')&&uiV15.includes('data-v15-material-tab'),'Biblioteca V15 oferece navegação simples sem remover filtros avançados');
 assert(uiV15.includes('syncSidebarAvatar')&&uiV15.includes('data-nrx-target'),'Avatar real e recursos secundários seguem o sistema visual V15');
