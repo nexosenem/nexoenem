@@ -5,8 +5,10 @@ Plataforma de estudos para o ENEM conectada a **Cloudflare + GitHub + Supabase**
 ## Estado atual
 
 - acervo bruto com 3.060 registros de questões, cobrindo 2009 a 2025
-- 2.891 questões ativas após a quarentena automática de itens com alternativas inválidas
-- 160 questões visuais ativas com imagem associada
+- 2.710 questões ativas após quarentena de itens estruturalmente incompletos ou ainda não validados
+- 159 questões visuais ativas com recurso dedicado em `question_media`; nenhum item visual ativo está sem asset
+- 117 questões preservadas em quarentena por dependerem de figura/gráfico/mapa/tabela sem recurso visual recuperado
+- 5 questões preservadas em quarentena por gabarito ainda não confirmado com segurança entre versões/cadernos
 - gabaritos privados no banco e correção de respostas por RPC
 - sessões por área, matéria, dificuldade e foco adaptativo
 - NEXO Core com recomendação de estudo baseada em desempenho
