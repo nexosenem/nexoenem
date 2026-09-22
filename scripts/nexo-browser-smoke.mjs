@@ -835,6 +835,9 @@ async function runProfile(browser,name,viewport){
     if(typeof openPage==='function')openPage('questoes');
     await wait();
     const setup=document.querySelector('#sessionSetup');
+    const advanced=document.querySelector('#v15AdvancedQuestionSetup');
+    if(advanced)advanced.open=true;
+    await wait();
     const areaButtons=[...document.querySelectorAll('#studyAreaGrid [data-study-area]')].filter(visible);
     const subject=document.querySelector('#sessionSubject');
     const difficulty=document.querySelector('#sessionDifficulty');
@@ -846,6 +849,8 @@ async function runProfile(browser,name,viewport){
     await wait();
     const questionControls={
       setupVisible:visible(setup),
+      advancedDisclosure:Boolean(advanced&&advanced.open),
+      quickModes:document.querySelectorAll('#v15QuestionModes [data-v15-qmode]').length,
       areas:areaButtons.length,
       fields:[subject,difficulty,size].every(visible),
       visualVisible:visible(visual?.closest('.toggle-row')),
@@ -915,7 +920,7 @@ async function runProfile(browser,name,viewport){
     return {questionControls,essayControls,simulationControls,plannerControls};
   });
   const q=coreFeatureAccessTest.questionControls,e=coreFeatureAccessTest.essayControls,s=coreFeatureAccessTest.simulationControls,p=coreFeatureAccessTest.plannerControls;
-  if(!q.setupVisible||q.areas!==4||!q.fields||!q.visualVisible||!q.startVisible||!q.areaSelection||!q.visualToggle)failures.push(name+': controles de Questões regrediram: '+JSON.stringify(q));
+  if(!q.setupVisible||!q.advancedDisclosure||q.quickModes!==4||q.areas!==4||!q.fields||!q.visualVisible||!q.startVisible||!q.areaSelection||!q.visualToggle)failures.push(name+': controles de Questões regrediram: '+JSON.stringify(q));
   if(!e.textVisible||!e.randomVisible||!e.analyzeVisible||!e.wordCountOk||!e.themePopulated||!e.randomSelected)failures.push(name+': controles de Redação regrediram: '+JSON.stringify(e));
   if(s.visibleCards<8||!s.allWired||!s.modes.includes('sprint')||!s.modes.includes('mini')||s.areas.length!==4)failures.push(name+': controles de Simulados regrediram: '+JSON.stringify(s));
   if(!p.visible||!p.grid||!p.longRange||!p.days)failures.push(name+': controles do Planner regrediram: '+JSON.stringify(p));
