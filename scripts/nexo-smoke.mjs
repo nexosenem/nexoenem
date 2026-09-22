@@ -130,6 +130,9 @@ assert(app.includes('LEARNING_TOPIC_ALIASES')&&app.includes('function materialTr
 assert(app.includes("state.topicMastery.get(String(trainingTopic))"),'Domínio de questões reaproveita tópico de treino sem fundir progresso editorial');
 assert(app.includes("normalizeTextKey(r.topic||'')===normalizeTextKey(trainingTopic)"),'Prioridade do Radar reconhece o tópico de treino equivalente');
 assert(app.includes("explanationHeading:hasEditorialExplanation?'Por que essa é a resposta?':'Gabarito confirmado'"),'Resposta distingue resolução validada de gabarito em revisão');
+assert(app.includes("NEXO_ESSAY_RUBRIC_VERSION='enem-2026'")&&app.includes('function toEnemCompetencyBand'),'Estimador de redação usa rubrica ENEM 2026 em faixas de competência');
+assert(app.includes('scores.map(toEnemCompetencyBand)')&&app.includes('function essayEstimateRange'),'Redação usa níveis de 40 pontos e mostra faixa orientativa');
+assert(app.includes('analysis_version:NEXO_ESSAY_ANALYSIS_VERSION')&&app.includes('rubric_version:NEXO_ESSAY_RUBRIC_VERSION'),'Histórico de redação registra versões da análise e rubrica');
 assert(app.includes("client.rpc('get_admin_explanation_queue'")&&app.includes("client.rpc('admin_set_question_explanation'"),'Fluxo editorial Admin usa RPCs protegidos');
 assert(index.includes('id="adminExplanationQueue"')&&index.includes('id="adminExplanationModal"'),'Fila e editor de resolução editorial publicados no Admin');
 assert(cssV15.includes('.answer-editorial-status')&&cssV15.includes('.admin-editorial-row'),'Estados editoriais seguem o design system V15')
