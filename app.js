@@ -279,6 +279,7 @@ const state = {
   questionBehavior:null,
   pdfCache:new Map(),
   visualCache:new Map(),
+  externalVisualCache:new Map(),
   videos:[],
   materials:[],
   materialSubject:'',
@@ -3904,11 +3905,49 @@ function startQuestionBehaviorMonitor(q,seed=null){
   },Math.max(1000,longSeconds*1000-elapsed)));
 }
 
+function likelyNeedsQuestionVisual(q){
+  if(!q)return false;
+  const text=String([q.base_text,q.prompt].filter(Boolean).join(' ')).toLocaleLowerCase('pt-BR');
+  return /\b(figura|figuras|gráfico|grafico|imagem|mapa|diagrama|esquema|tirinha|charge|cartum|tabela|quadro)\b/.test(text);
+}
+
+async function ensureExternalQuestionAssets(q){
+  if(!q||q.externalAssetsChecked||q.media_type||q.media_path||!likelyNeedsQuestionVisual(q))return q;
+  q.externalAssetsChecked=true;
+  const year=Number(q.source_year||0),index=Number(q.source_question_number||0);
+  if(year<2009||year>2023||!index)return q;
+  const cacheKey=year+':'+index;
+  try{
+    let data=state.externalVisualCache.get(cacheKey);
+    if(data===undefined){
+      const controller=new AbortController();
+      const timer=setTimeout(()=>controller.abort(),3200);
+      try{
+        const res=await fetch('https://api.enem.dev/v1/exams/'+year+'/questions/'+index,{signal:controller.signal});
+        data=res.ok?await res.json():null;
+      }finally{clearTimeout(timer)}
+      state.externalVisualCache.set(cacheKey,data||null);
+    }
+    if(!data)return q;
+    const files=[...new Set((Array.isArray(data.files)?data.files:[]).filter(x=>/^https:\/\//i.test(String(x||''))))];
+    const optionMedia=(Array.isArray(data.alternatives)?data.alternatives:[]).map(a=>/^https:\/\//i.test(String(a?.file||''))?String(a.file):'');
+    if(files.length){
+      q.external_media_files=files;
+      q.media_type='image';
+    }
+    if(optionMedia.some(Boolean))q.option_media=optionMedia;
+  }catch(err){
+    if(err?.name!=='AbortError')console.warn('external ENEM visual fallback',err);
+  }
+  return q;
+}
+
 async function renderQuestion(q) {
   const card=$('#questionCard');
-  // media_type is the lightweight source of truth. The image itself is lazy-loaded
-  // from question_media only when the current question is rendered.
-  const visual = Boolean(q.media_type || q.media_path);
+  // Use NEXO-owned media first. When metadata is absent but the statement clearly
+  // references a visual, recover official ENEM assets on demand (2009-2023).
+  await ensureExternalQuestionAssets(q);
+  const visual = Boolean(q.media_type || q.media_path || q.external_media_files?.length);
   card.innerHTML=`
     <div class="q-top">
       <div class="q-tags">
@@ -3932,7 +3971,7 @@ async function renderQuestion(q) {
       <button id="preAnswerHint" type="button">Pedir pista</button>
     </div>
     <div id="preAnswerHintBox" class="pre-answer-hint hidden"></div>
-    <div class="q-options">${(q.options||[]).map((opt,i)=>`<button class="q-option" data-option="${i}"><span>${'ABCDE'[i]}</span><b>${esc(opt)}</b></button>`).join('')}</div>
+    <div class="q-options">${(q.options||[]).map((opt,i)=>`<button class="q-option${q.option_media?.[i]?' has-media':''}" data-option="${i}"><span>${'ABCDE'[i]}</span><b>${esc(opt)}</b>${q.option_media?.[i]?`<img class="q-option-media" src="${esc(q.option_media[i])}" alt="Recurso visual da alternativa ${'ABCDE'[i]}" loading="lazy" decoding="async">`:''}</button>`).join('')}</div>
     <div class="confirm-answer-wrap"><small>Selecione uma alternativa. Você poderá conferir antes de enviar.</small><button id="confirmAnswer" class="primary-btn" disabled>Confirmar resposta</button></div>
     <div class="question-footer"><small>${esc(q.source_exam||'Exame Nacional do Ensino Médio')}</small></div>`;
 
@@ -4020,6 +4059,43 @@ function mountVisualImage(q, src){
   });
 }
 
+function mountVisualGallery(q,sources){
+  const clean=[...new Set((sources||[]).filter(Boolean))];
+  if(!clean.length)return Promise.resolve(false);
+  return new Promise(resolve=>{
+    const stage=$('#visualStage');
+    if(!stage||state.current?.id!==q.id)return resolve(false);
+    const gallery=document.createElement('div');
+    gallery.className='q-media-gallery'+(clean.length===1?' single':'');
+    let loaded=0,settled=0;
+    const done=()=>{
+      settled++;
+      if(settled<clean.length)return;
+      if(!loaded)return resolve(false);
+      stage.innerHTML='';
+      stage.appendChild(gallery);
+      const head=$('#visualWrap .visual-head span:last-child');
+      if(head)head.textContent=innerWidth<=760?'Toque para ampliar':(loaded>1?loaded+' imagens da prova':'Imagem da prova');
+      bindVisualZoom(stage);
+      resolve(true);
+    };
+    clean.forEach((src,index)=>{
+      const img=new Image();
+      img.decoding='async';
+      img.loading=index?'lazy':'eager';
+      img.alt='Recurso visual original da questão'+(clean.length>1?' '+(index+1):'');
+      img.className='q-media-image';
+      img.onload=()=>{loaded++;gallery.appendChild(img);done()};
+      img.onerror=()=>done();
+      img.src=src;
+    });
+  });
+}
+
+async function loadExternalVisual(q){
+  return q?.external_media_files?.length?mountVisualGallery(q,q.external_media_files):false;
+}
+
 async function loadStoredVisual(q){
   try{
     const id=Number(q.id);
@@ -4089,6 +4165,9 @@ async function renderVisual(q) {
     // Primary path: dedicated visual store. This prevents Base64 assets from
     // bloating question/session payloads and keeps mobile memory stable.
     if(await loadStoredVisual(q)) return true;
+    // Public ENEM API is an on-demand recovery path only for questions whose
+    // visual metadata is absent from NEXO's own catalog.
+    if(await loadExternalVisual(q)) return true;
     // Compatibility path for legacy/local questions that still carry media_path.
     if(await loadLocalVisual(q)) return true;
     if(q.media_type && !q.media_path){
