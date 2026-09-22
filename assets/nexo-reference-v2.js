@@ -462,7 +462,7 @@ function addMobileChrome(){
     const brand=document.createElement('div');
     brand.className='nrx-mobile-brand';
     brand.setAttribute('aria-label','Nexo');
-    brand.innerHTML='<span class="nrx-mobile-wordmark"><span class="nrx-logo-n" aria-hidden="true"></span><span class="nrx-logo-exo">exo</span></span>';
+    brand.innerHTML='<span class="nrx-mobile-wordmark"><span class="nrx-logo-word"><span class="nrx-logo-letter">N</span><span class="nrx-logo-rest">exo</span></span></span>';
     top.prepend(brand);
   }
   if(!$('.nrx-mobile-theme',top)){
