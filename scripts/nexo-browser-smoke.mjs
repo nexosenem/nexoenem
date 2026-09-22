@@ -1057,7 +1057,43 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,accessibilityTest,experienceControlTest,questionFlowTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  markStage('offline-shell');
+  let offlineShellTest={ok:false,error:'not-run'};
+  try{
+    await context.setOffline(true);
+    await page.reload({waitUntil:'commit',timeout:20000});
+    await page.waitForFunction(()=>{
+      const boot=document.querySelector('#boot');
+      const auth=document.querySelector('#authScreen');
+      const app=document.querySelector('#app');
+      const bootGone=!boot||boot.classList.contains('hidden')||getComputedStyle(boot).display==='none';
+      return bootGone||Boolean(auth&&!auth.classList.contains('hidden'))||Boolean(app&&!app.classList.contains('hidden'));
+    },{timeout:12000});
+    await page.waitForTimeout(500);
+    offlineShellTest=await page.evaluate(()=>({
+      ok:document.title==='NEXO ENEM'&&
+        typeof window.nexoRunProductionDiagnostics==='function'&&
+        Boolean(document.querySelector('.nrx-desktop'))&&
+        Boolean(document.querySelector('.nrx-mobile'))&&
+        Boolean(navigator.serviceWorker?.controller)&&
+        Boolean(document.querySelector('#authScreen'))&&
+        Boolean(document.querySelector('#app')),
+      title:document.title,
+      hardening:typeof window.nexoRunProductionDiagnostics==='function',
+      referenceDesktop:Boolean(document.querySelector('.nrx-desktop')),
+      referenceMobile:Boolean(document.querySelector('.nrx-mobile')),
+      controlled:Boolean(navigator.serviceWorker?.controller),
+      auth:Boolean(document.querySelector('#authScreen')),
+      app:Boolean(document.querySelector('#app'))
+    }));
+  }catch(err){
+    offlineShellTest={ok:false,error:String(err?.message||err)};
+  }finally{
+    await context.setOffline(false);
+  }
+  if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
+
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
