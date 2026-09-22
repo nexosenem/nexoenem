@@ -455,6 +455,20 @@ function syncMobileThemeButton(){
   button.setAttribute('aria-label',light?'Ativar modo escuro':'Ativar modo claro');
   button.title=light?'Ativar modo escuro':'Ativar modo claro';
 }
+function addDesktopCrown(){
+  const actions=$('.top-actions');
+  const notification=$('#notificationBtn');
+  if(!actions||$('.nrx-desktop-crown',actions))return;
+  const crown=document.createElement('button');
+  crown.type='button';
+  crown.className='icon-btn nrx-desktop-crown';
+  crown.setAttribute('aria-label','Abrir Loja NEXO');
+  crown.title='Loja NEXO';
+  crown.textContent='♛';
+  crown.addEventListener('click',openStore);
+  actions.insertBefore(crown,notification||actions.firstChild);
+}
+
 function addMobileChrome(){
   const top=$('.topbar');
   if(!top)return;
@@ -780,6 +794,7 @@ function init(){
     home.prepend(mobile);
     home.prepend(desktop);
     addMobileChrome();
+    addDesktopCrown();
     buildReferenceSidebar();
     buildBottomNav();
     buildReferenceInternalActions();
