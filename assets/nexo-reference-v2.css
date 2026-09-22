@@ -439,22 +439,72 @@ body.nexo-reference-ui #inicio>.dashboard-grid{display:none!important}
 .nrx-mobile-crown{color:#efc75a!important;font-size:15px!important}
 
 .nrx-mob-hero{
-  position:relative;min-height:178px;padding:18px 15px 15px;
-  border:1px solid rgba(115,88,242,.24);border-radius:15px;overflow:hidden;
+  position:relative;
+  min-height:232px;
+  padding:24px 44% 22px 20px;
+  border:1px solid rgba(119,95,246,.34);
+  border-radius:24px;
+  overflow:hidden;
   background:
-    radial-gradient(circle at 80% 42%,rgba(86,70,255,.25),transparent 31%),
-    linear-gradient(145deg,#091326,#0a1120);
+    radial-gradient(circle at 84% 30%,rgba(88,76,255,.28),transparent 34%),
+    radial-gradient(circle at 18% 115%,rgba(33,190,255,.10),transparent 42%),
+    linear-gradient(145deg,#081225 0%,#09152b 58%,#0d1430 100%);
+  box-shadow:
+    0 22px 56px rgba(0,0,0,.28),
+    inset 0 1px 0 rgba(255,255,255,.035);
 }
-.nrx-mob-hero>div:first-child{position:relative;z-index:3;max-width:63%}
-.nrx-mob-hello{font-size:9px;color:#a89ef5}
+.nrx-mob-hero:before{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  background:linear-gradient(115deg,rgba(255,255,255,.035),transparent 30%,transparent 72%,rgba(116,92,255,.08));
+}
+.nrx-mob-hero-copy{position:relative;z-index:3;max-width:100%}
+.nrx-mob-hello{font-size:12px;color:#b4a9ff;font-weight:700}
 .nrx-mob-hero h1{
-  margin:7px 0 6px;font-size:24px;line-height:1.03;letter-spacing:-.8px;
+  margin:14px 0 10px;
+  font-size:clamp(34px,9.6vw,44px);
+  line-height:.98;
+  letter-spacing:-1.55px;
+  text-wrap:balance;
 }
-.nrx-mob-hero p{margin:0;color:#9ba8ba;font-size:8.5px;line-height:1.42}
-.nrx-mob-hero img{
-  position:absolute;right:-2px;bottom:-2px;width:142px;height:170px;
-  object-fit:contain;object-position:right bottom;
-  filter:drop-shadow(0 13px 22px rgba(26,20,104,.38));
+.nrx-mob-hero p{
+  margin:0;
+  max-width:245px;
+  color:#a7b4c8;
+  font-size:13px;
+  line-height:1.5;
+}
+.nrx-mob-hero-media{
+  position:absolute;
+  z-index:2;
+  right:10px;
+  top:10px;
+  bottom:10px;
+  width:38%;
+  overflow:hidden;
+  border-radius:21px;
+  border:1px solid rgba(130,111,255,.28);
+  background:#0b1230;
+  box-shadow:0 18px 34px rgba(0,0,0,.30),0 0 26px rgba(84,75,255,.14);
+}
+.nrx-mob-hero-media:after{
+  content:"";
+  position:absolute;
+  inset:0;
+  pointer-events:none;
+  border-radius:inherit;
+  box-shadow:inset 0 0 0 1px rgba(255,255,255,.025);
+}
+.nrx-mob-hero-media img{
+  width:100%;
+  height:100%;
+  display:block;
+  object-fit:cover;
+  object-position:50% 50%;
+  border-radius:inherit;
+  filter:saturate(1.06) contrast(1.035);
 }
 .nrx-mobile-search-slot{margin-top:9px}
 .nrx-mobile-search-slot .search{
@@ -1913,7 +1963,7 @@ body.nexo-reference-ui #questoes .toggle-row small{font-size:9.5px!important}
 }
 
 
-/* Restore the original written NEXO ENEM identity on mobile. */
+/* Nexo identity: the N is literally cropped from Professor Nexo's chest. */
 .nrx-mobile-brand{
   min-width:max-content;
   gap:0!important;
@@ -1922,22 +1972,33 @@ body.nexo-reference-ui #questoes .toggle-row small{font-size:9.5px!important}
 }
 .nrx-mobile-wordmark{
   display:flex;
-  align-items:baseline;
-  gap:5px;
+  align-items:center;
+  gap:3px;
   white-space:nowrap;
   line-height:1;
 }
-.nrx-mobile-wordmark b,
-.nrx-mobile-wordmark em{
-  font-style:normal;
-  font-size:20px;
-  line-height:1;
-  letter-spacing:.2px;
+.nrx-logo-n{
+  width:31px;
+  height:31px;
+  flex:0 0 31px;
+  display:inline-block;
+  overflow:hidden;
+  border-radius:9px;
+  background-image:url('./nexo-family/bust-confiante.avif');
+  background-repeat:no-repeat;
+  background-size:128px 160px;
+  background-position:44% 78%;
+  filter:saturate(1.13) contrast(1.06) brightness(1.08);
+  box-shadow:0 0 18px rgba(86,91,255,.18);
 }
-.nrx-mobile-wordmark b{color:#f3f6ff}
-.nrx-mobile-wordmark em{color:#765bff}
-
-body.light.nexo-reference-ui .nrx-mobile-wordmark b{color:#172239}
+.nrx-logo-exo{
+  color:#f4f6ff;
+  font-size:24px;
+  font-weight:900;
+  line-height:1;
+  letter-spacing:-.8px;
+}
+body.light.nexo-reference-ui .nrx-logo-exo{color:#172239}
 body.light.nexo-reference-ui .nrx-mobile-theme{
   background:#fff!important;
   color:#172239!important;
@@ -1945,12 +2006,91 @@ body.light.nexo-reference-ui .nrx-mobile-theme{
 }
 
 @media(max-width:390px){
-  .nrx-mobile-wordmark b,
-  .nrx-mobile-wordmark em{font-size:18px}
+  .nrx-logo-n{width:28px;height:28px;flex-basis:28px;background-size:116px 145px}
+  .nrx-logo-exo{font-size:22px}
   .nrx-mobile-theme,
   .nrx-mobile-crown,
   body.nexo-reference-ui .top-actions .icon-btn{
     width:32px!important;
     height:32px!important;
   }
+}
+
+
+/* ========= Home-first mobile experience + premium visual pass ========= */
+@media(max-width:760px){
+  body.nexo-reference-ui.nrx-home-active #nexoContextBar{display:none!important}
+  body.nexo-reference-ui.nrx-home-active main{
+    padding-top:12px!important;
+  }
+  body.nexo-reference-ui.nrx-home-active #inicio>.nrx-mobile{
+    display:block!important;
+    margin-top:0!important;
+  }
+  body.nexo-reference-ui .topbar{
+    border-bottom-color:rgba(113,91,232,.16)!important;
+    background:rgba(5,11,23,.90)!important;
+    box-shadow:0 8px 24px rgba(0,0,0,.12);
+  }
+  body.light.nexo-reference-ui .topbar{
+    background:rgba(249,251,255,.94)!important;
+  }
+  .nrx-mobile-theme,
+  .nrx-mobile-crown{
+    border-radius:12px!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.035),0 8px 18px rgba(0,0,0,.12);
+  }
+  .nrx-mobile-search-slot .search{
+    min-height:44px!important;
+    border-radius:15px!important;
+    border-color:rgba(129,145,184,.16)!important;
+    background:rgba(12,22,40,.78)!important;
+    box-shadow:inset 0 1px 0 rgba(255,255,255,.025);
+  }
+  .nrx-mob-actions{
+    gap:13px 8px!important;
+    margin:18px 0 16px!important;
+  }
+  .nrx-mob-action i{
+    border-radius:16px!important;
+    box-shadow:0 10px 22px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.06)!important;
+  }
+  .nrx-mob-action b{
+    font-size:11px!important;
+    letter-spacing:-.01em;
+  }
+  .nrx-mob-progress,
+  .nrx-mob-continue{
+    border-radius:19px!important;
+    border-color:rgba(125,107,226,.17)!important;
+    box-shadow:0 14px 34px rgba(0,0,0,.15)!important;
+  }
+  .nrx-bottom-nav{
+    border-radius:20px!important;
+    background:rgba(7,13,26,.92)!important;
+    backdrop-filter:blur(24px) saturate(1.08)!important;
+    box-shadow:0 18px 44px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  }
+  .nrx-bottom-nav button{
+    border-radius:15px!important;
+  }
+}
+@media(max-width:430px){
+  .nrx-mob-hero{
+    min-height:226px;
+    padding:22px 43% 20px 18px;
+  }
+  .nrx-mob-hero-media{width:39%;border-radius:19px}
+  .nrx-mob-hero h1{font-size:clamp(33px,9.8vw,40px)}
+  .nrx-mob-hero p{font-size:12px;max-width:210px}
+}
+@media(max-width:360px){
+  .nrx-mob-hero{
+    min-height:216px;
+    padding:20px 42% 18px 16px;
+    border-radius:21px;
+  }
+  .nrx-mob-hero-media{right:8px;top:8px;bottom:8px;width:40%;border-radius:17px}
+  .nrx-mob-hero h1{font-size:32px}
+  .nrx-mob-hero p{font-size:11.5px}
 }
