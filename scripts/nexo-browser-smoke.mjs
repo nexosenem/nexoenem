@@ -284,7 +284,7 @@ async function runProfile(browser,name,viewport){
   if(referenceUiTest.overflow)failures.push(name+': interface de referência criou overflow horizontal');
   if(!referenceUiTest.originalHomeHidden)failures.push(name+': home antiga continua visível junto da referência');
   if(name==='mobile'&&!referenceUiTest.bottomVisible)failures.push(name+': barra inferior de referência não ficou visível');
-  if(name==='mobile'&&referenceUiTest.bottomLabels.join('|')!=='Início|Questões|Redação|Desempenho|Mais')failures.push(name+': barra inferior perdeu a navegação principal/área Mais: '+referenceUiTest.bottomLabels.join('|'));
+  if(name==='mobile'&&referenceUiTest.bottomLabels.join('|')!=='Início|Estudar|Questões|Redação|Mais')failures.push(name+': barra inferior perdeu a navegação principal/área Mais: '+referenceUiTest.bottomLabels.join('|'));
   if(name==='mobile'&&referenceUiTest.contextVisible)failures.push(name+': guia contextual ainda está acima do hero na entrada da Home');
   if(name!=='mobile'&&!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto fora da entrada mobile');
   if(name==='mobile'&&!referenceUiTest.heroFirst)failures.push(name+': hero Disciplina hoje não é o primeiro conteúdo da Home');
@@ -351,6 +351,44 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&referenceAccessTest.minTouch<44)failures.push(name+': alvo de toque principal menor que 44px');
   if(name==='mobile'&&referenceAccessTest.heroFont<26)failures.push(name+': título principal pequeno demais');
   if(name!=='mobile'&&referenceAccessTest.heroFont<36)failures.push(name+': título principal desktop pequeno demais');
+
+  markStage('v14-experience');
+  const v14ExperienceTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={app:app?.className||'',auth:auth?.className||'',active:pages.find(p=>p.classList.contains('active'))?.id||'inicio'};
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    pages.forEach(p=>p.classList.toggle('active',p.id==='desempenho'));
+    await new Promise(r=>setTimeout(r,120));
+    const loop=document.querySelector('#v14LearningLoop');
+    const loopActions=loop?.querySelectorAll('[data-v14-loop]').length||0;
+    const diagnostic=document.querySelector('[data-v14-diagnostic]');
+    const diagnosticCard=document.querySelector('[data-v14-diagnostic-card]');
+    const full=document.querySelector('#simulados [data-sim-mode="full"] b')?.textContent?.trim()||'';
+    const desktopBrand=document.querySelector('#sidebar .brand');
+    const chest=desktopBrand?.querySelector('.v14-chest-n');
+    const chestBg=chest?getComputedStyle(chest).backgroundImage:'';
+    const brandName=desktopBrand?.querySelector('b')?.textContent?.trim()||'';
+    const brief=document.querySelector('#v13Brief');
+    const briefMoved=!brief||brief.parentElement?.id==='semana';
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    return {
+      loop:Boolean(loop),loopActions,diagnostic:Boolean(diagnostic),
+      diagnosticCard:Boolean(diagnosticCard),full,
+      chestLogo:Boolean(chest&&chestBg.includes('bust-confiante.avif')),
+      brandName,briefMoved
+    };
+  });
+  if(!v14ExperienceTest.loop||v14ExperienceTest.loopActions!==4||!v14ExperienceTest.diagnostic)
+    failures.push(name+': ciclo Aprender/Praticar/Recordar/Revisar não foi montado: '+JSON.stringify(v14ExperienceTest));
+  if(!v14ExperienceTest.diagnosticCard||v14ExperienceTest.full!=='ENEM Real')
+    failures.push(name+': diagnóstico/Modo ENEM Real não foram preservados nos simulados: '+JSON.stringify(v14ExperienceTest));
+  if(name==='desktop'&&(!v14ExperienceTest.chestLogo||v14ExperienceTest.brandName!=='exo'))
+    failures.push(name+': marca N do mascote + exo não foi aplicada na sidebar: '+JSON.stringify(v14ExperienceTest));
+  if(!v14ExperienceTest.briefMoved)
+    failures.push(name+': plano adaptativo ainda polui a Home em vez de ficar no Planner: '+JSON.stringify(v14ExperienceTest));
 
   markStage('route-matrix');
   const routeMatrixTest=await page.evaluate(async()=>{
@@ -579,7 +617,7 @@ async function runProfile(browser,name,viewport){
     }
     checks.push({kind:'utility',key:'notification',ok:notificationOk});
     if(innerWidth<=760){
-      const mobileRoutes=[['questoes','questoes'],['redacao','redacao'],['desempenho','desempenho']];
+      const mobileRoutes=[['study','materiais'],['questoes','questoes'],['redacao','redacao']];
       for(const [key,pageId] of mobileRoutes){
         const btn=document.querySelector('[data-nrx-bottom="'+key+'"]');
         if(!btn){checks.push({kind:'mobile-bottom',key,ok:false,reason:'missing'});continue}
