@@ -608,3 +608,159 @@ body.light.nexo-reference-ui .nrx-ring:after{background:#fff}
   .nrx-side-item>b{font-size:11px}
   .nrx-side-account{margin-top:8px}
 }
+
+
+/* ========= Reference sidebar/navigation ========= */
+body.nexo-reference-ui .nrx-original-nav,
+body.nexo-reference-ui .nrx-original-quote{
+  display:none!important;
+}
+body.nexo-reference-ui .nrx-side-nav{
+  display:flex;
+  flex-direction:column;
+  gap:2px;
+  min-height:0;
+  flex:1 1 auto;
+  overflow-y:auto;
+  padding:2px 0 8px;
+  scrollbar-width:none;
+}
+body.nexo-reference-ui .nrx-side-nav::-webkit-scrollbar{display:none}
+body.nexo-reference-ui .nrx-side-item{
+  width:100%;
+  min-height:35px;
+  display:flex;
+  align-items:center;
+  gap:9px;
+  padding:7px 9px;
+  border:0;
+  border-radius:8px;
+  background:transparent;
+  color:#8f9db2;
+  font:inherit;
+  text-align:left;
+  cursor:pointer;
+  transition:background .15s ease,color .15s ease;
+}
+body.nexo-reference-ui .nrx-side-item>span{
+  width:22px;
+  height:22px;
+  flex:0 0 22px;
+  display:grid;
+  place-items:center;
+  border-radius:6px;
+  background:rgba(255,255,255,.025);
+  color:#adb8ca;
+  font-size:11px;
+}
+body.nexo-reference-ui .nrx-side-item>b{
+  min-width:0;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  white-space:nowrap;
+  font-size:10px;
+  font-weight:650;
+}
+body.nexo-reference-ui .nrx-side-item:hover{
+  background:rgba(255,255,255,.035);
+  color:#e9edf8;
+}
+body.nexo-reference-ui .nrx-side-item.active{
+  background:linear-gradient(90deg,rgba(113,79,255,.31),rgba(85,61,188,.12));
+  color:#fff;
+  box-shadow:inset 2px 0 0 #8c69ff;
+}
+body.nexo-reference-ui .nrx-side-item.active>span{
+  color:#fff;
+  background:rgba(125,91,255,.23);
+}
+body.nexo-reference-ui .nrx-side-account{
+  width:100%;
+  min-height:52px;
+  display:grid;
+  grid-template-columns:34px minmax(0,1fr) auto;
+  align-items:center;
+  gap:8px;
+  margin-top:auto;
+  padding:7px 8px;
+  border:1px solid rgba(125,95,243,.16);
+  border-radius:11px;
+  background:linear-gradient(180deg,rgba(14,24,43,.88),rgba(9,17,31,.88));
+  color:#eef2fb;
+  text-align:left;
+  cursor:pointer;
+}
+body.nexo-reference-ui .nrx-side-avatar{
+  width:32px;height:32px;border-radius:10px;
+  display:grid;place-items:center;
+  background:
+    radial-gradient(circle at 35% 25%,rgba(129,101,255,.42),transparent 45%),
+    linear-gradient(145deg,#263a66,#101a31);
+  border:1px solid rgba(96,214,255,.28);
+  color:#fff;font-size:10px;font-weight:900;
+}
+body.nexo-reference-ui .nrx-side-account div{min-width:0}
+body.nexo-reference-ui .nrx-side-account b{
+  display:block;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  font-size:9px;
+}
+body.nexo-reference-ui .nrx-side-account small{
+  display:block;margin-top:2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#77879f;font-size:6.8px;
+}
+body.nexo-reference-ui .nrx-side-account i{
+  font-style:normal;color:#f1c65b;font-size:11px;
+}
+body.nexo-reference-ui .sidebar-spacer{display:none!important}
+body.nexo-reference-ui .desktop-sidebar-toggle{
+  width:23px!important;height:23px!important;
+  right:-12px!important;top:17px!important;
+  opacity:.36;
+  border-color:rgba(125,95,243,.2)!important;
+  background:#0b1425!important;
+}
+body.nexo-reference-ui .desktop-sidebar-toggle:hover{opacity:.85}
+
+/* Mobile top controls from the approved concept */
+body.nexo-reference-ui .nrx-mobile-crown{
+  display:none;
+  width:33px;height:33px;
+  place-items:center;
+  padding:0;
+  border:1px solid rgba(238,193,82,.13);
+  border-radius:9px;
+  background:rgba(74,54,31,.18);
+  color:#f0c55d;
+  font-size:14px;
+  cursor:pointer;
+}
+
+@media(max-width:760px){
+  body.nexo-reference-ui .nrx-mobile-crown{display:grid!important}
+  body.nexo-reference-ui .sidebar{
+    padding:16px 11px calc(12px + env(safe-area-inset-bottom))!important;
+  }
+  body.nexo-reference-ui .nrx-side-item{
+    min-height:41px;
+    padding:8px 10px;
+  }
+  body.nexo-reference-ui .nrx-side-item>b{font-size:11.5px}
+  body.nexo-reference-ui .nrx-side-item>span{
+    width:25px;height:25px;flex-basis:25px;font-size:12px;
+  }
+  body.nexo-reference-ui .nrx-side-account{min-height:58px}
+  body.nexo-reference-ui .desktop-sidebar-toggle{display:none!important}
+}
+
+/* Light theme variants for generated navigation */
+body.light.nexo-reference-ui .nrx-side-item{color:#64738a}
+body.light.nexo-reference-ui .nrx-side-item:hover{background:#f1f4fa;color:#172239}
+body.light.nexo-reference-ui .nrx-side-item.active{
+  background:linear-gradient(90deg,#ece8ff,#f5f3ff);
+  color:#332a69;
+}
+body.light.nexo-reference-ui .nrx-side-account{
+  background:#f8faff;
+  border-color:rgba(94,73,191,.14);
+  color:#172239;
+}
