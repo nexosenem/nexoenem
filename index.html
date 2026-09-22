@@ -1440,6 +1440,10 @@
               <div class="panel-title"><div><b>Problemas em questões</b><small>gabarito, imagem, texto, alternativas e explicação</small></div><span id="questionIssueCount">0 abertos</span></div>
               <div id="adminQuestionIssues" class="admin-feedbacks"></div>
             </article>
+            <article class="panel admin-reports-panel admin-editorial-panel">
+              <div class="panel-title"><div><b>Fila editorial de resoluções</b><small>prioridade por uso, erros e reportes dos alunos</small></div><span id="adminExplanationCount">0 pendentes</span></div>
+              <div id="adminExplanationQueue" class="admin-feedbacks"><p class="learning-empty">Carregando fila editorial...</p></div>
+            </article>
             <article class="panel admin-content-panel retired-video-feature" aria-hidden="true">
               <div class="panel-title"><b>Gerenciar videoaulas</b><small>editar, ocultar ou remover</small></div>
               <div id="adminVideoList" class="admin-content-list"></div>
@@ -1638,6 +1642,21 @@
       <div class="question-issue-actions">
         <button id="cancelQuestionIssue" class="outline-btn">Cancelar</button>
         <button id="sendQuestionIssue" class="primary-btn">Enviar reporte</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminExplanationModal" class="community-modal hidden admin-only" aria-modal="true" role="dialog" aria-labelledby="adminExplanationTitle">
+    <div class="community-sheet question-issue-sheet admin-explanation-sheet">
+      <div class="community-head"><div><span class="eyebrow">REVISÃO EDITORIAL</span><h3 id="adminExplanationTitle">Adicionar resolução validada</h3></div><button id="closeAdminExplanation" class="icon-btn" aria-label="Fechar">×</button></div>
+      <p id="adminExplanationQuestionMeta" class="question-note-meta">Questão</p>
+      <label>Resolução editorial
+        <textarea id="adminExplanationText" rows="10" maxlength="8000" placeholder="Explique o raciocínio correto passo a passo, sem apenas repetir o gabarito..."></textarea>
+      </label>
+      <small class="editorial-guidance">Inclua o conceito central, o passo decisivo e por que a alternativa correta satisfaz o comando. Evite afirmar algo que não esteja sustentado pela questão.</small>
+      <div class="question-issue-actions">
+        <button id="cancelAdminExplanation" class="outline-btn">Cancelar</button>
+        <button id="saveAdminExplanation" class="primary-btn">Salvar resolução validada</button>
       </div>
     </div>
   </div>
