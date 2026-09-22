@@ -713,6 +713,80 @@ async function runProfile(browser,name,viewport){
   if(s.visibleCards<8||!s.allWired||!s.modes.includes('sprint')||!s.modes.includes('mini')||s.areas.length!==4)failures.push(name+': controles de Simulados regrediram: '+JSON.stringify(s));
   if(!p.visible||!p.grid||!p.longRange||!p.days)failures.push(name+': controles do Planner regrediram: '+JSON.stringify(p));
 
+
+  markStage('utility-modules');
+  const utilityModuleTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      focusMinutes:typeof focusModeState==='object'?focusModeState.minutes:25,
+      journeyTab:state.journeyTab||'missions'
+    };
+    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+
+    let focus={opened:false,durationVisible:false,durationChanged:false,closed:false};
+    if(typeof runSiteSearchAction==='function')runSiteSearchAction('foco');
+    await wait(40);
+    const focusModal=document.querySelector('#focusModeModal');
+    const duration45=document.querySelector('[data-focus-minutes="45"]');
+    focus.opened=visible(focusModal);
+    focus.durationVisible=visible(duration45);
+    duration45?.click();
+    await wait(20);
+    focus.durationChanged=Boolean(typeof focusModeState==='object'&&Number(focusModeState.minutes)===45&&duration45?.classList.contains('active'));
+    document.querySelector('#closeFocusMode')?.click();
+    await wait(20);
+    focus.closed=Boolean(focusModal?.classList.contains('hidden'))&&document.body.style.overflow==='';
+    if(typeof setFocusMinutes==='function'&&typeof focusModeState==='object'&&!focusModeState.running)setFocusMinutes(prev.focusMinutes);
+
+    if(typeof openPage==='function')openPage('banco');
+    await wait(30);
+    const bankSearch=document.querySelector('#bankSearch'),bankArea=document.querySelector('#bankArea');
+    const bank={
+      searchVisible:visible(bankSearch),areaVisible:visible(bankArea),
+      list:Boolean(document.querySelector('#bankList')),
+      saved:Boolean(document.querySelector('#savedQuestionList'))
+    };
+
+    if(typeof openPage==='function')openPage('feedback');
+    await wait(30);
+    const feedback={
+      ratingVisible:visible(document.querySelector('#feedbackRating')),
+      textVisible:visible(document.querySelector('#feedbackText')),
+      sendVisible:visible(document.querySelector('#sendFeedback')),
+      list:Boolean(document.querySelector('#feedbackList'))
+    };
+
+    if(typeof openPage==='function')openPage('ranking');
+    await wait(30);
+    const journeyTargets=['missions','league','avatar','wardrobe','store','achievements'];
+    const journeyChecks=[];
+    for(const tab of journeyTargets){
+      const button=document.querySelector('[data-journey-tab="'+tab+'"]');
+      button?.click();
+      await wait(20);
+      const panel=document.querySelector('[data-journey-panel="'+tab+'"]');
+      journeyChecks.push({tab,button:visible(button),panel:Boolean(panel?.classList.contains('active'))});
+    }
+    if(typeof setJourneyTab==='function')setJourneyTab(prev.journeyTab);
+
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    return {focus,bank,feedback,journeyChecks};
+  });
+  const utilFocus=utilityModuleTest.focus,utilBank=utilityModuleTest.bank,utilFeedback=utilityModuleTest.feedback;
+  if(!utilFocus.opened||!utilFocus.durationVisible||!utilFocus.durationChanged||!utilFocus.closed)failures.push(name+': Modo Foco regrediu: '+JSON.stringify(utilFocus));
+  if(!utilBank.searchVisible||!utilBank.areaVisible||!utilBank.list||!utilBank.saved)failures.push(name+': Banco de Questões regrediu: '+JSON.stringify(utilBank));
+  if(!utilFeedback.ratingVisible||!utilFeedback.textVisible||!utilFeedback.sendVisible||!utilFeedback.list)failures.push(name+': Feedback regrediu: '+JSON.stringify(utilFeedback));
+  const badJourney=utilityModuleTest.journeyChecks.filter(x=>!x.button||!x.panel);
+  if(badJourney.length)failures.push(name+': abas da Jornada regrediram: '+JSON.stringify(badJourney));
+
   markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -1093,7 +1167,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
