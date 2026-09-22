@@ -372,19 +372,37 @@ async function runProfile(browser,name,viewport){
     const brandName=desktopBrand?.querySelector('b')?.textContent?.trim()||'';
     const brief=document.querySelector('#v13Brief');
     const briefMoved=!brief||brief.parentElement?.id==='semana';
+    const hero=document.querySelector(innerWidth<=760?'.nrx-mob-hero':'.nrx-hero');
+    const sidebar=document.querySelector('#sidebar');
+    const heroStyle=hero?getComputedStyle(hero):null;
+    const heroRadius=parseFloat(heroStyle?.borderRadius||'0');
+    const sidebarWidth=sidebar?.getBoundingClientRect().width||0;
+    let diagnosticWorks=true,diagnosticCall=null;
+    if(diagnosticCard){
+      const original=window.startStudySession;
+      window.startStudySession=async opts=>{diagnosticCall=opts;return true};
+      diagnosticCard.click();
+      await new Promise(r=>setTimeout(r,180));
+      diagnosticWorks=Boolean(diagnosticCall&&diagnosticCall.mode==='diagnostic'&&Number(diagnosticCall.size)===20);
+      window.startStudySession=original;
+    }
     pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
     if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
     return {
       loop:Boolean(loop),loopActions,diagnostic:Boolean(diagnostic),
-      diagnosticCard:Boolean(diagnosticCard),full,
+      diagnosticCard:Boolean(diagnosticCard),diagnosticWorks,diagnosticCall,full,
       chestLogo:Boolean(chest&&chestBg.includes('bust-confiante.avif')),
-      brandName,briefMoved
+      brandName,briefMoved,heroRadius,sidebarWidth
     };
   });
   if(!v14ExperienceTest.loop||v14ExperienceTest.loopActions!==4||!v14ExperienceTest.diagnostic)
     failures.push(name+': ciclo Aprender/Praticar/Recordar/Revisar não foi montado: '+JSON.stringify(v14ExperienceTest));
-  if(!v14ExperienceTest.diagnosticCard||v14ExperienceTest.full!=='ENEM Real')
+  if(!v14ExperienceTest.diagnosticCard||!v14ExperienceTest.diagnosticWorks||v14ExperienceTest.full!=='ENEM Real')
     failures.push(name+': diagnóstico/Modo ENEM Real não foram preservados nos simulados: '+JSON.stringify(v14ExperienceTest));
+  if(v14ExperienceTest.heroRadius<14)
+    failures.push(name+': hero perdeu o acabamento arredondado premium: '+JSON.stringify(v14ExperienceTest));
+  if(name==='desktop'&&(v14ExperienceTest.sidebarWidth<205||v14ExperienceTest.sidebarWidth>235))
+    failures.push(name+': sidebar se afastou da proporção da referência visual: '+JSON.stringify(v14ExperienceTest));
   if(name==='desktop'&&(!v14ExperienceTest.chestLogo||v14ExperienceTest.brandName!=='exo'))
     failures.push(name+': marca N do mascote + exo não foi aplicada na sidebar: '+JSON.stringify(v14ExperienceTest));
   if(!v14ExperienceTest.briefMoved)
