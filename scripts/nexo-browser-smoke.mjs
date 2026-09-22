@@ -528,11 +528,38 @@ async function runProfile(browser,name,viewport){
     };
     try{
       await ensureExternalQuestionAssets(q);
+      const resolvers={
+        missing2025:typeof questionVisualCanBeResolved==='function'?questionVisualCanBeResolved({
+          source_year:2025,source_question_number:13,base_text:'Observe a imagem a seguir.',prompt:'Analise a imagem.',
+          media_type:null,media_path:null,source_pdf_url:null,source_page:null,media_crop:null
+        }):null,
+        described2025:typeof questionVisualCanBeResolved==='function'?questionVisualCanBeResolved({
+          source_year:2025,source_question_number:14,
+          base_text:'Descrição acessível do gráfico: valores 10, 20, 30, 40, 50, 60 para as seis categorias.',
+          prompt:'De acordo com o gráfico, qual alternativa está correta?',
+          media_type:null,media_path:null,source_pdf_url:null,source_page:null,media_crop:null
+        }):null,
+        recoverable2023:typeof questionVisualCanBeResolved==='function'?questionVisualCanBeResolved({
+          source_year:2023,source_question_number:50,base_text:'Observe a figura a seguir.',prompt:'Analise a figura.',
+          media_type:null,media_path:null,source_pdf_url:null,source_page:null,media_crop:null
+        }):null
+      };
+      let fallbackBlocked=false;
+      if(typeof showVisualFallback==='function'){
+        const box=document.createElement('div');
+        box.id='v15VisualFallbackSandbox';
+        box.innerHTML='<div id="visualWrap"><div class="visual-head"><span>visual</span><span></span></div><div id="visualStage"></div></div><button class="q-option">A</button><button class="q-option">B</button><button id="confirmAnswer">Confirmar</button>';
+        document.body.appendChild(box);
+        showVisualFallback({id:-99001});
+        fallbackBlocked=[...box.querySelectorAll('.q-option')].every(x=>x.disabled)&&box.querySelector('#confirmAnswer')?.disabled===true;
+        box.remove();
+      }
       return {
         available:true,calls,
         files:Array.isArray(q.external_media_files)?q.external_media_files.length:0,
         optionMedia:Array.isArray(q.option_media)?q.option_media.filter(Boolean).length:0,
-        mediaType:q.media_type||''
+        mediaType:q.media_type||'',
+        resolvers,fallbackBlocked
       };
     }finally{
       window.fetch=originalFetch;
@@ -540,6 +567,10 @@ async function runProfile(browser,name,viewport){
   });
   if(!visualRecoveryTest.available||visualRecoveryTest.calls!==1||visualRecoveryTest.files!==2||visualRecoveryTest.optionMedia!==1||visualRecoveryTest.mediaType!=='image')
     failures.push(name+': recuperação de visuais ENEM ausentes regrediu: '+JSON.stringify(visualRecoveryTest));
+  if(visualRecoveryTest.resolvers?.missing2025!==false||visualRecoveryTest.resolvers?.described2025!==true||visualRecoveryTest.resolvers?.recoverable2023!==true)
+    failures.push(name+': filtro de integridade visual classificou questões incorretamente: '+JSON.stringify(visualRecoveryTest));
+  if(!visualRecoveryTest.fallbackBlocked)
+    failures.push(name+': questão com visual obrigatório indisponível ainda permite resposta: '+JSON.stringify(visualRecoveryTest));
 
   markStage('route-matrix');
   const routeMatrixTest=await page.evaluate(async()=>{
