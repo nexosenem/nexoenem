@@ -390,6 +390,41 @@ async function runProfile(browser,name,viewport){
       if(!btn){checks.push({kind:'primary',key,ok:false,reason:'missing'});continue}
       btn.click();await wait();checks.push({kind:'primary',key,expected:pageId,actual:active(),ok:active()===pageId});
     }
+
+    const journeyPrimary=[['community','community','groups'],['store','store','store'],['avatar','avatar','avatar']];
+    for(const [key,view,tab] of journeyPrimary){
+      const btn=document.querySelector('[data-nrx-side="'+key+'"]');
+      if(!btn){checks.push({kind:'journey-primary',key,ok:false,reason:'missing'});continue}
+      btn.click();await new Promise(r=>setTimeout(r,180));
+      const activeTab=document.querySelector('[data-journey-tab="'+tab+'"]');
+      const activePanel=document.querySelector('[data-journey-panel="'+tab+'"]');
+      const viewOk=document.body.dataset.nrxJourneyView===view;
+      const tabOk=Boolean(activeTab?.classList.contains('active')||activePanel?.classList.contains('active'));
+      checks.push({kind:'journey-primary',key,expected:'ranking/'+tab,actual:active()+'/'+String(document.body.dataset.nrxJourneyView||''),ok:active()==='ranking'&&viewOk&&tabOk});
+    }
+
+    const nexoBtn=document.querySelector('[data-nrx-side="nexo"]');
+    let nexoOk=false;
+    if(nexoBtn){
+      nexoBtn.click();await wait();
+      const panel=document.querySelector('#niaPanel');
+      const opened=Boolean(panel&&!panel.classList.contains('hidden'));
+      document.querySelector('#closeNia')?.click();await wait();
+      nexoOk=opened&&Boolean(panel?.classList.contains('hidden'));
+    }
+    checks.push({kind:'special-primary',key:'nexo',ok:nexoOk});
+
+    const settingsBtn=document.querySelector('[data-nrx-side="settings"]');
+    let settingsOk=false;
+    if(settingsBtn){
+      settingsBtn.click();await wait();
+      const modal=document.querySelector('#experienceSettingsModal');
+      const opened=Boolean(modal&&!modal.classList.contains('hidden'));
+      document.querySelector('#closeExperienceSettings')?.click();await wait();
+      settingsOk=opened&&Boolean(modal?.classList.contains('hidden'));
+    }
+    checks.push({kind:'special-primary',key:'settings',ok:settingsOk});
+
     const secondary=[['focos','focos'],['radar','radar'],['banco','banco'],['temas','temas'],['feedback','feedback'],['ranking','ranking'],['planos','planos']];
     for(const [key,pageId] of secondary){
       const btn=document.querySelector('.nrx-side-more-panel [data-nrx-target="'+key+'"]');
