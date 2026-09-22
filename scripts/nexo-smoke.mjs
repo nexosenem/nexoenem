@@ -123,7 +123,8 @@ assert(!fetchQuestionsBlock.includes('data_uri'),'Filas de questões não carreg
 assert(app.includes('function hasAccessibleVisualDescription')&&app.includes('function questionVisualCanBeResolved'),'Integridade visual filtra questões irresolvíveis sem apagar descrições acessíveis');
 assert(!app.includes('media_type,source_pdf_url,source_page,media_crop'),'Todas as rotas de questão completa preservam media_path');
 assert(fetchQuestionsBlock.includes('if(filters.visualOnly)')&&fetchQuestionsBlock.includes('likelyNeedsQuestionVisual(x)'),'Modo visual considera mídia nativa e questões ENEM recuperáveis, não apenas media_type');
-assert(fetchQuestionsBlock.includes("client.rpc('get_study_question_candidates'")&&fetchQuestionsBlock.includes('p_limit:1000'),'Treinos usam amostra aleatória do acervo completo sem inflar o payload móvel');
+assert(fetchQuestionsBlock.includes("client.rpc('get_study_question_candidates_v2'")&&fetchQuestionsBlock.includes('p_limit:candidateLimit')&&fetchQuestionsBlock.includes('candidateLimit=Math.min(400,Math.max(80,requested*4))'),'Treinos usam candidatos leves, aleatórios e proporcionais ao tamanho da sessão');
+assert(app.includes("const hasSeenMetadata=all.length>0&&all.every(x=>typeof x._seen==='boolean')"),'Sessões reaproveitam metadado de visto e evitam consulta extra de histórico');
 assert(app.includes("client.rpc('get_question_catalog_items_v2'"),'Banco usa catálogo leve com status de integridade visual');
 assert(app.includes("q.visual_status!=='repair'"),'Banco oculta questões visuais em restauração');
 assert(app.includes("if(!questionVisualCanBeResolved(data))"),'Abertura avulsa bloqueia questão visual irresolúvel');
