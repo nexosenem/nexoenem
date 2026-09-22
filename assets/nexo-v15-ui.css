@@ -656,3 +656,41 @@ body.light.nexo-reference-ui .v15-material-tabs button:hover{color:#fff!importan
     transition-duration:.001ms!important;
   }
 }
+
+
+/* V15 question media completeness */
+#questoes .q-media-gallery{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(min(260px,100%),1fr));
+  gap:10px;
+  width:100%;
+  align-items:start;
+}
+#questoes .q-media-gallery.single{display:block}
+#questoes .q-media-gallery .q-media-image{
+  width:auto!important;
+  max-width:100%!important;
+  max-height:520px;
+  object-fit:contain;
+  background:#fff;
+}
+#questoes .q-option.has-media{
+  display:grid!important;
+  grid-template-columns:auto minmax(0,1fr)!important;
+  align-items:center!important;
+}
+#questoes .q-option-media{
+  grid-column:2;
+  width:min(100%,420px);
+  max-height:220px;
+  object-fit:contain;
+  margin:8px 0 2px;
+  border-radius:9px;
+  background:#fff;
+  border:1px solid rgba(132,148,190,.13);
+}
+@media(max-width:760px){
+  #questoes .q-media-gallery{grid-template-columns:1fr}
+  #questoes .q-media-gallery .q-media-image{max-height:62vh}
+  #questoes .q-option-media{max-height:180px}
+}
