@@ -29,6 +29,28 @@ const missingRefs=[...new Set(refs)].filter(ref=>!exists(ref.replace(/^\.\//,'')
 assert(missingRefs.length===0,'Assets locais do index existem',missingRefs.join(', '));
 
 const localScripts=[...index.matchAll(/<script\s+src="(\.\/[^"?#]+\.js)(?:\?[^"]*)?"[^>]*><\/script>/g)].map(m=>m[1].replace(/^\.\//,''));
+const localStyles=[...index.matchAll(/<link\b[^>]*href="(\.\/[^"?#]+\.css)(?:\?[^"]*)?"[^>]*>/g)].map(m=>m[1].replace(/^\.\//,''));
+const literalAssetRefs=[];
+for(const file of [...new Set(localScripts)]){
+  const src=read(file);
+  for(const match of src.matchAll(/\.\/assets\/[A-Za-z0-9_./-]+\.(?:avif|webp|png|jpe?g|svg|gif|woff2?|mp4|webm|pdf)/gi)){
+    const raw=match[0];
+    literalAssetRefs.push({from:file,raw,resolved:raw.replace(/^\.\//,'')});
+  }
+}
+for(const file of [...new Set(localStyles)]){
+  const src=read(file);
+  for(const match of src.matchAll(/url\(\s*['"]?([^)'"]+)['"]?\s*\)/gi)){
+    const raw=String(match[1]||'').trim();
+    if(!raw||/^(?:data:|https?:|\/\/)/i.test(raw)||raw.includes('$'))continue;
+    if(!/\.(?:avif|webp|png|jpe?g|svg|gif|woff2?|mp4|webm|pdf)(?:[?#].*)?$/i.test(raw))continue;
+    const clean=raw.split(/[?#]/)[0];
+    const resolved=path.normalize(path.join(path.dirname(file),clean));
+    literalAssetRefs.push({from:file,raw,resolved});
+  }
+}
+const missingLiteralAssets=literalAssetRefs.filter(item=>!exists(item.resolved));
+assert(missingLiteralAssets.length===0,'Assets literais de JS/CSS existem',missingLiteralAssets.map(x=>x.from+' -> '+x.raw).join(' | '));
 const syntaxErrors=[];
 for(const file of [...new Set(localScripts), 'sw.js']){
   try{new Function(read(file));}
