@@ -694,3 +694,40 @@ body.light.nexo-reference-ui .v15-material-tabs button:hover{color:#fff!importan
   #questoes .q-media-gallery .q-media-image{max-height:62vh}
   #questoes .q-option-media{max-height:180px}
 }
+
+
+/* V15 visual-integrity guard: never let a broken figure become a student error */
+#questoes .visual-accessible-fallback{
+  display:grid;
+  gap:7px;
+  padding:18px;
+  border-radius:12px;
+  background:linear-gradient(180deg,rgba(18,38,54,.92),rgba(11,26,41,.92));
+  border:1px solid rgba(87,214,190,.18);
+}
+#questoes .visual-accessible-fallback b{font-size:12px;color:#74e0be}
+#questoes .visual-accessible-fallback p{margin:0;color:#9cabbf;font-size:10.5px;line-height:1.5}
+#questoes .visual-wrap.accessible-fallback .visual-head{border-bottom-color:rgba(87,214,190,.12)!important}
+#questoes .visual-fallback{
+  display:grid;
+  justify-items:center;
+  gap:9px;
+  padding:20px 14px;
+  text-align:center;
+}
+#questoes .visual-fallback>span{
+  width:42px;height:42px;display:grid;place-items:center;border-radius:13px;
+  background:rgba(255,111,132,.10);color:#ff7689;font-size:19px;
+}
+#questoes .visual-fallback>b{font-size:12px}
+#questoes .visual-fallback>p{max-width:520px;margin:0;color:#8d9bb0;font-size:10.5px;line-height:1.5}
+#questoes .visual-fallback>div{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+#questoes .q-option:disabled{
+  opacity:.48;
+  cursor:not-allowed!important;
+  transform:none!important;
+}
+body.light.nexo-reference-ui #questoes .visual-accessible-fallback{
+  background:#f4fbf9!important;border-color:rgba(33,151,121,.18)!important;
+}
+body.light.nexo-reference-ui #questoes .visual-accessible-fallback p{color:#607287!important}
