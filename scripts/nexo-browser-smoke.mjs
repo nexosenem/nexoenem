@@ -787,6 +787,85 @@ async function runProfile(browser,name,viewport){
   const badJourney=utilityModuleTest.journeyChecks.filter(x=>!x.button||!x.panel);
   if(badJourney.length)failures.push(name+': abas da Jornada regrediram: '+JSON.stringify(badJourney));
 
+
+  markStage('essay-render-viewer');
+  const essayRenderAndViewerTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      membership:state.membership,user:state.user,
+      materials:[...(state.materials||[])],materialSubject:state.materialSubject,
+      text:document.querySelector('#essayText')?.value||'',
+      result:document.querySelector('#essayResult')?.innerHTML||''
+    };
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    let essay={},viewer={};
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+
+      if(typeof openPage==='function')openPage('redacao');
+      if(typeof fillThemes==='function')fillThemes();
+      await wait(30);
+      state.membership={plan:'plus',is_plus:true,usage:{},limits:{}};
+      const area=document.querySelector('#essayText');
+      const analyze=document.querySelector('#analyzeEssay');
+      if(area){area.value='texto curto';area.dispatchEvent(new Event('input',{bubbles:true}))}
+      analyze?.click();
+      await wait(30);
+      const shortValidation=/pelo menos 80 palavras/i.test(document.querySelector('#toast')?.textContent||'');
+
+      const paragraph='A educação pública é essencial para a cidadania e para a redução das desigualdades sociais. Entretanto, diferenças de acesso e infraestrutura dificultam a garantia desse direito. Nesse sentido, políticas permanentes devem articular escola, comunidade e poder público. Além disso, a inclusão depende de ações contínuas, acompanhamento e investimento. Portanto, o Estado deve implementar programas de formação docente por meio de financiamento adequado, a fim de reduzir barreiras e garantir aprendizagem, especialmente para estudantes em situação de vulnerabilidade. ';
+      const sample=(paragraph+paragraph+paragraph).trim();
+      const theme=typeof getEssayThemeData==='function'?getEssayThemeData():{};
+      const scores=typeof essayScores==='function'?essayScores(sample,theme):[];
+      const total=scores.reduce((a,b)=>a+b,0);
+      if(typeof showEssayResult==='function')showEssayResult(sample,scores,total);
+      await wait(20);
+      const result=document.querySelector('#essayResult');
+      essay={
+        shortValidation,
+        fiveScores:scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200),
+        fiveCards:result?.querySelectorAll('.essay-comp-card').length===5,
+        resultVisible:visible(result?.querySelector('.essay-correction-shell')),
+        score:total
+      };
+      essay.ok=essay.shortValidation&&essay.fiveScores&&essay.fiveCards&&essay.resultVisible&&total>=200&&total<=1000;
+
+      state.user=null;
+      const fake={id:-733001,title:'Resumo NEXO - visualizador',format:'image',file_url:'./assets/nexo-family/bust-confiante.avif',area:'Matemática',subject:'Matemática',topic:'Porcentagem',plus_only:false,is_published:true};
+      state.materials=[fake];state.materialSubject='Matemática';
+      if(typeof openPage==='function')openPage('materiais');
+      await wait(20);
+      await openContentViewer('material',fake.id);
+      await wait(40);
+      const modal=document.querySelector('#contentViewer'),body=document.querySelector('#contentViewerBody');
+      const opened=visible(modal)&&document.querySelector('#contentViewerTitle')?.textContent.includes('visualizador')&&Boolean(body?.querySelector('img'))&&visible(document.querySelector('#viewerPractice'))&&visible(document.querySelector('#viewerComplete'));
+      document.querySelector('#closeContentViewer')?.click();
+      await wait(20);
+      viewer={opened,closed:Boolean(modal?.classList.contains('hidden')),cleared:body?.innerHTML==='',stateCleared:state.activeViewer===null};
+      viewer.ok=viewer.opened&&viewer.closed&&viewer.cleared&&viewer.stateCleared;
+    }catch(err){
+      essay.error=String(err?.message||err);
+      viewer.error=String(err?.message||err);
+    }finally{
+      state.membership=prev.membership;state.user=prev.user;state.materials=prev.materials;state.materialSubject=prev.materialSubject;
+      const area=document.querySelector('#essayText');if(area){area.value=prev.text;area.dispatchEvent(new Event('input',{bubbles:true}))}
+      const result=document.querySelector('#essayResult');if(result)result.innerHTML=prev.result;
+      document.querySelector('#contentViewer')?.classList.add('hidden');
+      const body=document.querySelector('#contentViewerBody');if(body)body.innerHTML='';
+      state.activeViewer=null;document.body.style.overflow='';
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return {essay,viewer};
+  });
+  if(!essayRenderAndViewerTest.essay.ok)failures.push(name+': renderização/validação de Redação falhou: '+JSON.stringify(essayRenderAndViewerTest.essay));
+  if(!essayRenderAndViewerTest.viewer.ok)failures.push(name+': visualizador da Biblioteca falhou: '+JSON.stringify(essayRenderAndViewerTest.viewer));
+
   markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -1167,7 +1246,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
