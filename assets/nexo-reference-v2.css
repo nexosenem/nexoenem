@@ -3101,7 +3101,8 @@ body.nexo-reference-ui.nrx-context-open #nexoContextBar{
 
 /* Search is already first-class in the top/mobile header; keep Ctrl+K functionality
    but remove the redundant floating button from the visual hierarchy. */
-body.nexo-reference-ui #v13SearchButton{
+body.nexo-reference-ui #v13SearchButton,
+body.nexo-reference-ui #v15TutorFab{
   display:none!important;
 }
 
