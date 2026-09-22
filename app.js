@@ -7402,7 +7402,7 @@ function renderBank(){
     .filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search)))
     .slice(0,150);
   $('#bankList').innerHTML=list.length?list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.has_visual||q.media_type?' · ◉ visual':''}${q.visual_status==='recoverable'?' · recuperável':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join(''):'<p class="learning-empty">Nenhuma questão respondível encontrada neste filtro.</p>';
-  $('[data-bank]').forEach(b=>b.onclick=()=>openSingleQuestion(Number(b.dataset.bank)));
+  document.querySelectorAll('[data-bank]').forEach(b=>b.onclick=()=>openSingleQuestion(Number(b.dataset.bank)));
 }
 $('#bankSearch').addEventListener('input',renderBank);
 $('#bankArea').addEventListener('change',renderBank);
