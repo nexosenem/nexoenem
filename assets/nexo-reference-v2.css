@@ -1760,3 +1760,67 @@ body.nexo-reference-ui .network-status:not(.hidden) b{display:inline!important;f
     min-width:0!important;
   }
 }
+
+
+/* ========= Reference accessibility font scaling =========
+   The original experience control must also affect the generated reference UI. */
+body.nexo-reference-ui[data-font-scale="large"] .nrx-side-item>b{font-size:13px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-side-item>b{font-size:14.5px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-side-account b{font-size:12px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-side-account b{font-size:13.5px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-side-account small{font-size:9.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-side-account small{font-size:11px!important}
+
+body.nexo-reference-ui[data-font-scale="large"] .nrx-greeting{font-size:13.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-greeting{font-size:15px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-hero h1{font-size:48px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-hero h1{font-size:52px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-hero p{font-size:14.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-hero p{font-size:16px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-btn{font-size:13px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-btn{font-size:14px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-shortcut b{font-size:13.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-shortcut b{font-size:15px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-shortcut small{font-size:10px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-shortcut small{font-size:11px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-stat-card>h3{font-size:13px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-stat-card>h3{font-size:14.5px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-preview-head b{font-size:14.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-preview-head b{font-size:16px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-preview-head span,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-preview-tabs i,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-preview-list span,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-essay-box,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-preview-cta{font-size:10px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-preview-head span,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-preview-tabs i,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-preview-list span,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-essay-box,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-preview-cta{font-size:11px!important}
+
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mobile-brand{font-size:22px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mobile-brand{font-size:24px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-hello{font-size:12.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-hello{font-size:14px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-hero h1{font-size:31px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-hero h1{font-size:34px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-hero p{font-size:11px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-hero p{font-size:12px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mobile-search-slot .search input{font-size:13.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mobile-search-slot .search input{font-size:15px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-action b{font-size:11.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-action b{font-size:13px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-progress strong,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-section-head b,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-continue b{font-size:12.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-progress strong,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-section-head b,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-continue b{font-size:14px!important}
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-progress small,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-section-head span,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-continue small,
+body.nexo-reference-ui[data-font-scale="large"] .nrx-bottom-nav button small{font-size:10.5px!important}
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-progress small,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-section-head span,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-continue small,
+body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-bottom-nav button small{font-size:12px!important}

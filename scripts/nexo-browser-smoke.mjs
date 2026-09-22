@@ -567,6 +567,69 @@ async function runProfile(browser,name,viewport){
   if(accessibilityTest.unlabeledButtons.length)failures.push(name+': botões visíveis sem nome acessível: '+accessibilityTest.unlabeledButtons.join(', '));
   if(accessibilityTest.unlabeledFields.length)failures.push(name+': campos visíveis sem rótulo: '+accessibilityTest.unlabeledFields.join(', '));
 
+  markStage('experience-controls');
+  const experienceControlTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      light:document.body.classList.contains('light')
+    };
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    if(typeof openPage==='function')openPage('inicio');
+    await new Promise(r=>requestAnimationFrame(r));
+
+    const mobile=innerWidth<=760;
+    const sample=document.querySelector(mobile?'.nrx-mobile .nrx-mob-action b':'.nrx-side-nav .nrx-side-item b');
+    const normalFont=sample?parseFloat(getComputedStyle(sample).fontSize):0;
+
+    const settings=document.querySelector('[data-nrx-side="settings"]');
+    settings?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const modal=document.querySelector('#experienceSettingsModal');
+    const modalOpened=Boolean(modal&&!modal.classList.contains('hidden'));
+
+    modal?.querySelector('[data-font-scale="xlarge"]')?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const xlargeFont=sample?parseFloat(getComputedStyle(sample).fontSize):0;
+    const fontChanged=document.body.dataset.fontScale==='xlarge'&&xlargeFont>normalFont+1;
+
+    modal?.querySelector('[data-contrast="high"]')?.click();
+    const contrastChanged=document.body.dataset.contrast==='high';
+
+    modal?.querySelector('[data-motion="reduced"]')?.click();
+    const motionChanged=document.body.dataset.motion==='reduced';
+
+    modal?.querySelector('[data-experience-mode="focus"]')?.click();
+    const focusChanged=document.body.dataset.experience==='focus';
+
+    const saver=modal?.querySelector('#dataSaverToggle');
+    if(saver){
+      saver.checked=true;
+      saver.dispatchEvent(new Event('change',{bubbles:true}));
+    }
+    const saverChanged=document.body.classList.contains('data-saver');
+
+    modal?.querySelector('#resetExperienceSettings')?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const resetOk=document.body.dataset.fontScale==='normal'&&document.body.dataset.contrast==='normal'&&document.body.dataset.experience==='balanced'&&!document.body.classList.contains('data-saver');
+
+    modal?.querySelector('#closeExperienceSettings')?.click();
+    const modalClosed=Boolean(modal?.classList.contains('hidden'))&&document.body.style.overflow==='';
+
+    document.body.classList.toggle('light',prev.light);
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    return {modalOpened,fontChanged,normalFont,xlargeFont,contrastChanged,motionChanged,focusChanged,saverChanged,resetOk,modalClosed};
+  });
+  for(const [key,value] of Object.entries(experienceControlTest)){
+    if(['normalFont','xlargeFont'].includes(key))continue;
+    if(!value)failures.push(name+': controle de experiência falhou em '+key+' ('+JSON.stringify(experienceControlTest)+')');
+  }
+
 
 
 
@@ -705,7 +768,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,accessibilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,accessibilityTest,experienceControlTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
