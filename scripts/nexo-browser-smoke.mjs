@@ -550,19 +550,20 @@ async function runProfile(browser,name,viewport){
     }
     checks.push({kind:'utility',key:'notification',ok:notificationOk});
     if(innerWidth<=760){
-      const mobileRoutes=[['questoes','questoes'],['redacao','redacao'],['materiais','materiais']];
+      const mobileRoutes=[['questoes','questoes'],['redacao','redacao'],['desempenho','desempenho']];
       for(const [key,pageId] of mobileRoutes){
         const btn=document.querySelector('[data-nrx-bottom="'+key+'"]');
         if(!btn){checks.push({kind:'mobile-bottom',key,ok:false,reason:'missing'});continue}
         btn.click();await wait();checks.push({kind:'mobile-bottom',key,expected:pageId,actual:active(),ok:active()===pageId});
       }
-      const profile=document.querySelector('[data-nrx-bottom="profile"]');
-      if(profile){
-        profile.click();await wait();
-        const menu=document.querySelector('#profileMenu');
-        checks.push({kind:'mobile-bottom',key:'profile',ok:Boolean(menu&&!menu.classList.contains('hidden'))});
-        menu?.classList.add('hidden');
-      }else checks.push({kind:'mobile-bottom',key:'profile',ok:false,reason:'missing'});
+      const more=document.querySelector('[data-nrx-bottom="more"]');
+      if(more){
+        more.click();await wait();
+        const sidebar=document.querySelector('#sidebar');
+        const opened=Boolean(document.body.classList.contains('mobile-menu-open')&&sidebar?.classList.contains('open'));
+        checks.push({kind:'mobile-bottom',key:'more',ok:opened});
+        document.querySelector('#closeMenu')?.click();
+      }else checks.push({kind:'mobile-bottom',key:'more',ok:false,reason:'missing'});
     }
     document.body.classList.toggle('light',original.light);
     pages.forEach(p=>p.classList.toggle('active',p.id===original.active));
