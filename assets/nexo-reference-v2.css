@@ -3205,3 +3205,26 @@ body.nexo-reference-ui #sessionSetup.v15-progressive-setup .nexo-guide-card{
     display:flex!important;
   }
 }
+
+
+/* Desktop header parity: theme → crown → notifications → journey/avatar. */
+.nrx-desktop-crown{
+  color:#f1ca62!important;
+}
+.nrx-desktop-crown .v15-icon{
+  width:18px!important;
+  height:18px!important;
+}
+@media(min-width:761px){
+  body.nexo-reference-ui .nrx-desktop-crown{
+    display:grid!important;
+    place-items:center!important;
+    background:linear-gradient(180deg,rgba(28,31,53,.96),rgba(16,22,39,.96))!important;
+    border-color:rgba(218,181,83,.16)!important;
+  }
+}
+@media(max-width:760px){
+  body.nexo-reference-ui .nrx-desktop-crown{
+    display:none!important;
+  }
+}
