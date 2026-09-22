@@ -233,9 +233,9 @@ function buildBottomNav(){
   nav.setAttribute('aria-label','Navegação principal');
   const items=[
     ['inicio','⌂','Início'],
+    ['study','▣','Estudar'],
     ['questoes','✓','Questões'],
     ['redacao','✎','Redação'],
-    ['desempenho','▥','Desempenho'],
     ['more','☰','Mais']
   ];
   items.forEach(([page,icon,label])=>{
@@ -248,6 +248,8 @@ function buildBottomNav(){
         e.stopPropagation();
         $('#moreMobile')?.click();
         setTimeout(syncBottom,0);
+      }else if(page==='study'){
+        openMaterials('study');
       }else go(page);
       syncBottom();
     });
@@ -264,12 +266,13 @@ function syncShellVisibility(){
 }
 function syncBottom(){
   const active=$('.page.active')?.id||'inicio';
-  const primary=new Set(['inicio','questoes','redacao','desempenho']);
+  const primary=new Set(['inicio','materiais','questoes','redacao']);
   const menuOpen=document.body.classList.contains('mobile-menu-open');
   document.querySelectorAll('[data-nrx-bottom]').forEach(b=>{
     const p=b.dataset.nrxBottom;
     const moreActive=p==='more'&&(menuOpen||!primary.has(active));
-    b.classList.toggle('active',p===active||moreActive);
+    const studyActive=p==='study'&&active==='materiais'&&document.body.dataset.nrxMaterialsView!=='resumos';
+    b.classList.toggle('active',p===active||studyActive||moreActive);
   });
   syncShellVisibility();
 }
