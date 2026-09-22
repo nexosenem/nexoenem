@@ -91,6 +91,9 @@
       const name=title.includes('real')||title.includes('enem')?'simulation':title.includes('diagn')?'target':title.includes('core')?'spark':title.includes('matem')?'target':'questions';
       replaceIcon(btn.querySelector(':scope>span'),name);
     });
+    replaceIcon($('.nrx-difficulty-icon'),'target');
+    replaceIcon($('.nrx-goal-icon'),'planner');
+    replaceIcon($('.nrx-continue-icon'),'study');
   }
 
   function enhanceSearch(){
