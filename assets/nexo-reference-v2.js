@@ -566,10 +566,10 @@ function observe(){
     const el=$(sel);if(!el)return;
     observer.observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
   });
-  $('[data-nexo-today-title],[data-nexo-today-text]').filter(el=>!el.closest?.('.nrx-home')).forEach(el=>{
-    observer.observe(el,{subtree:true,childList:true,characterData:true});
-  });
-  $('.page').forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));
+  Array.from(document.querySelectorAll('[data-nexo-today-title],[data-nexo-today-text]'))
+    .filter(el=>!el.closest?.('.nrx-home'))
+    .forEach(el=>observer.observe(el,{subtree:true,childList:true,characterData:true}));
+  document.querySelectorAll('.page').forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));
   const app=$('#app');
   if(app)observer.observe(app,{attributes:true,attributeFilter:['class']});
   window.addEventListener('resize',()=>{placeSearch();scheduleReferenceSync()},{passive:true});
