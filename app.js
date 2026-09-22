@@ -3448,7 +3448,10 @@ async function getSeenIds() {
 async function fetchQuestions(filters={}) {
   const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
   const requested=Math.max(1,Number(filters.size||10));
-  const candidateLimit=Math.min(400,Math.max(80,requested*4));
+  // The server already removes visual repairs and puts unseen items first, so a
+  // compact 1.5x buffer is enough for resilience without downloading hundreds
+  // of full statements unnecessarily on mobile.
+  const candidateLimit=Math.min(160,Math.max(30,Math.ceil(requested*1.5)));
   let rows=null;
 
   // Main path: fetch only a lightweight randomized candidate list from the full
