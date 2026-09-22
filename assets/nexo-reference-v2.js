@@ -550,13 +550,29 @@ function syncContinueCard(){
 }
 function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncLegacyHomeTools();syncSideNav();syncBottom();placeSearch()}
 
-function observe(){
-  const targets=['#profileName','#profileAdminShortcut','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#studyWorkspace','#inicio','#app'];
-  targets.forEach(sel=>{
-    const el=$(sel);if(!el)return;
-    new MutationObserver(()=>syncAll()).observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
+let referenceSyncQueued=false;
+function scheduleReferenceSync(){
+  if(referenceSyncQueued)return;
+  referenceSyncQueued=true;
+  requestAnimationFrame(()=>{
+    referenceSyncQueued=false;
+    syncAll();
   });
-  window.addEventListener('resize',placeSearch,{passive:true});
+}
+function observe(){
+  const observer=new MutationObserver(scheduleReferenceSync);
+  const contentTargets=['#profileName','#profileRole','#profileAdminShortcut','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#studyWorkspace'];
+  contentTargets.forEach(sel=>{
+    const el=$(sel);if(!el)return;
+    observer.observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
+  });
+  $('[data-nexo-today-title],[data-nexo-today-text]').filter(el=>!el.closest?.('.nrx-home')).forEach(el=>{
+    observer.observe(el,{subtree:true,childList:true,characterData:true});
+  });
+  $('.page').forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));
+  const app=$('#app');
+  if(app)observer.observe(app,{attributes:true,attributeFilter:['class']});
+  window.addEventListener('resize',()=>{placeSearch();scheduleReferenceSync()},{passive:true});
   document.addEventListener('click',e=>{
     if(!e.target.closest?.('.nrx-side-more-panel')&&!e.target.closest?.('.nrx-side-more-toggle'))closeReferenceMore();
     const materialPage=e.target.closest?.('[data-page="materiais"]');
