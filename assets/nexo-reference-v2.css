@@ -1677,3 +1677,86 @@ body.nexo-reference-ui .network-status:not(.hidden) b{display:inline!important;f
   body.nexo-reference-ui #redacao .page-nexo-mentor img{width:32px!important;height:38px!important}
   body.nexo-reference-ui .network-status:not(.hidden) b{font-size:6px!important}
 }
+
+
+/* ========= Reference tablet/intermediate breakpoint =========
+   Desktop chrome still exists at 761px+, but content must stop assuming
+   a wide desktop canvas. Keep every feature; only reflow the layout. */
+@media (min-width:761px) and (max-width:900px){
+  body.nexo-reference-ui #redacao,
+  body.nexo-reference-ui #radar{
+    min-width:0!important;
+    max-width:100%!important;
+    overflow-x:hidden!important;
+  }
+
+  body.nexo-reference-ui #redacao .essay-workspace-v2{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui #redacao .essay-side-v2{
+    position:static!important;
+    top:auto!important;
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui #redacao .essay-theme-tools{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui #redacao .essay-random-theme,
+  body.nexo-reference-ui #redacao .essay-editor-actions .primary-btn{
+    width:100%!important;
+    min-width:0!important;
+  }
+  body.nexo-reference-ui #redacao .essay-editor-actions{
+    align-items:stretch!important;
+    flex-direction:column!important;
+  }
+  body.nexo-reference-ui #redacao .essay-editor-actions>small{
+    max-width:none!important;
+  }
+  body.nexo-reference-ui #redacao .essay-structure-check{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  body.nexo-reference-ui #redacao .essay-editor-heading,
+  body.nexo-reference-ui #redacao .essay-writing-head{
+    flex-wrap:wrap!important;
+  }
+
+  body.nexo-reference-ui #radar .radar-kpis{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+  }
+  body.nexo-reference-ui #radar .radar-controls{
+    align-items:stretch!important;
+    flex-direction:column!important;
+    gap:12px!important;
+  }
+  body.nexo-reference-ui #radar .radar-controls-copy{
+    min-width:0!important;
+  }
+  body.nexo-reference-ui #radar .radar-filter-grid{
+    width:100%!important;
+    min-width:0!important;
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui #radar .radar-filter-grid label,
+  body.nexo-reference-ui #radar .radar-filter-grid select,
+  body.nexo-reference-ui #radar .radar-filter-grid input{
+    min-width:0!important;
+    max-width:100%!important;
+  }
+  body.nexo-reference-ui #radar .radar-layout{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui #radar .radar-side{
+    position:static!important;
+    top:auto!important;
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui #radar .radar-topic-row{
+    min-width:0!important;
+  }
+  body.nexo-reference-ui #radar .radar-topic-main,
+  body.nexo-reference-ui #radar .radar-topic-head,
+  body.nexo-reference-ui #radar .radar-topic-stats{
+    min-width:0!important;
+  }
+}
