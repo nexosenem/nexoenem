@@ -355,10 +355,10 @@ function syncCountdown(){
     days=Math.ceil((target.getTime()-today.getTime())/86400000);
   }
   const shown=Math.max(0,days);
-  $('[data-nrx-days]').forEach(el=>el.textContent=(days>=0?shown:'—')+' dias');
+  $$('[data-nrx-days]').forEach(el=>el.textContent=(days>=0?shown:'—')+' dias');
   const windowDays=120;
   const pct=days<=0?100:Math.max(4,Math.min(100,100-(days/windowDays*100)));
-  $('[data-nrx-countdown-bar]').forEach(el=>el.style.width=pct+'%');
+  $$('[data-nrx-countdown-bar]').forEach(el=>el.style.width=pct+'%');
 }
 function syncProgress(){
   const src=$('#progressPct')||$('#mobileProgressPct');
