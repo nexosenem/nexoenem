@@ -328,7 +328,22 @@ function buildReferenceProfileTools(){
   if(!menu||$('.nrx-profile-tools',menu))return;
   const section=document.createElement('section');
   section.className='nrx-profile-tools';
-  section.innerHTML='<div class="nrx-profile-tools-head"><b>Mais recursos</b><small>Todos os módulos continuam disponíveis</small></div><div class="nrx-profile-tools-grid"></div>';
+  section.innerHTML='<div class="nrx-profile-tools-head"><b>Acesso rápido</b><small>Busca, tema e todos os módulos do NEXO</small></div><div class="nrx-profile-utility-grid"></div><div class="nrx-profile-tools-grid"></div>';
+  const utilities=$('.nrx-profile-utility-grid',section);
+  const searchBtn=document.createElement('button');
+  searchBtn.type='button';searchBtn.dataset.nrxUtility='search';
+  searchBtn.innerHTML='<span>⌕</span><b>Pesquisar no NEXO</b>';
+  searchBtn.addEventListener('click',()=>{
+    menu.classList.add('hidden');
+    go('inicio');
+    setTimeout(()=>{placeSearch();const input=$('#globalSearch');if(input){try{input.focus({preventScroll:false})}catch(_){input.focus()}}},80);
+  });
+  utilities.appendChild(searchBtn);
+  const themeBtn=document.createElement('button');
+  themeBtn.type='button';themeBtn.dataset.nrxUtility='theme';
+  themeBtn.innerHTML='<span>◐</span><b>Tema claro / escuro</b>';
+  themeBtn.addEventListener('click',()=>$('#themeToggle')?.click());
+  utilities.appendChild(themeBtn);
   const grid=$('.nrx-profile-tools-grid',section);
   referenceSecondaryTools().forEach(([key,icon,label,,adminOnly])=>{
     const b=document.createElement('button');

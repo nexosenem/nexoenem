@@ -185,6 +185,72 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&referenceAccessTest.heroFont<26)failures.push(name+': título principal pequeno demais');
   if(name!=='mobile'&&referenceAccessTest.heroFont<36)failures.push(name+': título principal desktop pequeno demais');
 
+  const routeMatrixTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app');
+    const auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')].filter(p=>p.id!=='videoaulas'&&p.id!=='admin');
+    const original={
+      app:app?.className||'',
+      auth:auth?.className||'',
+      light:document.body.classList.contains('light'),
+      font:document.body.dataset.fontScale||'normal',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio'
+    };
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    const results=[];
+    const modes=[
+      {theme:'dark',font:'normal'},
+      {theme:'light',font:'normal'},
+      {theme:'dark',font:'xlarge'}
+    ];
+    for(const mode of modes){
+      document.body.classList.toggle('light',mode.theme==='light');
+      document.body.dataset.fontScale=mode.font;
+      for(const target of pages){
+        document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p===target));
+        await new Promise(r=>requestAnimationFrame(r));
+        const rect=target.getBoundingClientRect();
+        const style=getComputedStyle(target);
+        const children=[...target.querySelectorAll('button,input,select,textarea,.panel,.question-card,.plan-card,.theme-card,.journey-profile-card')]
+          .filter(el=>{const cs=getComputedStyle(el),r=el.getBoundingClientRect();return cs.display!=='none'&&cs.visibility!=='hidden'&&r.width>0&&r.height>0;});
+        const overflow=children.filter(el=>el.scrollWidth>el.clientWidth+6).slice(0,8).map(el=>({tag:el.tagName,cls:el.className,id:el.id,sw:el.scrollWidth,cw:el.clientWidth}));
+        results.push({
+          page:target.id,theme:mode.theme,font:mode.font,
+          visible:style.display!=='none'&&rect.width>0&&rect.height>0,
+          documentOverflow:document.documentElement.scrollWidth>innerWidth+4,
+          overflow
+        });
+      }
+    }
+    document.body.classList.toggle('light',original.light);
+    document.body.dataset.fontScale=original.font;
+    document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===original.active));
+    if(app)app.className=original.app;
+    if(auth)auth.className=original.auth;
+    return results;
+  });
+  const routeBad=routeMatrixTest.filter(x=>!x.visible||x.documentOverflow||x.overflow.length);
+  if(routeBad.length)failures.push(name+': matriz visual por página/tema/fonte encontrou problemas: '+JSON.stringify(routeBad.slice(0,12)));
+
+  const utilityTest=await page.evaluate(()=>{
+    const profile=document.querySelector('#profileMenu');
+    const search=document.querySelector('[data-nrx-utility="search"]');
+    const theme=document.querySelector('[data-nrx-utility="theme"]');
+    const notification=document.querySelector('#notificationBtn');
+    const notificationVisible=Boolean(notification&&getComputedStyle(notification).display!=='none'&&notification.getBoundingClientRect().width>0);
+    return {
+      search:Boolean(search),theme:Boolean(theme),
+      notification:Boolean(notification),
+      notificationVisible,
+      profileScrollable:profile?['auto','scroll'].includes(getComputedStyle(profile).overflowY)||profile.scrollHeight<=profile.clientHeight:true
+    };
+  });
+  if(!utilityTest.search||!utilityTest.theme)failures.push(name+': busca ou tema ficaram sem acesso na interface nova');
+  if(name==='mobile'&&!utilityTest.notificationVisible)failures.push(name+': notificações continuam escondidas no topo móvel');
+  if(name==='mobile'&&!utilityTest.profileScrollable)failures.push(name+': painel Perfil pode cortar recursos no celular');
+
+
 
   if(!first.hardening)failures.push(name+': hardening não carregou');
   if(!first.v13Core)failures.push(name+': V13 core não carregou');
@@ -315,7 +381,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   await context.close();
 }
 

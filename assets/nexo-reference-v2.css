@@ -1516,3 +1516,31 @@ body.light.nexo-reference-ui .nrx-notification-panel{background:rgba(255,255,255
 body.light.nexo-reference-ui .nrx-side-more-grid>button,
 body.light.nexo-reference-ui .nrx-profile-tools-grid>button,
 body.light.nexo-reference-ui .nrx-notification-list>button{background:#f7f9fd;color:#172239}
+
+
+/* ========= Reference mobile utility preservation ========= */
+body.nexo-reference-ui .nrx-profile-utility-grid{
+  display:grid;grid-template-columns:1fr 1fr;gap:5px;margin:0 0 7px
+}
+body.nexo-reference-ui .nrx-profile-utility-grid>button{
+  min-height:45px;padding:8px;
+  display:grid;grid-template-columns:27px minmax(0,1fr);align-items:center;gap:7px;
+  border:1px solid rgba(100,189,240,.12);border-radius:9px;
+  background:rgba(66,126,180,.06);color:#dfe8f5;text-align:left;cursor:pointer
+}
+body.nexo-reference-ui .nrx-profile-utility-grid>button span{
+  width:27px;height:27px;border-radius:8px;display:grid;place-items:center;
+  background:rgba(78,178,222,.10);color:#71d9ff;font-size:12px
+}
+body.nexo-reference-ui .nrx-profile-utility-grid>button b{font-size:8.5px;line-height:1.15}
+@media(max-width:760px){
+  body.nexo-reference-ui #notificationBtn{
+    display:grid!important;
+    place-items:center!important;
+  }
+  body.nexo-reference-ui .nrx-profile-utility-grid>button{min-height:52px}
+  body.nexo-reference-ui .nrx-profile-utility-grid>button b{font-size:9.5px}
+}
+body.light.nexo-reference-ui .nrx-profile-utility-grid>button{
+  background:#f4f9fd;color:#172239;border-color:rgba(50,128,175,.12)
+}
