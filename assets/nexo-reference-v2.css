@@ -772,3 +772,31 @@ body.light.nexo-reference-ui .nrx-side-account{
   body.nexo-reference-ui .top-actions{order:3!important;margin-left:0!important}
   .nrx-mobile-menu{display:none!important}
 }
+
+/* NEXO flame mark */
+body.nexo-reference-ui .brand-mark,
+.nrx-mobile-brand i{
+  position:relative;
+  overflow:visible;
+  font-size:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui .brand-mark::before,
+body.nexo-reference-ui .brand-mark::after,
+.nrx-mobile-brand i::before,
+.nrx-mobile-brand i::after{
+  content:"";
+  position:absolute;
+  left:50%;top:50%;
+  width:9px;height:22px;
+  border-radius:90% 15% 90% 15%;
+  transform-origin:center;
+  background:linear-gradient(180deg,#a36cff 0%,#6570ff 58%,#55bfff 100%);
+  box-shadow:0 0 14px rgba(107,83,255,.22);
+}
+body.nexo-reference-ui .brand-mark::before,
+.nrx-mobile-brand i::before{transform:translate(-9px,-11px) rotate(31deg)}
+body.nexo-reference-ui .brand-mark::after,
+.nrx-mobile-brand i::after{transform:translate(1px,-11px) rotate(31deg) scale(.82)}
+body.nexo-reference-ui .header-journey-pill{display:none!important}
