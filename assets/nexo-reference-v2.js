@@ -231,20 +231,21 @@ function buildBottomNav(){
   nav.setAttribute('aria-label','Navegação principal');
   const items=[
     ['inicio','⌂','Início'],
-    ['materiais','▧','Estudar'],
-    ['questoes','⌘','Questões'],
-    ['redacao','▱','Redação'],
-    ['profile','♙','Perfil']
+    ['questoes','✓','Questões'],
+    ['redacao','✎','Redação'],
+    ['desempenho','▥','Desempenho'],
+    ['more','☰','Mais']
   ];
   items.forEach(([page,icon,label])=>{
     const b=document.createElement('button');
     b.type='button';b.dataset.nrxBottom=page;
     b.innerHTML='<span>'+icon+'</span><small>'+label+'</small>';
     b.addEventListener('click',e=>{
-      if(page==='profile'){
+      if(page==='more'){
         e.preventDefault();
         e.stopPropagation();
-        $('#profileButton')?.click();
+        $('#moreMobile')?.click();
+        setTimeout(syncBottom,0);
       }else go(page);
       syncBottom();
     });
@@ -261,9 +262,12 @@ function syncShellVisibility(){
 }
 function syncBottom(){
   const active=$('.page.active')?.id||'inicio';
-  $$('[data-nrx-bottom]').forEach(b=>{
+  const primary=new Set(['inicio','questoes','redacao','desempenho']);
+  const menuOpen=document.body.classList.contains('mobile-menu-open');
+  $('[data-nrx-bottom]').forEach(b=>{
     const p=b.dataset.nrxBottom;
-    b.classList.toggle('active',p===active||(p==='materiais'&&active==='videoaulas'));
+    const moreActive=p==='more'&&(menuOpen||!primary.has(active));
+    b.classList.toggle('active',p===active||moreActive);
   });
   syncShellVisibility();
 }
@@ -271,13 +275,20 @@ function syncBottom(){
 
 function referenceSecondaryTools(){
   return [
+    ['materiais','▧','Materiais PDF',()=>openMaterials('study')],
+    ['simulados','▤','Simulados',()=>go('simulados')],
+    ['semana','▦','Semana NEXO',()=>go('semana')],
     ['focos','◎','Meus Focos',()=>go('focos')],
     ['radar','◉','Radar ENEM',()=>go('radar')],
     ['banco','▦','Banco de Questões',()=>go('banco')],
     ['temas','▧','Temas de Redação',()=>go('temas')],
     ['feedback','◌','Feedback',()=>go('feedback')],
     ['ranking','✦','NEXO Jornada',()=>{document.body.dataset.nrxJourneyView='';go('ranking')}],
+    ['store','♕','Loja NEXO',openStore],
+    ['avatar','✦','Personalizar',openAvatar],
     ['planos','＋','Free & Plus',()=>go('planos')],
+    ['nexo','🐾','Professor Nexo',openNexo],
+    ['settings','⚙','Configurações',openExperience],
     ['admin','♛','Área do Admin',()=>go('admin'),true]
   ];
 }
