@@ -47,7 +47,7 @@ async function runProfile(browser,name,viewport){
   await load('first');
 
   markStage('core-state');
-  const first=await page.evaluate(async()=>{
+  const first=await page.evaluate(()=>{
     const result={
       title:document.title,
       hardening:typeof window.nexoRunProductionDiagnostics==='function',
@@ -73,41 +73,76 @@ async function runProfile(browser,name,viewport){
       result.wrappers.essay=typeof window.essayScores==='function'&&/rubric/.test(String(window.essayScores));
       result.wrappers.tutor=typeof window.niaAnswer==='function'&&/v13State/.test(String(window.niaAnswer));
       result.wrappers.notebook=typeof window.loadErrorNotebook==='function'&&/nexo_attempt_reflections/.test(String(window.loadErrorNotebook));
+    }catch(err){result.wiringError=String(err?.message||err);}
+    const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
+    result.duplicateIds=[...new Set(ids.filter((id,i)=>ids.indexOf(id)!==i))];
+    return result;
+  });
+
+  markStage('essay-engine');
+  const essayProbe=await page.evaluate(()=>{
+    try{
       const sample=('A educação pública é essencial para a cidadania. Portanto, o Estado deve ampliar políticas de formação e acesso. '+
         'Além disso, desigualdades sociais afetam oportunidades e exigem ações coordenadas. Por meio de programas permanentes, '+
         'escolas e governos podem promover acompanhamento, formação docente e inclusão, a fim de reduzir barreiras e garantir direitos. ').repeat(4);
-      const scores=window.essayScores(sample);
-      result.essayEngine=Array.isArray(scores)&&scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200);
+      const scores=typeof window.essayScores==='function'?window.essayScores(sample):null;
+      return {ok:Array.isArray(scores)&&scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200),error:null};
+    }catch(err){return {ok:false,error:String(err?.message||err)}}
+  });
+  first.essayEngine=essayProbe.ok;
+  if(essayProbe.error)first.wiringError=(first.wiringError?first.wiringError+' | ':'')+'essay: '+essayProbe.error;
+
+  markStage('search-results');
+  const searchProbe=await page.evaluate(()=>{
+    try{
       const queries=['perfil de evolução','professor nexo','caderno de erros','simulado','radar enem'];
-      result.searchSamples=queries.map(q=>({q,items:typeof buildGlobalSearchResults==='function'?buildGlobalSearchResults(q).filter(x=>x.type==='action').map(x=>x.actionId):[]}));
-      result.siteSearch=result.searchSamples.every(x=>x.items.length>0)&&typeof runSiteSearchAction==='function';
-      if(result.siteSearch){
-        runSiteSearchAction('evolucao');
-        result.searchActionWorks=Boolean(document.querySelector('#desempenho')?.classList.contains('active'));
-        if(typeof openPage==='function')openPage('inicio');
-      }
+      const samples=queries.map(q=>({q,items:typeof buildGlobalSearchResults==='function'?buildGlobalSearchResults(q).filter(x=>x.type==='action').map(x=>x.actionId):[]}));
+      return {samples,ok:samples.every(x=>x.items.length>0)&&typeof runSiteSearchAction==='function',error:null};
+    }catch(err){return {samples:[],ok:false,error:String(err?.message||err)}}
+  });
+  first.searchSamples=searchProbe.samples;
+  first.siteSearch=searchProbe.ok;
+  if(searchProbe.error)first.wiringError=(first.wiringError?first.wiringError+' | ':'')+'search: '+searchProbe.error;
 
-      const toneHost=document.createElement('div');
-      toneHost.innerHTML='<b>39%</b><b>40%</b><b>79%</b><b>80%</b><b>100%</b>';
-      document.body.appendChild(toneHost);
-      if(typeof window.nexoApplyPercentTones==='function')window.nexoApplyPercentTones(toneHost);
-      result.percentToneMap=[...toneHost.querySelectorAll('b')].map(el=>({text:el.textContent,tone:el.dataset.scoreTone||'',classes:[...el.classList]}));
-      result.percentTones=JSON.stringify(result.percentToneMap.map(x=>x.tone))===JSON.stringify(['low','mid','mid','high','high']);
-      toneHost.remove();
-    }catch(err){result.wiringError=String(err?.message||err);}
+  markStage('percent-tones');
+  const toneProbe=await page.evaluate(()=>{
+    try{
+      const host=document.createElement('div');
+      host.innerHTML='<b>39%</b><b>40%</b><b>79%</b><b>80%</b><b>100%</b>';
+      document.body.appendChild(host);
+      if(typeof window.nexoApplyPercentTones==='function')window.nexoApplyPercentTones(host);
+      const map=[...host.querySelectorAll('b')].map(el=>({text:el.textContent,tone:el.dataset.scoreTone||'',classes:[...el.classList]}));
+      host.remove();
+      return {map,ok:JSON.stringify(map.map(x=>x.tone))===JSON.stringify(['low','mid','mid','high','high']),error:null};
+    }catch(err){return {map:[],ok:false,error:String(err?.message||err)}}
+  });
+  first.percentToneMap=toneProbe.map;
+  first.percentTones=toneProbe.ok;
+  if(toneProbe.error)first.wiringError=(first.wiringError?first.wiringError+' | ':'')+'tones: '+toneProbe.error;
 
-    const ids=[...document.querySelectorAll('[id]')].map(x=>x.id);
-    result.duplicateIds=[...new Set(ids.filter((id,i)=>ids.indexOf(id)!==i))];
-    if('serviceWorker' in navigator){
-      try{
-        const reg=await Promise.race([
-          navigator.serviceWorker.ready,
-          new Promise((_,reject)=>setTimeout(()=>reject(new Error('sw timeout')),8000))
-        ]);
-        result.serviceWorker=Boolean(reg?.active);
-      }catch(_){}
-    }
-    return result;
+  markStage('search-action');
+  const searchActionProbe=await page.evaluate(()=>{
+    try{
+      if(typeof runSiteSearchAction!=='function')return {ok:false,error:'runSiteSearchAction ausente'};
+      runSiteSearchAction('evolucao');
+      const ok=Boolean(document.querySelector('#desempenho')?.classList.contains('active'));
+      if(typeof openPage==='function')openPage('inicio');
+      return {ok,error:null};
+    }catch(err){return {ok:false,error:String(err?.message||err)}}
+  });
+  first.searchActionWorks=searchActionProbe.ok;
+  if(searchActionProbe.error)first.wiringError=(first.wiringError?first.wiringError+' | ':'')+'search-action: '+searchActionProbe.error;
+
+  markStage('service-worker');
+  first.serviceWorker=await page.evaluate(async()=>{
+    if(!('serviceWorker' in navigator))return false;
+    try{
+      const reg=await Promise.race([
+        navigator.serviceWorker.ready,
+        new Promise((_,reject)=>setTimeout(()=>reject(new Error('sw timeout')),8000))
+      ]);
+      return Boolean(reg?.active);
+    }catch(_){return false}
   });
 
   markStage('reference-home');
