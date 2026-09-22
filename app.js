@@ -6457,6 +6457,23 @@ function essayMetrics(text,theme={}){
   const punctuation=(text.match(/[.;:!?]/g)||[]).length;
   return {rawWords,tokens,meaningful,lexicalDiversity,dominantShare,paras,sentences,avgSentence,connectorMatches,connectorDiversity,argumentMarkers,thesis,themeCoverage,themeHits,themeTokenCount:themeTokens.length,proposal,proposalElements,punctuation};
 }
+const NEXO_ESSAY_ANALYSIS_VERSION='nexo-essay-v6';
+const NEXO_ESSAY_RUBRIC_VERSION='enem-2026';
+function toEnemCompetencyBand(value){
+  const v=clamp(Number(value||0),0,200);
+  return clamp(Math.round(v/40)*40,0,200);
+}
+function essayEstimateRange(total,text,theme={}){
+  const m=essayMetrics(text,theme);
+  let spread=100;
+  if(m.rawWords.length>=180&&m.paras.length>=4&&m.themeCoverage>=.12)spread=80;
+  if(m.rawWords.length>=260&&m.paras.length>=4&&m.connectorDiversity>=4&&m.themeCoverage>=.20)spread=60;
+  return {
+    min:Math.max(0,Math.floor((total-spread)/20)*20),
+    max:Math.min(1000,Math.ceil((total+spread)/20)*20),
+    spread
+  };
+}
 function essayScores(text,theme={}){
   const m=essayMetrics(text,theme);
   const words=m.rawWords.length;
@@ -6485,7 +6502,7 @@ function essayScores(text,theme={}){
     scores[1]=Math.min(scores[1],80);
     scores[2]=Math.min(scores[2],100);
   }
-  return scores.map(x=>Math.round(x/20)*20);
+  return scores.map(toEnemCompetencyBand);
 }
 $('#analyzeEssay').onclick=async()=>{
   if(blockMaintenance('essays'))return;
@@ -6510,10 +6527,14 @@ $('#analyzeEssay').onclick=async()=>{
   await sleep(350);
   const t=selectedTheme;
   const scores=essayScores(text,t),total=scores.reduce((a,b)=>a+b,0);
+  const estimateRange=essayEstimateRange(total,text,t);
   const feedback={
     strength:scores[3]>=160?'Boa presença de mecanismos de coesão e encadeamento.':'A estrutura está identificável; vale tornar a progressão entre parágrafos ainda mais explícita.',
     priority:scores.indexOf(Math.min(...scores))+1,
-    detailed_review:buildDetailedEssayReview(text,scores)
+    detailed_review:buildDetailedEssayReview(text,scores),
+    estimate_range:estimateRange,
+    rubric_version:NEXO_ESSAY_RUBRIC_VERSION,
+    analysis_version:NEXO_ESSAY_ANALYSIS_VERSION
   };
   const { error }=await client.from('essays').insert({
     user_id:state.user.id,theme_title:t.title,essay_text:text,status:'reviewed',
@@ -6522,7 +6543,9 @@ $('#analyzeEssay').onclick=async()=>{
     feedback,
     revision_of:state.essayRevisionOf||null,
     version_number:currentEssayVersionNumber(),
-    word_count:(text.match(/\S+/g)||[]).length
+    word_count:(text.match(/\S+/g)||[]).length,
+    analysis_version:NEXO_ESSAY_ANALYSIS_VERSION,
+    rubric_version:NEXO_ESSAY_RUBRIC_VERSION
   });
   clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.textContent='Analisar e salvar';
   if(error){
@@ -6559,6 +6582,7 @@ function buildDetailedEssayReview(text,scores,theme=getEssayThemeData()){
 
 function showEssayResult(text,scores,total){
   const comps=['Norma-padrão','Compreensão da proposta','Argumentação','Coesão','Intervenção'];
+  const estimateRange=essayEstimateRange(total,text,getEssayThemeData());
   const shortComps=['C1','C2','C3','C4','C5'];
   const weak=scores.map((score,index)=>({score,index})).sort((a,b)=>a.score-b.score)[0].index;
   const best=scores.map((score,index)=>({score,index})).sort((a,b)=>b.score-a.score)[0].index;
@@ -6581,11 +6605,13 @@ function showEssayResult(text,scores,total){
           <span class="eyebrow">CORREÇÃO ORIENTATIVA · PROFESSOR NEXO</span>
           <h3>${scoreLabel}</h3>
           <p>Seu texto sobre “${esc(t.title)}” já foi transformado em um plano de revisão. A prioridade agora é a ${shortComps[weak]}.</p>
-          <div class="essay-estimate-notice">Estimativa automática orientativa: não substitui a correção oficial do Inep nem uma leitura humana detalhada. Use a nota como faixa de treino e priorize os comentários por competência.</div>
+          <div class="essay-estimate-notice">Estimativa automática orientativa alinhada às 5 competências do ENEM 2026. Cada competência é mostrada em níveis de 40 pontos; a correção oficial continua dependendo de avaliadores humanos independentes.</div>
           <div class="essay-meta-chips">
             <span>${review.words} palavras</span>
             <span>${review.paras} parágrafo(s)</span>
             <span>${review.connectors} conectivo(s)</span>
+            <span>faixa ${estimateRange.min}–${estimateRange.max}</span>
+            <span>rubrica ENEM 2026</span>
           </div>
         </div>
         <div class="essay-score-side">
@@ -6649,7 +6675,7 @@ function showEssayResult(text,scores,total){
 
       <footer class="essay-analysis-note">
         <span>i</span>
-        <p>Esta é uma análise automática de treino. Ela ajuda a orientar sua revisão, mas não substitui uma correção humana nem a avaliação oficial do ENEM.</p>
+        <p>Esta é uma análise automática de treino, versão ${NEXO_ESSAY_ANALYSIS_VERSION}. A nota central é uma referência heurística; use também a faixa ${estimateRange.min}–${estimateRange.max} e os comentários por competência. Ela não substitui uma correção humana nem a avaliação oficial do ENEM.</p>
       </footer>
     </div>`;
 
