@@ -7,6 +7,14 @@ const info=[];
 async function runProfile(browser,name,viewport){
   const context=await browser.newContext({viewport,locale:'pt-BR'});
   const page=await context.newPage();
+  page.setDefaultTimeout(20000);
+  page.setDefaultNavigationTimeout(30000);
+  let smokeStage='boot';
+  const markStage=label=>{smokeStage=label;console.log('STAGE '+name+' '+label)};
+  const watchdog=setTimeout(()=>{
+    console.error('FAIL '+name+': browser smoke watchdog em '+smokeStage);
+    process.exit(2);
+  },120000); // browser smoke watchdog
   const pageErrors=[];
   const badResponses=[];
   const failedRequests=[];
@@ -35,8 +43,10 @@ async function runProfile(browser,name,viewport){
     await page.waitForTimeout(1200);
   }
 
+  markStage('load-first');
   await load('first');
 
+  markStage('core-state');
   const first=await page.evaluate(async()=>{
     const result={
       title:document.title,
@@ -100,6 +110,7 @@ async function runProfile(browser,name,viewport){
     return result;
   });
 
+  markStage('reference-home');
   const referenceUiTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app');
     const auth=document.querySelector('#authScreen');
@@ -155,6 +166,7 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
 
+  markStage('reference-access');
   const referenceAccessTest=await page.evaluate(()=>{
     const expected=['focos','radar','banco','temas','feedback','ranking','planos'];
     const side=[...document.querySelectorAll('.nrx-side-more-panel [data-nrx-target]')].map(x=>x.dataset.nrxTarget);
@@ -185,6 +197,7 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&referenceAccessTest.heroFont<26)failures.push(name+': título principal pequeno demais');
   if(name!=='mobile'&&referenceAccessTest.heroFont<36)failures.push(name+': título principal desktop pequeno demais');
 
+  markStage('route-matrix');
   const routeMatrixTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app');
     const auth=document.querySelector('#authScreen');
@@ -237,6 +250,7 @@ async function runProfile(browser,name,viewport){
   const routeBad=routeMatrixTest.filter(x=>!x.visible||x.documentOverflow||x.overflow.length);
   if(routeBad.length)failures.push(name+': matriz visual por página/tema/fonte encontrou problemas: '+JSON.stringify(routeBad.slice(0,12)));
 
+  markStage('utilities');
   const utilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app');
     const auth=document.querySelector('#authScreen');
@@ -259,6 +273,7 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&!utilityTest.notificationVisible)failures.push(name+': notificações continuam escondidas no topo móvel');
   if(name==='mobile'&&!utilityTest.profileScrollable)failures.push(name+': painel Perfil pode cortar recursos no celular');
 
+  markStage('legacy-capabilities');
   const legacyCapabilityTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen'),profile=document.querySelector('#profileMenu');
     const prev={app:app?.className||'',auth:auth?.className||'',profile:profile?.className||''};
@@ -283,6 +298,7 @@ async function runProfile(browser,name,viewport){
   if(legacyCapabilityTest.missing.length)failures.push(name+': ações exclusivas da home antiga ficaram inacessíveis: '+legacyCapabilityTest.missing.join(', '));
   if(!legacyCapabilityTest.contextVisible||!legacyCapabilityTest.contextClosed)failures.push(name+': guia contextual não abre/fecha corretamente na interface minimalista');
 
+  markStage('preserved-guidance');
   const preservedGuidanceTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
     const pages=[...document.querySelectorAll('.page')];
@@ -323,6 +339,7 @@ async function runProfile(browser,name,viewport){
   if(!preservedGuidanceTest.mentorVisible||!preservedGuidanceTest.essayHintsVisible)failures.push(name+': conteúdo orientativo da redação ficou oculto');
   if(!preservedGuidanceTest.badgeVisible)failures.push(name+': orientação Radar → Aula → Treino da Biblioteca ficou oculta');
 
+  markStage('navigation-clicks');
   const navigationClickTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
     const pages=[...document.querySelectorAll('.page')];
@@ -387,6 +404,7 @@ async function runProfile(browser,name,viewport){
   const navigationFailures=navigationClickTest.filter(x=>!x.ok);
   if(navigationFailures.length)failures.push(name+': cliques reais de navegação/recursos falharam: '+JSON.stringify(navigationFailures));
 
+  markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
     const prev={app:app?.className||'',auth:auth?.className||''};
@@ -429,6 +447,7 @@ async function runProfile(browser,name,viewport){
     if(!closeTest.button)failures.push(name+': botão X do guia de contexto não existe');
     if(!closeTest.dismissed)failures.push(name+': botão X não fechou o guia de contexto');
 
+    markStage('mobile-typography');
     const typographyTest=await page.evaluate(()=>{
       const host=document.createElement('div');
       host.id='nexoTypographySmoke';
@@ -518,8 +537,10 @@ async function runProfile(browser,name,viewport){
   if(!first.percentTones)failures.push(name+': faixas de porcentagem incorretas: '+JSON.stringify(first.percentToneMap));
   for(const [key,active] of Object.entries(first.wrappers))if(!active)failures.push(name+': wrapper V13 inativo: '+key);
 
+  markStage('reload');
   await load('reload');
 
+  markStage('post-reload');
   const second=await page.evaluate(()=>({
     hardening:typeof window.nexoRunProductionDiagnostics==='function',
     v13Core:typeof window.v13State==='function',
@@ -542,6 +563,8 @@ async function runProfile(browser,name,viewport){
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
   info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,accessibilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  markStage('done');
+  clearTimeout(watchdog);
   await context.close();
 }
 
