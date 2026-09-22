@@ -195,7 +195,16 @@ body.nexo-reference-ui .header-journey-pill{
 body.nexo-reference-ui .header-journey-copy span{font-size:6px!important}
 body.nexo-reference-ui .header-journey-copy b{font-size:8px!important}
 
-body.nexo-reference-ui #nexoContextBar{display:none!important}
+body.nexo-reference-ui #nexoContextBar{
+  display:grid!important;
+  margin:0 16px 10px!important;
+  border-color:rgba(124,103,236,.18)!important;
+  background:linear-gradient(100deg,rgba(8,18,34,.96),rgba(12,22,42,.96))!important;
+  box-shadow:0 10px 28px rgba(0,0,0,.16)!important;
+}
+body.nexo-reference-ui #nexoContextBar.is-dismissed,
+body.nexo-reference-ui #nexoContextBar.menu-hidden,
+body.nexo-reference-ui.mobile-menu-open #nexoContextBar{display:none!important}
 body.nexo-reference-ui main{padding:13px 16px 28px!important}
 
 /* Old dashboard stays alive for data + event handlers, but not visible on Home. */
@@ -1824,3 +1833,55 @@ body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-progress small,
 body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-section-head span,
 body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-continue small,
 body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-bottom-nav button small{font-size:12px!important}
+
+
+/* ========= Functional parity + readability restoration ========= */
+body.nexo-reference-ui .nrx-side-more-toggle>b{font-size:12px!important}
+body.nexo-reference-ui .nrx-side-more-head b{font-size:13px!important}
+body.nexo-reference-ui .nrx-side-more-head small{font-size:10px!important}
+body.nexo-reference-ui .nrx-side-more-grid b,
+body.nexo-reference-ui .nrx-profile-tools-grid b{font-size:11px!important;line-height:1.25!important}
+
+body.nexo-reference-ui #materiais .content-topic-name h3{font-size:13px!important;line-height:1.3!important}
+body.nexo-reference-ui #materiais .content-topic-name span,
+body.nexo-reference-ui #materiais .content-topic-meta{font-size:9.5px!important}
+body.nexo-reference-ui #materiais .content-resource-copy strong{font-size:12px!important;line-height:1.3!important}
+body.nexo-reference-ui #materiais .content-resource-copy small,
+body.nexo-reference-ui #materiais .content-resource-copy em{font-size:10px!important;line-height:1.4!important}
+
+body.nexo-reference-ui #questoes .setup-title h3{font-size:15px!important}
+body.nexo-reference-ui #questoes .nexo-guide-card b{font-size:12px!important}
+body.nexo-reference-ui #questoes .nexo-guide-card p{font-size:10px!important;line-height:1.45!important}
+body.nexo-reference-ui #questoes .nexo-guide-card button{font-size:10px!important}
+body.nexo-reference-ui #questoes .study-area-grid button b{font-size:11px!important}
+body.nexo-reference-ui #questoes .setup-fields label{font-size:10px!important}
+body.nexo-reference-ui #questoes .setup-fields select{font-size:12px!important}
+body.nexo-reference-ui #questoes .toggle-row b{font-size:11px!important}
+body.nexo-reference-ui #questoes .toggle-row small{font-size:9.5px!important}
+
+@media(max-width:760px){
+  body.nexo-reference-ui #nexoContextBar{
+    top:55px!important;
+    margin:0 9px 10px!important;
+  }
+  body.nexo-reference-ui .nrx-bottom-nav button span{font-size:18px!important}
+  body.nexo-reference-ui .nrx-bottom-nav button small{font-size:10px!important;font-weight:750!important}
+  body.nexo-reference-ui .nrx-side-item{min-height:44px!important}
+  body.nexo-reference-ui .nrx-side-item>b{font-size:12px!important}
+  body.nexo-reference-ui .nrx-side-more-panel{
+    left:10px!important;
+    right:10px!important;
+    bottom:calc(72px + env(safe-area-inset-bottom))!important;
+    width:auto!important;
+    max-height:min(70vh,560px)!important;
+    overflow:auto!important;
+  }
+  body.nexo-reference-ui .nrx-side-more-grid{grid-template-columns:1fr 1fr!important}
+  body.nexo-reference-ui #materiais .content-topic-name h3{font-size:15px!important}
+  body.nexo-reference-ui #materiais .content-resource-copy strong{font-size:13px!important}
+  body.nexo-reference-ui #materiais .content-resource-copy small,
+  body.nexo-reference-ui #materiais .content-resource-copy em{font-size:11px!important}
+  body.nexo-reference-ui #questoes .nexo-guide-card p{font-size:11px!important}
+  body.nexo-reference-ui #questoes .setup-fields label{font-size:11px!important}
+  body.nexo-reference-ui #questoes .setup-fields select{font-size:14px!important}
+}
