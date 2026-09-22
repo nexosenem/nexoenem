@@ -254,24 +254,45 @@
   function addMaterialTabs(){
     const page=$('#materiais');
     const filter=$('.filter-line',page);
-    if(!page||!filter||$('#v15MaterialTabs',page))return;
-    const nav=document.createElement('nav');
-    nav.id='v15MaterialTabs';
-    nav.className='v15-material-tabs';
-    nav.setAttribute('aria-label','Tipos de conteúdo');
-    nav.innerHTML=[
-      ['all','Todas'],['lesson','Aulas'],['summary','Resumos'],['tips','Macetes'],['review','Revisar']
-    ].map(([key,label])=>'<button type="button" data-v15-material-tab="'+key+'" class="'+(key==='all'?'active':'')+'">'+label+'</button>').join('');
-    filter.insertAdjacentElement('afterend',nav);
-    $$('[data-v15-material-tab]',nav).forEach(btn=>btn.addEventListener('click',()=>{
-      const key=btn.dataset.v15MaterialTab;
-      const type=$('#materialTypeFilter'),status=$('#materialStatusFilter');
-      if(type)type.value=['lesson','summary','tips'].includes(key)?key:'';
-      if(status)status.value=key==='review'?'review':'';
-      $$('.v15-material-tabs button',nav).forEach(x=>x.classList.toggle('active',x===btn));
-      const source=key==='review'?status:type;
-      source?.dispatchEvent(new Event('change',{bubbles:true}));
-    }));
+    if(!page||!filter)return;
+    const title=$('.page-head h2',page);
+    const subtitle=$('.page-head p',page);
+    if(title)title.textContent='Estudar';
+    if(subtitle)subtitle.textContent='Aulas, resumos e macetes organizados para aprender, praticar e revisar sem perder o foco.';
+
+    let nav=$('#v15MaterialTabs',page);
+    if(!nav){
+      nav=document.createElement('nav');
+      nav.id='v15MaterialTabs';
+      nav.className='v15-material-tabs';
+      nav.setAttribute('aria-label','Tipos de conteúdo');
+      nav.innerHTML=[
+        ['all','Todas'],['lesson','Aulas'],['summary','Resumos'],['tips','Macetes'],['review','Revisar']
+      ].map(([key,label])=>'<button type="button" data-v15-material-tab="'+key+'" class="'+(key==='all'?'active':'')+'">'+label+'</button>').join('');
+      filter.insertAdjacentElement('afterend',nav);
+
+      const syncTabs=()=>{
+        const type=$('#materialTypeFilter')?.value||'';
+        const status=$('#materialStatusFilter')?.value||'';
+        const active=status==='review'?'review':(['lesson','summary','tips'].includes(type)?type:'all');
+        $$('.v15-material-tabs button',nav).forEach(x=>x.classList.toggle('active',x.dataset.v15MaterialTab===active));
+      };
+      $$('[data-v15-material-tab]',nav).forEach(btn=>btn.addEventListener('click',()=>{
+        const key=btn.dataset.v15MaterialTab;
+        const type=$('#materialTypeFilter'),status=$('#materialStatusFilter');
+        if(type)type.value=['lesson','summary','tips'].includes(key)?key:'';
+        if(status)status.value=key==='review'?'review':'';
+        const source=key==='review'?status:type;
+        source?.dispatchEvent(new Event('change',{bubbles:true}));
+        syncTabs();
+      }));
+      $('#materialTypeFilter')?.addEventListener('change',syncTabs);
+      $('#materialStatusFilter')?.addEventListener('change',syncTabs);
+      $('#materialClearFilters')?.addEventListener('click',()=>setTimeout(syncTabs,0));
+    }
+
+    const subjectNav=$('#materialSubjectNav',page);
+    if(subjectNav&&subjectNav.previousElementSibling!==nav)nav.insertAdjacentElement('afterend',subjectNav);
   }
 
   function syncSidebarAvatar(){
