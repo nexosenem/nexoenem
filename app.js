@@ -3461,10 +3461,16 @@ async function fetchQuestions(filters={}) {
   if (filters.subject) q=q.eq('subject',filters.subject);
   if (filters.difficulty) q=q.eq('difficulty',Number(filters.difficulty));
   if (!radarKeys&&filters.topic) q=q.eq('topic',filters.fallbackTopic||filters.topic);
-  if (filters.visualOnly) q=q.not('media_type','is',null);
   const { data, error } = await q;
   if (error) throw error;
-  const rows=(data||[]).filter(questionVisualCanBeResolved);
+  let rows=(data||[]).filter(questionVisualCanBeResolved);
+  if(filters.visualOnly){
+    rows=rows.filter(x=>Boolean(
+      x.media_type||x.media_path||
+      (x.source_pdf_url&&x.source_page&&x.media_crop)||
+      likelyNeedsQuestionVisual(x)
+    ));
+  }
   if(!radarKeys)return rows;
   return rows.filter(x=>radarKeys.has(String(x.source_year)+'::'+String(x.source_question_number)));
 }
