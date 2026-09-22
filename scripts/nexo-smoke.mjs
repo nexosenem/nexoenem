@@ -105,11 +105,18 @@ assert(uiV15.includes('v15QuestionModes')&&uiV15.includes('v15EssayTabs')&&uiV15
 assert(cssV15.includes('NEXO V15')&&cssV15.includes('.nrx-mob-hero-media:before')&&cssV15.includes('.v15-question-modes'),'Design system V15 publicado');
 assert(app.includes('TEXTO-BASE')&&app.includes('RECURSO VISUAL ORIGINAL')&&app.includes('COMANDO'),'Questão preserva texto-base, recurso visual e comando');
 assert(app.indexOf('TEXTO-BASE')<app.indexOf('RECURSO VISUAL ORIGINAL')&&app.indexOf('RECURSO VISUAL ORIGINAL')<app.indexOf('COMANDO'),'Ordem pedagógica texto → visual → comando preservada');
-assert(app.includes("const visual = Boolean(q.media_type || q.media_path)"),'Questão visual usa metadado leve como fonte de verdade');
+assert(app.includes("const visual = Boolean(q.media_type || q.media_path || q.external_media_files?.length)"),'Questão visual usa metadado leve + recuperação externa como fonte de verdade');
+assert(app.includes('function likelyNeedsQuestionVisual')&&app.includes('async function ensureExternalQuestionAssets'),'Recuperação de mídia ausente por semântica publicada');
+assert(app.includes("https://api.enem.dev/v1/exams/")&&app.includes('externalVisualCache'),'Fallback ENEM usa endpoint público com cache local');
+assert(app.includes('function mountVisualGallery')&&app.includes('q.external_media_files'),'Questões com múltiplas imagens são suportadas');
+assert(app.includes('q.option_media')&&app.includes('q-option-media'),'Alternativas com recurso visual são suportadas');
 assert(app.includes("genericExplanation=/^Gabarito oficial:")&&app.includes("explanationStatus:hasEditorialExplanation?'editorial':'pending'"),'Placeholder de gabarito não é tratado como resolução editorial');
 
 const renderVisualBlock=app.slice(app.indexOf('async function renderVisual(q)'),app.indexOf('function questionStudyText(q)'));
 assert(renderVisualBlock.indexOf('if(await loadStoredVisual(q)) return true;')>=0&&renderVisualBlock.indexOf('if(await loadStoredVisual(q)) return true;')<renderVisualBlock.indexOf('await ensureMediaPath(q);'),'Mídia dedicada é carregada antes do fallback Base64 legado');
+assert(renderVisualBlock.includes("q.external_media_files?.length && await loadExternalVisual(q)"),'Mídia recuperada externamente evita round-trip desnecessário');
+assert(cssV15.includes('.q-media-gallery')&&cssV15.includes('.q-option-media'),'Design V15 suporta galeria e alternativas visuais');
+assert(uiV15.includes("typeof openProfessorNexo==='function'")&&uiV15.includes("$('#niaButton')?.click()"),'Professor Nexo contextual possui abertura direta e fallback');
 assert(!app.includes('options,media_type,media_path,source_pdf_url,source_page,media_crop'),'Filas de questões não carregam Base64 antecipadamente');
 assert(uiV15.includes('v15AdvancedQuestionSetup')&&uiV15.includes('v15LibraryFilters'),'Filtros avançados V15 usam divulgação progressiva');
 assert(uiV15.includes('v15MaterialTabs')&&uiV15.includes('data-v15-material-tab'),'Biblioteca V15 oferece navegação simples sem remover filtros avançados');
