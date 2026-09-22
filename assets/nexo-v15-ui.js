@@ -68,6 +68,7 @@
       theme.dataset.v15Icon='theme-'+themeName;
     }
     replaceIcon($('.nrx-mobile-crown'),'crown');
+    replaceIcon($('.nrx-desktop-crown'),'crown');
 
     const notice=$('#notificationBtn');
     if(notice&&notice.dataset.v15Icon!=='bell'){
