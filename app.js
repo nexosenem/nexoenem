@@ -3455,7 +3455,7 @@ async function fetchQuestions(filters={}) {
   }
 
   let q = client.from('questions').select(
-    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop'
+    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop'
   ).eq('is_active',true).limit(1000);
   if (filters.area) q=q.eq('area',filters.area);
   if (filters.subject) q=q.eq('subject',filters.subject);
@@ -3464,7 +3464,7 @@ async function fetchQuestions(filters={}) {
   if (filters.visualOnly) q=q.not('media_type','is',null);
   const { data, error } = await q;
   if (error) throw error;
-  const rows=data||[];
+  const rows=(data||[]).filter(questionVisualCanBeResolved);
   if(!radarKeys)return rows;
   return rows.filter(x=>radarKeys.has(String(x.source_year)+'::'+String(x.source_question_number)));
 }
@@ -3910,6 +3910,26 @@ function likelyNeedsQuestionVisual(q){
   const text=String([q.base_text,q.prompt].filter(Boolean).join(' ')).toLocaleLowerCase('pt-BR');
   return /\b(figura|figuras|gráfico|grafico|imagem|mapa|diagrama|esquema|tirinha|charge|cartum|tabela|quadro)\b/.test(text);
 }
+function hasAccessibleVisualDescription(q){
+  const text=String(q?.base_text||'').toLocaleLowerCase('pt-BR');
+  if(!text)return false;
+  if(/descri[cç][aã]o acess[ií]vel/.test(text))return true;
+  if(/representa[cç][aã]o (?:acess[ií]vel|textual)/.test(text))return true;
+  // Some imported official items transcribe all values of a table/graph into the
+  // base text. Keep only clearly data-rich descriptions as a non-image fallback.
+  const numeric=(text.match(/\d+(?:[.,]\d+)?/g)||[]).length;
+  return numeric>=6&&/(gr[aá]fico|tabela|quadro).{0,90}(apresenta|mostra|dados|valores|classifica)/.test(text);
+}
+function questionVisualCanBeResolved(q){
+  if(!likelyNeedsQuestionVisual(q))return true;
+  if(q?.media_type||q?.media_path||q?.external_media_files?.length)return true;
+  if(q?.source_pdf_url&&q?.source_page&&q?.media_crop)return true;
+  if(hasAccessibleVisualDescription(q))return true;
+  const year=Number(q?.source_year||0);
+  // ENEM.dev currently exposes original media for 2009-2023 and is used only
+  // as a recovery path when NEXO-owned media is absent.
+  return year>=2009&&year<=2023&&Number(q?.source_question_number||0)>0;
+}
 
 async function ensureExternalQuestionAssets(q){
   if(!q||q.externalAssetsChecked||q.media_type||q.media_path||!likelyNeedsQuestionVisual(q))return q;
@@ -4002,7 +4022,16 @@ async function renderQuestion(q) {
   if(visual){
     const ok=await renderVisual(q);
     if(!ok && state.current?.id===q.id){
-      $('#visualWrap')?.remove();
+      if(hasAccessibleVisualDescription(q)){
+        const wrap=$('#visualWrap');
+        const stage=$('#visualStage');
+        const head=$('#visualWrap .visual-head span:last-child');
+        if(head)head.textContent='descrição textual disponível';
+        if(stage)stage.innerHTML='<div class="visual-accessible-fallback"><b>Recurso visual descrito no texto-base</b><p>Esta questão possui uma descrição textual suficiente para manter as informações necessárias ao raciocínio.</p></div>';
+        wrap?.classList.add('accessible-fallback');
+      }else{
+        showVisualFallback(q);
+      }
     }
   }
 }
@@ -4122,22 +4151,28 @@ function loadLocalVisual(q){
 function showVisualFallback(q){
   const stage=$('#visualStage');
   const head=$('#visualWrap .visual-head span:last-child');
-  if(head) head.textContent='falha ao carregar';
+  const options=$('.q-option');
+  const confirm=$('#confirmAnswer');
+  if(head) head.textContent='recurso necessário indisponível';
+  options.forEach(b=>{b.disabled=true;b.setAttribute('aria-disabled','true')});
+  if(confirm)confirm.disabled=true;
   if(stage){
     stage.innerHTML=`<div class="visual-fallback">
       <span>◌</span>
-      <b>O recurso visual não carregou.</b>
-      <p>A questão não será pulada automaticamente. Você pode tentar de novo ou pular manualmente.</p>
+      <b>Este recurso visual é necessário para responder.</b>
+      <p>Para não transformar uma questão incompleta em erro seu, as alternativas ficam bloqueadas até o visual carregar. Tente novamente ou pule esta questão.</p>
       <div><button id="retryVisual" class="outline-btn small">Tentar novamente</button><button id="skipBrokenVisual" class="ghost-btn">Pular questão</button></div>
     </div>`;
     $('#retryVisual').onclick=async()=>{
       stage.innerHTML='<div class="visual-loading"></div>';
       const ok=await renderVisual(q);
-      if(!ok) showVisualFallback(q);
+      if(ok){
+        options.forEach(b=>{b.disabled=false;b.removeAttribute('aria-disabled')});
+      }else showVisualFallback(q);
     };
     $('#skipBrokenVisual').onclick=()=>nextQuestion();
   }
-  toast('O visual falhou, mas a sessão não vai mais avançar sozinha.','error');
+  toast('O NEXO bloqueou uma questão visual incompleta para não prejudicar seu treino.','error');
 }
 
 async function getPdf(url) {
