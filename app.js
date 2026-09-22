@@ -3967,7 +3967,8 @@ async function renderQuestion(q) {
   // Use NEXO-owned media first. When metadata is absent but the statement clearly
   // references a visual, recover official ENEM assets on demand (2009-2023).
   await ensureExternalQuestionAssets(q);
-  const visual = Boolean(q.media_type || q.media_path || q.external_media_files?.length);
+  const requiredVisual=likelyNeedsQuestionVisual(q)&&!hasAccessibleVisualDescription(q);
+  const visual = Boolean(q.media_type || q.media_path || q.external_media_files?.length || requiredVisual);
   card.innerHTML=`
     <div class="q-top">
       <div class="q-tags">
