@@ -264,7 +264,7 @@ function syncBottom(){
   const active=$('.page.active')?.id||'inicio';
   const primary=new Set(['inicio','questoes','redacao','desempenho']);
   const menuOpen=document.body.classList.contains('mobile-menu-open');
-  $('[data-nrx-bottom]').forEach(b=>{
+  document.querySelectorAll('[data-nrx-bottom]').forEach(b=>{
     const p=b.dataset.nrxBottom;
     const moreActive=p==='more'&&(menuOpen||!primary.has(active));
     b.classList.toggle('active',p===active||moreActive);
