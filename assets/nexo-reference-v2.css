@@ -2597,3 +2597,42 @@ body.light.nexo-reference-ui .v14-loop-grid small{color:#718097!important}
 body.light.nexo-reference-ui .v14-consistency-grid>button{
   background:#fff!important;color:#172239!important;border-color:rgba(54,71,105,.11)!important;
 }
+
+
+/* V14 light-mode parity */
+body.light.nexo-reference-ui .topbar{
+  background:rgba(248,250,255,.94)!important;
+  border-bottom-color:rgba(70,86,122,.10)!important;
+}
+body.light.nexo-reference-ui .topbar .search,
+body.light.nexo-reference-ui .nrx-mobile-search-slot .search{
+  background:#fff!important;
+  border-color:rgba(64,82,121,.14)!important;
+}
+body.light.nexo-reference-ui .nrx-bottom-nav{
+  background:rgba(250,252,255,.96)!important;
+  border-color:rgba(64,82,121,.13)!important;
+  box-shadow:0 14px 34px rgba(32,45,71,.16)!important;
+}
+body.light.nexo-reference-ui .nrx-bottom-nav button{color:#68758c!important}
+body.light.nexo-reference-ui .nrx-bottom-nav button.active{
+  color:#6750d8!important;
+  background:linear-gradient(180deg,#eeeaff,#f5f2ff)!important;
+}
+body.light.nexo-reference-ui .nrx-mob-progress,
+body.light.nexo-reference-ui .nrx-mob-continue{
+  background:#fff!important;
+  border-color:rgba(61,78,113,.10)!important;
+}
+body.light.nexo-reference-ui .nrx-mobile-theme,
+body.light.nexo-reference-ui .nrx-mobile-crown,
+body.light.nexo-reference-ui .top-actions .icon-btn{
+  background:#fff!important;
+  border-color:rgba(64,82,121,.13)!important;
+}
+body.light.nexo-reference-ui .v14-learning-loop,
+body.light.nexo-reference-ui .v14-consistency{
+  background:#fff!important;
+  border-color:rgba(54,71,105,.10)!important;
+}
+body.nexo-reference-ui #semana #v13Brief{margin-top:14px!important}
