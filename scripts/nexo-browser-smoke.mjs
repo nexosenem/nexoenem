@@ -1309,12 +1309,12 @@ async function runProfile(browser,name,viewport){
 
       // Haptics: preferência local deve alternar e voltar ao valor original.
       const haptic=document.querySelector('#toggleNexoHaptics');
-      const before=localStorage.getItem('nexo-haptics');
+      const beforeEnabled=typeof nexoHapticsEnabled==='function'?nexoHapticsEnabled():localStorage.getItem('nexo-haptics')!=='off';
       haptic?.click();
-      const afterOne=localStorage.getItem('nexo-haptics');
+      const afterOneEnabled=typeof nexoHapticsEnabled==='function'?nexoHapticsEnabled():localStorage.getItem('nexo-haptics')!=='off';
       haptic?.click();
-      const afterTwo=localStorage.getItem('nexo-haptics');
-      result.haptics=Boolean(haptic&&afterOne!==before&&afterTwo===before);
+      const afterTwoEnabled=typeof nexoHapticsEnabled==='function'?nexoHapticsEnabled():localStorage.getItem('nexo-haptics')!=='off';
+      result.haptics=Boolean(haptic&&afterOneEnabled!==beforeEnabled&&afterTwoEnabled===beforeEnabled);
 
       // Links oficiais sem abrir nova janela real.
       window.open=(...args)=>{calls.opens.push(args);return null};
