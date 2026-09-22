@@ -1130,6 +1130,224 @@ async function runProfile(browser,name,viewport){
   for(const [key,value] of Object.entries(contentWorkflowTest.radar||{}))if(!value)contentWorkflowFailures.push('radar.'+key);
   for(const [key,value] of Object.entries(contentWorkflowTest.themes||{}))if(!value)contentWorkflowFailures.push('temas.'+key);
   if(contentWorkflowFailures.length)failures.push(name+': fluxos Biblioteca/Radar/Temas regrediram: '+contentWorkflowFailures.join(', ')+' '+JSON.stringify(contentWorkflowTest));
+
+  markStage('journey-persistence');
+  const journeyPersistenceTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      user:state.user,profile:state.profile,membership:state.membership,
+      journey:state.journey,journeyTab:state.journeyTab,journeyLoading:state.journeyLoading,
+      avatarDraft:state.avatarDraft,weekPlan:state.weekPlan,
+      savedQuestions:state.savedQuestions,questionMeta:state.questionMeta,
+      current:state.current,studyGroups:state.studyGroups,selectedStudyGroup:state.selectedStudyGroup
+    };
+    const originalRpc=client.rpc,originalFrom=client.from,originalStart=window.startStudySession;
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const calls={weekComplete:0,weekLaunch:[],savedInsert:0,savedDelete:0,claim:0,buy:0,avatarSave:0,createGroup:0,joinGroup:0,goalInsert:0};
+    const result={week:{},saved:{},journey:{},groups:{}};
+
+    let mockGroups=[];
+    const journey={
+      profile:{
+        level:5,title:'Explorador NEXO',coins:500,streak_days:3,league:'Bronze',
+        rank_position:8,arena_points:120,arena_rank:5,xp_in_level:40,xp_to_next:180,
+        avatar:{base:'neutral',skin:'tone3',hair:'short',hair_color:'ink',outfit:'purple',accessory:'none',frame:'basic',background:'grid',aura:'none'}
+      },
+      missions:[{
+        id:9101,period:'daily',title:'Missão Smoke',description:'Concluir um teste seguro',
+        progress:1,target:1,status:'completed',reward_xp:30,reward_coins:5
+      }],
+      inventory:[],
+      catalog:[{
+        item_code:'smoke_cap',name:'Boné Smoke',description:'Item de teste local',
+        category:'accessory',rarity:'comum',price:100,grant_mode:'store',unlock_level:1,
+        plus_only:false,collection_code:'core',compatible_bases:['neutral'],
+        visual:{field:'accessory',value:'cap'}
+      }],
+      achievements:[],leaderboard:[],arena_leaderboard:[]
+    };
+
+    const savedChain=()=>{
+      const chain={
+        delete(){chain.mode='delete';return chain},
+        eq(){return chain},
+        then(resolve,reject){
+          if(chain.mode==='delete')calls.savedDelete++;
+          return Promise.resolve({data:null,error:null}).then(resolve,reject);
+        },
+        async insert(){calls.savedInsert++;return {data:null,error:null}}
+      };
+      return chain;
+    };
+
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      state.user={id:'smoke-user',email:'smoke@nexo.local',user_metadata:{full_name:'Aluno Smoke'}};
+      state.profile={full_name:'Aluno Smoke',daily_minutes:45};
+      state.membership={plan:'plus',is_plus:true,is_ultra:false,usage:{},limits:{}};
+      state.journey=journey;state.journeyTab='missions';state.journeyLoading=false;
+      state.avatarDraft=normalizedAvatar(journey.profile.avatar);
+
+      client.rpc=async(name,args={})=>{
+        if(name==='complete_nexo_week_task'){
+          calls.weekComplete++;
+          const task=state.weekPlan?.tasks?.find(x=>Number(x.id)===Number(args.p_task_id));
+          if(task)task.status='completed';
+          if(state.weekPlan)state.weekPlan.completed=1;
+          return {data:{awarded:true},error:null};
+        }
+        if(name==='get_or_create_nexo_week_plan')return {data:state.weekPlan,error:null};
+        if(name==='claim_nexo_mission'){
+          calls.claim++;
+          const m=journey.missions.find(x=>Number(x.id)===Number(args.p_mission_id));
+          if(m)m.status='claimed';
+          journey.profile.coins+=5;
+          return {data:journey,error:null};
+        }
+        if(name==='buy_nexo_item'){
+          calls.buy++;
+          if(!journey.inventory.some(x=>x.item_code===args.p_item_code))journey.inventory.push({item_code:args.p_item_code});
+          journey.profile.coins-=100;
+          return {data:{ok:true},error:null};
+        }
+        if(name==='save_nexo_avatar'){
+          calls.avatarSave++;
+          return {data:normalizedAvatar(args.p_avatar||{}),error:null};
+        }
+        if(name==='get_nexo_journey')return {data:journey,error:null};
+        if(name==='get_nexo_membership')return {data:state.membership,error:null};
+        if(name==='get_nexo_social_ranking')return {data:{weekly:[],arena:[]},error:null};
+        if(name==='get_nexo_store_catalog')return {data:journey.catalog,error:null};
+        if(name==='create_study_group'){
+          calls.createGroup++;
+          mockGroups=[{
+            id:7701,name:String(args.p_name||'Grupo Smoke'),description:args.p_description||'',
+            join_code:'SMOKE7',member_count:1,is_owner:true,
+            members:[{name:'Aluno Smoke',role:'owner'}],goals:[]
+          }];
+          return {data:{id:7701,join_code:'SMOKE7'},error:null};
+        }
+        if(name==='join_study_group'){
+          calls.joinGroup++;
+          return {data:{id:7701,name:'Grupo Smoke'},error:null};
+        }
+        if(name==='get_my_study_groups')return {data:mockGroups,error:null};
+        return originalRpc.call(client,name,args);
+      };
+
+      client.from=(table)=>{
+        if(table==='saved_questions')return savedChain();
+        if(table==='study_group_goals'){
+          return {
+            async insert(row){
+              calls.goalInsert++;
+              const g=mockGroups.find(x=>String(x.id)===String(row.group_id));
+              if(g)g.goals.push({id:8801,title:row.title,target_value:row.target_value,current_value:0,unit:row.unit,due_date:row.due_date});
+              return {data:null,error:null};
+            }
+          };
+        }
+        return originalFrom.call(client,table);
+      };
+
+      window.startStudySession=async config=>{
+        calls.weekLaunch.push({...config});
+        state.session={...config,index:0,questions:[]};
+        return state.session;
+      };
+
+      state.weekPlan={
+        daily_minutes:45,total:1,completed:0,
+        tasks:[{
+          id:7001,day_index:0,title:'Treinar porcentagem',task_type:'questions',
+          topic:'Porcentagem',subject:'Matemática',area:'Matemática',
+          target_minutes:20,target_count:5,status:'planned'
+        }]
+      };
+      pages.forEach(p=>p.classList.toggle('active',p.id==='semana'));
+      renderNexoWeekPlan();
+      const complete=document.querySelector('[data-week-complete="7001"]');
+      complete?.click();await wait(90);
+      const completeAfter=document.querySelector('[data-week-complete="7001"]');
+      result.week.complete=Boolean(calls.weekComplete===1&&state.weekPlan.tasks[0].status==='completed'&&completeAfter?.disabled);
+
+      document.querySelector('[data-week-launch="7001"]')?.click();await wait(45);
+      const launch=calls.weekLaunch[0];
+      result.week.launch=Boolean(launch&&launch.mode==='adaptive'&&launch.topic==='Porcentagem'&&Number(launch.size)===5&&document.querySelector('#questoes')?.classList.contains('active'));
+
+      const fakeQuestion={id:-812399,area:'Matemática',subject:'Matemática',topic:'Porcentagem',source_year:2025,source_question_number:88};
+      state.questionMeta=[fakeQuestion];state.savedQuestions=new Set();state.current=fakeQuestion;
+      renderSavedQuestions();
+      await toggleSavedQuestion(fakeQuestion.id);await wait(15);
+      const savedNow=state.savedQuestions.has(fakeQuestion.id);
+      const countNow=document.querySelector('#savedQuestionsCount')?.textContent||'';
+      await toggleSavedQuestion(fakeQuestion.id);await wait(15);
+      result.saved={
+        add:Boolean(savedNow&&calls.savedInsert===1&&/1 salva/.test(countNow)),
+        remove:Boolean(!state.savedQuestions.has(fakeQuestion.id)&&calls.savedDelete===1&&/0 salvas/.test(document.querySelector('#savedQuestionsCount')?.textContent||''))
+      };
+
+      pages.forEach(p=>p.classList.toggle('active',p.id==='ranking'));
+      renderJourneyMissions();
+      const claim=document.querySelector('[data-claim-mission="9101"]');
+      claim?.click();await wait(90);
+      result.journey.claim=Boolean(calls.claim===1&&journey.missions[0].status==='claimed'&&!document.querySelector('[data-claim-mission="9101"]'));
+
+      setJourneyTab('store');renderJourneyStore();await wait(20);
+      const buy=document.querySelector('[data-buy-item="smoke_cap"]');
+      buy?.click();await wait(120);
+      result.journey.buy=Boolean(calls.buy===1&&journey.inventory.some(x=>x.item_code==='smoke_cap')&&/Adquirido/i.test(document.querySelector('#journeyStore')?.textContent||''));
+
+      state.avatarDraft=normalizedAvatar({...journey.profile.avatar,accessory:'cap'});
+      renderAvatarBuilder();
+      const saveAvatar=document.querySelector('#saveJourneyAvatar');
+      saveAvatar?.click();await wait(85);
+      result.journey.avatar=Boolean(calls.avatarSave===1&&journey.profile.avatar?.accessory==='cap'&&!saveAvatar?.disabled&&/Salvar personagem/i.test(saveAvatar?.textContent||''));
+
+      setJourneyTab('groups');
+      state.studyGroups=[];state.selectedStudyGroup=null;renderStudyGroups();
+      const groupName=document.querySelector('#studyGroupName'),groupDescription=document.querySelector('#studyGroupDescription');
+      if(groupName)groupName.value='Grupo Smoke';
+      if(groupDescription)groupDescription.value='Grupo local de validação';
+      document.querySelector('#createStudyGroup')?.click();await wait(100);
+      result.groups.create=Boolean(calls.createGroup===1&&state.studyGroups.length===1&&state.selectedStudyGroup?.id===7701&&groupName?.value==='');
+
+      const goalTitle=document.querySelector('#studyGroupGoalTitle');
+      if(goalTitle)goalTitle.value='Resolver Matemática';
+      const goalTarget=document.querySelector('#studyGroupGoalTarget');
+      if(goalTarget)goalTarget.value='40';
+      document.querySelector('#createStudyGroupGoal')?.click();await wait(80);
+      result.groups.goal=Boolean(calls.goalInsert===1&&state.studyGroups[0]?.goals?.some(g=>g.title==='Resolver Matemática'));
+
+      const joinInput=document.querySelector('#studyGroupCode');
+      if(joinInput)joinInput.value='SMOKE7';
+      document.querySelector('#joinStudyGroup')?.click();await wait(85);
+      result.groups.join=Boolean(calls.joinGroup===1&&joinInput?.value==='');
+    }catch(err){
+      result.error=String(err?.stack||err?.message||err);
+    }finally{
+      client.rpc=originalRpc;client.from=originalFrom;window.startStudySession=originalStart;
+      state.user=prev.user;state.profile=prev.profile;state.membership=prev.membership;
+      state.journey=prev.journey;state.journeyTab=prev.journeyTab;state.journeyLoading=prev.journeyLoading;
+      state.avatarDraft=prev.avatarDraft;state.weekPlan=prev.weekPlan;
+      state.savedQuestions=prev.savedQuestions;state.questionMeta=prev.questionMeta;
+      state.current=prev.current;state.studyGroups=prev.studyGroups;state.selectedStudyGroup=prev.selectedStudyGroup;
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return {...result,calls};
+  });
+  const journeyPersistenceFailures=[];
+  if(journeyPersistenceTest.error)journeyPersistenceFailures.push('error='+journeyPersistenceTest.error);
+  for(const [group,values] of Object.entries(journeyPersistenceTest)){
+    if(['error','calls'].includes(group))continue;
+    for(const [key,value] of Object.entries(values||{}))if(!value)journeyPersistenceFailures.push(group+'.'+key);
+  }
+  if(journeyPersistenceFailures.length)failures.push(name+': persistência/Jornada regrediu: '+journeyPersistenceFailures.join(', ')+' '+JSON.stringify(journeyPersistenceTest));
   const utilFocus=utilityModuleTest.focus,utilBank=utilityModuleTest.bank,utilFeedback=utilityModuleTest.feedback;
   if(!utilFocus.opened||!utilFocus.durationVisible||!utilFocus.durationChanged||!utilFocus.closed)failures.push(name+': Modo Foco regrediu: '+JSON.stringify(utilFocus));
   if(!utilBank.searchVisible||!utilBank.areaVisible||!utilBank.list||!utilBank.saved)failures.push(name+': Banco de Questões regrediu: '+JSON.stringify(utilBank));
@@ -2122,7 +2340,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,adminAccessTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,moduleInteractionTest,contentWorkflowTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,adminAccessTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,moduleInteractionTest,contentWorkflowTest,journeyPersistenceTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
