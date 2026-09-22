@@ -867,6 +867,127 @@ async function runProfile(browser,name,viewport){
   if(!essayRenderAndViewerTest.viewer.ok)failures.push(name+': visualizador da Biblioteca falhou: '+JSON.stringify(essayRenderAndViewerTest.viewer));
 
 
+
+  markStage('viewer-actions');
+  const viewerActionTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      user:state.user,materials:[...(state.materials||[])],materialSubject:state.materialSubject,
+      favorites:new Set(state.favorites||[]),contentProgress:new Map(state.contentProgress||[]),
+      activeViewer:state.activeViewer
+    };
+    const originalFrom=client.from,originalRpc=client.rpc;
+    const originalStartStudySession=window.startStudySession;
+    const originalAskNia=window.askNia;
+    const originalLoadJourney=window.loadNexoJourney;
+    const calls={sessions:[],asks:[]};
+    const result={};
+    const fake={
+      id:-880021,title:'Aula NEXO #999 · Visualizador Smoke',format:'image',
+      file_url:'./assets/nexo-family/bust-confiante.avif',
+      area:'Matemática',subject:'Matemática',topic:'Porcentagem',plus_only:false,is_published:true
+    };
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      state.user={id:'smoke-user',email:'smoke@nexo.local'};
+      state.materials=[fake];
+      state.materialSubject='Matemática';
+      state.favorites=new Set();
+      state.contentProgress=new Map();
+
+      client.from=(table)=>{
+        if(table==='content_progress')return {async upsert(){return {data:null,error:null}}};
+        if(table==='content_favorites'){
+          return {
+            async insert(){return {data:null,error:null}},
+            delete(){
+              const chain={eq(){return chain},then(resolve){return Promise.resolve({data:null,error:null}).then(resolve)}};
+              return chain;
+            }
+          };
+        }
+        return originalFrom.call(client,table);
+      };
+      client.rpc=async(name,...args)=>{
+        if(name==='refresh_my_learning_achievements')return {data:null,error:null};
+        return originalRpc.call(client,name,...args);
+      };
+      window.loadNexoJourney=async()=>null;
+      window.startStudySession=async config=>{calls.sessions.push(config);return null};
+      window.askNia=prompt=>{calls.asks.push(String(prompt||''));return null};
+
+      if(typeof openPage==='function')openPage('materiais');
+      await wait(20);
+      await openContentViewer('material',fake.id);
+      await wait(30);
+      const modal=document.querySelector('#contentViewer');
+      result.opened=visible(modal);
+      result.checkpointVisible=visible(document.querySelector('#viewerCheckpoint'));
+      result.favoriteVisible=visible(document.querySelector('#viewerFavorite'));
+      result.completeVisible=visible(document.querySelector('#viewerComplete'));
+      result.practiceVisible=visible(document.querySelector('#viewerPractice'));
+      result.askVisible=visible(document.querySelector('#viewerAskNexo'));
+
+      document.querySelector('#viewerFavorite')?.click();
+      await wait(25);
+      result.favorite=state.favorites.has('material:'+fake.id)&&document.querySelector('#viewerFavorite')?.classList.contains('active');
+
+      document.querySelector('#viewerComplete')?.click();
+      await wait(35);
+      const progress=state.contentProgress.get('material:'+fake.id);
+      result.complete=Boolean(progress?.completed&&Number(progress?.progress_percent)===100&&/Concluído/i.test(document.querySelector('#viewerComplete')?.textContent||''));
+
+      await openContentViewer('material',fake.id);
+      await wait(20);
+      document.querySelector('#viewerCheckpoint')?.click();
+      await wait(35);
+      result.checkpoint=Boolean(calls.sessions.some(x=>Number(x.size)===2&&x.mode==='content'));
+
+      await openContentViewer('material',fake.id);
+      await wait(20);
+      document.querySelector('#viewerPractice')?.click();
+      await wait(35);
+      result.practice=Boolean(calls.sessions.some(x=>Number(x.size)===5&&x.mode==='content'));
+
+      await openContentViewer('material',fake.id);
+      await wait(20);
+      document.querySelector('#viewerAskNexo')?.click();
+      await wait(25);
+      result.ask=Boolean(calls.asks.some(x=>/Porcentagem/i.test(x)&&/exemplo no estilo ENEM/i.test(x)));
+
+      document.querySelector('#closeNia')?.click();
+      if(typeof closeContentViewer==='function')closeContentViewer();
+      result.closed=Boolean(modal?.classList.contains('hidden'))&&state.activeViewer===null;
+    }catch(err){
+      result.error=String(err?.stack||err?.message||err);
+    }finally{
+      client.from=originalFrom;client.rpc=originalRpc;
+      window.startStudySession=originalStartStudySession;
+      window.askNia=originalAskNia;
+      window.loadNexoJourney=originalLoadJourney;
+      state.user=prev.user;state.materials=prev.materials;state.materialSubject=prev.materialSubject;
+      state.favorites=prev.favorites;state.contentProgress=prev.contentProgress;state.activeViewer=prev.activeViewer;
+      document.querySelector('#contentViewer')?.classList.add('hidden');
+      document.querySelector('#niaPanel')?.classList.add('hidden');
+      document.body.style.overflow='';
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return {...result,calls};
+  });
+  const viewerActionFailures=[];
+  for(const key of ['opened','checkpointVisible','favoriteVisible','completeVisible','practiceVisible','askVisible','favorite','complete','checkpoint','practice','ask','closed']){
+    if(!viewerActionTest[key])viewerActionFailures.push(key);
+  }
+  if(viewerActionTest.error)viewerActionFailures.push('error='+viewerActionTest.error);
+  if(viewerActionFailures.length)failures.push(name+': ações do visualizador regrediram: '+viewerActionFailures.join(', ')+' '+JSON.stringify(viewerActionTest));
+
   markStage('advanced-controls');
   const advancedControlTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -1389,7 +1510,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,advancedControlTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,advancedControlTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
