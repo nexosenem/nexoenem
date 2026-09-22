@@ -55,20 +55,24 @@
     $$('.nrx-shortcut').forEach(btn=>replaceIcon(btn.querySelector(':scope>i'),shortcutMap[(btn.querySelector('b')?.textContent||'').trim()]||'spark'));
     $$('[data-nrx-bottom]').forEach(btn=>replaceIcon(btn.querySelector(':scope>span'),bottomMap[btn.dataset.nrxBottom]||'more'));
 
+    const themeName=document.body.classList.contains('light')?'sun':'moon';
     const theme=$('.nrx-mobile-theme');
-    if(theme){
-      theme.innerHTML=svg(document.body.classList.contains('light')?'sun':'moon');
-      theme.dataset.v15Icon='theme';
+    if(theme&&theme.dataset.v15Icon!=='theme-'+themeName){
+      theme.innerHTML=svg(themeName);
+      theme.dataset.v15Icon='theme-'+themeName;
     }
     replaceIcon($('.nrx-mobile-crown'),'crown');
 
     const notice=$('#notificationBtn');
-    if(notice){
+    if(notice&&notice.dataset.v15Icon!=='bell'){
       notice.innerHTML=svg('bell')+'<i></i>';
       notice.dataset.v15Icon='bell';
     }
     const originalTheme=$('#themeToggle');
-    if(originalTheme)originalTheme.innerHTML=svg(document.body.classList.contains('light')?'sun':'moon');
+    if(originalTheme&&originalTheme.dataset.v15Icon!=='theme-'+themeName){
+      originalTheme.innerHTML=svg(themeName);
+      originalTheme.dataset.v15Icon='theme-'+themeName;
+    }
 
     $$('#studyAreaGrid>button').forEach(btn=>{
       const key=(btn.dataset.studyArea||'').toLowerCase();
