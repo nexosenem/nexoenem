@@ -2703,3 +2703,76 @@ body.nexo-reference-ui #sidebar .brand[data-v14-brand="1"] small{
 @media(max-width:390px){
   .nrx-logo-word{font-size:23px}
 }
+
+
+/* Mobile header controls: theme -> crown -> notifications, all locked to one row. */
+@media(max-width:760px){
+  body.nexo-reference-ui .topbar{
+    display:grid!important;
+    grid-template-columns:max-content minmax(0,1fr) 38px 38px auto!important;
+    grid-template-rows:44px!important;
+    align-items:center!important;
+    column-gap:7px!important;
+    row-gap:0!important;
+    overflow:visible!important;
+  }
+  body.nexo-reference-ui .topbar>.nrx-mobile-brand{
+    grid-column:1!important;
+    grid-row:1!important;
+    justify-self:start!important;
+    align-self:center!important;
+    margin:0!important;
+    min-width:0!important;
+  }
+  body.nexo-reference-ui .topbar>.nrx-mobile-theme{
+    grid-column:3!important;
+    grid-row:1!important;
+    justify-self:center!important;
+    align-self:center!important;
+    margin:0!important;
+    width:38px!important;
+    height:38px!important;
+  }
+  body.nexo-reference-ui .topbar>.nrx-mobile-crown{
+    grid-column:4!important;
+    grid-row:1!important;
+    justify-self:center!important;
+    align-self:center!important;
+    margin:0!important;
+    width:38px!important;
+    height:38px!important;
+  }
+  body.nexo-reference-ui .topbar>.top-actions{
+    grid-column:5!important;
+    grid-row:1!important;
+    justify-self:end!important;
+    align-self:center!important;
+    margin:0!important;
+    display:flex!important;
+    align-items:center!important;
+    gap:0!important;
+    min-width:38px!important;
+  }
+  body.nexo-reference-ui .topbar>.top-actions .icon-btn{
+    width:38px!important;
+    height:38px!important;
+    margin:0!important;
+  }
+  body.nexo-reference-ui .topbar>.top-actions .header-journey-pill,
+  body.nexo-reference-ui .topbar>.top-actions #themeToggle{
+    display:none!important;
+  }
+}
+@media(max-width:390px){
+  body.nexo-reference-ui .topbar{
+    grid-template-columns:max-content minmax(0,1fr) 34px 34px auto!important;
+    column-gap:6px!important;
+  }
+  body.nexo-reference-ui .topbar>.nrx-mobile-theme,
+  body.nexo-reference-ui .topbar>.nrx-mobile-crown,
+  body.nexo-reference-ui .topbar>.top-actions .icon-btn{
+    width:34px!important;
+    height:34px!important;
+  }
+  body.nexo-reference-ui .topbar>.top-actions{min-width:34px!important}
+}
