@@ -38,6 +38,18 @@ function openStore(){
 function openNexo(){
   $('#openNexoFromMenu')?.click();
 }
+function openExperience(){
+  $('#openExperienceSettings')?.click();
+}
+function openAvatar(){
+  go('ranking');
+  setTimeout(()=>{
+    try{
+      if(typeof window.setJourneyTab==='function')window.setJourneyTab('avatar');
+      else $('[data-journey-tab="avatar"]')?.click();
+    }catch(_){$('[data-journey-tab="avatar"]')?.click()}
+  },120);
+}
 function resumeStudy(){
   $('#continueStudy')?.click();
 }
@@ -73,7 +85,6 @@ function desktopMarkup(){
         <div class="nrx-hero-actions">
           <button class="nrx-btn primary" data-nrx-resume>Continuar estudando&nbsp; →</button>
           <button class="nrx-btn" data-nrx-page="desempenho">Ver meu desempenho&nbsp; →</button>
-          <button class="nrx-btn nrx-focus-mini" data-nrx-focus title="Modo Foco">◷</button>
         </div>
       </div>
       <div class="nrx-hero-art" aria-hidden="true">
@@ -103,8 +114,8 @@ function desktopMarkup(){
       </article>
       <article class="nrx-stat-card">
         <h3>Meta do ENEM</h3>
-        <div class="nrx-goal-main"><span class="nrx-goal-icon">▣</span><div><span>Seu avanço</span><b data-nrx-goal-pct>0%</b></div></div>
-        <div class="nrx-goal-track"><i data-nrx-goal-bar></i></div>
+        <div class="nrx-goal-main"><span class="nrx-goal-icon">▣</span><div><span>Faltam</span><b data-nrx-days>— dias</b></div></div>
+        <div class="nrx-goal-track"><i data-nrx-countdown-bar></i></div>
         <small class="nrx-goal-quote">“Disciplina hoje, aprovação amanhã.”</small>
       </article>
     </section>
@@ -229,6 +240,56 @@ function syncBottom(){
   syncShellVisibility();
 }
 
+function buildReferenceSidebar(){
+  const sidebar=$('#sidebar');
+  if(!sidebar||$('.nrx-side-nav',sidebar))return;
+  const old=$('.side-nav',sidebar);
+  if(old)old.classList.add('nrx-original-nav');
+  $('.sidebar-quote',sidebar)?.classList.add('nrx-original-quote');
+
+  const nav=document.createElement('nav');
+  nav.className='nrx-side-nav';
+  const items=[
+    ['inicio','⌂','Início',()=>go('inicio')],
+    ['materiais','▣','Estudar',()=>go('materiais')],
+    ['questoes','✓','Questões',()=>go('questoes')],
+    ['redacao','✎','Redação',()=>go('redacao')],
+    ['simulados','▤','Simulados',()=>go('simulados')],
+    ['materiais','▧','Resumo e Macetes',()=>go('materiais')],
+    ['semana','▦','Planner',()=>go('semana')],
+    ['desempenho','▥','Meu Desempenho',()=>go('desempenho')],
+    ['radar','◉','Radar ENEM',()=>go('radar')],
+    ['store','♕','Loja NEXO',openStore],
+    ['avatar','✦','Personalizar',openAvatar],
+    ['nexo','🐾','Nexo (Assistente)',openNexo],
+    ['settings','⚙','Configurações',openExperience]
+  ];
+  items.forEach(([key,icon,label,run])=>{
+    const b=document.createElement('button');
+    b.type='button';b.className='nrx-side-item';b.dataset.nrxSide=key;
+    b.innerHTML='<span>'+icon+'</span><b>'+label+'</b>';
+    b.addEventListener('click',()=>{run();setTimeout(syncSideNav,60)});
+    nav.appendChild(b);
+  });
+  old?.insertAdjacentElement('beforebegin',nav);
+
+  const account=document.createElement('button');
+  account.type='button';account.className='nrx-side-account';
+  account.innerHTML='<span class="nrx-side-avatar">N</span><div><b data-nrx-side-name>Aluno</b><small data-nrx-side-plan>Plano NEXO</small></div><i>♛</i>';
+  account.addEventListener('click',()=>$('#profileButton')?.click());
+  sidebar.appendChild(account);
+}
+function syncSideNav(){
+  const active=$('.page.active')?.id||'inicio';
+  $('[data-nrx-side]').forEach(b=>{
+    const key=b.dataset.nrxSide;
+    b.classList.toggle('active',key===active||(key==='materiais'&&active==='videoaulas'));
+  });
+  const name=firstName();
+  $('[data-nrx-side-name]').forEach(el=>el.textContent=name);
+  const role=$('#profileRole')?.textContent?.trim()||'Estudante';
+  $('[data-nrx-side-plan]').forEach(el=>el.textContent=role);
+}
 function addMobileChrome(){
   const top=$('.topbar');
   if(!top)return;
@@ -237,6 +298,12 @@ function addMobileChrome(){
     brand.className='nrx-mobile-brand';
     brand.innerHTML='<i>N</i><span>NEXO</span>';
     top.prepend(brand);
+  }
+  if(!$('.nrx-mobile-crown',top)){
+    const crown=document.createElement('button');
+    crown.type='button';crown.className='nrx-mobile-crown';crown.setAttribute('aria-label','Abrir Loja NEXO');
+    crown.textContent='♛';crown.addEventListener('click',openStore);
+    top.appendChild(crown);
   }
   if(!$('.nrx-mobile-menu',top)){
     const menu=document.createElement('button');
@@ -276,6 +343,23 @@ function syncIdentity(){
   $$('[data-nrx-name]').forEach(el=>el.textContent=name);
   $$('[data-nrx-greeting]').forEach(el=>el.textContent=hello);
 }
+function syncCountdown(){
+  let days=null;
+  try{
+    if(typeof window.studyPhaseMeta==='function')days=Number(window.studyPhaseMeta()?.days);
+    else if(typeof studyPhaseMeta==='function')days=Number(studyPhaseMeta()?.days);
+  }catch(_){}
+  if(!Number.isFinite(days)){
+    const target=new Date('2026-11-08T00:00:00-03:00');
+    const today=new Date();today.setHours(0,0,0,0);
+    days=Math.ceil((target.getTime()-today.getTime())/86400000);
+  }
+  const shown=Math.max(0,days);
+  $('[data-nrx-days]').forEach(el=>el.textContent=(days>=0?shown:'—')+' dias');
+  const windowDays=120;
+  const pct=days<=0?100:Math.max(4,Math.min(100,100-(days/windowDays*100)));
+  $('[data-nrx-countdown-bar]').forEach(el=>el.style.width=pct+'%');
+}
 function syncProgress(){
   const src=$('#progressPct')||$('#mobileProgressPct');
   const p=pctNumber(src?.textContent);
@@ -285,8 +369,7 @@ function syncProgress(){
     el.classList.add(toneClass(p));
   });
   $$('[data-nrx-ring]').forEach(el=>el.style.setProperty('--p',String(p)));
-  $$('[data-nrx-goal-pct]').forEach(el=>el.textContent=Math.round(p)+'%');
-  $$('[data-nrx-goal-bar]').forEach(el=>el.style.width=p+'%');
+  syncCountdown();
   let label='Comece hoje!',note='Seu desempenho vai aparecer aqui.';
   if(p>=80){label='Muito bem!';note='Continue assim.'}
   else if(p>=40){label='Bom caminho!';note='Continue evoluindo.'}
@@ -312,7 +395,7 @@ function syncWeakness(){
     $$('[data-nrx-continue-sub]').forEach(el=>el.textContent='Reforce este foco e continue evoluindo.');
   }
 }
-function syncAll(){syncIdentity();syncProgress();syncWeakness();syncBottom();placeSearch()}
+function syncAll(){syncIdentity();syncProgress();syncWeakness();syncSideNav();syncBottom();placeSearch()}
 
 function observe(){
   const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#inicio','#app'];
@@ -335,6 +418,7 @@ function init(){
     home.prepend(mobile);
     home.prepend(desktop);
     addMobileChrome();
+    buildReferenceSidebar();
     buildBottomNav();
     document.body.classList.add('nexo-reference-ui');
     observe();
