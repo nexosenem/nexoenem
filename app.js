@@ -3447,25 +3447,37 @@ async function getSeenIds() {
 
 async function fetchQuestions(filters={}) {
   const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+  const requested=Math.max(1,Number(filters.size||10));
+  const candidateLimit=Math.min(400,Math.max(80,requested*4));
   let rows=null;
 
-  // Main path: server-side random candidate pool. This avoids biasing mixed
-  // sessions toward the first 1,000 rows while keeping the mobile payload bounded.
+  // Main path: fetch only a lightweight randomized candidate list from the full
+  // 2009–2025 archive, already prioritizing unseen and excluding visual repairs.
   try{
-    const {data,error}=await client.rpc('get_study_question_candidates',{
+    const {data:candidates,error:candidateError}=await client.rpc('get_study_question_candidates_v2',{
       p_area:filters.area||null,
       p_subject:filters.subject||null,
       p_difficulty:filters.difficulty?Number(filters.difficulty):null,
       p_topic:filters.radarTopic?null:(filters.fallbackTopic||filters.topic||null),
       p_radar_topic:filters.radarTopic||null,
-      p_limit:1000
+      p_visual_only:Boolean(filters.visualOnly),
+      p_limit:candidateLimit
     });
+    if(candidateError)throw candidateError;
+    const ordered=candidates||[];
+    const ids=ordered.map(x=>Number(x.id)).filter(Boolean);
+    if(!ids.length)return [];
+    const {data,error}=await client.from('questions').select(fields).in('id',ids).eq('is_active',true);
     if(error)throw error;
-    rows=data||[];
+    const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
+    rows=ordered.map(meta=>{
+      const q=byId.get(Number(meta.id));
+      return q?{...q,_seen:Boolean(meta.seen),_visualStatus:meta.visual_status,_hasVisual:Boolean(meta.has_visual)}:null;
+    }).filter(Boolean);
   }catch(err){
-    console.warn('study question candidate RPC fallback',err);
+    console.warn('study question candidate v2 fallback',err);
 
-    // Compatibility fallback for deployments where the RPC has not propagated yet.
+    // Compatibility fallback for a deploy where the RPC has not propagated yet.
     let radarKeys=null;
     if(filters.radarTopic){
       try{
@@ -3490,17 +3502,17 @@ async function fetchQuestions(filters={}) {
     if(error)throw error;
     rows=data||[];
     if(radarKeys)rows=rows.filter(x=>radarKeys.has(String(x.source_year)+'::'+String(x.source_question_number)));
+    rows=rows.filter(questionVisualCanBeResolved);
+    if(filters.visualOnly){
+      rows=rows.filter(x=>Boolean(
+        x.media_type||x.media_path||
+        (x.source_pdf_url&&x.source_page&&x.media_crop)||
+        likelyNeedsQuestionVisual(x)
+      ));
+    }
   }
 
-  rows=(rows||[]).filter(questionVisualCanBeResolved);
-  if(filters.visualOnly){
-    rows=rows.filter(x=>Boolean(
-      x.media_type||x.media_path||
-      (x.source_pdf_url&&x.source_page&&x.media_crop)||
-      likelyNeedsQuestionVisual(x)
-    ));
-  }
-  return rows;
+  return rows||[];
 }
 
 async function fetchQuestionsResilient(filters={}){
@@ -3651,13 +3663,18 @@ async function startStudySession(config={}) {
     const resolvedQuestions=await fetchQuestionsResilient(config);
     const all=resolvedQuestions.rows;
     const effectiveConfig={...config,...resolvedQuestions.filters};
-    const seen = await getSeenIds();
     const requested=Math.max(1,Number(config.size||10));
-    let fresh = shuffle(all.filter(x=>!seen.has(Number(x.id))));
+    const hasSeenMetadata=all.length>0&&all.every(x=>typeof x._seen==='boolean');
+    const seen=hasSeenMetadata?null:await getSeenIds();
+    let fresh=hasSeenMetadata
+      ? all.filter(x=>!x._seen)
+      : shuffle(all.filter(x=>!seen.has(Number(x.id))));
     let reviewMode=false;
     if(fresh.length<requested){
       const freshIds=new Set(fresh.map(x=>Number(x.id)));
-      const reviewPool=shuffle(all.filter(x=>!freshIds.has(Number(x.id))));
+      const reviewPool=hasSeenMetadata
+        ? all.filter(x=>x._seen&&!freshIds.has(Number(x.id)))
+        : shuffle(all.filter(x=>!freshIds.has(Number(x.id))));
       fresh=[...fresh,...reviewPool];
       reviewMode=true;
     }
