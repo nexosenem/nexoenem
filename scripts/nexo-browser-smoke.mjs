@@ -501,6 +501,84 @@ async function runProfile(browser,name,viewport){
   if(!v15InterfaceTest.tutor||!v15InterfaceTest.tutorVisible||!v15InterfaceTest.tutorOpens)failures.push(name+': Professor Nexo contextual não abriu corretamente em páginas de estudo: '+JSON.stringify(v15InterfaceTest));
   if(v15InterfaceTest.radius<16)failures.push(name+': acabamento arredondado V15 regrediu: '+JSON.stringify(v15InterfaceTest));
 
+  markStage('editorial-explanations');
+  const editorialExplanationTest=await page.evaluate(async()=>{
+    const prevProfile=state.profile,prevTarget=state.adminExplanationTarget;
+    const originalRpc=client.rpc;
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const out={};
+    try{
+      const q={
+        id:-99031,area:'Matemática',subject:'Matemática',topic:'Porcentagem',
+        options:['10','20','30','40','50']
+      };
+      const pending=buildAnswerExplanation(q,{correct:false,correct_option:2,explanation:null},1);
+      const ready=buildAnswerExplanation(q,{
+        correct:false,correct_option:2,
+        explanation:'A alternativa C é correta porque o cálculo percentual pedido pelo comando leva diretamente ao valor 30, enquanto as demais opções decorrem de fatores inadequados.'
+      },1);
+      out.pending=Boolean(
+        pending.explanationStatus==='pending'&&
+        pending.explanationHeading==='Gabarito confirmado'&&
+        /RESOLUÇÃO EM REVISÃO/i.test(pending.explanationLabel||'')
+      );
+      out.ready=Boolean(
+        ready.explanationStatus==='editorial'&&
+        ready.explanationHeading==='Por que essa é a resposta?'&&
+        /VALIDADA/i.test(ready.explanationLabel||'')
+      );
+
+      state.profile={...(state.profile||{}),role:'admin'};
+      let saved=null;
+      client.rpc=async(name,args)=>{
+        if(name==='get_admin_explanation_queue'){
+          return {data:[{
+            question_id:-99031,source_year:2025,source_exam:'ENEM 2025',source_question_number:31,
+            area:'Matemática',subject:'Matemática',topic:'Porcentagem',
+            attempts:24,wrong:12,open_reports:2,explanation:null
+          }],error:null};
+        }
+        if(name==='admin_set_question_explanation'){
+          saved=args;
+          return {data:{ok:true,question_id:Number(args?.p_question_id)},error:null};
+        }
+        return originalRpc.call(client,name,args);
+      };
+
+      await loadAdminExplanationQueue();
+      const row=document.querySelector('#adminExplanationQueue [data-editorial-write="-99031"]');
+      out.queue=Boolean(row&&/24 tentativa/i.test(document.querySelector('#adminExplanationQueue')?.textContent||''));
+      row?.click();
+      await wait(20);
+      const modal=document.querySelector('#adminExplanationModal');
+      const editor=document.querySelector('#adminExplanationText');
+      out.modal=Boolean(modal&&!modal.classList.contains('hidden')&&editor);
+      if(editor)editor.value='Resolução editorial de teste com mais de quarenta caracteres, explicando o conceito central e o passo decisivo sem inventar informação.';
+      document.querySelector('#saveAdminExplanation')?.click();
+      await wait(50);
+      out.saved=Boolean(saved&&Number(saved.p_question_id)===-99031&&String(saved.p_explanation||'').length>=40);
+      out.closed=Boolean(modal?.classList.contains('hidden'));
+    }catch(err){
+      out.error=String(err?.stack||err?.message||err);
+    }finally{
+      client.rpc=originalRpc;
+      state.profile=prevProfile;
+      state.adminExplanationTarget=prevTarget;
+      document.querySelector('#adminExplanationModal')?.classList.add('hidden');
+      document.body.style.overflow='';
+    }
+    return out;
+  });
+  if(editorialExplanationTest.error||
+     !editorialExplanationTest.pending||
+     !editorialExplanationTest.ready||
+     !editorialExplanationTest.queue||
+     !editorialExplanationTest.modal||
+     !editorialExplanationTest.saved||
+     !editorialExplanationTest.closed){
+    failures.push(name+': fluxo editorial de explicações regrediu: '+JSON.stringify(editorialExplanationTest));
+  }
+
   markStage('visual-recovery');
   const visualRecoveryTest=await page.evaluate(async()=>{
     if(typeof ensureExternalQuestionAssets!=='function')return {available:false};
