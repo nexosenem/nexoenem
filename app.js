@@ -3718,8 +3718,9 @@ async function showCurrentQuestion() {
   $('#sessionMeta').textContent=`Questão ${state.session.index+1} de ${state.session.size}`;
   $('#sessionProgress').style.width=`${Math.round((state.session.index/state.session.size)*100)}%`;
   $('#questionCard').innerHTML='<div class="question-loading"><div class="pulse-block"></div><div class="pulse-line"></div><div class="pulse-line short"></div></div>';
-  renderQuestion(state.current);
+  await renderQuestion(state.current);
   renderNexoContextBar('questoes');
+  scheduleNextVisualPrefetch();
 }
 
 function localMediaPath(q){
@@ -3741,6 +3742,39 @@ async function ensureMediaPath(q){
     state.visualCache.set('path:'+id,data.media_path);
   }
   return q;
+}
+
+async function prefetchVisualAsset(q){
+  if(!q?.media_type)return;
+  const id=Number(q.id);
+  if(!id||state.visualCache.has(id)||state.visualCache.has('path:'+id)||q.media_path)return;
+  try{
+    const {data,error}=await client.from('question_media')
+      .select('data_uri')
+      .eq('question_id',id)
+      .maybeSingle();
+    if(!error&&data?.data_uri){
+      state.visualCache.set(id,data.data_uri);
+      return;
+    }
+    await ensureMediaPath(q);
+  }catch(err){
+    console.warn('visual prefetch',err);
+  }
+}
+
+function scheduleNextVisualPrefetch(){
+  const session=state.session;
+  if(!session?.queue?.length)return;
+  const next=session.queue[Number(session.index||0)+1];
+  if(!next?.media_type)return;
+  const sessionRef=session;
+  const run=()=>{
+    if(state.session!==sessionRef)return;
+    prefetchVisualAsset(next);
+  };
+  if('requestIdleCallback' in window)window.requestIdleCallback(run,{timeout:1200});
+  else setTimeout(run,250);
 }
 
 function stopQuestionBehaviorMonitor(){
