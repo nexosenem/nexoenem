@@ -1444,6 +1444,10 @@
               <div class="panel-title"><div><b>Fila editorial de resoluções</b><small>prioridade por uso, erros e reportes dos alunos</small></div><span id="adminExplanationCount">0 pendentes</span></div>
               <div id="adminExplanationQueue" class="admin-feedbacks"><p class="learning-empty">Carregando fila editorial...</p></div>
             </article>
+            <article class="panel admin-reports-panel admin-visual-repair-panel">
+              <div class="panel-title"><div><b>Restauração de recursos visuais</b><small>questões protegidas até a imagem, gráfico, mapa ou diagrama estar disponível</small></div><span id="adminVisualRepairCount">0 pendentes</span></div>
+              <div id="adminVisualRepairQueue" class="admin-feedbacks"><p class="learning-empty">Carregando recursos em restauração...</p></div>
+            </article>
             <article class="panel admin-content-panel retired-video-feature" aria-hidden="true">
               <div class="panel-title"><b>Gerenciar videoaulas</b><small>editar, ocultar ou remover</small></div>
               <div id="adminVideoList" class="admin-content-list"></div>
@@ -1657,6 +1661,36 @@
       <div class="question-issue-actions">
         <button id="cancelAdminExplanation" class="outline-btn">Cancelar</button>
         <button id="saveAdminExplanation" class="primary-btn">Salvar resolução validada</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminVisualRepairModal" class="community-modal hidden admin-only" aria-modal="true" role="dialog" aria-labelledby="adminVisualRepairTitle">
+    <div class="community-sheet question-issue-sheet admin-visual-repair-sheet">
+      <div class="community-head"><div><span class="eyebrow">INTEGRIDADE VISUAL</span><h3 id="adminVisualRepairTitle">Restaurar recurso da questão</h3></div><button id="closeAdminVisualRepair" class="icon-btn" aria-label="Fechar">×</button></div>
+      <p id="adminVisualRepairMeta" class="question-note-meta">Questão</p>
+      <p id="adminVisualRepairPrompt" class="admin-visual-prompt"></p>
+      <label>Tipo de recurso
+        <select id="adminVisualRepairType">
+          <option value="image">Imagem / fotografia</option>
+          <option value="graph">Gráfico</option>
+          <option value="table">Tabela / quadro</option>
+          <option value="map">Mapa</option>
+          <option value="diagram">Diagrama / esquema</option>
+        </select>
+      </label>
+      <label>Enviar arquivo
+        <input id="adminVisualRepairFile" type="file" accept="image/png,image/jpeg,image/webp,image/avif">
+      </label>
+      <div class="or-divider"><span>ou</span></div>
+      <label>URL HTTPS da mídia
+        <input id="adminVisualRepairUrl" class="text-input" type="url" placeholder="https://...">
+      </label>
+      <small class="editorial-guidance">A questão só volta ao Banco e aos treinos depois que uma mídia válida é salva. Prefira recorte fiel da prova original, sem alterar dados, escalas ou legendas.</small>
+      <div id="adminVisualRepairStatus" class="upload-status hidden"></div>
+      <div class="question-issue-actions">
+        <button id="cancelAdminVisualRepair" class="outline-btn">Cancelar</button>
+        <button id="saveAdminVisualRepair" class="primary-btn">Salvar e liberar questão</button>
       </div>
     </div>
   </div>
