@@ -2112,12 +2112,23 @@ function radarTrainingTopic(subject,topic){
   return bySubject[subject]||'';
 }
 
+const LEARNING_TOPIC_ALIASES=Object.freeze({
+  'Geometria e trigonometria':'Geometria',
+  'Análise do texto literário':'Literatura e análise do texto literário',
+  'Variação linguística e linguagem':'Variação linguística',
+  'Interpretação e gêneros textuais':'Interpretação de texto',
+  'Coesão, coerência e semântica':'Interpretação de texto',
+  'Recursos expressivos e efeitos de sentido':'Interpretação de texto'
+});
 function canonicalLearningTopic(subject,topic){
   const raw=String(topic||'').trim();
-  return radarTrainingTopic(subject||'',raw)||raw;
+  return LEARNING_TOPIC_ALIASES[raw]||raw;
 }
 function sameLearningTopic(subject,a,b){
   return normalizeTextKey(canonicalLearningTopic(subject,a))===normalizeTextKey(canonicalLearningTopic(subject,b));
+}
+function materialTrainingTopic(subject,topic){
+  return radarTrainingTopic(subject||'',topic||'')||canonicalLearningTopic(subject,topic);
 }
 
 function bindRadarControls(){
@@ -6827,13 +6838,22 @@ function topicMaterials(topic,subject='Matemática'){
 }
 
 function topicLesson(topic,subject='Matemática'){
-  return topicMaterials(topic,subject).find(m=>materialKind(m).key==='lesson')||topicMaterials(topic,subject)[0]||null;
+  const direct=topicMaterials(topic,subject);
+  const exact=direct.find(m=>materialKind(m).key==='lesson')||direct[0];
+  if(exact)return exact;
+  const target=normalizeTextKey(materialTrainingTopic(subject,topic));
+  const related=(state.materials||[]).filter(m=>
+    (!subject||!m.subject||normalizeTextKey(m.subject)===normalizeTextKey(subject)) &&
+    normalizeTextKey(materialTrainingTopic(subject,m.topic))===target
+  );
+  return related.find(m=>materialKind(m).key==='lesson')||related[0]||null;
 }
 
 function topicLearningMeta(topic,subject='Matemática'){
   const materials=topicMaterials(topic,subject);
   const canonicalTopic=canonicalLearningTopic(subject,topic);
-  const mastery=state.topicMastery.get(String(canonicalTopic))||state.topicMastery.get(String(topic))||{attempts:0,accuracy:0,masteryScore:0,confidence:0,avgSeconds:0,lastAt:null,daysSince:999};
+  const trainingTopic=materialTrainingTopic(subject,topic);
+  const mastery=state.topicMastery.get(String(trainingTopic))||state.topicMastery.get(String(canonicalTopic))||state.topicMastery.get(String(topic))||{attempts:0,accuracy:0,masteryScore:0,confidence:0,avgSeconds:0,lastAt:null,daysSince:999};
   const completed=materials.filter(m=>getContentProgress('material',m.id).completed).length;
   const progress=materials.length
     ? Math.round(materials.reduce((sum,m)=>sum+(getContentProgress('material',m.id).completed?100:Number(getContentProgress('material',m.id).progress_percent||0)),0)/materials.length)
@@ -6859,12 +6879,14 @@ function openLibraryTopic(subject,topic){
   openPage('materiais');
   Promise.resolve(loadMaterials({silent:true})).then(()=>{
     if(subject)state.materialSubject=subject;
-    const key=[subject||'Conteúdo',topic||'Materiais'].join('||');
+    const related=topicLesson(topic,subject);
+    const displayTopic=related?.topic||topic;
+    const key=[subject||'Conteúdo',displayTopic||'Materiais'].join('||');
     state.materialOpenTopic=key;
     renderMaterials();
     setTimeout(()=>{
-      const nodes=$('.content-topic-group');
-      const target=nodes.find(el=>sameLearningTopic(subject,el.querySelector('.content-topic-name h3')?.textContent?.trim(),topic));
+      const nodes=Array.from(document.querySelectorAll('.content-topic-group'));
+      const target=nodes.find(el=>sameLearningTopic(subject,el.querySelector('.content-topic-name h3')?.textContent?.trim(),displayTopic));
       target?.scrollIntoView({behavior:'smooth',block:'start'});
     },80);
   });
@@ -7335,8 +7357,9 @@ function materialKind(item){
 
 function materialRadarMeta(item){
   const subject=item?.subject||'';
+  const trainingTopic=materialTrainingTopic(subject,item?.topic);
   const row=(state.radarTopics||[]).find(r=>
-    sameLearningTopic(subject,r.topic,item?.topic) &&
+    normalizeTextKey(r.topic||'')===normalizeTextKey(trainingTopic) &&
     (!subject||normalizeTextKey(r.subject||'')===normalizeTextKey(subject))
   );
   if(row){
