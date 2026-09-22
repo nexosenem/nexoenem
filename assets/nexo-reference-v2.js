@@ -258,7 +258,7 @@ function buildReferenceSidebar(){
     ['materiais','▧','Resumo e Macetes',()=>go('materiais')],
     ['semana','▦','Planner',()=>go('semana')],
     ['desempenho','▥','Meu Desempenho',()=>go('desempenho')],
-    ['radar','◉','Radar ENEM',()=>go('radar')],
+    ['feedback','◉','Comunidade',()=>go('feedback')],
     ['store','♕','Loja NEXO',openStore],
     ['avatar','✦','Personalizar',openAvatar],
     ['nexo','🐾','Nexo (Assistente)',openNexo],
