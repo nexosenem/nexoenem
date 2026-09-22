@@ -641,7 +641,7 @@ async function runProfile(browser,name,viewport){
       setupVisible:visible(setup),
       areas:areaButtons.length,
       fields:[subject,difficulty,size].every(visible),
-      visualVisible:visible(visual),
+      visualVisible:visible(visual?.closest('.toggle-row')),
       startVisible:visible(start),
       areaSelection:Boolean(math?.classList.contains('active'))
     };
@@ -653,6 +653,7 @@ async function runProfile(browser,name,viewport){
     }else questionControls.visualToggle=false;
 
     if(typeof openPage==='function')openPage('redacao');
+    if(typeof fillThemes==='function')fillThemes();
     await wait();
     const random=document.querySelector('#randomEssayTheme');
     const analyze=document.querySelector('#analyzeEssay');
