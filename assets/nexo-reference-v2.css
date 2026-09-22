@@ -2019,7 +2019,7 @@ body.light.nexo-reference-ui .nrx-mobile-theme{
 
 /* ========= Home-first mobile experience + premium visual pass ========= */
 @media(max-width:760px){
-  body.nexo-reference-ui.nrx-home-active #nexoContextBar{display:none!important}
+  body.nexo-reference-ui.nrx-home-active:not(.nrx-context-open) #nexoContextBar{display:none!important}
   body.nexo-reference-ui.nrx-home-active main{
     padding-top:12px!important;
   }
