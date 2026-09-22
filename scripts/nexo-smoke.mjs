@@ -14,6 +14,7 @@ const index=read('index.html');
 const sw=read('sw.js');
 const app=read('app.js');
 const compat=read('assets/nexo-runtime-compat.js');
+const referenceUi=read('assets/nexo-reference-v2.js');
 const headers=read('_headers');
 
 assert(!index.includes('\\n'),'HTML sem \\n literal');
@@ -67,6 +68,11 @@ assert(emptyImages.length===0,'Sem imagens com src vazio',emptyImages.join(' | '
 const badCollectionSelectors=[...app.matchAll(/(?<!\$)\$\([^()\n]*\)\.(forEach|find|filter)\s*\(/g)].map(m=>m[0]);
 assert(badCollectionSelectors.length===0,'Seletores de coleção usam $$',badCollectionSelectors.join(' | '));
 assert(!/Element\.prototype\.forEach/.test(compat),'Sem monkey patch em Element.prototype.forEach');
+assert(index.includes('nexo-reference-v2.css')&&index.includes('nexo-reference-v2.js'),'Interface de referência conectada');
+assert(!index.includes('nexo-minimal-v1.css'),'Camada minimal antiga desativada');
+assert(sw.includes('nexo-reference-v2.css')&&sw.includes('nexo-reference-v2.js'),'Interface de referência no PWA');
+const badReferenceCollections=[...referenceUi.matchAll(/(?<!\$)\$\([^()\n]*\)\.(forEach|find|filter|map)\s*\(/g)].map(m=>m[0]);
+assert(badReferenceCollections.length===0,'Seletores de coleção da interface de referência usam $',badReferenceCollections.join(' | '));
 assert(/\/index\.html[\s\S]*Cache-Control: no-cache/.test(headers),'HTML força revalidação de cache');
 assert(/\/sw\.js[\s\S]*Cache-Control: no-cache/.test(headers)&&/Service-Worker-Allowed: \//.test(headers),'Service Worker sem cache velho');
 
