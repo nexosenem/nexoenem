@@ -106,7 +106,7 @@
 
     if(innerWidth>760&&!box.querySelector('.v15-search-hint')){
       const hint=document.createElement('kbd');
-      hint.className='v15-search-hint';
+      hint.className='v15-search-kbd';
       hint.textContent='Ctrl K';
       box.appendChild(hint);
     }
@@ -115,7 +115,7 @@
     if(innerWidth<=760&&!box.querySelector('.v15-voice-search')){
       const b=document.createElement('button');
       b.type='button';
-      b.className='v15-voice-search';
+      b.className='v15-search-mic';
       b.setAttribute('aria-label','Pesquisar por voz');
       b.innerHTML=svg('mic');
       if(!SpeechRecognition){
@@ -126,15 +126,15 @@
           e.preventDefault();e.stopPropagation();
           const rec=new SpeechRecognition();
           rec.lang='pt-BR';rec.interimResults=false;rec.maxAlternatives=1;
-          b.classList.add('listening');
+          b.classList.add('is-listening');
           rec.onresult=ev=>{
             input.value=ev.results?.[0]?.[0]?.transcript||'';
             input.dispatchEvent(new Event('input',{bubbles:true}));
             input.focus();
           };
-          rec.onerror=()=>b.classList.remove('listening');
-          rec.onend=()=>b.classList.remove('listening');
-          try{rec.start()}catch(_){b.classList.remove('listening')}
+          rec.onerror=()=>b.classList.remove('is-listening');
+          rec.onend=()=>b.classList.remove('is-listening');
+          try{rec.start()}catch(_){b.classList.remove('is-listening')}
         };
       }
       box.appendChild(b);
@@ -190,15 +190,16 @@
 
   function addQuestionModes(){
     const setup=$('#sessionSetup');
-    if(!setup||$('#v15QuestionModes'))return;
+    if(!setup||$('#v15StudyModes'))return;
     const grid=document.createElement('div');
-    grid.id='v15QuestionModes';
-    grid.className='v15-question-modes';
+    grid.id='v15StudyModes';
+    grid.className='v15-study-modes';
+    const mode=(key,icon,title,sub)=>'<button type="button" data-v15-qmode="'+key+'"><i>'+svg(icon)+'</i><span><b>'+title+'</b><small>'+sub+'</small></span><em>'+svg('chevron')+'</em></button>';
     grid.innerHTML=
-      '<button type="button" data-v15-qmode="topic">'+svg('study')+'<span><b>Treino por assunto</b><small>Escolha matéria, dificuldade e quantidade</small></span>'+svg('chevron')+'</button>'+
-      '<button type="button" data-v15-qmode="adaptive">'+svg('spark')+'<span><b>Questões adaptativas</b><small>O NEXO prioriza seus pontos fracos</small></span>'+svg('chevron')+'</button>'+
-      '<button type="button" data-v15-qmode="simulation">'+svg('simulation')+'<span><b>Simulado personalizado</b><small>Tempo, áreas e estratégia de prova</small></span>'+svg('chevron')+'</button>'+
-      '<button type="button" data-v15-qmode="errors">'+svg('errors')+'<span><b>Meus erros</b><small>Revise questões e padrões recorrentes</small></span>'+svg('chevron')+'</button>';
+      mode('topic','study','Treino por assunto','Escolha matéria, dificuldade e quantidade')+
+      mode('adaptive','spark','Questões adaptativas','O NEXO prioriza seus pontos fracos')+
+      mode('simulation','simulation','Simulado personalizado','Tempo, áreas e estratégia de prova')+
+      mode('errors','errors','Meus erros','Revise questões e padrões recorrentes');
     const guide=$('.nexo-guide-card',setup);
     guide?.insertAdjacentElement('afterend',grid);
 
@@ -225,14 +226,14 @@
       const advanced=document.createElement('details');
       advanced.id='v15AdvancedQuestionSetup';
       advanced.className='v15-advanced-setup';
-      advanced.innerHTML='<summary><span><b>Personalizar treino</b><small>área · matéria · dificuldade · quantidade · visual</small></span><i>+</i></summary><div class="v15-advanced-body"></div>';
+      advanced.innerHTML='<summary><span class="v15-advanced-icon">'+svg('settings')+'</span><span class="v15-advanced-copy"><b>Personalizar treino</b><small>área · matéria · dificuldade · quantidade · visual</small></span><i class="v15-advanced-signal">+</i></summary><div class="v15-advanced-body"></div>';
       area.insertAdjacentElement('beforebegin',advanced);
       const body=$('.v15-advanced-body',advanced);
       body.appendChild(area);
       if(fields)body.appendChild(fields);
       if(visualToggle)body.appendChild(visualToggle);
       advanced.addEventListener('toggle',()=>{
-        const signal=advanced.querySelector('summary>i');
+        const signal=advanced.querySelector('.v15-advanced-signal');
         if(signal)signal.textContent=advanced.open?'−':'+';
       });
     }
@@ -244,12 +245,12 @@
     if(!page||!deck||$('#v15LibraryFilters',page))return;
     const details=document.createElement('details');
     details.id='v15LibraryFilters';
-    details.className='v15-library-filters';
-    details.innerHTML='<summary><span><b>Filtros avançados</b><small>status · tipo · prioridade · estudo rápido</small></span><i>+</i></summary><div class="v15-library-filter-body"></div>';
+    details.className='v15-library-filters v15-advanced-setup';
+    details.innerHTML='<summary><span class="v15-advanced-icon">'+svg('settings')+'</span><span class="v15-advanced-copy"><b>Filtros avançados</b><small>status · tipo · prioridade · estudo rápido</small></span><i class="v15-advanced-signal">+</i></summary><div class="v15-library-filter-body v15-advanced-body"></div>';
     deck.insertAdjacentElement('beforebegin',details);
     $('.v15-library-filter-body',details).appendChild(deck);
     details.addEventListener('toggle',()=>{
-      const signal=details.querySelector('summary>i');
+      const signal=details.querySelector('.v15-advanced-signal');
       if(signal)signal.textContent=details.open?'−':'+';
     });
   }
