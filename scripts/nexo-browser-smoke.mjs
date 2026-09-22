@@ -866,6 +866,149 @@ async function runProfile(browser,name,viewport){
   if(!essayRenderAndViewerTest.essay.ok)failures.push(name+': renderização/validação de Redação falhou: '+JSON.stringify(essayRenderAndViewerTest.essay));
   if(!essayRenderAndViewerTest.viewer.ok)failures.push(name+': visualizador da Biblioteca falhou: '+JSON.stringify(essayRenderAndViewerTest.viewer));
 
+
+  markStage('advanced-controls');
+  const advancedControlTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      user:state.user,profile:state.profile,onboarding:state.onboarding,current:state.current,
+      light:document.body.classList.contains('light'),
+      bodyOverflow:document.body.style.overflow,
+      focus:{
+        minutes:focusModeState.minutes,remaining:focusModeState.remaining,running:focusModeState.running,
+        paused:focusModeState.paused,completed:focusModeState.completed,endAt:focusModeState.endAt
+      }
+    };
+    const originalRpc=client.rpc,originalFrom=client.from;
+    const result={focus:{},profileTheme:{},onboarding:{},questionModals:{}};
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      if(typeof openPage==='function')openPage('inicio');
+      await wait(30);
+
+      if(typeof resetFocusMode==='function')resetFocusMode();
+      if(typeof setFocusMinutes==='function')setFocusMinutes(25);
+      if(typeof openFocusMode==='function')openFocusMode();
+      await wait(20);
+      const focusModal=document.querySelector('#focusModeModal');
+      result.focus.opened=visible(focusModal);
+      document.querySelector('#focusStart')?.click();
+      await wait(25);
+      result.focus.started=Boolean(focusModeState.running&&!focusModeState.paused&&document.querySelector('#focusStart')?.dataset.focusAction==='pause');
+      result.focus.pill=visible(document.querySelector('#focusRunningPill'));
+      document.querySelector('#focusStart')?.click();
+      await wait(25);
+      result.focus.paused=Boolean(focusModeState.running&&focusModeState.paused&&document.querySelector('#focusStart')?.dataset.focusAction==='resume');
+      document.querySelector('#focusStart')?.click();
+      await wait(25);
+      result.focus.resumed=Boolean(focusModeState.running&&!focusModeState.paused);
+      document.querySelector('#focusReset')?.click();
+      await wait(25);
+      result.focus.reset=Boolean(!focusModeState.running&&!focusModeState.paused&&focusModeState.remaining===focusModeState.minutes*60);
+      document.querySelector('#closeFocusMode')?.click();
+      result.focus.closed=Boolean(focusModal?.classList.contains('hidden'))&&document.body.style.overflow==='';
+
+      const profile=document.querySelector('#profileMenu');
+      document.querySelector('#profileButton')?.click();
+      result.profileTheme.profileOpened=Boolean(profile&&!profile.classList.contains('hidden'));
+      document.querySelector('#profileButton')?.click();
+      result.profileTheme.profileClosed=Boolean(profile?.classList.contains('hidden'));
+      const wasLight=document.body.classList.contains('light');
+      document.querySelector('#themeToggle')?.click();
+      result.profileTheme.themeChanged=document.body.classList.contains('light')!==wasLight;
+      document.querySelector('#themeToggle')?.click();
+      result.profileTheme.themeRestored=document.body.classList.contains('light')===wasLight;
+
+      state.user=state.user||{id:'smoke-user',email:'smoke@nexo.local',user_metadata:{full_name:'Aluno Smoke'}};
+      state.profile={...(state.profile||{}),goal_score:750,difficult_areas:['Matemática'],daily_minutes:60};
+      document.querySelector('#editStudyPlan')?.click();
+      await wait(30);
+      const onboarding=document.querySelector('#nexoOnboarding');
+      const step1=Number(state.onboarding?.step||0);
+      result.onboarding.opened=Boolean(onboarding&&!onboarding.classList.contains('hidden')&&step1===1);
+      document.querySelector('#onboardingNext')?.click();
+      await wait(30);
+      const step2=Number(state.onboarding?.step||0);
+      result.onboarding.next=step2!==step1&&step2>0;
+      document.querySelector('#onboardingBack')?.click();
+      await wait(30);
+      result.onboarding.back=Number(state.onboarding?.step||0)===step1;
+      if(typeof closeNexoOnboarding==='function')closeNexoOnboarding();
+      result.onboarding.closed=Boolean(onboarding?.classList.contains('hidden'))&&!document.body.classList.contains('onboarding-open');
+
+      state.current={id:-777001,area:'Matemática',subject:'Matemática',topic:'Porcentagem',source_year:2025};
+      client.rpc=async(name,...args)=>{
+        if(name==='get_question_comments_v3')return {data:[],error:null};
+        return originalRpc.call(client,name,...args);
+      };
+      client.from=(table)=>{
+        if(table==='question_notes'){
+          const chain={
+            select(){return chain},eq(){return chain},
+            async maybeSingle(){return {data:{note:'Lembrar de converter porcentagem antes da conta.'},error:null}},
+            async upsert(){return {data:null,error:null}},
+            delete(){return chain}
+          };
+          return chain;
+        }
+        return originalFrom.call(client,table);
+      };
+
+      if(typeof openQuestionNote==='function')await openQuestionNote(state.current.id);
+      await wait(25);
+      const noteModal=document.querySelector('#questionNoteModal');
+      result.questionModals.noteOpened=Boolean(visible(noteModal)&&/converter porcentagem/i.test(document.querySelector('#questionNoteText')?.value||''));
+      document.querySelector('#closeQuestionNote')?.click();
+      result.questionModals.noteClosed=Boolean(noteModal?.classList.contains('hidden'));
+
+      if(typeof openQuestionIssueModal==='function')openQuestionIssueModal(state.current.id);
+      await wait(10);
+      const issue=document.querySelector('#questionIssueModal');
+      result.questionModals.issueOpened=visible(issue);
+      document.querySelector('#cancelQuestionIssue')?.click();
+      result.questionModals.issueClosed=Boolean(issue?.classList.contains('hidden'));
+
+      if(typeof openQuestionComments==='function')await openQuestionComments(state.current.id);
+      await wait(25);
+      const comments=document.querySelector('#commentModal');
+      result.questionModals.commentsOpened=Boolean(visible(comments)&&/ainda não há comentários/i.test(document.querySelector('#questionComments')?.textContent||''));
+      document.querySelector('#closeComments')?.click();
+      result.questionModals.commentsClosed=Boolean(comments?.classList.contains('hidden'));
+    }catch(err){
+      result.error=String(err?.stack||err?.message||err);
+    }finally{
+      client.rpc=originalRpc;client.from=originalFrom;
+      if(typeof clearFocusInterval==='function')clearFocusInterval();
+      Object.assign(focusModeState,prev.focus,{interval:null});
+      if(typeof renderFocusMode==='function')renderFocusMode();
+      state.user=prev.user;state.profile=prev.profile;state.onboarding=prev.onboarding;state.current=prev.current;
+      document.body.classList.toggle('light',prev.light);
+      document.body.style.overflow=prev.bodyOverflow;
+      document.querySelector('#focusModeModal')?.classList.add('hidden');
+      document.querySelector('#nexoOnboarding')?.classList.add('hidden');
+      document.querySelector('#questionNoteModal')?.classList.add('hidden');
+      document.querySelector('#questionIssueModal')?.classList.add('hidden');
+      document.querySelector('#commentModal')?.classList.add('hidden');
+      document.querySelector('#profileMenu')?.classList.add('hidden');
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return result;
+  });
+  const advancedFailures=[];
+  if(advancedControlTest.error)advancedFailures.push('erro='+advancedControlTest.error);
+  for(const [group,values] of Object.entries(advancedControlTest)){
+    if(group==='error')continue;
+    for(const [key,value] of Object.entries(values||{}))if(!value)advancedFailures.push(group+'.'+key);
+  }
+  if(advancedFailures.length)failures.push(name+': controles avançados regrediram: '+advancedFailures.join(', ')+' '+JSON.stringify(advancedControlTest));
+
   markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -1246,7 +1389,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,advancedControlTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
