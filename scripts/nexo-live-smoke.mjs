@@ -54,7 +54,8 @@ async function verifyAssets(base,html){
   const refs=[...html.matchAll(/(?:src|href)="(\.\/[^"?#]+)(?:\?[^"]*)?"/g)].map(m=>m[1]);
   const critical=[
     './app.js','./sw.js','./manifest.webmanifest','./assets/nexo-v13-hardening.js',
-    './assets/nexo-v13-core.js','./assets/nexo-v13-ui.js','./assets/nexo-v13-search-errors.js'
+    './assets/nexo-v13-core.js','./assets/nexo-v13-ui.js','./assets/nexo-v13-search-errors.js',
+    './assets/nexo-reference-v2.css','./assets/nexo-reference-v2.js'
   ];
   for(const ref of critical){
     const full=localToRemote(base,ref);

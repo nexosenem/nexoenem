@@ -1,9 +1,9 @@
-const NEXO_CACHE='nexo-v14-20260921-12';
+const NEXO_CACHE='nexo-v15-20260922-3';
 const SHELL=[
   './',
   './index.html',
   './styles.css?v=20260921-4',
-  './app.js?v=20260921-11',
+  './app.js?v=20260922-1',
   './assets/nexo-runtime-compat.js?v=20260921-2',
   './assets/nexo-v13-hardening.js?v=20260921-2',
   './assets/nexo-v13.css?v=20260921-3',
@@ -19,7 +19,7 @@ const SHELL=[
   './assets/nexo-v13-tutor.js?v=20260921-2',
   './assets/nexo-v13-search-errors.js?v=20260921-3',
   './assets/nexo-v13-ui.js?v=20260921-3',
-  './assets/nexo-reference-v2.js?v=20260922-2',
+  './assets/nexo-reference-v2.js?v=20260922-3',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',

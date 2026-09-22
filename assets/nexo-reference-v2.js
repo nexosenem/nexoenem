@@ -54,12 +54,11 @@ function openMaterials(view='study'){
   go('materiais');
   setTimeout(()=>{
     const type=$('#materialTypeFilter');
-    if(type){
-      const wanted=view==='resumos'?'summary':'';
-      if(type.value!==wanted){
-        type.value=wanted;
-        type.dispatchEvent(new Event('change',{bubbles:true}));
-      }
+    if(type&&type.value){
+      type.value='';
+      type.dispatchEvent(new Event('change',{bubbles:true}));
+    }else if(typeof renderMaterials==='function'){
+      renderMaterials();
     }
   },80);
 }
@@ -453,6 +452,8 @@ function observe(){
   });
   window.addEventListener('resize',placeSearch,{passive:true});
   document.addEventListener('click',e=>{
+    const materialPage=e.target.closest?.('[data-page="materiais"]');
+    if(materialPage&&!materialPage.closest?.('.nrx-home'))document.body.dataset.nrxMaterialsView='study';
     const journeyTab=e.target.closest?.('[data-journey-tab]');
     if(journeyTab){
       const tab=journeyTab.dataset.journeyTab;

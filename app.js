@@ -7056,6 +7056,7 @@ function renderMaterials(){
   const favoritesOnly=$('#materialFavoritesOnly')?.classList.contains('active');
   const statusFilter=$('#materialStatusFilter')?.value||'';
   const typeFilter=$('#materialTypeFilter')?.value||'';
+  const referenceView=document.body.dataset.nrxMaterialsView||'study';
   const priorityFilter=$('#materialPriorityFilter')?.value||'';
   const quickFive=Boolean(state.libraryQuickFive);
   const all=state.materials||[];
@@ -7081,6 +7082,7 @@ function renderMaterials(){
     .filter(m=>!favoritesOnly||favoriteContent('material',m.id))
     .filter(m=>!statusFilter||topicLearningMeta(m.topic,m.subject).key===statusFilter)
     .filter(m=>!typeFilter||materialKind(m).key===typeFilter)
+    .filter(m=>referenceView!=='resumos'||['summary','tips'].includes(materialKind(m).key))
     .filter(m=>{
       if(!priorityFilter)return true;
       const radar=materialRadarMeta(m);
