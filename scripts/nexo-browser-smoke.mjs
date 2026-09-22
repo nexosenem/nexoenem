@@ -230,8 +230,11 @@ async function runProfile(browser,name,viewport){
     const search=document.querySelector('.search');
     const heroImg=target?.querySelector('img');
     const mobileBrand=document.querySelector('.nrx-mobile-brand');
+    const logoN=document.querySelector('.nrx-logo-n');
+    const logoExo=document.querySelector('.nrx-logo-exo');
     const mobileTheme=document.querySelector('.nrx-mobile-theme');
     const brandText=(mobileBrand?.textContent||'').replace(/\s+/g,' ').trim();
+    const logoNBackground=logoN?getComputedStyle(logoN).backgroundImage:'';
     const mobileThemeVisible=Boolean(mobileTheme&&getComputedStyle(mobileTheme).display!=='none'&&mobileTheme.getBoundingClientRect().width>0);
     let mobileThemeWorks=true;
     if(mobile&&mobileThemeVisible){
@@ -258,8 +261,11 @@ async function runProfile(browser,name,viewport){
       bottomVisible:Boolean(bottom&&getComputedStyle(bottom).display!=='none'&&!bottom.hidden),
       bottomLabels:bottom?[...bottom.querySelectorAll('small')].map(x=>x.textContent.trim()):[],
       contextVisible:Boolean(document.querySelector('#nexoContextBar')&&getComputedStyle(document.querySelector('#nexoContextBar')).display!=='none'),
+      heroFirst:mobile?document.querySelector('#inicio')?.firstElementChild===mobileHome:true,
       searchInMobileSlot:Boolean(search?.closest('.nrx-mobile-search-slot')),
       mobileBrandText:brandText,
+      mobileLogoNUsesMascot:logoNBackground.includes('bust-confiante.avif'),
+      mobileLogoExo:(logoExo?.textContent||'').trim(),
       mobileThemeVisible,
       mobileThemeWorks,
       heroLoaded:Boolean(heroImg?.complete&&heroImg?.naturalWidth>0),
@@ -279,9 +285,11 @@ async function runProfile(browser,name,viewport){
   if(!referenceUiTest.originalHomeHidden)failures.push(name+': home antiga continua visível junto da referência');
   if(name==='mobile'&&!referenceUiTest.bottomVisible)failures.push(name+': barra inferior de referência não ficou visível');
   if(name==='mobile'&&referenceUiTest.bottomLabels.join('|')!=='Início|Questões|Redação|Desempenho|Mais')failures.push(name+': barra inferior perdeu a navegação principal/área Mais: '+referenceUiTest.bottomLabels.join('|'));
-  if(!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto na referência');
+  if(name==='mobile'&&referenceUiTest.contextVisible)failures.push(name+': guia contextual ainda está acima do hero na entrada da Home');
+  if(name!=='mobile'&&!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto fora da entrada mobile');
+  if(name==='mobile'&&!referenceUiTest.heroFirst)failures.push(name+': hero Disciplina hoje não é o primeiro conteúdo da Home');
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
-  if(name==='mobile'&&referenceUiTest.mobileBrandText.replace(/\s+/g,'')!=='NEXOENEM')failures.push(name+': identidade escrita antiga NEXO ENEM não foi restaurada no cabeçalho: '+referenceUiTest.mobileBrandText);
+  if(name==='mobile'&&(!referenceUiTest.mobileLogoNUsesMascot||referenceUiTest.mobileLogoExo!=='exo'||/enem/i.test(referenceUiTest.mobileBrandText)))failures.push(name+': logo N do mascote + exo não foi aplicada corretamente: '+JSON.stringify({text:referenceUiTest.mobileBrandText,n:referenceUiTest.mobileLogoNUsesMascot,exo:referenceUiTest.mobileLogoExo}));
   if(name==='mobile'&&!referenceUiTest.mobileThemeVisible)failures.push(name+': controle claro/escuro não ficou visível no cabeçalho mobile');
   if(name==='mobile'&&!referenceUiTest.mobileThemeWorks)failures.push(name+': controle claro/escuro mobile não alternou e restaurou o tema');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
