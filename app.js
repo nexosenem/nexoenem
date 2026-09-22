@@ -4467,17 +4467,20 @@ function buildAnswerExplanation(q,data,selected){
   else if(q.area==='Ciências da Natureza') method='Relacione o fenômeno descrito ao princípio científico central e elimine alternativas que contradizem causa, unidade ou mecanismo.';
   else if(q.area==='Linguagens') method='Volte ao trecho que responde ao comando e confira qual alternativa é sustentada pelo texto, pelo gênero ou pelo efeito de linguagem.';
   else method='Localize no texto o conceito histórico, geográfico, filosófico ou sociológico que o comando exige e descarte extrapolações.';
-  const hasEditorialExplanation=Boolean(String(data.explanation||'').trim());
+  const rawExplanation=String(data.explanation||'').trim();
+  const genericExplanation=/^Gabarito oficial:\s*alternativa\s+[A-E]\.\s*Compare a alternativa correta/i.test(rawExplanation);
+  const hasEditorialExplanation=Boolean(rawExplanation&&!genericExplanation);
   const whyWrong=data.correct
-    ? 'Sua escolha coincide com o gabarito cadastrado.'
+    ? 'Sua escolha coincide com o gabarito da questão.'
     : hasEditorialExplanation
-      ? `Você marcou ${'ABCDE'[selected]} (“${selectedText}”). Compare seu raciocínio com ${'ABCDE'[correct]} (“${correctText}”) usando a resolução abaixo.`
-      : `Você marcou ${'ABCDE'[selected]} (“${selectedText}”) e o gabarito cadastrado é ${'ABCDE'[correct]} (“${correctText}”). Esta questão ainda não possui uma resolução editorial específica; por isso o NEXO não vai inventar um motivo para a alternativa estar errada.`;
+      ? `Você marcou ${'ABCDE'[selected]} (“${selectedText}”). Compare seu raciocínio com ${'ABCDE'[correct]} (“${correctText}”) usando a resolução editorial abaixo.`
+      : `Você marcou ${'ABCDE'[selected]} (“${selectedText}”) e o gabarito é ${'ABCDE'[correct]} (“${correctText}”). A resolução editorial específica ainda está em revisão; por isso o NEXO não vai inventar uma justificativa que não foi validada.`;
   return {
-    summary:hasEditorialExplanation?data.explanation:`Gabarito cadastrado: alternativa ${'ABCDE'[correct]}. Resolução detalhada ainda em revisão editorial.`,
+    summary:hasEditorialExplanation?rawExplanation:`Gabarito: alternativa ${'ABCDE'[correct]}. Resolução específica em revisão editorial.`,
     whyWrong,
     method:`${method} O ponto de revisão desta questão é “${topic}”.`,
-    hasEditorialExplanation
+    hasEditorialExplanation,
+    explanationStatus:hasEditorialExplanation?'editorial':'pending'
   };
 }
 
