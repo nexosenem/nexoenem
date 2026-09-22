@@ -203,7 +203,7 @@
         btn.dataset.v14DiagnosticCard='1';
         btn.dataset.simMode='diagnostic';
         btn.innerHTML='<span>◎</span><b>Diagnóstico NEXO</b><small>20 questões para recalibrar seu mapa</small><i>inteligente</i>';
-        btn.addEventListener('click',startAdaptiveDiagnostic);
+        btn.onclick=startAdaptiveDiagnostic;
         grid.insertBefore(btn,grid.firstChild?.nextSibling||null);
       }
     }
