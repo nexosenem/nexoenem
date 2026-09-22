@@ -475,11 +475,19 @@ async function runProfile(browser,name,viewport){
     await new Promise(r=>setTimeout(r,30));
     const tutor=document.querySelector('#v15TutorFab');
     const tutorVisible=Boolean(tutor&&getComputedStyle(tutor).display!=='none');
+    const panel=document.querySelector('#niaPanel');
+    const panelWasHidden=Boolean(panel?.classList.contains('hidden'));
+    if(tutorVisible){
+      tutor.click();
+      await new Promise(r=>setTimeout(r,40));
+    }
+    const tutorOpens=Boolean(panel&&!panel.classList.contains('hidden'));
+    if(panel&&panelWasHidden)panel.classList.add('hidden');
     const radius=parseFloat(getComputedStyle(document.querySelector(innerWidth<=760?'.nrx-mob-hero':'.nrx-hero')).borderRadius||'0');
 
     pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
     if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
-    return {sideSvg,mobileSvg,bottomSvg,secondarySvg,searchOk,modes,essayTabs,materialTabs,materialAdvancedPreserved,voicePresent:Boolean(voice),tutor:Boolean(tutor),tutorVisible,radius};
+    return {sideSvg,mobileSvg,bottomSvg,secondarySvg,searchOk,modes,essayTabs,materialTabs,materialAdvancedPreserved,voicePresent:Boolean(voice),tutor:Boolean(tutor),tutorVisible,tutorOpens,radius};
   });
   if(v15InterfaceTest.sideSvg<10)failures.push(name+': ícones SVG unificados ausentes na navegação lateral: '+JSON.stringify(v15InterfaceTest));
   if(name==='mobile'&&v15InterfaceTest.mobileSvg<8)failures.push(name+': atalhos móveis não receberam ícones SVG consistentes: '+JSON.stringify(v15InterfaceTest));
@@ -490,8 +498,48 @@ async function runProfile(browser,name,viewport){
   if(v15InterfaceTest.materialTabs!==5||!v15InterfaceTest.materialAdvancedPreserved)failures.push(name+': Biblioteca perdeu abas simples ou filtros avançados: '+JSON.stringify(v15InterfaceTest));
   if(v15InterfaceTest.secondarySvg<8)failures.push(name+': recursos secundários não receberam iconografia V15: '+JSON.stringify(v15InterfaceTest));
   if(name==='mobile'&&!v15InterfaceTest.voicePresent)failures.push(name+': busca mobile perdeu o controle de voz/fallback visual');
-  if(!v15InterfaceTest.tutor||!v15InterfaceTest.tutorVisible)failures.push(name+': Professor Nexo contextual não ficou disponível em páginas de estudo');
+  if(!v15InterfaceTest.tutor||!v15InterfaceTest.tutorVisible||!v15InterfaceTest.tutorOpens)failures.push(name+': Professor Nexo contextual não abriu corretamente em páginas de estudo: '+JSON.stringify(v15InterfaceTest));
   if(v15InterfaceTest.radius<16)failures.push(name+': acabamento arredondado V15 regrediu: '+JSON.stringify(v15InterfaceTest));
+
+  markStage('visual-recovery');
+  const visualRecoveryTest=await page.evaluate(async()=>{
+    if(typeof ensureExternalQuestionAssets!=='function')return {available:false};
+    const originalFetch=window.fetch;
+    let calls=0;
+    window.fetch=async url=>{
+      if(String(url).includes('api.enem.dev/v1/exams/2014/questions/55')){
+        calls++;
+        return {
+          ok:true,
+          json:async()=>({
+            files:['https://example.invalid/question-visual.png','https://example.invalid/question-visual-2.png'],
+            alternatives:[
+              {file:null},{file:'https://example.invalid/option-b.png'},{file:null},{file:null},{file:null}
+            ]
+          })
+        };
+      }
+      return originalFetch(url);
+    };
+    const q={
+      id:99999991,source_year:2014,source_question_number:55,
+      base_text:'Observe o gráfico a seguir.',prompt:'Qual alternativa está correta?',
+      media_type:null,media_path:null,options:['A','B','C','D','E']
+    };
+    try{
+      await ensureExternalQuestionAssets(q);
+      return {
+        available:true,calls,
+        files:Array.isArray(q.external_media_files)?q.external_media_files.length:0,
+        optionMedia:Array.isArray(q.option_media)?q.option_media.filter(Boolean).length:0,
+        mediaType:q.media_type||''
+      };
+    }finally{
+      window.fetch=originalFetch;
+    }
+  });
+  if(!visualRecoveryTest.available||visualRecoveryTest.calls!==1||visualRecoveryTest.files!==2||visualRecoveryTest.optionMedia!==1||visualRecoveryTest.mediaType!=='image')
+    failures.push(name+': recuperação de visuais ENEM ausentes regrediu: '+JSON.stringify(visualRecoveryTest));
 
   markStage('route-matrix');
   const routeMatrixTest=await page.evaluate(async()=>{
