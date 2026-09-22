@@ -356,7 +356,15 @@
     b.className='v15-tutor-fab';
     b.setAttribute('aria-label','Perguntar ao Professor Nexo');
     b.innerHTML=svg('nexo')+'<span>Professor Nexo</span>';
-    b.onclick=()=>$('#openNexoFromMenu')?.click();
+    b.onclick=()=>{
+      try{
+        if(typeof window.openProfessorNexo==='function')return window.openProfessorNexo();
+        if(typeof openProfessorNexo==='function')return openProfessorNexo();
+      }catch(_){}
+      const menu=$('#openNexoFromMenu');
+      if(menu)return menu.click();
+      return $('#niaButton')?.click();
+    };
     document.body.appendChild(b);
   }
 
