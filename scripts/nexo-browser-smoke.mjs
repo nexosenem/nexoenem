@@ -100,6 +100,61 @@ async function runProfile(browser,name,viewport){
     return result;
   });
 
+  const referenceUiTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app');
+    const auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      appClass:app?.className||'',
+      authClass:auth?.className||'',
+      active:pages.filter(p=>p.classList.contains('active')).map(p=>p.id)
+    };
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    pages.forEach(p=>p.classList.toggle('active',p.id==='inicio'));
+    await new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)));
+    const mobile=innerWidth<=760;
+    const desktopHome=document.querySelector('.nrx-desktop');
+    const mobileHome=document.querySelector('.nrx-mobile');
+    const target=mobile?mobileHome:desktopHome;
+    const targetStyle=target?getComputedStyle(target):null;
+    const rect=target?.getBoundingClientRect?.();
+    const side=document.querySelector('.nrx-side-nav');
+    const bottom=document.querySelector('.nrx-bottom-nav');
+    const search=document.querySelector('.search');
+    const heroImg=target?.querySelector('img');
+    const result={
+      bodyClass:document.body.classList.contains('nexo-reference-ui'),
+      desktopMounted:Boolean(desktopHome),
+      mobileMounted:Boolean(mobileHome),
+      sidebarMounted:Boolean(side),
+      sideItems:side?.querySelectorAll('[data-nrx-side]').length||0,
+      targetVisible:Boolean(target&&targetStyle?.display!=='none'&&rect?.width>0&&rect?.height>0),
+      width:Math.round(rect?.width||0),
+      viewport:innerWidth,
+      overflow:document.documentElement.scrollWidth>innerWidth+3,
+      bottomMounted:Boolean(bottom),
+      bottomVisible:Boolean(bottom&&getComputedStyle(bottom).display!=='none'&&!bottom.hidden),
+      searchInMobileSlot:Boolean(search?.closest('.nrx-mobile-search-slot')),
+      heroLoaded:Boolean(heroImg?.complete&&heroImg?.naturalWidth>0),
+      originalHomeHidden:[...document.querySelectorAll('#inicio>.mobile-home,#inicio>.dashboard-grid')].every(el=>getComputedStyle(el).display==='none')
+    };
+    if(app)app.className=prev.appClass;
+    if(auth)auth.className=prev.authClass;
+    pages.forEach(p=>p.classList.toggle('active',prev.active.includes(p.id)));
+    return result;
+  });
+
+  if(!referenceUiTest.bodyClass)failures.push(name+': camada visual de referência não foi ativada');
+  if(!referenceUiTest.desktopMounted||!referenceUiTest.mobileMounted)failures.push(name+': home de referência desktop/mobile não foi montada');
+  if(!referenceUiTest.sidebarMounted||referenceUiTest.sideItems<10)failures.push(name+': navegação lateral de referência incompleta');
+  if(!referenceUiTest.targetVisible)failures.push(name+': home de referência não ficou visível no viewport '+name);
+  if(referenceUiTest.overflow)failures.push(name+': interface de referência criou overflow horizontal');
+  if(!referenceUiTest.originalHomeHidden)failures.push(name+': home antiga continua visível junto da referência');
+  if(name==='mobile'&&!referenceUiTest.bottomVisible)failures.push(name+': barra inferior de referência não ficou visível');
+  if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
+  if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
+
   if(!first.hardening)failures.push(name+': hardening não carregou');
   if(!first.v13Core)failures.push(name+': V13 core não carregou');
   if(!first.authVisible&&!first.appVisible)failures.push(name+': nenhuma tela principal ficou visível');
@@ -229,7 +284,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,referenceUiTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   await context.close();
 }
 
