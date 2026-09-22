@@ -578,23 +578,31 @@ async function runProfile(browser,name,viewport){
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
     const pages=[...document.querySelectorAll('.page')];
     const shortcut=document.querySelector('#profileAdminShortcut');
+    let appState=null;
+    try{
+      if(typeof state==='object'&&state)appState=state;
+    }catch(_){}
+    if(!appState){
+      try{appState=window.eval('state')}catch(_){}
+    }
+    if(!appState)return {stateAvailable:false,studentHidden:false,adminVisible:false,opened:false,restoredOk:false,count:document.querySelectorAll('[data-nrx-admin-tool]').length};
     const prev={
       app:app?.className||'',auth:auth?.className||'',
       active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
-      profile:state.profile?{...state.profile}:null,
+      profile:appState.profile?{...appState.profile}:null,
       shortcutClass:shortcut?.className||''
     };
     const wait=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     if(app)app.classList.remove('hidden');
     if(auth)auth.classList.add('hidden');
 
-    if(!state.profile)state.profile={role:'student'};
-    state.profile.role='student';
+    if(!appState.profile)appState.profile={role:'student'};
+    appState.profile.role='student';
     shortcut?.classList.add('hidden');
     await wait();
     const studentHidden=[...document.querySelectorAll('[data-nrx-admin-tool]')].every(el=>el.classList.contains('hidden'));
 
-    state.profile.role='admin';
+    appState.profile.role='admin';
     shortcut?.classList.remove('hidden');
     await wait();
     const adminButtons=[...document.querySelectorAll('[data-nrx-admin-tool]')];
@@ -604,7 +612,7 @@ async function runProfile(browser,name,viewport){
     await new Promise(r=>setTimeout(r,90));
     const opened=document.querySelector('#admin')?.classList.contains('active')===true;
 
-    if(prev.profile)state.profile=prev.profile;else state.profile=null;
+    if(prev.profile)appState.profile=prev.profile;else appState.profile=null;
     if(shortcut)shortcut.className=prev.shortcutClass;
     await wait();
     const restoredShouldShow=prev.profile?.role==='admin';
@@ -614,9 +622,9 @@ async function runProfile(browser,name,viewport){
 
     pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
     if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
-    return {studentHidden,adminVisible,opened,restoredOk,restoredShouldShow,count:adminButtons.length};
+    return {stateAvailable:true,studentHidden,adminVisible,opened,restoredOk,restoredShouldShow,count:adminButtons.length};
   });
-  if(!adminAccessTest.studentHidden||!adminAccessTest.adminVisible||!adminAccessTest.opened||!adminAccessTest.restoredOk)
+  if(!adminAccessTest.stateAvailable||!adminAccessTest.studentHidden||!adminAccessTest.adminVisible||!adminAccessTest.opened||!adminAccessTest.restoredOk)
     failures.push(name+': permissão/acesso da Área do Admin regrediu: '+JSON.stringify(adminAccessTest));
 
   markStage('home-shortcuts');
