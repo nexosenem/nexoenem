@@ -3087,3 +3087,120 @@ body.light.nexo-reference-ui .v15-essay-tabs button.active{color:#5f48c9!importa
   .v15-study-modes>button{min-height:82px;align-items:center}
   .v15-essay-tabs button{padding-inline:9px;font-size:9px}
 }
+
+
+/* ==========================================================================
+   V16 fidelity cleanup · reduce duplicated chrome without removing capability
+   ========================================================================== */
+body.nexo-reference-ui:not(.nrx-context-open) #nexoContextBar{
+  display:none!important;
+}
+body.nexo-reference-ui.nrx-context-open #nexoContextBar{
+  display:grid!important;
+}
+
+/* Search is already first-class in the top/mobile header; keep Ctrl+K functionality
+   but remove the redundant floating button from the visual hierarchy. */
+body.nexo-reference-ui #v13SearchButton{
+  display:none!important;
+}
+
+/* V15 compatibility nodes remain mounted for handlers/tests, while the reference
+   surface owns the visible navigation to avoid duplicated cards/tabs. */
+body.nexo-reference-ui #v15QuestionModes,
+body.nexo-reference-ui #v15EssayTabs{
+  display:none!important;
+}
+
+/* The reference desktop sidebar mirrors the approved art. Secondary capabilities
+   stay available in profile tools, universal search and mobile "Mais". */
+@media(min-width:761px){
+  body.nexo-reference-ui .nrx-side-more-toggle,
+  body.nexo-reference-ui .nrx-side-more-panel{
+    display:none!important;
+  }
+}
+
+/* Progressive question setup: the six reference mode cards are the first layer.
+   Advanced controls remain fully available only when requested. */
+body.nexo-reference-ui #sessionSetup.v15-progressive-setup{
+  margin-top:0!important;
+  padding:0!important;
+  border:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #sessionSetup.v15-progressive-setup>.setup-title{
+  display:none!important;
+}
+body.nexo-reference-ui #sessionSetup.v15-progressive-setup>#startSession{
+  display:none!important;
+}
+body.nexo-reference-ui #sessionSetup.v15-progressive-setup.v15-advanced-open>#startSession{
+  display:flex!important;
+  margin-top:10px!important;
+}
+body.nexo-reference-ui #sessionSetup.v15-progressive-setup .v15-advanced-setup{
+  margin-top:0!important;
+}
+body.nexo-reference-ui #sessionSetup.v15-progressive-setup .v15-advanced-body{
+  padding-top:10px!important;
+}
+body.nexo-reference-ui #sessionSetup.v15-progressive-setup .nexo-guide-card{
+  margin:0 0 10px!important;
+}
+
+/* Desktop hero proportions closer to the approved composition: less zoom,
+   more of Professor Nexo visible, and tighter shortcut cards. */
+@media(min-width:1060px){
+  body.nexo-reference-ui .nrx-hero{
+    min-height:304px!important;
+    grid-template-columns:minmax(0,57%) minmax(360px,43%)!important;
+  }
+  body.nexo-reference-ui .nrx-hero-copy{
+    padding:35px 28px 33px 40px!important;
+  }
+  body.nexo-reference-ui .nrx-hero h1{
+    font-size:44px!important;
+    letter-spacing:-1.8px!important;
+  }
+  body.nexo-reference-ui .nrx-hero p{
+    font-size:13px!important;
+  }
+  body.nexo-reference-ui .nrx-hero-actions{
+    margin-top:18px!important;
+  }
+  body.nexo-reference-ui .nrx-hero-art img{
+    width:98%!important;
+    height:100%!important;
+    object-fit:contain!important;
+    object-position:right bottom!important;
+  }
+  body.nexo-reference-ui .nrx-shortcuts{
+    margin-top:11px!important;
+    gap:9px!important;
+  }
+  body.nexo-reference-ui .nrx-shortcut{
+    min-height:104px!important;
+    padding:12px 9px!important;
+  }
+  body.nexo-reference-ui .nrx-shortcut i{
+    width:43px!important;
+    height:43px!important;
+    border-radius:14px!important;
+  }
+  body.nexo-reference-ui .nrx-shortcut b{
+    margin-top:7px!important;
+    font-size:11px!important;
+  }
+  body.nexo-reference-ui .nrx-shortcut small{
+    margin-top:3px!important;
+    font-size:8.5px!important;
+  }
+}
+
+@media(max-width:760px){
+  body.nexo-reference-ui #sessionSetup.v15-progressive-setup.v15-advanced-open>#startSession{
+    display:flex!important;
+  }
+}
