@@ -392,6 +392,7 @@ function buildReferenceSidebar(){
   items.forEach(([key,icon,label,run])=>{
     const b=document.createElement('button');
     b.type='button';b.className='nrx-side-item';b.dataset.nrxSide=key;
+    b.dataset.sidebarLabel=label;b.title=label;
     b.innerHTML='<span>'+icon+'</span><b>'+label+'</b>';
     b.addEventListener('click',()=>{run();setTimeout(syncSideNav,60)});
     nav.appendChild(b);
