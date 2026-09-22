@@ -16,6 +16,8 @@ const app=read('app.js');
 const compat=read('assets/nexo-runtime-compat.js');
 const referenceUi=read('assets/nexo-reference-v2.js');
 const experienceV14=read('assets/nexo-v14-experience.js');
+const uiV15=read('assets/nexo-v15-ui.js');
+const cssV15=read('assets/nexo-v15-ui.css');
 const headers=read('_headers');
 
 assert(!index.includes('\\n'),'HTML sem \\n literal');
@@ -97,6 +99,13 @@ assert(sw.includes('nexo-reference-v2.css')&&sw.includes('nexo-reference-v2.js')
 assert(index.includes('nexo-v14-experience.js'),'Experiência V14 conectada');
 assert(sw.includes('nexo-v14-experience.js'),'Experiência V14 no PWA');
 assert(experienceV14.includes('v14LearningLoop')&&experienceV14.includes('Diagnóstico NEXO')&&experienceV14.includes('ENEM Real'),'Ciclo de aprendizagem/diagnóstico V14 publicados');
+assert(index.includes('nexo-v15-ui.css')&&index.includes('nexo-v15-ui.js'),'Experiência V15 conectada');
+assert(sw.includes('nexo-v15-ui.css')&&sw.includes('nexo-v15-ui.js'),'Experiência V15 no PWA');
+assert(uiV15.includes('v15QuestionModes')&&uiV15.includes('v15EssayTabs')&&uiV15.includes('v15-voice-search'),'V15 mantém modos de questão, navegação de redação e busca por voz progressiva');
+assert(cssV15.includes('NEXO V15')&&cssV15.includes('.nrx-mob-hero-media:before')&&cssV15.includes('.v15-question-modes'),'Design system V15 publicado');
+assert(app.includes('TEXTO-BASE')&&app.includes('RECURSO VISUAL ORIGINAL')&&app.includes('COMANDO'),'Questão preserva texto-base, recurso visual e comando');
+assert(app.indexOf('TEXTO-BASE')<app.indexOf('RECURSO VISUAL ORIGINAL')&&app.indexOf('RECURSO VISUAL ORIGINAL')<app.indexOf('COMANDO'),'Ordem pedagógica texto → visual → comando preservada');
+
 const badReferenceCollections=[...referenceUi.matchAll(/(?<!\$)\$\([^()\n]*\)\.(forEach|find|filter|map)\s*\(/g)].map(m=>m[0]);
 assert(badReferenceCollections.length===0,'Seletores de coleção da interface de referência usam $',badReferenceCollections.join(' | '));
 assert(/\/index\.html[\s\S]*Cache-Control: no-cache/.test(headers),'HTML força revalidação de cache');
