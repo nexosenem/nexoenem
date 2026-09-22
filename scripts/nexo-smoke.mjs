@@ -105,6 +105,11 @@ assert(uiV15.includes('v15QuestionModes')&&uiV15.includes('v15EssayTabs')&&uiV15
 assert(cssV15.includes('NEXO V15')&&cssV15.includes('.nrx-mob-hero-media:before')&&cssV15.includes('.v15-question-modes'),'Design system V15 publicado');
 assert(app.includes('TEXTO-BASE')&&app.includes('RECURSO VISUAL ORIGINAL')&&app.includes('COMANDO'),'Questão preserva texto-base, recurso visual e comando');
 assert(app.indexOf('TEXTO-BASE')<app.indexOf('RECURSO VISUAL ORIGINAL')&&app.indexOf('RECURSO VISUAL ORIGINAL')<app.indexOf('COMANDO'),'Ordem pedagógica texto → visual → comando preservada');
+assert(app.includes("const visual = Boolean(q.media_type || q.media_path)"),'Questão visual usa metadado leve como fonte de verdade');
+assert(app.indexOf('if(await loadStoredVisual(q)) return true;')<app.indexOf('await ensureMediaPath(q);'),'Mídia dedicada é carregada antes do fallback Base64 legado');
+assert(!app.includes('options,media_type,media_path,source_pdf_url,source_page,media_crop'),'Filas de questões não carregam Base64 antecipadamente');
+assert(uiV15.includes('v15AdvancedQuestionSetup')&&uiV15.includes('v15LibraryFilters'),'Filtros avançados V15 usam divulgação progressiva');
+
 
 const badReferenceCollections=[...referenceUi.matchAll(/(?<!\$)\$\([^()\n]*\)\.(forEach|find|filter|map)\s*\(/g)].map(m=>m[0]);
 assert(badReferenceCollections.length===0,'Seletores de coleção da interface de referência usam $',badReferenceCollections.join(' | '));
