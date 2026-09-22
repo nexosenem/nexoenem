@@ -110,6 +110,69 @@
     $('[data-v14-loop="review"]',section)?.addEventListener('click',()=>safeOpen('focos'));
   }
 
+  async function loadConsistency(){
+    const perf=$('#desempenho');
+    if(!perf||!state?.user?.id)return;
+    let root=$('#v14Consistency');
+    if(!root){
+      root=document.createElement('section');
+      root.id='v14Consistency';
+      root.className='panel v14-consistency';
+      root.innerHTML='<div class="v14-consistency-head"><div><span class="eyebrow">CONSISTÊNCIA 7 × 30 DIAS</span><h3>O que está ficando mais forte — e o que está voltando a cair.</h3><p>Comparamos seu desempenho recente com as semanas anteriores para antecipar revisões.</p></div></div><div class="v14-consistency-grid"><p class="learning-empty">Calculando seu histórico...</p></div>';
+      const mastery=$('#v13Mastery',perf);
+      if(mastery)perf.insertBefore(root,mastery);else perf.appendChild(root);
+    }
+    if(root.dataset.loading==='1'||root.dataset.loaded==='1')return;
+    root.dataset.loading='1';
+    try{
+      const since=new Date();since.setDate(since.getDate()-30);
+      const cut=new Date();cut.setDate(cut.getDate()-7);
+      const {data,error}=await client.from('question_attempts')
+        .select('is_correct,created_at,question:questions(area,subject,topic)')
+        .gte('created_at',since.toISOString())
+        .order('created_at',{ascending:false})
+        .limit(1200);
+      if(error)throw error;
+      const groups=new Map();
+      (data||[]).forEach(row=>{
+        const q=row.question||{},topic=q.topic||q.subject||q.area||'Geral';
+        const key=[q.area||'',q.subject||'',topic].join('|');
+        if(!groups.has(key))groups.set(key,{area:q.area||'',subject:q.subject||'',topic,recent:{n:0,ok:0},prior:{n:0,ok:0}});
+        const g=groups.get(key),bucket=new Date(row.created_at)>=cut?'recent':'prior';
+        g[bucket].n++;
+        if(row.is_correct)g[bucket].ok++;
+      });
+      const rows=[...groups.values()].map(g=>{
+        const recent=g.recent.n?Math.round(g.recent.ok/g.recent.n*100):null;
+        const prior=g.prior.n?Math.round(g.prior.ok/g.prior.n*100):null;
+        const delta=recent!=null&&prior!=null?recent-prior:null;
+        return {...g,recent,prior,delta};
+      }).filter(g=>g.recent!=null&&(g.recent.n>=2||g.prior.n>=3))
+        .sort((a,b)=>{
+          const ar=a.delta==null?-999:Math.abs(a.delta),br=b.delta==null?-999:Math.abs(b.delta);
+          return br-ar||b.recent.n-a.recent.n;
+        }).slice(0,6);
+      const grid=$('.v14-consistency-grid',root);
+      if(grid)grid.innerHTML=rows.length?rows.map(g=>{
+        const tone=g.delta==null?'new':g.delta>=8?'up':g.delta<=-8?'down':'stable';
+        const label=g.delta==null?'Novo sinal':g.delta>=8?'Evoluindo':g.delta<=-8?'Revisar agora':'Estável';
+        const delta=g.delta==null?'—':(g.delta>0?'+':'')+g.delta+' p.p.';
+        return '<button type="button" class="'+tone+'" data-v14-consistency-topic="'+String(g.topic).replace(/"/g,'&quot;')+'" data-v14-consistency-subject="'+String(g.subject).replace(/"/g,'&quot;')+'" data-v14-consistency-area="'+String(g.area).replace(/"/g,'&quot;')+'"><span>'+label+'</span><b>'+g.topic+'</b><small>7 dias: '+g.recent+'% · antes: '+(g.prior==null?'—':g.prior+'%')+'</small><strong>'+delta+'</strong></button>';
+      }).join(''):'<p class="learning-empty">Continue treinando para comparar sua evolução entre semanas.</p>';
+      root.querySelectorAll('[data-v14-consistency-topic]').forEach(btn=>btn.addEventListener('click',()=>{
+        safeOpen('questoes');
+        setTimeout(()=>window.startStudySession?.({mode:'consistency',area:btn.dataset.v14ConsistencyArea||'',subject:btn.dataset.v14ConsistencySubject||'',topic:btn.dataset.v14ConsistencyTopic||'',difficulty:'',visualOnly:false,size:8}),120);
+      }));
+      root.dataset.loaded='1';
+    }catch(e){
+      console.warn('v14 consistency',e);
+      const grid=$('.v14-consistency-grid',root);
+      if(grid)grid.innerHTML='<p class="learning-empty">Seu histórico continua disponível; a comparação semanal será atualizada quando a conexão estabilizar.</p>';
+    }finally{
+      root.dataset.loading='';
+    }
+  }
+
   function enhanceMasteryCopy(){
     const root=$('#v13Mastery');
     if(!root)return;
@@ -167,6 +230,7 @@
   function boot(){
     moveAdaptivePlan();
     buildLearningLoop();
+    loadConsistency();
     enhanceMasteryCopy();
     enhanceSimulation();
     enhanceDesktopBrand();
