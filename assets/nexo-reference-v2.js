@@ -188,12 +188,14 @@ function mobileMarkup(){
   wrap.className='nrx-home nrx-mobile';
   wrap.innerHTML=`
     <section class="nrx-mob-hero">
-      <div>
+      <div class="nrx-mob-hero-copy">
         <span class="nrx-mob-hello"><span data-nrx-greeting>Boa noite</span>, <b data-nrx-name>Aluno</b>!</span>
         <h1>Disciplina hoje,<br>resultados amanhã.</h1>
         <p>O ENEM é uma maratona, e você não está sozinho.</p>
       </div>
-      <img src="./assets/nexo-family/bust-confiante.avif" alt="Professor Nexo">
+      <div class="nrx-mob-hero-media">
+        <img src="./assets/nexo-family/bust-confiante.avif" alt="Professor Nexo">
+      </div>
     </section>
     <div class="nrx-mobile-search-slot" data-nrx-search-slot></div>
     <section class="nrx-mob-actions" data-nrx-mobile-actions></section>
@@ -456,8 +458,8 @@ function addMobileChrome(){
   if(!$('.nrx-mobile-brand',top)){
     const brand=document.createElement('div');
     brand.className='nrx-mobile-brand';
-    brand.setAttribute('aria-label','NEXO ENEM');
-    brand.innerHTML='<span class="nrx-mobile-wordmark"><b>NEXO</b><em>ENEM</em></span>';
+    brand.setAttribute('aria-label','Nexo');
+    brand.innerHTML='<span class="nrx-mobile-wordmark"><span class="nrx-logo-n" aria-hidden="true"></span><span class="nrx-logo-exo">exo</span></span>';
     top.prepend(brand);
   }
   if(!$('.nrx-mobile-theme',top)){
@@ -584,7 +586,14 @@ function syncContinueCard(){
   $$('[data-nrx-continue-title]').forEach(el=>el.textContent=title);
   $$('[data-nrx-continue-sub]').forEach(el=>el.textContent=sub);
 }
-function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncLegacyHomeTools();syncSideNav();syncBottom();syncMobileThemeButton();placeSearch()}
+function syncMobileHomePriority(){
+  const home=$('#inicio');
+  const mobile=$('.nrx-mobile',home);
+  const homeActive=Boolean(home?.classList.contains('active'));
+  document.body.classList.toggle('nrx-home-active',homeActive);
+  if(innerWidth<=760&&home&&mobile&&home.firstElementChild!==mobile)home.prepend(mobile);
+}
+function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncLegacyHomeTools();syncSideNav();syncBottom();syncMobileThemeButton();syncMobileHomePriority();placeSearch()}
 
 let referenceSyncQueued=false;
 function scheduleReferenceSync(){
