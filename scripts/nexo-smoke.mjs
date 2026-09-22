@@ -123,6 +123,7 @@ assert(!fetchQuestionsBlock.includes('data_uri'),'Filas de questões não carreg
 assert(app.includes('function hasAccessibleVisualDescription')&&app.includes('function questionVisualCanBeResolved'),'Integridade visual filtra questões irresolvíveis sem apagar descrições acessíveis');
 assert(!app.includes('media_type,source_pdf_url,source_page,media_crop'),'Todas as rotas de questão completa preservam media_path');
 assert(fetchQuestionsBlock.includes('if(filters.visualOnly)')&&fetchQuestionsBlock.includes('likelyNeedsQuestionVisual(x)'),'Modo visual considera mídia nativa e questões ENEM recuperáveis, não apenas media_type');
+assert(fetchQuestionsBlock.includes("client.rpc('get_study_question_candidates'")&&fetchQuestionsBlock.includes('p_limit:1000'),'Treinos usam amostra aleatória do acervo completo sem inflar o payload móvel');
 assert(app.includes('Este recurso visual é necessário para responder.')&&app.includes("b.disabled=true"),'Questão visual quebrada bloqueia resposta em vez de penalizar o aluno');
 assert(cssV15.includes('.visual-accessible-fallback')&&cssV15.includes('.q-option:disabled'),'UI V15 diferencia descrição acessível de visual quebrado');
 assert(uiV15.includes('v15AdvancedQuestionSetup')&&uiV15.includes('v15LibraryFilters'),'Filtros avançados V15 usam divulgação progressiva');
