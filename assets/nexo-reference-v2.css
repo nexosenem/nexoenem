@@ -2636,3 +2636,70 @@ body.light.nexo-reference-ui .v14-consistency{
   border-color:rgba(54,71,105,.10)!important;
 }
 body.nexo-reference-ui #semana #v13Brief{margin-top:14px!important}
+
+
+/* Natural Nexo wordmark — readable replacement for cropped mascot-N logos */
+.nrx-mobile-wordmark{
+  display:flex!important;
+  align-items:center!important;
+  gap:0!important;
+}
+.nrx-logo-word{
+  display:inline-flex;
+  align-items:baseline;
+  gap:0;
+  white-space:nowrap;
+  font-size:25px;
+  line-height:1;
+  font-weight:900;
+  letter-spacing:-1.05px;
+}
+.nrx-logo-letter,
+.v14-brand-n{
+  display:inline-block;
+  margin-right:-.5px;
+  background:linear-gradient(145deg,#8d63ff 10%,#6f7cff 52%,#50d5ff 100%);
+  -webkit-background-clip:text;
+  background-clip:text;
+  color:transparent;
+  text-shadow:0 0 18px rgba(104,91,255,.16);
+}
+.nrx-logo-rest,
+.v14-brand-rest{color:#f4f6ff}
+body.light.nexo-reference-ui .nrx-logo-rest,
+body.light.nexo-reference-ui .v14-brand-rest{color:#172239}
+
+body.nexo-reference-ui .brand-mark.v14-wordmark-hidden{
+  display:none!important;
+}
+body.nexo-reference-ui #sidebar .brand[data-v14-brand="1"]{
+  gap:0!important;
+}
+body.nexo-reference-ui #sidebar .brand[data-v14-brand="1"]>span:last-child{
+  display:flex!important;
+  align-items:baseline!important;
+  flex-wrap:wrap!important;
+}
+body.nexo-reference-ui #sidebar .brand[data-v14-brand="1"] b{
+  display:inline-flex!important;
+  align-items:baseline!important;
+  gap:0!important;
+  font-size:27px!important;
+  line-height:1!important;
+  letter-spacing:-1.15px!important;
+  text-transform:none!important;
+}
+body.nexo-reference-ui #sidebar .brand[data-v14-brand="1"] b .v14-brand-n,
+body.nexo-reference-ui #sidebar .brand[data-v14-brand="1"] b .v14-brand-rest{
+  font:inherit;
+  line-height:inherit;
+  letter-spacing:inherit;
+}
+body.nexo-reference-ui #sidebar .brand[data-v14-brand="1"] small{
+  flex-basis:100%;
+  margin-top:8px!important;
+}
+
+@media(max-width:390px){
+  .nrx-logo-word{font-size:23px}
+}
