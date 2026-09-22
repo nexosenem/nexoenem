@@ -607,6 +607,111 @@ async function runProfile(browser,name,viewport){
   const homeShortcutFailures=homeShortcutTest.filter(x=>!x.ok);
   if(homeShortcutFailures.length)failures.push(name+': atalhos visuais da home falharam: '+JSON.stringify(homeShortcutFailures));
 
+
+  markStage('core-feature-access');
+  const coreFeatureAccessTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const essay=document.querySelector('#essayText');
+    const essayTheme=document.querySelector('#essayTheme');
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      essayText:essay?.value||'',
+      essayTheme:essayTheme?.value||''
+    };
+    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    const wait=()=>new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+
+    if(typeof openPage==='function')openPage('questoes');
+    await wait();
+    const setup=document.querySelector('#sessionSetup');
+    const areaButtons=[...document.querySelectorAll('#studyAreaGrid [data-study-area]')].filter(visible);
+    const subject=document.querySelector('#sessionSubject');
+    const difficulty=document.querySelector('#sessionDifficulty');
+    const size=document.querySelector('#sessionSize');
+    const visual=document.querySelector('#visualOnly');
+    const start=document.querySelector('#startSession');
+    const math=areaButtons.find(b=>b.dataset.studyArea==='Matemática');
+    math?.click();
+    await wait();
+    const questionControls={
+      setupVisible:visible(setup),
+      areas:areaButtons.length,
+      fields:[subject,difficulty,size].every(visible),
+      visualVisible:visible(visual),
+      startVisible:visible(start),
+      areaSelection:Boolean(math?.classList.contains('active'))
+    };
+    if(visual){
+      const before=visual.checked;
+      visual.click();
+      questionControls.visualToggle=visual.checked!==before;
+      visual.click();
+    }else questionControls.visualToggle=false;
+
+    if(typeof openPage==='function')openPage('redacao');
+    await wait();
+    const random=document.querySelector('#randomEssayTheme');
+    const analyze=document.querySelector('#analyzeEssay');
+    const count=document.querySelector('#wordCount');
+    if(essay){
+      essay.value='um dois três quatro';
+      essay.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+    const beforeTheme=essayTheme?.value||'';
+    random?.click();
+    await wait();
+    const essayControls={
+      textVisible:visible(essay),
+      randomVisible:visible(random),
+      analyzeVisible:visible(analyze),
+      wordCountOk:/4\s+palavras/i.test(count?.textContent||''),
+      themePopulated:Boolean(essayTheme&&essayTheme.options.length>1),
+      randomSelected:Boolean(essayTheme?.value)&&essayTheme?.value!==beforeTheme
+    };
+
+    if(typeof openPage==='function')openPage('simulados');
+    await wait();
+    const simCards=[...document.querySelectorAll('#simulados .sim-card')].filter(visible);
+    const simulationControls={
+      visibleCards:simCards.length,
+      allWired:simCards.length>=8&&simCards.every(btn=>typeof btn.onclick==='function'),
+      modes:[...document.querySelectorAll('#simulados [data-sim-mode]')].map(x=>x.dataset.simMode).sort(),
+      areas:[...document.querySelectorAll('#simulados [data-sim-area]')].map(x=>x.dataset.simArea).sort()
+    };
+
+    if(typeof openPage==='function')openPage('semana');
+    await wait();
+    const plannerIds=['studyMode30','studyModeEve','studyModeIntensive'];
+    const plannerControls={
+      visible:plannerIds.every(id=>visible(document.querySelector('#'+id))),
+      grid:Boolean(document.querySelector('#weekFullGrid')),
+      longRange:Boolean(document.querySelector('#longRangePlan')),
+      days:Boolean(document.querySelector('#daysToEnem'))
+    };
+
+    if(essay){
+      essay.value=prev.essayText;
+      essay.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+    if(essayTheme&&prev.essayTheme){
+      essayTheme.value=prev.essayTheme;
+      if(typeof updateEssayPrompt==='function')updateEssayPrompt();
+    }
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    return {questionControls,essayControls,simulationControls,plannerControls};
+  });
+  const q=coreFeatureAccessTest.questionControls,e=coreFeatureAccessTest.essayControls,s=coreFeatureAccessTest.simulationControls,p=coreFeatureAccessTest.plannerControls;
+  if(!q.setupVisible||q.areas!==4||!q.fields||!q.visualVisible||!q.startVisible||!q.areaSelection||!q.visualToggle)failures.push(name+': controles de Questões regrediram: '+JSON.stringify(q));
+  if(!e.textVisible||!e.randomVisible||!e.analyzeVisible||!e.wordCountOk||!e.themePopulated||!e.randomSelected)failures.push(name+': controles de Redação regrediram: '+JSON.stringify(e));
+  if(s.visibleCards<8||!s.allWired||!s.modes.includes('sprint')||!s.modes.includes('mini')||s.areas.length!==4)failures.push(name+': controles de Simulados regrediram: '+JSON.stringify(s));
+  if(!p.visible||!p.grid||!p.longRange||!p.days)failures.push(name+': controles do Planner regrediram: '+JSON.stringify(p));
+
   markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -828,7 +933,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,accessibilityTest,experienceControlTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,accessibilityTest,experienceControlTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
