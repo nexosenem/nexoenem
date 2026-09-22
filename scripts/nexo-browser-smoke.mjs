@@ -422,6 +422,46 @@ async function runProfile(browser,name,viewport){
   if(!v14ExperienceTest.briefMoved)
     failures.push(name+': plano adaptativo ainda polui a Home em vez de ficar no Planner: '+JSON.stringify(v14ExperienceTest));
 
+  markStage('v15-interface');
+  const v15InterfaceTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={app:app?.className||'',auth:auth?.className||'',active:pages.find(p=>p.classList.contains('active'))?.id||'inicio'};
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    await new Promise(r=>setTimeout(r,160));
+
+    const sideSvg=document.querySelectorAll('.nrx-side-item>span svg.v15-icon').length;
+    const mobileSvg=document.querySelectorAll('.nrx-mob-action i svg.v15-icon').length;
+    const bottomSvg=document.querySelectorAll('.nrx-bottom-nav span svg.v15-icon').length;
+    const search=document.querySelector('#globalSearch');
+    const searchOk=search?.placeholder==='Pesquisar no NEXO...';
+
+    pages.forEach(p=>p.classList.toggle('active',p.id==='questoes'));
+    await new Promise(r=>setTimeout(r,60));
+    const modes=document.querySelectorAll('#v15QuestionModes [data-v15-qmode]').length;
+
+    pages.forEach(p=>p.classList.toggle('active',p.id==='redacao'));
+    await new Promise(r=>setTimeout(r,60));
+    const essayTabs=document.querySelectorAll('#v15EssayTabs [data-v15-essay-tab]').length;
+
+    const tutor=document.querySelector('#v15TutorFab');
+    const tutorVisible=Boolean(tutor&&getComputedStyle(tutor).display!=='none');
+    const radius=parseFloat(getComputedStyle(document.querySelector(innerWidth<=760?'.nrx-mob-hero':'.nrx-hero')).borderRadius||'0');
+
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    return {sideSvg,mobileSvg,bottomSvg,searchOk,modes,essayTabs,tutor:Boolean(tutor),tutorVisible,radius};
+  });
+  if(v15InterfaceTest.sideSvg<10)failures.push(name+': ícones SVG unificados ausentes na navegação lateral: '+JSON.stringify(v15InterfaceTest));
+  if(name==='mobile'&&v15InterfaceTest.mobileSvg<8)failures.push(name+': atalhos móveis não receberam ícones SVG consistentes: '+JSON.stringify(v15InterfaceTest));
+  if(name==='mobile'&&v15InterfaceTest.bottomSvg<5)failures.push(name+': barra inferior não recebeu ícones SVG consistentes: '+JSON.stringify(v15InterfaceTest));
+  if(!v15InterfaceTest.searchOk)failures.push(name+': busca V15 perdeu o placeholder de referência');
+  if(v15InterfaceTest.modes!==4)failures.push(name+': modos rápidos da área de Questões não foram montados: '+v15InterfaceTest.modes);
+  if(v15InterfaceTest.essayTabs!==3)failures.push(name+': navegação compacta da Redação não foi montada: '+v15InterfaceTest.essayTabs);
+  if(!v15InterfaceTest.tutor||!v15InterfaceTest.tutorVisible)failures.push(name+': Professor Nexo contextual não ficou disponível em páginas de estudo');
+  if(v15InterfaceTest.radius<16)failures.push(name+': acabamento arredondado V15 regrediu: '+JSON.stringify(v15InterfaceTest));
+
   markStage('route-matrix');
   const routeMatrixTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app');
