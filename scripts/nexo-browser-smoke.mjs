@@ -950,6 +950,7 @@ async function runProfile(browser,name,viewport){
       await wait(35);
       result.checkpoint=Boolean(calls.sessions.some(x=>Number(x.size)===2&&x.mode==='content'));
 
+      state.contentProgress.set('material:'+fake.id,{user_id:'smoke-user',content_type:'material',content_id:fake.id,progress_seconds:0,progress_percent:10,completed:false,last_opened_at:new Date().toISOString(),updated_at:new Date().toISOString()});
       await openContentViewer('material',fake.id);
       await wait(20);
       document.querySelector('#viewerPractice')?.click();
