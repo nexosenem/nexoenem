@@ -315,8 +315,7 @@ async function runProfile(browser,name,viewport){
   if(!referenceUiTest.originalHomeHidden)failures.push(name+': home antiga continua visível junto da referência');
   if(name==='mobile'&&!referenceUiTest.bottomVisible)failures.push(name+': barra inferior de referência não ficou visível');
   if(name==='mobile'&&referenceUiTest.bottomLabels.join('|')!=='Início|Estudar|Questões|Redação|Mais')failures.push(name+': barra inferior perdeu a navegação principal/área Mais: '+referenceUiTest.bottomLabels.join('|'));
-  if(name==='mobile'&&referenceUiTest.contextVisible)failures.push(name+': guia contextual ainda está acima do hero na entrada da Home');
-  if(name!=='mobile'&&!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto fora da entrada mobile');
+  if(referenceUiTest.contextVisible)failures.push(name+': guia contextual deve ficar recolhido por padrão e abrir somente sob demanda');
   if(name==='mobile'&&!referenceUiTest.heroFirst)failures.push(name+': hero Disciplina hoje não é o primeiro conteúdo da Home');
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
   if(name==='mobile'&&(!referenceUiTest.mobileWordmarkVisible||!referenceUiTest.mobileLogoLetterVisible||referenceUiTest.mobileBrandText!=='Nexo'))failures.push(name+': wordmark Nexo mobile não está natural/legível: '+JSON.stringify({text:referenceUiTest.mobileBrandText,wordmark:referenceUiTest.mobileWordmarkVisible,n:referenceUiTest.mobileLogoLetterVisible}));
@@ -361,9 +360,15 @@ async function runProfile(browser,name,viewport){
     }
     const hero=document.querySelector(mobile?'.nrx-mob-hero h1':'.nrx-hero h1');
     const heroFont=hero?parseFloat(getComputedStyle(hero).fontSize):0;
+    const moreToggle=document.querySelector('.nrx-side-more-toggle');
+    const floatingSearch=document.querySelector('#v13SearchButton');
+    const floatingTutor=document.querySelector('#v15TutorFab');
     const result={
       missingSide,missingProfile,overflowing,minTouch,heroFont,
-      moreToggle:Boolean(document.querySelector('.nrx-side-more-toggle')),
+      moreToggle:Boolean(moreToggle),
+      moreVisible:visible(moreToggle),
+      floatingSearchVisible:visible(floatingSearch),
+      floatingTutorVisible:visible(floatingTutor),
       profileTools:Boolean(document.querySelector('.nrx-profile-tools')),
       notificationWired:Boolean(document.querySelector('#notificationBtn')),
       actionCount,moreOpened
@@ -375,7 +380,10 @@ async function runProfile(browser,name,viewport){
   });
   if(referenceAccessTest.missingSide.length)failures.push(name+': recursos antigos ausentes do menu Mais: '+referenceAccessTest.missingSide.join(', '));
   if(referenceAccessTest.missingProfile.length)failures.push(name+': recursos antigos ausentes do Perfil: '+referenceAccessTest.missingProfile.join(', '));
-  if(!referenceAccessTest.moreToggle)failures.push(name+': acesso Mais recursos não foi montado');
+  if(!referenceAccessTest.moreToggle)failures.push(name+': estrutura de acesso Mais recursos não foi preservada');
+  if(name!=='mobile'&&referenceAccessTest.moreVisible)failures.push(name+': Mais recursos ainda polui a sidebar desktop apesar de existir no Perfil/Busca');
+  if(referenceAccessTest.floatingSearchVisible)failures.push(name+': botão flutuante de busca duplicou a busca principal');
+  if(referenceAccessTest.floatingTutorVisible)failures.push(name+': Professor Nexo flutuante duplicou acessos já presentes na navegação');
   if(!referenceAccessTest.profileTools)failures.push(name+': recursos secundários não foram preservados no Perfil');
   if(name==='mobile'&&!referenceAccessTest.moreOpened)failures.push(name+': botão Mais não abriu o menu completo');
   if(referenceAccessTest.overflowing.length)failures.push(name+': cards da referência com overflow: '+referenceAccessTest.overflowing.join(', '));
@@ -457,11 +465,15 @@ async function runProfile(browser,name,viewport){
 
     pages.forEach(p=>p.classList.toggle('active',p.id==='questoes'));
     await new Promise(r=>setTimeout(r,60));
-    const modes=document.querySelectorAll('#v15QuestionModes [data-v15-qmode]').length;
+    const modeNode=document.querySelector('#v15QuestionModes');
+    const modes=modeNode?.querySelectorAll('[data-v15-qmode]').length||0;
+    const duplicateModesVisible=Boolean(modeNode&&getComputedStyle(modeNode).display!=='none'&&modeNode.getBoundingClientRect().height>0);
 
     pages.forEach(p=>p.classList.toggle('active',p.id==='redacao'));
     await new Promise(r=>setTimeout(r,60));
-    const essayTabs=document.querySelectorAll('#v15EssayTabs [data-v15-essay-tab]').length;
+    const essayNode=document.querySelector('#v15EssayTabs');
+    const essayTabs=essayNode?.querySelectorAll('[data-v15-essay-tab]').length||0;
+    const duplicateEssayTabsVisible=Boolean(essayNode&&getComputedStyle(essayNode).display!=='none'&&essayNode.getBoundingClientRect().height>0);
 
     pages.forEach(p=>p.classList.toggle('active',p.id==='materiais'));
     await new Promise(r=>setTimeout(r,80));
@@ -474,31 +486,31 @@ async function runProfile(browser,name,viewport){
     pages.forEach(p=>p.classList.toggle('active',p.id==='redacao'));
     await new Promise(r=>setTimeout(r,30));
     const tutor=document.querySelector('#v15TutorFab');
-    const tutorVisible=Boolean(tutor&&getComputedStyle(tutor).display!=='none');
+    const tutorVisible=Boolean(tutor&&getComputedStyle(tutor).display!=='none'&&tutor.getBoundingClientRect().height>0);
     const panel=document.querySelector('#niaPanel');
     const panelWasHidden=Boolean(panel?.classList.contains('hidden'));
-    if(tutorVisible){
-      tutor.click();
-      await new Promise(r=>setTimeout(r,40));
-    }
+    tutor?.click();
+    await new Promise(r=>setTimeout(r,40));
     const tutorOpens=Boolean(panel&&!panel.classList.contains('hidden'));
     if(panel&&panelWasHidden)panel.classList.add('hidden');
     const radius=parseFloat(getComputedStyle(document.querySelector(innerWidth<=760?'.nrx-mob-hero':'.nrx-hero')).borderRadius||'0');
 
     pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
     if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
-    return {sideSvg,mobileSvg,bottomSvg,secondarySvg,searchOk,modes,essayTabs,materialTabs,materialAdvancedPreserved,voicePresent:Boolean(voice),tutor:Boolean(tutor),tutorVisible,tutorOpens,radius};
+    return {sideSvg,mobileSvg,bottomSvg,secondarySvg,searchOk,modes,duplicateModesVisible,essayTabs,duplicateEssayTabsVisible,materialTabs,materialAdvancedPreserved,voicePresent:Boolean(voice),tutor:Boolean(tutor),tutorVisible,tutorOpens,radius};
   });
   if(v15InterfaceTest.sideSvg<10)failures.push(name+': ícones SVG unificados ausentes na navegação lateral: '+JSON.stringify(v15InterfaceTest));
   if(name==='mobile'&&v15InterfaceTest.mobileSvg<8)failures.push(name+': atalhos móveis não receberam ícones SVG consistentes: '+JSON.stringify(v15InterfaceTest));
   if(name==='mobile'&&v15InterfaceTest.bottomSvg<5)failures.push(name+': barra inferior não recebeu ícones SVG consistentes: '+JSON.stringify(v15InterfaceTest));
   if(!v15InterfaceTest.searchOk)failures.push(name+': busca V15 perdeu o placeholder de referência');
-  if(v15InterfaceTest.modes!==4)failures.push(name+': modos rápidos da área de Questões não foram montados: '+v15InterfaceTest.modes);
-  if(v15InterfaceTest.essayTabs!==3)failures.push(name+': navegação compacta da Redação não foi montada: '+v15InterfaceTest.essayTabs);
+  if(v15InterfaceTest.modes!==4)failures.push(name+': modos rápidos compatíveis da área de Questões não foram montados: '+v15InterfaceTest.modes);
+  if(v15InterfaceTest.duplicateModesVisible)failures.push(name+': modos de Questões duplicados continuam visíveis na camada principal');
+  if(v15InterfaceTest.essayTabs!==3)failures.push(name+': navegação compacta compatível da Redação não foi montada: '+v15InterfaceTest.essayTabs);
+  if(v15InterfaceTest.duplicateEssayTabsVisible)failures.push(name+': segunda barra de abas da Redação continua visível');
   if(v15InterfaceTest.materialTabs!==5||!v15InterfaceTest.materialAdvancedPreserved)failures.push(name+': Biblioteca perdeu abas simples ou filtros avançados: '+JSON.stringify(v15InterfaceTest));
   if(v15InterfaceTest.secondarySvg<8)failures.push(name+': recursos secundários não receberam iconografia V15: '+JSON.stringify(v15InterfaceTest));
   if(name==='mobile'&&!v15InterfaceTest.voicePresent)failures.push(name+': busca mobile perdeu o controle de voz/fallback visual');
-  if(!v15InterfaceTest.tutor||!v15InterfaceTest.tutorVisible||!v15InterfaceTest.tutorOpens)failures.push(name+': Professor Nexo contextual não abriu corretamente em páginas de estudo: '+JSON.stringify(v15InterfaceTest));
+  if(!v15InterfaceTest.tutor||v15InterfaceTest.tutorVisible||!v15InterfaceTest.tutorOpens)failures.push(name+': Professor Nexo contextual deve permanecer funcional sem botão flutuante redundante: '+JSON.stringify(v15InterfaceTest));
   if(v15InterfaceTest.radius<16)failures.push(name+': acabamento arredondado V15 regrediu: '+JSON.stringify(v15InterfaceTest));
 
   markStage('editorial-explanations');
