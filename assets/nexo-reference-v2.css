@@ -1359,3 +1359,48 @@ body.nexo-reference-ui .network-status:not(.hidden){
   max-width:34px!important;overflow:hidden!important;padding:0 8px!important
 }
 body.nexo-reference-ui .network-status:not(.hidden) b{display:none!important}
+
+/* Mobile profile becomes the reference "Perfil" sheet instead of a top popover. */
+@media(max-width:760px){
+  body.nexo-reference-ui .profile-menu{
+    left:9px!important;
+    right:9px!important;
+    top:auto!important;
+    bottom:calc(73px + env(safe-area-inset-bottom))!important;
+    width:auto!important;
+    max-height:min(68vh,560px)!important;
+    overflow:auto!important;
+    padding:10px!important;
+    border-radius:16px!important;
+    border:1px solid rgba(132,145,178,.16)!important;
+    background:rgba(8,15,29,.97)!important;
+    backdrop-filter:blur(20px)!important;
+    box-shadow:0 16px 42px rgba(0,0,0,.38)!important;
+  }
+  body.nexo-reference-ui .profile-menu>div:first-child{
+    padding:7px 7px 10px!important;
+  }
+  body.nexo-reference-ui .profile-menu>div:first-child b{
+    font-size:11px!important;
+  }
+  body.nexo-reference-ui .profile-menu>div:first-child small{
+    margin-top:2px!important;
+    font-size:7.5px!important;
+  }
+  body.nexo-reference-ui .profile-menu>button,
+  body.nexo-reference-ui .nrx-profile-extra button{
+    min-height:36px!important;
+    margin-top:5px!important;
+    padding:7px 9px!important;
+    border-radius:9px!important;
+    border:1px solid rgba(132,145,178,.10)!important;
+    background:rgba(255,255,255,.018)!important;
+    color:#b9c3d3!important;
+    font-size:8px!important;
+    text-align:left!important;
+  }
+  body.nexo-reference-ui #logoutBtn{
+    color:#ff8f96!important;
+    border-color:rgba(255,103,116,.16)!important;
+  }
+}
