@@ -596,6 +596,58 @@ async function runProfile(browser,name,viewport){
     failures.push(name+': fluxo editorial de explicações regrediu: '+JSON.stringify(editorialExplanationTest));
   }
 
+  markStage('admin-visual-repair');
+  const adminVisualRepairTest=await page.evaluate(async()=>{
+    const prevProfile=state.profile,prevTarget=state.adminVisualRepairTarget,prevMeta=state.questionMeta;
+    const originalRpc=client.rpc;
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const out={};let saved=null;
+    try{
+      state.profile={...(state.profile||{}),role:'admin'};
+      client.rpc=async(name,args)=>{
+        if(name==='get_admin_visual_repair_queue'){
+          return {data:[{
+            question_id:-99041,source_year:2025,source_exam:'ENEM 2025',source_question_number:114,
+            area:'Ciências da Natureza',subject:'Física',topic:'Fenômenos físicos e energia',
+            prompt_preview:'A tirinha ilustra um processo físico em que uma onda sonora causa a quebra das taças.',
+            attempts:18,wrong:9,open_reports:1,source_reference:'INEP'
+          }],error:null};
+        }
+        if(name==='admin_set_question_media_path'){
+          saved=args;
+          return {data:{ok:true,question_id:Number(args?.p_question_id)},error:null};
+        }
+        if(name==='get_question_catalog_items_v2')return {data:[],error:null};
+        return originalRpc.call(client,name,args);
+      };
+      await loadAdminVisualRepairQueue();
+      const row=document.querySelector('#adminVisualRepairQueue [data-visual-repair="-99041"]');
+      out.queue=Boolean(row&&/18 tentativa/i.test(document.querySelector('#adminVisualRepairQueue')?.textContent||''));
+      row?.click();await wait(20);
+      const modal=document.querySelector('#adminVisualRepairModal');
+      const url=document.querySelector('#adminVisualRepairUrl');
+      const type=document.querySelector('#adminVisualRepairType');
+      out.modal=Boolean(modal&&!modal.classList.contains('hidden')&&url&&type);
+      if(url)url.value='https://example.invalid/enem-2025-q114.webp';
+      if(type)type.value='image';
+      document.querySelector('#saveAdminVisualRepair')?.click();
+      await wait(70);
+      out.saved=Boolean(saved&&Number(saved.p_question_id)===-99041&&saved.p_media_path==='https://example.invalid/enem-2025-q114.webp'&&saved.p_media_type==='image');
+      out.closed=Boolean(modal?.classList.contains('hidden'));
+    }catch(err){
+      out.error=String(err?.stack||err?.message||err);
+    }finally{
+      client.rpc=originalRpc;
+      state.profile=prevProfile;state.adminVisualRepairTarget=prevTarget;state.questionMeta=prevMeta;
+      document.querySelector('#adminVisualRepairModal')?.classList.add('hidden');
+      document.body.style.overflow='';
+    }
+    return out;
+  });
+  if(adminVisualRepairTest.error||!adminVisualRepairTest.queue||!adminVisualRepairTest.modal||!adminVisualRepairTest.saved||!adminVisualRepairTest.closed){
+    failures.push(name+': fluxo Admin de restauração visual regrediu: '+JSON.stringify(adminVisualRepairTest));
+  }
+
   markStage('visual-recovery');
   const visualRecoveryTest=await page.evaluate(async()=>{
     if(typeof ensureExternalQuestionAssets!=='function')return {available:false};
