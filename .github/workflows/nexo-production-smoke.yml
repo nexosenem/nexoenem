@@ -57,6 +57,15 @@ jobs:
       - name: Browser runtime smoke
         run: node scripts/nexo-browser-smoke.mjs
 
+      - name: Upload visual reference screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nexo-visual-reference-${{ github.sha }}
+          path: artifacts/visual
+          if-no-files-found: warn
+          retention-days: 14
+
       - name: Build Cloudflare asset bundle
         if: github.event_name != 'pull_request'
         run: |
