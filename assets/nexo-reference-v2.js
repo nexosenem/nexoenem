@@ -27,6 +27,7 @@ function go(page){
   trigger?.click();
 }
 function openStore(){
+  document.body.dataset.nrxJourneyView='store';
   go('ranking');
   setTimeout(()=>{
     try{
@@ -42,6 +43,7 @@ function openExperience(){
   $('#openExperienceSettings')?.click();
 }
 function openAvatar(){
+  document.body.dataset.nrxJourneyView='avatar';
   go('ranking');
   setTimeout(()=>{
     try{
@@ -251,11 +253,11 @@ function buildReferenceSidebar(){
   nav.className='nrx-side-nav';
   const items=[
     ['inicio','⌂','Início',()=>go('inicio')],
-    ['materiais','▣','Estudar',()=>go('materiais')],
+    ['study','▣','Estudar',()=>{document.body.dataset.nrxMaterialsView='study';go('materiais')}],
     ['questoes','✓','Questões',()=>go('questoes')],
     ['redacao','✎','Redação',()=>go('redacao')],
     ['simulados','▤','Simulados',()=>go('simulados')],
-    ['materiais','▧','Resumo e Macetes',()=>go('materiais')],
+    ['resumos','▧','Resumo e Macetes',()=>{document.body.dataset.nrxMaterialsView='resumos';go('materiais')}],
     ['semana','▦','Planner',()=>go('semana')],
     ['desempenho','▥','Meu Desempenho',()=>go('desempenho')],
     ['radar','◉','Radar ENEM',()=>go('radar')],
@@ -281,10 +283,10 @@ function buildReferenceSidebar(){
 }
 function syncSideNav(){
   const active=$('.page.active')?.id||'inicio';
-  $$('[data-nrx-side]').forEach(b=>{
-    const key=b.dataset.nrxSide;
-    b.classList.toggle('active',key===active||(key==='materiais'&&active==='videoaulas'));
-  });
+  let selected=active;
+  if(active==='materiais')selected=document.body.dataset.nrxMaterialsView||'study';
+  if(active==='ranking')selected=document.body.dataset.nrxJourneyView||'';
+  $$('[data-nrx-side]').forEach(b=>b.classList.toggle('active',b.dataset.nrxSide===selected));
   const name=firstName();
   $$('[data-nrx-side-name]').forEach(el=>el.textContent=name);
   const role=$('#profileRole')?.textContent?.trim()||'Estudante';
@@ -390,15 +392,27 @@ function syncWeakness(){
     el.classList.remove('nrx-score-low','nrx-score-mid','nrx-score-high');
     if(pct!==null)el.classList.add(toneClass(pct));
   });
-  if(topic!=='Ainda calibrando'){
-    $$('[data-nrx-continue-title]').forEach(el=>el.textContent=topic);
-    $$('[data-nrx-continue-sub]').forEach(el=>el.textContent='Reforce este foco e continue evoluindo.');
-  }
 }
-function syncAll(){syncIdentity();syncProgress();syncWeakness();syncSideNav();syncBottom();placeSearch()}
+function syncContinueCard(){
+  const host=$('#mobileRecent')||$('#recentAttempts');
+  const resume=host?.querySelector('.resume-study-row');
+  const recent=host?.querySelector('.recent-item');
+  let title='Retomar seus estudos';
+  let sub='Continue sua próxima sessão.';
+  if(resume){
+    title=resume.querySelector('b')?.textContent?.trim()||'Continuar sessão';
+    sub=resume.querySelector('small')?.textContent?.trim()||sub;
+  }else if(recent){
+    title=recent.querySelector('b')?.textContent?.trim()||title;
+    sub=recent.querySelector('small')?.textContent?.trim()||sub;
+  }
+  $('[data-nrx-continue-title]').forEach(el=>el.textContent=title);
+  $('[data-nrx-continue-sub]').forEach(el=>el.textContent=sub);
+}
+function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncSideNav();syncBottom();placeSearch()}
 
 function observe(){
-  const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#inicio','#app'];
+  const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#inicio','#app'];
   targets.forEach(sel=>{
     const el=$(sel);if(!el)return;
     new MutationObserver(()=>syncAll()).observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
