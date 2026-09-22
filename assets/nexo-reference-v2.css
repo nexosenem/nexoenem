@@ -1275,3 +1275,87 @@ body.nexo-reference-ui #materiais .content-topic-train{
   body.nexo-reference-ui #materiais .content-topic-cards{grid-template-columns:1fr!important}
   body.nexo-reference-ui #materiais .content-topic-progress{display:none!important}
 }
+
+
+/* ========= Reference fidelity + readability pass ========= */
+@media(min-width:761px){
+  :root{--nrx-sidebar:210px}
+  body.nexo-reference-ui .topbar-profile .profile-copy,
+  body.nexo-reference-ui .topbar-profile .profile-caret{display:none!important}
+  body.nexo-reference-ui .topbar-profile{padding:0!important}
+  body.nexo-reference-ui .nrx-side-item>b{font-size:11.5px!important}
+  body.nexo-reference-ui .nrx-side-item>span{font-size:12px!important}
+  body.nexo-reference-ui .nrx-side-account b{font-size:10.5px!important}
+  body.nexo-reference-ui .nrx-side-account small{font-size:8px!important}
+  .nrx-greeting{font-size:12px!important}
+  .nrx-hero h1{font-size:44px!important}
+  .nrx-hero p{font-size:13px!important}
+  .nrx-btn{font-size:11.5px!important}
+  .nrx-shortcut b{font-size:12px!important}
+  .nrx-shortcut small{font-size:9px!important}
+  .nrx-stat-card>h3{font-size:11.5px!important}
+  .nrx-stat-copy strong,.nrx-difficulty b{font-size:11px!important}
+  .nrx-stat-copy span,.nrx-difficulty small{font-size:9px!important}
+  .nrx-preview-head b{font-size:13px!important}
+  .nrx-preview-head span{font-size:8.5px!important}
+  .nrx-preview-tabs i,.nrx-preview-list span,.nrx-essay-box,.nrx-preview-cta{font-size:8.5px!important}
+  body.nexo-reference-ui #materiais .page-head h2,
+  body.nexo-reference-ui #questoes .page-head h2,
+  body.nexo-reference-ui #redacao .page-head h2{font-size:28px!important}
+  body.nexo-reference-ui #materiais .page-head p,
+  body.nexo-reference-ui #questoes .page-head p,
+  body.nexo-reference-ui #redacao .page-head p{font-size:11px!important}
+  body.nexo-reference-ui #materiais .text-input,
+  body.nexo-reference-ui #materiais select{font-size:10.5px!important}
+  body.nexo-reference-ui #materiais .library-filter-deck select,
+  body.nexo-reference-ui #materiais .library-filter-deck button,
+  body.nexo-reference-ui #materiais .material-subject-nav button{font-size:9px!important}
+  body.nexo-reference-ui #questoes .setup-title h3{font-size:14px!important}
+  body.nexo-reference-ui #questoes .nexo-guide-card b{font-size:10.5px!important}
+  body.nexo-reference-ui #questoes .nexo-guide-card p{font-size:9px!important}
+  body.nexo-reference-ui #questoes .study-area-grid button b{font-size:10px!important}
+  body.nexo-reference-ui #questoes .setup-fields label{font-size:9px!important}
+  body.nexo-reference-ui #questoes .setup-fields select{font-size:10px!important}
+  body.nexo-reference-ui #redacao .essay-flow-bar b{font-size:9px!important}
+  body.nexo-reference-ui #redacao .essay-editor-heading h3,
+  body.nexo-reference-ui #redacao .essay-writing-head h3,
+  body.nexo-reference-ui #redacao .essay-guide-card h3,
+  body.nexo-reference-ui #redacao .essay-sheet-card h3{font-size:12px!important}
+  body.nexo-reference-ui #redacao .essay-writing-shell textarea{font-size:11.5px!important}
+}
+@media(max-width:760px){
+  .nrx-mobile-brand{font-size:20px!important}
+  .nrx-mob-hello{font-size:11px!important}
+  .nrx-mob-hero h1{font-size:28px!important}
+  .nrx-mob-hero p{font-size:10px!important}
+  .nrx-mobile-search-slot .search input{font-size:12px!important}
+  .nrx-mob-action b{font-size:10px!important}
+  .nrx-mob-action i{width:46px!important;height:46px!important;font-size:18px!important}
+  .nrx-mob-progress strong{font-size:11px!important}
+  .nrx-mob-progress small{font-size:9px!important}
+  .nrx-mob-section-head b{font-size:11.5px!important}
+  .nrx-mob-section-head span{font-size:9px!important}
+  .nrx-mob-continue b{font-size:10.5px!important}
+  .nrx-mob-continue small{font-size:9px!important}
+  .nrx-bottom-nav button{font-size:18px!important}
+  .nrx-bottom-nav button small{font-size:9px!important}
+  body.nexo-reference-ui .top-actions .icon-btn{font-size:15px!important}
+  body.nexo-reference-ui #materiais .page-head h2,
+  body.nexo-reference-ui #questoes .page-head h2,
+  body.nexo-reference-ui #redacao .page-head h2{font-size:24px!important}
+  body.nexo-reference-ui #materiais .page-head p,
+  body.nexo-reference-ui #questoes .page-head p,
+  body.nexo-reference-ui #redacao .page-head p{font-size:10px!important}
+  body.nexo-reference-ui #materiais .library-filter-deck select,
+  body.nexo-reference-ui #materiais .library-filter-deck button,
+  body.nexo-reference-ui #materiais .material-subject-nav button{font-size:10px!important}
+  body.nexo-reference-ui #questoes .study-area-grid button b{font-size:11px!important}
+  body.nexo-reference-ui #questoes .setup-fields label{font-size:10px!important}
+  body.nexo-reference-ui #questoes .setup-fields select{font-size:11px!important}
+  body.nexo-reference-ui #redacao .essay-flow-bar b{font-size:9.5px!important}
+  body.nexo-reference-ui #redacao .essay-writing-shell textarea{font-size:12px!important}
+}
+body.nexo-reference-ui .network-status:not(.hidden){
+  max-width:34px!important;overflow:hidden!important;padding:0 8px!important
+}
+body.nexo-reference-ui .network-status:not(.hidden) b{display:none!important}

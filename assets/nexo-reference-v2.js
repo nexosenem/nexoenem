@@ -39,6 +39,30 @@ function openStore(){
 function openNexo(){
   $('#openNexoFromMenu')?.click();
 }
+function openCommunity(){
+  document.body.dataset.nrxJourneyView='community';
+  go('ranking');
+  setTimeout(()=>{
+    try{
+      if(typeof window.setJourneyTab==='function')window.setJourneyTab('groups');
+      else $('[data-journey-tab="groups"]')?.click();
+    }catch(_){$('[data-journey-tab="groups"]')?.click()}
+  },120);
+}
+function openMaterials(view='study'){
+  document.body.dataset.nrxMaterialsView=view;
+  go('materiais');
+  setTimeout(()=>{
+    const type=$('#materialTypeFilter');
+    if(type){
+      const wanted=view==='resumos'?'summary':'';
+      if(type.value!==wanted){
+        type.value=wanted;
+        type.dispatchEvent(new Event('change',{bubbles:true}));
+      }
+    }
+  },80);
+}
 function openExperience(){
   $('#openExperienceSettings')?.click();
 }
@@ -123,7 +147,7 @@ function desktopMarkup(){
     </section>
 
     <section class="nrx-preview-row">
-      <button type="button" class="nrx-preview" data-nrx-page="materiais">
+      <button type="button" class="nrx-preview" data-nrx-materials-view="study">
         <div class="nrx-preview-head"><b>Estudar</b><span>Aulas, resumos e macetes</span></div>
         <div class="nrx-preview-tabs"><i>Todas</i><i>Matemática</i><i>Linguagens</i></div>
         <div class="nrx-preview-list">
@@ -153,7 +177,7 @@ function desktopMarkup(){
     ['Questões','⌘','Treinar agora',()=>go('questoes')],
     ['Redação','▱','Corrigir texto',()=>go('redacao')],
     ['Simulados','▤','Provas completas',()=>go('simulados')],
-    ['Resumo','▧','Aulas e PDFs',()=>go('materiais')],
+    ['Resumo','▧','Aulas e PDFs',()=>openMaterials('resumos')],
     ['Planner','▦','Organizar rotina',()=>go('semana')],
     ['Loja NEXO','♕','Itens e avatares',openStore]
   ].forEach(x=>actions.appendChild(action(...x)));
@@ -191,7 +215,7 @@ function mobileMarkup(){
     ['Questões','⌘',()=>go('questoes')],
     ['Redação','▱',()=>go('redacao')],
     ['Simulados','▤',()=>go('simulados')],
-    ['Resumo','▧',()=>go('materiais')],
+    ['Resumo','▧',()=>openMaterials('resumos')],
     ['Planner','▦',()=>go('semana')],
     ['Meu Desempenho','▥',()=>go('desempenho')],
     ['Loja','♕',openStore],
@@ -257,14 +281,14 @@ function buildReferenceSidebar(){
   nav.className='nrx-side-nav';
   const items=[
     ['inicio','⌂','Início',()=>go('inicio')],
-    ['study','▣','Estudar',()=>{document.body.dataset.nrxMaterialsView='study';go('materiais')}],
+    ['study','▣','Estudar',()=>openMaterials('study')],
     ['questoes','✓','Questões',()=>go('questoes')],
     ['redacao','✎','Redação',()=>go('redacao')],
     ['simulados','▤','Simulados',()=>go('simulados')],
-    ['resumos','▧','Resumo e Macetes',()=>{document.body.dataset.nrxMaterialsView='resumos';go('materiais')}],
+    ['resumos','▧','Resumo e Macetes',()=>openMaterials('resumos')],
     ['semana','▦','Planner',()=>go('semana')],
     ['desempenho','▥','Meu Desempenho',()=>go('desempenho')],
-    ['radar','◉','Radar ENEM',()=>go('radar')],
+    ['community','♟','Comunidade',openCommunity],
     ['store','♕','Loja NEXO',openStore],
     ['avatar','✦','Personalizar',openAvatar],
     ['nexo','🐾','Nexo (Assistente)',openNexo],
@@ -340,6 +364,7 @@ function placeSearch(){
 
 function bindReferenceEvents(root){
   $$('[data-nrx-page]',root).forEach(el=>el.addEventListener('click',()=>go(el.dataset.nrxPage)));
+  $$('[data-nrx-materials-view]',root).forEach(el=>el.addEventListener('click',()=>openMaterials(el.dataset.nrxMaterialsView||'study')));
   $$('[data-nrx-resume]',root).forEach(el=>el.addEventListener('click',resumeStudy));
   $$('[data-nrx-focus]',root).forEach(el=>el.addEventListener('click',focusMode));
 }
@@ -423,7 +448,13 @@ function observe(){
   });
   window.addEventListener('resize',placeSearch,{passive:true});
   document.addEventListener('click',e=>{
-    if(e.target.closest?.('[data-page],.nav-item'))setTimeout(()=>{syncBottom();placeSearch()},40);
+    const journeyTab=e.target.closest?.('[data-journey-tab]');
+    if(journeyTab){
+      const tab=journeyTab.dataset.journeyTab;
+      document.body.dataset.nrxJourneyView=tab==='groups'?'community':tab;
+      setTimeout(syncSideNav,40);
+    }
+    if(e.target.closest?.('[data-page],.nav-item'))setTimeout(()=>{syncBottom();syncSideNav();placeSearch()},40);
   },true);
 }
 
