@@ -800,3 +800,292 @@ body.nexo-reference-ui .brand-mark::before,
 body.nexo-reference-ui .brand-mark::after,
 .nrx-mobile-brand i::after{transform:translate(1px,-11px) rotate(31deg) scale(.82)}
 body.nexo-reference-ui .header-journey-pill{display:none!important}
+
+/* ========= Approved-reference internal pages ========= */
+body.nexo-reference-ui .brand em{display:none!important}
+
+body.nexo-reference-ui #materiais,
+body.nexo-reference-ui #questoes,
+body.nexo-reference-ui #redacao{
+  max-width:1180px;
+  margin:0 auto;
+}
+body.nexo-reference-ui #materiais .page-head,
+body.nexo-reference-ui #questoes .page-head,
+body.nexo-reference-ui #redacao .page-head{
+  margin:3px 0 12px!important;
+  align-items:center!important;
+}
+body.nexo-reference-ui #materiais .page-head .eyebrow,
+body.nexo-reference-ui #questoes .page-head .eyebrow,
+body.nexo-reference-ui #redacao .page-head .eyebrow{
+  font-size:6.5px!important;
+  letter-spacing:1.6px!important;
+  color:#8e7dff!important;
+}
+body.nexo-reference-ui #materiais .page-head h2,
+body.nexo-reference-ui #questoes .page-head h2,
+body.nexo-reference-ui #redacao .page-head h2{
+  margin-top:3px!important;
+  font-size:24px!important;
+  line-height:1.08!important;
+  letter-spacing:-.65px!important;
+}
+body.nexo-reference-ui #materiais .page-head p,
+body.nexo-reference-ui #questoes .page-head p,
+body.nexo-reference-ui #redacao .page-head p{
+  margin-top:4px!important;
+  font-size:9px!important;
+  color:#8593a8!important;
+}
+
+/* Study / Biblioteca */
+body.nexo-reference-ui #materiais .content-head-badge{display:none!important}
+body.nexo-reference-ui #materiais .content-filter-line{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr) auto!important;
+  gap:8px!important;
+  margin-bottom:8px!important;
+}
+body.nexo-reference-ui #materiais .text-input,
+body.nexo-reference-ui #materiais select{
+  min-height:36px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(132,145,179,.13)!important;
+  background:#0b172a!important;
+  box-shadow:none!important;
+  font-size:9px!important;
+}
+body.nexo-reference-ui #materiais .library-filter-deck{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:6px!important;
+  padding:0!important;
+  margin:0 0 9px!important;
+  background:transparent!important;
+  border:0!important;
+}
+body.nexo-reference-ui #materiais .library-filter-deck select,
+body.nexo-reference-ui #materiais .library-filter-deck button{
+  min-height:31px!important;
+  padding:6px 9px!important;
+  border-radius:7px!important;
+  font-size:7.5px!important;
+}
+body.nexo-reference-ui #materiais .material-subject-nav{
+  display:flex!important;
+  flex-wrap:wrap!important;
+  gap:5px!important;
+  margin:0 0 9px!important;
+}
+body.nexo-reference-ui #materiais .material-subject-nav button{
+  min-height:29px!important;
+  padding:6px 10px!important;
+  border-radius:7px!important;
+  border:1px solid rgba(130,144,178,.12)!important;
+  background:#0c1729!important;
+  box-shadow:none!important;
+  font-size:7.5px!important;
+}
+body.nexo-reference-ui #materiais .material-subject-nav button.active{
+  background:#6e51ea!important;
+  border-color:#6e51ea!important;
+  color:#fff!important;
+}
+body.nexo-reference-ui #materiais .material-library-meta{
+  margin:0 0 7px!important;
+  color:#75849b!important;
+  font-size:7.5px!important;
+}
+body.nexo-reference-ui #materiais .video-grid{
+  display:grid!important;
+  grid-template-columns:1fr!important;
+  gap:7px!important;
+}
+body.nexo-reference-ui #materiais .video-card,
+body.nexo-reference-ui #materiais .material-card,
+body.nexo-reference-ui #materiais [class*="content-card"]{
+  min-height:60px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(132,145,177,.10)!important;
+  background:#0d192d!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #materiais .video-card:hover,
+body.nexo-reference-ui #materiais .material-card:hover{
+  transform:none!important;
+  border-color:rgba(117,92,238,.30)!important;
+}
+
+/* Questions */
+body.nexo-reference-ui #questoes .question-head-actions{
+  display:flex!important;gap:6px!important;
+}
+body.nexo-reference-ui #questoes .session-setup{
+  max-width:none!important;
+  padding:13px!important;
+  border-radius:12px!important;
+  border:1px solid rgba(129,143,178,.13)!important;
+  background:linear-gradient(180deg,rgba(11,21,39,.96),rgba(8,16,30,.96))!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #questoes .setup-title{
+  margin-bottom:9px!important;
+}
+body.nexo-reference-ui #questoes .setup-title h3{font-size:12px!important}
+body.nexo-reference-ui #questoes .setup-chip{
+  font-size:6.5px!important;
+  border-radius:6px!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #questoes .nexo-guide-card{
+  min-height:72px!important;
+  padding:9px 10px!important;
+  grid-template-columns:44px 1fr auto!important;
+  gap:9px!important;
+  border-radius:10px!important;
+  border-color:rgba(108,87,222,.17)!important;
+  background:rgba(84,63,190,.055)!important;
+}
+body.nexo-reference-ui #questoes .nexo-guide-card img{
+  width:42px!important;height:42px!important;border-radius:10px!important;
+}
+body.nexo-reference-ui #questoes .nexo-guide-card b{font-size:9px!important}
+body.nexo-reference-ui #questoes .nexo-guide-card p{font-size:7.5px!important;line-height:1.4!important}
+body.nexo-reference-ui #questoes .nexo-guide-card button{
+  min-height:30px!important;padding:6px 9px!important;border-radius:7px!important;font-size:7px!important;
+}
+body.nexo-reference-ui #questoes .study-area-grid{
+  display:grid!important;
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+  gap:7px!important;
+  margin:9px 0!important;
+}
+body.nexo-reference-ui #questoes .study-area-grid button{
+  min-height:72px!important;
+  padding:9px!important;
+  border-radius:10px!important;
+  border:1px solid rgba(132,145,178,.11)!important;
+  background:#0d192d!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #questoes .study-area-grid button span{
+  width:31px!important;height:31px!important;border-radius:9px!important;
+  display:grid!important;place-items:center!important;
+  margin:0 auto 6px!important;
+  background:rgba(112,87,241,.14)!important;
+}
+body.nexo-reference-ui #questoes .study-area-grid button b{font-size:8px!important}
+body.nexo-reference-ui #questoes .setup-fields{
+  display:grid!important;
+  grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  gap:7px!important;
+}
+body.nexo-reference-ui #questoes .setup-fields label{
+  font-size:7px!important;color:#7f8da3!important;
+}
+body.nexo-reference-ui #questoes .setup-fields select{
+  min-height:34px!important;border-radius:8px!important;
+  border:1px solid rgba(132,145,178,.12)!important;
+  background:#0a1628!important;box-shadow:none!important;font-size:8px!important;
+}
+body.nexo-reference-ui #questoes .toggle-row{
+  margin:9px 0!important;
+  padding:9px!important;border-radius:9px!important;
+  background:rgba(255,255,255,.02)!important;border-color:rgba(132,145,178,.10)!important;
+}
+body.nexo-reference-ui #questoes .toggle-row b{font-size:8px!important}
+body.nexo-reference-ui #questoes .toggle-row small{font-size:7px!important}
+body.nexo-reference-ui #questoes .session-bar{
+  border-radius:10px!important;box-shadow:none!important;
+}
+body.nexo-reference-ui #questoes .question-card{
+  border-radius:12px!important;
+  background:#0b1629!important;
+  border-color:rgba(132,145,178,.13)!important;
+  box-shadow:none!important;
+}
+
+/* Essay */
+body.nexo-reference-ui #redacao .page-nexo-mentor{display:none!important}
+body.nexo-reference-ui #redacao .essay-flow-bar{
+  min-height:38px!important;
+  padding:4px!important;
+  margin-bottom:8px!important;
+  border-radius:9px!important;
+  border:1px solid rgba(132,145,178,.11)!important;
+  background:#0a1527!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #redacao .essay-flow-bar>span{
+  min-height:29px!important;
+  padding:5px 7px!important;
+  border-radius:7px!important;
+}
+body.nexo-reference-ui #redacao .essay-flow-bar i{
+  width:18px!important;height:18px!important;font-size:7px!important;
+}
+body.nexo-reference-ui #redacao .essay-flow-bar b{font-size:7.5px!important}
+body.nexo-reference-ui #redacao .essay-flow-bar small{display:none!important}
+body.nexo-reference-ui #redacao .essay-workspace-v2{
+  grid-template-columns:minmax(0,1fr) 275px!important;
+  gap:8px!important;
+}
+body.nexo-reference-ui #redacao .essay-editor-v2,
+body.nexo-reference-ui #redacao .essay-side-v2>.panel{
+  border-radius:11px!important;
+  border-color:rgba(132,145,178,.11)!important;
+  background:linear-gradient(180deg,rgba(11,21,39,.96),rgba(8,16,30,.96))!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #redacao .essay-editor-v2{padding:13px!important}
+body.nexo-reference-ui #redacao .essay-editor-heading h3,
+body.nexo-reference-ui #redacao .essay-writing-head h3,
+body.nexo-reference-ui #redacao .essay-guide-card h3,
+body.nexo-reference-ui #redacao .essay-sheet-card h3{
+  font-size:10px!important;
+}
+body.nexo-reference-ui #redacao .essay-theme-control select,
+body.nexo-reference-ui #redacao .essay-theme-control input,
+body.nexo-reference-ui #redacao .essay-writing-shell textarea{
+  border-radius:8px!important;
+  border:1px solid rgba(132,145,178,.12)!important;
+  background:#0b172a!important;
+  box-shadow:none!important;
+}
+body.nexo-reference-ui #redacao .essay-writing-shell textarea{
+  min-height:280px!important;
+  padding:12px!important;
+  font-size:10px!important;
+  line-height:1.65!important;
+}
+body.nexo-reference-ui #redacao .essay-structure-check{
+  display:grid!important;grid-template-columns:repeat(4,1fr)!important;gap:5px!important;
+}
+body.nexo-reference-ui #redacao .essay-structure-check span{
+  padding:6px!important;border-radius:7px!important;font-size:6.5px!important;
+  background:rgba(255,255,255,.02)!important;
+}
+body.nexo-reference-ui #redacao .essay-intelligence-v5{
+  gap:8px!important;margin-top:8px!important;
+}
+
+@media(max-width:760px){
+  body.nexo-reference-ui #materiais,
+  body.nexo-reference-ui #questoes,
+  body.nexo-reference-ui #redacao{max-width:none}
+  body.nexo-reference-ui #questoes .study-area-grid{grid-template-columns:1fr 1fr!important}
+  body.nexo-reference-ui #questoes .setup-fields{grid-template-columns:1fr!important}
+  body.nexo-reference-ui #questoes .nexo-guide-card{
+    grid-template-columns:38px 1fr!important;
+  }
+  body.nexo-reference-ui #questoes .nexo-guide-card button{
+    grid-column:1/-1!important;width:100%!important;
+  }
+  body.nexo-reference-ui #redacao .essay-workspace-v2{grid-template-columns:1fr!important}
+  body.nexo-reference-ui #redacao .essay-structure-check{grid-template-columns:1fr 1fr!important}
+  body.nexo-reference-ui #redacao .essay-side-v2{
+    display:grid!important;grid-template-columns:1fr!important;gap:7px!important;
+  }
+  body.nexo-reference-ui #redacao .essay-writing-shell textarea{min-height:330px!important}
+}
