@@ -4151,7 +4151,7 @@ function loadLocalVisual(q){
 function showVisualFallback(q){
   const stage=$('#visualStage');
   const head=$('#visualWrap .visual-head span:last-child');
-  const options=$('.q-option');
+  const options=Array.from(document.querySelectorAll('.q-option'));
   const confirm=$('#confirmAnswer');
   if(head) head.textContent='recurso necessário indisponível';
   options.forEach(b=>{b.disabled=true;b.setAttribute('aria-disabled','true')});
