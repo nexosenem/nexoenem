@@ -948,6 +948,147 @@ async function runProfile(browser,name,viewport){
   if(!moduleInteractionTest.bank?.searchFiltered||!moduleInteractionTest.bank?.areaFiltered||!moduleInteractionTest.bank?.opened)moduleInteractionFailures.push('banco='+JSON.stringify(moduleInteractionTest.bank));
   if(!moduleInteractionTest.feedback?.inserted||!moduleInteractionTest.feedback?.row||!moduleInteractionTest.feedback?.cleared||!moduleInteractionTest.feedback?.rendered)moduleInteractionFailures.push('feedback='+JSON.stringify(moduleInteractionTest.feedback));
   if(moduleInteractionFailures.length)failures.push(name+': interações reais de módulos falharam: '+moduleInteractionFailures.join(' | '));
+
+  markStage('content-workflows');
+  const contentWorkflowTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      materials:state.materials,materialSubject:state.materialSubject,materialOpenTopic:state.materialOpenTopic,
+      libraryQuickFive:state.libraryQuickFive,radarTopics:state.radarTopics,radarSubjects:state.radarSubjects,
+      radarYears:state.radarYears,radarOverview:state.radarOverview,radarLoaded:state.radarLoaded,
+      completedEssayThemes:state.completedEssayThemes,
+      materialsView:document.body.dataset.nrxMaterialsView||'',
+      essayTheme:document.querySelector('#essayTheme')?.value||'',
+      essayAxis:document.querySelector('#essayAxis')?.value||''
+    };
+    const originalRadarStudy=window.startRadarContent;
+    const originalRadarTrain=window.startRadarTraining;
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const result={library:{},radar:{},themes:{}};
+    const calls={radarStudy:null,radarTrain:null};
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+
+      state.materials=[
+        {id:-93001,area:'Matemática',subject:'Matemática',topic:'Estatística e análise de dados',title:'Aula NEXO #01 · Estatística',description:'Aula completa',format:'HTML'},
+        {id:-93002,area:'Matemática',subject:'Matemática',topic:'Estatística e análise de dados',title:'Resumo NEXO #01 · Estatística',description:'Resumo estratégico',format:'HTML'},
+        {id:-93003,area:'Matemática',subject:'Matemática',topic:'Estatística e análise de dados',title:'Macetes NEXO #01 · Estatística',description:'Macetes rápidos',format:'HTML'},
+        {id:-93004,area:'Linguagens',subject:'Português',topic:'Interpretação de texto',title:'Resumo NEXO #02 · Interpretação',description:'Resumo de leitura',format:'HTML'}
+      ];
+      state.materialSubject='Matemática';
+      state.materialOpenTopic='';
+      state.libraryQuickFive=false;
+      document.body.dataset.nrxMaterialsView='study';
+      if(typeof openPage==='function')openPage('materiais');
+      if(typeof renderMaterials==='function')renderMaterials();
+      await wait(30);
+      const cardCount=()=>document.querySelectorAll('#materialGrid .content-resource-card').length;
+      result.library.base=cardCount()===3&&document.querySelectorAll('#materialSubjectNav [data-material-subject]').length===2;
+
+      const search=document.querySelector('#materialSearch');
+      if(search){search.value='Macetes';search.dispatchEvent(new Event('input',{bubbles:true}))}
+      await wait(20);
+      result.library.search=cardCount()===1&&/Macetes NEXO/i.test(document.querySelector('#materialGrid')?.textContent||'');
+
+      if(search){search.value='';search.dispatchEvent(new Event('input',{bubbles:true}))}
+      const type=document.querySelector('#materialTypeFilter');
+      if(type){type.value='summary';type.dispatchEvent(new Event('change',{bubbles:true}))}
+      await wait(20);
+      result.library.type=cardCount()===1&&/Resumo NEXO/i.test(document.querySelector('#materialGrid')?.textContent||'');
+
+      if(type){type.value='';type.dispatchEvent(new Event('change',{bubbles:true}))}
+      const quick=document.querySelector('#materialQuickFive');
+      quick?.click();await wait(20);
+      result.library.quick=Boolean(state.libraryQuickFive&&cardCount()===2&&quick?.classList.contains('active'));
+
+      document.querySelector('#materialClearFilters')?.click();await wait(20);
+      result.library.clear=Boolean(!state.libraryQuickFive&&search?.value===''&&type?.value===''&&cardCount()===3&&!quick?.classList.contains('active'));
+
+      const portuguese=[...document.querySelectorAll('#materialSubjectNav [data-material-subject]')].find(b=>b.dataset.materialSubject==='Português');
+      portuguese?.click();await wait(20);
+      result.library.subject=Boolean(portuguese&&state.materialSubject==='Português'&&cardCount()===1);
+
+      state.radarTopics=[
+        {area:'Matemática',subject:'Matemática',topic:'Estatística e análise de dados',questions:90,years_present:17,questions_2021_2025:30,years_2021_2025:5,last_year:2025,nexo_priority_score:92},
+        {area:'Matemática',subject:'Matemática',topic:'Geometria e trigonometria',questions:70,years_present:16,questions_2021_2025:24,years_2021_2025:5,last_year:2025,nexo_priority_score:84},
+        {area:'Linguagens',subject:'Português',topic:'Interpretação de texto',questions:120,years_present:17,questions_2021_2025:35,years_2021_2025:5,last_year:2025,nexo_priority_score:95}
+      ];
+      state.radarSubjects=[
+        {area:'Matemática',subject:'Matemática',classified_questions:160,years_present:17,questions_2021_2025:54,avg_confidence:0.9},
+        {area:'Linguagens',subject:'Português',classified_questions:120,years_present:17,questions_2021_2025:35,avg_confidence:0.9}
+      ];
+      state.radarYears=[{year:2025,total_items:180,classified_items:175,review_items:5,avg_confidence:0.9,subjects_mapped:8}];
+      state.radarOverview={total_items:3060,editions:17,first_year:2009,last_year:2025,classified_items:3000,review_items:60,topics_mapped:3};
+      state.radarLoaded=true;
+      window.startRadarContent=async row=>{calls.radarStudy=row?.topic||''};
+      window.startRadarTraining=async row=>{calls.radarTrain=row?.topic||''};
+      if(typeof openPage==='function')openPage('radar');
+      if(typeof bindRadarControls==='function')bindRadarControls();
+      if(typeof refreshRadarSubjectOptions==='function')refreshRadarSubjectOptions();
+      if(typeof renderEnemRadar==='function')renderEnemRadar();
+      await wait(30);
+      const radarRows=()=>[...document.querySelectorAll('#radarList .radar-topic-row')];
+      result.radar.base=radarRows().length===3;
+
+      const area=document.querySelector('#radarArea');
+      if(area){area.value='Matemática';area.dispatchEvent(new Event('change',{bubbles:true}))}
+      await wait(20);
+      result.radar.area=radarRows().length===2&&/2 assuntos/.test(document.querySelector('#radarResultMeta')?.textContent||'');
+
+      const radarSearch=document.querySelector('#radarSearch');
+      if(radarSearch){radarSearch.value='geometria';radarSearch.dispatchEvent(new Event('input',{bubbles:true}))}
+      await wait(20);
+      result.radar.search=radarRows().length===1&&/Geometria e trigonometria/i.test(document.querySelector('#radarList')?.textContent||'');
+
+      if(radarSearch){radarSearch.value='';radarSearch.dispatchEvent(new Event('input',{bubbles:true}))}
+      await wait(20);
+      const statRow=radarRows().find(row=>/Estatística e análise de dados/i.test(row.textContent||''));
+      statRow?.querySelector('[data-radar-study]')?.click();await wait(25);
+      statRow?.querySelector('[data-radar-train]')?.click();await wait(25);
+      result.radar.actions=Boolean(calls.radarStudy==='Estatística e análise de dados'&&calls.radarTrain==='Estatística e análise de dados');
+
+      state.completedEssayThemes=new Set();
+      if(typeof fillThemes==='function')fillThemes();
+      if(typeof openPage==='function')openPage('temas');
+      await wait(30);
+      const themeBtn=[...document.querySelectorAll('#themesGrid [data-theme]')].find(btn=>!btn.disabled);
+      const themeId=themeBtn?.dataset.theme||'';
+      themeBtn?.click();await wait(35);
+      result.themes={
+        button:Boolean(themeBtn),
+        opened:document.querySelector('#redacao')?.classList.contains('active')===true,
+        selected:Boolean(themeId&&document.querySelector('#essayTheme')?.value===themeId),
+        prompt:Boolean((document.querySelector('#essayPrompt')?.textContent||'').trim().length>20),
+        focused:document.activeElement===document.querySelector('#essayText')
+      };
+    }catch(err){
+      result.error=String(err?.stack||err?.message||err);
+    }finally{
+      window.startRadarContent=originalRadarStudy;window.startRadarTraining=originalRadarTrain;
+      state.materials=prev.materials;state.materialSubject=prev.materialSubject;state.materialOpenTopic=prev.materialOpenTopic;
+      state.libraryQuickFive=prev.libraryQuickFive;state.radarTopics=prev.radarTopics;state.radarSubjects=prev.radarSubjects;
+      state.radarYears=prev.radarYears;state.radarOverview=prev.radarOverview;state.radarLoaded=prev.radarLoaded;
+      state.completedEssayThemes=prev.completedEssayThemes;
+      if(prev.materialsView)document.body.dataset.nrxMaterialsView=prev.materialsView;else delete document.body.dataset.nrxMaterialsView;
+      if(document.querySelector('#essayAxis'))document.querySelector('#essayAxis').value=prev.essayAxis;
+      if(typeof fillThemes==='function')fillThemes();
+      if(document.querySelector('#essayTheme')&&[...document.querySelector('#essayTheme').options].some(o=>o.value===prev.essayTheme))document.querySelector('#essayTheme').value=prev.essayTheme;
+      if(typeof updateEssayPrompt==='function')updateEssayPrompt();
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return {...result,calls};
+  });
+  const contentWorkflowFailures=[];
+  if(contentWorkflowTest.error)contentWorkflowFailures.push('error='+contentWorkflowTest.error);
+  for(const [key,value] of Object.entries(contentWorkflowTest.library||{}))if(!value)contentWorkflowFailures.push('biblioteca.'+key);
+  for(const [key,value] of Object.entries(contentWorkflowTest.radar||{}))if(!value)contentWorkflowFailures.push('radar.'+key);
+  for(const [key,value] of Object.entries(contentWorkflowTest.themes||{}))if(!value)contentWorkflowFailures.push('temas.'+key);
+  if(contentWorkflowFailures.length)failures.push(name+': fluxos Biblioteca/Radar/Temas regrediram: '+contentWorkflowFailures.join(', ')+' '+JSON.stringify(contentWorkflowTest));
   const utilFocus=utilityModuleTest.focus,utilBank=utilityModuleTest.bank,utilFeedback=utilityModuleTest.feedback;
   if(!utilFocus.opened||!utilFocus.durationVisible||!utilFocus.durationChanged||!utilFocus.closed)failures.push(name+': Modo Foco regrediu: '+JSON.stringify(utilFocus));
   if(!utilBank.searchVisible||!utilBank.areaVisible||!utilBank.list||!utilBank.saved)failures.push(name+': Banco de Questões regrediu: '+JSON.stringify(utilBank));
@@ -1940,7 +2081,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,moduleInteractionTest,contentWorkflowTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
