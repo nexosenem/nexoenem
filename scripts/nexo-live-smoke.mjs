@@ -6,6 +6,8 @@ const appSource=fs.readFileSync('app.js','utf8');
 const supabasePublishableKey=appSource.match(/const SUPABASE_KEY = '([^']+)'/)?.[1]||'';
 const expectedApp=index.match(/app\.js\?v=([^"]+)/)?.[1]||'';
 const expectedHardening=index.match(/nexo-v13-hardening\.js\?v=([^"]+)/)?.[1]||'';
+const expectedReferenceJs=index.match(/nexo-reference-v2\.js\?v=([^"]+)/)?.[1]||'';
+const expectedReferenceCss=index.match(/nexo-reference-v2\.css\?v=([^"]+)/)?.[1]||'';
 const envUrls=(process.env.NEXO_PUBLIC_URL||'').split(',').map(x=>x.trim()).filter(Boolean);
 const candidates=[...new Set([
   ...envUrls,
@@ -34,8 +36,11 @@ async function discoverLive(){
       const url=base.endsWith('/')?base:base+'/';
       const r=await fetchText(url+'?deploy_check='+Date.now());
       const hasBrand=/NEXO ENEM/i.test(r.text);
-      const hasVersion=expectedApp&&r.text.includes('app.js?v='+expectedApp);
-      seen.push({attempt,url,status:r.status,hasBrand,hasVersion,error:r.error||null});
+      const hasAppVersion=expectedApp&&r.text.includes('app.js?v='+expectedApp);
+      const hasReferenceJs=expectedReferenceJs&&r.text.includes('nexo-reference-v2.js?v='+expectedReferenceJs);
+      const hasReferenceCss=expectedReferenceCss&&r.text.includes('nexo-reference-v2.css?v='+expectedReferenceCss);
+      const hasVersion=Boolean(hasAppVersion&&hasReferenceJs&&hasReferenceCss);
+      seen.push({attempt,url,status:r.status,hasBrand,hasAppVersion,hasReferenceJs,hasReferenceCss,hasVersion,error:r.error||null});
       if(r.ok&&hasBrand&&hasVersion)return {base:url,index:r,seen};
     }
     if(attempt<15)await sleep(5000);
@@ -117,7 +122,12 @@ async function browserProfile(browser,base,name,viewport){
       searchActionWorks:false,
       searchSamples:[],
       percentTones:false,
-      percentToneMap:[]
+      percentToneMap:[],
+      referenceUi:false,
+      referenceDesktop:false,
+      referenceMobile:false,
+      referenceSecondary:false,
+      referenceUtilities:false
     };
     try{
       result.supabaseGlobal=Boolean(window.supabase?.createClient);
@@ -151,6 +161,11 @@ async function browserProfile(browser,base,name,viewport){
       result.wrappers.essay=typeof window.essayScores==='function'&&/rubric/.test(String(window.essayScores));
       result.wrappers.tutor=typeof window.niaAnswer==='function'&&/v13State/.test(String(window.niaAnswer));
       result.wrappers.notebook=typeof window.loadErrorNotebook==='function'&&/nexo_attempt_reflections/.test(String(window.loadErrorNotebook));
+      result.referenceUi=document.body.classList.contains('nexo-reference-ui');
+      result.referenceDesktop=Boolean(document.querySelector('.nrx-desktop'));
+      result.referenceMobile=Boolean(document.querySelector('.nrx-mobile'));
+      result.referenceSecondary=Boolean(document.querySelector('.nrx-side-more-panel')&&document.querySelector('.nrx-profile-tools'));
+      result.referenceUtilities=Boolean(document.querySelector('[data-nrx-utility="search"]')&&document.querySelector('[data-nrx-utility="theme"]'));
     }catch(err){result.wiringError=String(err?.message||err)}
     const auth=document.querySelector('#authScreen'),app=document.querySelector('#app');
     result.screenVisible=Boolean((auth&&!auth.classList.contains('hidden'))||(app&&!app.classList.contains('hidden')));
@@ -190,6 +205,8 @@ async function browserProfile(browser,base,name,viewport){
     if(!closeTest.button)failures.push('botão X do guia de contexto não existe');
     if(!closeTest.dismissed)failures.push('botão X não fechou o guia de contexto');
   }
+  if(!first.referenceUi||!first.referenceDesktop||!first.referenceMobile)failures.push('interface de referência não carregou/montou no deploy público');
+  if(!first.referenceSecondary||!first.referenceUtilities)failures.push('acessos preservados da interface de referência não estão montados no deploy público');
   if(!first.siteSearch)failures.push('pesquisa interna do deploy público não encontrou todas as ações esperadas: '+JSON.stringify(first.searchSamples));
   if(!first.searchActionWorks)failures.push('ação pesquisada do deploy público não abriu Meu perfil de evolução');
   if(!first.percentTones)failures.push('faixas de porcentagem do deploy público incorretas: '+JSON.stringify(first.percentToneMap));
@@ -218,6 +235,7 @@ const supabaseHealth=await fetchText(SUPABASE_HEALTH_URL,12000,supabasePublishab
 if(!supabaseHealth.ok)assetFailures.push('Supabase health HTTP '+supabaseHealth.status);
 console.log('LIVE_URL='+live.base);
 console.log('APP_VERSION='+expectedApp);
+console.log('REFERENCE_UI_VERSION='+expectedReferenceJs);
 console.log('CF_CACHE_STATUS='+(live.index.headers['cf-cache-status']||''));
 console.log('SERVER='+(live.index.headers.server||''));
 console.log('SUPABASE_HEALTH='+(supabaseHealth.ok?'OK':'FAIL '+supabaseHealth.status));
