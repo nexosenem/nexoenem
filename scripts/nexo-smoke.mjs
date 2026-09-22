@@ -21,6 +21,24 @@ const uiV15=read('assets/nexo-v15-ui.js');
 const cssV15=read('assets/nexo-v15-ui.css');
 const headers=read('_headers');
 
+const contentDir=path.join(root,'assets','conteudo');
+const contentFiles=fs.readdirSync(contentDir).filter(name=>name.endsWith('.html')).sort();
+const invalidContent=[];
+for(const name of contentFiles){
+  const source=fs.readFileSync(path.join(contentDir,name),'utf8');
+  const checks={
+    doctype:/<!doctype html>/i.test(source),
+    lang:/<html\s+lang="pt-BR"/i.test(source),
+    viewport:/name="viewport"/i.test(source),
+    title:/<title>[^<]+<\/title>/i.test(source),
+    train:/nexo-content-train/.test(source),
+    responsive:/@media\(max-width:600px\)/.test(source)
+  };
+  if(Object.values(checks).some(v=>!v))invalidContent.push(name+':'+Object.entries(checks).filter(([,v])=>!v).map(([k])=>k).join(','));
+}
+assert(contentFiles.length>=126,'Biblioteca autoral mantém pelo menos 126 materiais HTML',String(contentFiles.length));
+assert(invalidContent.length===0,'Materiais autorais têm HTML, viewport, responsividade e CTA de treino',invalidContent.slice(0,12).join(' | '));
+
 assert(!index.includes('\\n'),'HTML sem \\n literal');
 assert((index.match(/id="viewerNote"/g)||[]).length===1,'viewerNote único');
 
