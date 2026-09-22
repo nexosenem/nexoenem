@@ -216,8 +216,8 @@
     const mark=brand.querySelector('.brand-mark');
     const name=brand.querySelector('b');
     const enem=brand.querySelector('em');
-    if(mark){ mark.textContent=''; mark.classList.add('v14-chest-n'); }
-    if(name)name.textContent='exo';
+    if(mark){ mark.textContent=''; mark.classList.remove('v14-chest-n'); mark.classList.add('v14-wordmark-hidden'); }
+    if(name)name.innerHTML='<span class="v14-brand-n">N</span><span class="v14-brand-rest">exo</span>';
     if(enem)enem.textContent='';
     brand.setAttribute('aria-label','Nexo');
   }
