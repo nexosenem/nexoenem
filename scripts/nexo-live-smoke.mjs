@@ -10,6 +10,7 @@ const expectedReferenceJs=index.match(/nexo-reference-v2\.js\?v=([^"]+)/)?.[1]||
 const expectedReferenceCss=index.match(/nexo-reference-v2\.css\?v=([^"]+)/)?.[1]||'';
 const envUrls=(process.env.NEXO_PUBLIC_URL||'').split(',').map(x=>x.trim()).filter(Boolean);
 const candidates=[...new Set([
+  'https://rarshein222.workers.dev/',
   ...envUrls,
   'https://nexosenem.miguelcomprarshein222.workers.dev/',
   'https://nexo-enem.miguelcomprarshein222.workers.dev/'
