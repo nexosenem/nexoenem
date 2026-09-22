@@ -559,6 +559,47 @@ async function runProfile(browser,name,viewport){
   const navigationFailures=navigationClickTest.filter(x=>!x.ok);
   if(navigationFailures.length)failures.push(name+': cliques reais de navegação/recursos falharam: '+JSON.stringify(navigationFailures));
 
+  markStage('admin-permission');
+  const adminAccessTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const shortcut=document.querySelector('#profileAdminShortcut');
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      profile:state.profile?{...state.profile}:null,
+      shortcutClass:shortcut?.className||''
+    };
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+
+    if(!state.profile)state.profile={role:'student'};
+    state.profile.role='student';
+    shortcut?.classList.add('hidden');
+    if(typeof syncReferenceAccess==='function')syncReferenceAccess();
+    const studentHidden=[...document.querySelectorAll('[data-nrx-admin-tool]')].every(el=>el.classList.contains('hidden'));
+
+    state.profile.role='admin';
+    shortcut?.classList.remove('hidden');
+    if(typeof syncReferenceAccess==='function')syncReferenceAccess();
+    const adminButtons=[...document.querySelectorAll('[data-nrx-admin-tool]')];
+    const adminVisible=adminButtons.length>0&&adminButtons.some(el=>!el.classList.contains('hidden'));
+    const button=adminButtons.find(el=>el.closest('.nrx-side-more-panel'))||adminButtons[0];
+    button?.click();
+    await new Promise(r=>setTimeout(r,90));
+    const opened=document.querySelector('#admin')?.classList.contains('active')===true;
+
+    if(prev.profile)state.profile=prev.profile;else state.profile=null;
+    if(shortcut)shortcut.className=prev.shortcutClass;
+    if(typeof syncReferenceAccess==='function')syncReferenceAccess();
+    const restoredHidden=[...document.querySelectorAll('[data-nrx-admin-tool]')].every(el=>el.classList.contains('hidden'));
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    return {studentHidden,adminVisible,opened,restoredHidden,count:adminButtons.length};
+  });
+  if(!adminAccessTest.studentHidden||!adminAccessTest.adminVisible||!adminAccessTest.opened||!adminAccessTest.restoredHidden)
+    failures.push(name+': permissão/acesso da Área do Admin regrediu: '+JSON.stringify(adminAccessTest));
+
   markStage('home-shortcuts');
   const homeShortcutTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -2081,7 +2122,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,moduleInteractionTest,contentWorkflowTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,adminAccessTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,moduleInteractionTest,contentWorkflowTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
