@@ -141,6 +141,7 @@ assert(referenceUi.includes("$('#openNexoFromMenu')?.click()"),'Professor Nexo p
 assert(referenceUi.includes('nrx-profile-tools')&&referenceUi.includes('nrx-side-more-panel'),'Recursos secundários preservados sem poluir a navegação');
 
 assert(!/id="desktopSidebarToggle"[^>]*onclick=/.test(index),'Toggle da sidebar não possui handler duplicado');
+assert(!app.includes("  $('.q-option',$('#questionCard')).forEach"),'Questões usam coleção ao iterar alternativas');
 assert(!referenceUi.includes("const targets=['#profileName','#profileAdminShortcut','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#studyWorkspace','#inicio','#app']"),'Observer da interface não observa a própria árvore inteira');
 assert(referenceUi.includes('function scheduleReferenceSync()'),'Sincronização da interface é agrupada por frame');
 assert(referenceUi.includes("e.stopPropagation();")&&referenceUi.includes("if(page==='profile')"),'Perfil móvel não é fechado pelo clique que o abriu');

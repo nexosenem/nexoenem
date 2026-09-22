@@ -3586,7 +3586,7 @@ function ensureExamClock(){
   state.examTimer=setInterval(renderExamClock,1000);
 }
 function renderExamRegisteredAnswer(option,duration){
-  $('.q-option',$('#questionCard')).forEach((b,i)=>{
+  $$('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected','correct','wrong','exam-registered');
     if(i===Number(option))b.classList.add('exam-registered');
   });
@@ -4589,7 +4589,7 @@ async function submitAnswer(option) {
     console.error('submit_answer',error);
     state.answered=false;
     if(state.current)startQuestionBehaviorMonitor(state.current,behaviorSnapshot);
-    $('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
+    $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
     if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
     if(handlePlanLimitError(error))return;
     logClientError('questions',error,'submit_answer');
@@ -4627,7 +4627,7 @@ async function submitAnswer(option) {
     Promise.all([loadDashboard(),loadNexoCore(),loadNexoMembership({silent:true})]).catch(()=>{});
     return;
   }
-  $('.q-option',$('#questionCard')).forEach((b,i)=>{
+  $$('.q-option',$('#questionCard')).forEach((b,i)=>{
     b.classList.remove('selected');
     if(i===correct)b.classList.add('correct');
     else if(i===option)b.classList.add('wrong');
