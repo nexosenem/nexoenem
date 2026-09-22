@@ -2520,7 +2520,7 @@ async function runProfile(browser,name,viewport){
     },{timeout:12000});
     await page.waitForTimeout(500);
     offlineShellTest=await page.evaluate(()=>({
-      ok:document.title==='NEXO ENEM'&&
+      ok:/^Nexo\b/.test(document.title)&&
         typeof window.nexoRunProductionDiagnostics==='function'&&
         Boolean(document.querySelector('.nrx-desktop'))&&
         Boolean(document.querySelector('.nrx-mobile'))&&
