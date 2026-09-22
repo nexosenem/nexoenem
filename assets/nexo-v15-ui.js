@@ -54,9 +54,9 @@
     $$('[data-nrx-side]').forEach(btn=>replaceIcon(btn.querySelector(':scope>span'),sideMap[btn.dataset.nrxSide]||'spark'));
     $$('.nrx-mob-action').forEach(btn=>replaceIcon(btn.querySelector(':scope>i'),mobileLabelMap[(btn.querySelector('b')?.textContent||'').trim()]||'spark'));
     $$('.nrx-shortcut').forEach(btn=>replaceIcon(btn.querySelector(':scope>i'),shortcutMap[(btn.querySelector('b')?.textContent||'').trim()]||'spark'));
-    $('[data-nrx-bottom]').forEach(btn=>replaceIcon(btn.querySelector(':scope>span'),bottomMap[btn.dataset.nrxBottom]||'more'));
-    $('[data-nrx-target]').forEach(btn=>replaceIcon(btn.querySelector(':scope>span'),secondaryMap[btn.dataset.nrxTarget]||'spark'));
-    $('[data-nrx-utility]').forEach(btn=>{
+    $$('[data-nrx-bottom]').forEach(btn=>replaceIcon(btn.querySelector(':scope>span'),bottomMap[btn.dataset.nrxBottom]||'more'));
+    $$('[data-nrx-target]').forEach(btn=>replaceIcon(btn.querySelector(':scope>span'),secondaryMap[btn.dataset.nrxTarget]||'spark'));
+    $$('[data-nrx-utility]').forEach(btn=>{
       const key=btn.dataset.nrxUtility;
       replaceIcon(btn.querySelector(':scope>span'),key==='search'?'search':key==='theme'?(document.body.classList.contains('light')?'sun':'moon'):'spark');
     });
@@ -263,12 +263,12 @@
       ['all','Todas'],['lesson','Aulas'],['summary','Resumos'],['tips','Macetes'],['review','Revisar']
     ].map(([key,label])=>'<button type="button" data-v15-material-tab="'+key+'" class="'+(key==='all'?'active':'')+'">'+label+'</button>').join('');
     filter.insertAdjacentElement('afterend',nav);
-    $('[data-v15-material-tab]',nav).forEach(btn=>btn.addEventListener('click',()=>{
+    $$('[data-v15-material-tab]',nav).forEach(btn=>btn.addEventListener('click',()=>{
       const key=btn.dataset.v15MaterialTab;
       const type=$('#materialTypeFilter'),status=$('#materialStatusFilter');
       if(type)type.value=['lesson','summary','tips'].includes(key)?key:'';
       if(status)status.value=key==='review'?'review':'';
-      $('.v15-material-tabs button',nav).forEach(x=>x.classList.toggle('active',x===btn));
+      $$('.v15-material-tabs button',nav).forEach(x=>x.classList.toggle('active',x===btn));
       const source=key==='review'?status:type;
       source?.dispatchEvent(new Event('change',{bubbles:true}));
     }));
@@ -291,7 +291,7 @@
   }
 
   function applyPerformanceHints(){
-    $('img').forEach(img=>{
+    $$('img').forEach(img=>{
       const priority=Boolean(img.closest('.nrx-hero,.nrx-mob-hero,.auth-visual,.boot-screen'));
       if(!priority&&!img.hasAttribute('loading'))img.loading='lazy';
       if(!img.hasAttribute('decoding'))img.decoding='async';
@@ -302,7 +302,7 @@
     const homeActive=$('#inicio')?.classList.contains('active');
     document.body.classList.toggle('v15-home-active',Boolean(homeActive));
     if(!homeActive)return;
-    $('button').forEach(btn=>{
+    $$('button').forEach(btn=>{
       if(btn.id==='v15TutorFab'||btn.closest('.topbar,.nrx-bottom-nav'))return;
       const label=(btn.getAttribute('aria-label')||'').toLocaleLowerCase('pt-BR');
       const fixed=getComputedStyle(btn).position==='fixed';
