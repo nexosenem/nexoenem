@@ -780,6 +780,174 @@ async function runProfile(browser,name,viewport){
     if(auth)auth.className=prev.auth;
     return {focus,bank,feedback,journeyChecks};
   });
+
+
+  markStage('module-interactions');
+  const moduleInteractionTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      current:state.current,session:state.session,user:state.user,
+      core:state.core,membership:state.membership,
+      questionMeta:state.questionMeta
+    };
+    const originalStart=window.startStudySession;
+    const originalShow=window.showCurrentQuestion;
+    const originalFrom=client.from;
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const active=()=>document.querySelector('.page.active')?.id||'';
+    const calls={sessions:[],singleQuestion:0,feedbackInsert:0};
+    const result={simulations:{},planner:{},bank:{},feedback:{}};
+
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      state.user={id:'smoke-user',email:'smoke@nexo.local'};
+      state.core={recommended_action:{area:'Matemática',subject:'Matemática',topic:'Porcentagem',reason:'Teste local'}};
+      state.membership={plan:'plus',is_plus:true,is_ultra:false,usage:{},limits:{}};
+
+      window.startStudySession=async config=>{
+        calls.sessions.push({...config});
+        state.session={...config,queue:[],questions:[],index:0,size:Number(config.size||0),examMode:Boolean(config.examMode)};
+        return state.session;
+      };
+
+      if(typeof openPage==='function')openPage('simulados');
+      await wait(30);
+      const simSpecs=[
+        ['mini',10],['mixed',30],['sprint',5],['adaptive',20]
+      ];
+      const simChecks=[];
+      for(const [mode,size] of simSpecs){
+        const before=calls.sessions.length;
+        const btn=document.querySelector('[data-sim-mode="'+mode+'"]');
+        btn?.click();
+        await wait(45);
+        const cfg=calls.sessions[before];
+        simChecks.push({
+          mode,button:Boolean(btn),route:active(),
+          called:Boolean(cfg),size:Number(cfg?.size||0),
+          examMode:Boolean(cfg?.examMode),sessionMode:String(cfg?.mode||'')
+        });
+        if(typeof openPage==='function')openPage('simulados');
+        await wait(15);
+      }
+      const areaBtn=document.querySelector('[data-sim-area="Matemática"]');
+      const beforeArea=calls.sessions.length;
+      areaBtn?.click();await wait(45);
+      const areaCfg=calls.sessions[beforeArea];
+      result.simulations={
+        checks:simChecks,
+        area:Boolean(areaBtn&&areaCfg&&areaCfg.area==='Matemática'&&Number(areaCfg.size)===20&&areaCfg.mode==='simulado'&&areaCfg.examMode===true)
+      };
+
+      if(typeof openPage==='function')openPage('semana');
+      await wait(30);
+      const plannerChecks=[];
+      for(const [id,expectedSize] of [['studyMode30',5],['studyModeIntensive',15]]){
+        const before=calls.sessions.length;
+        document.querySelector('#'+id)?.click();
+        await wait(50);
+        const cfg=calls.sessions[before];
+        plannerChecks.push({id,called:Boolean(cfg),size:Number(cfg?.size||0),route:active()});
+        if(typeof openPage==='function')openPage('semana');
+        await wait(15);
+      }
+      const beforeEve=calls.sessions.length;
+      document.querySelector('#studyModeEve')?.click();
+      await wait(140);
+      const eveCfg=calls.sessions[beforeEve];
+      result.planner={
+        checks:plannerChecks,
+        eve:Boolean(eveCfg&&Number(eveCfg.size)===5&&eveCfg.mode==='simulado'&&eveCfg.examMode===true)
+      };
+
+      const fakeQuestion={
+        id:-812345,area:'Matemática',subject:'Matemática',topic:'Porcentagem',
+        difficulty:2,source_year:2025,source_exam:'ENEM',source_question_number:77,
+        source_reference:'',base_text:'',prompt:'Pergunta mock',options:['A','B','C','D','E'],
+        media_type:'',media_path:'',source_pdf_url:'',source_page:null,media_crop:null
+      };
+      state.questionMeta=[
+        fakeQuestion,
+        {...fakeQuestion,id:-812346,area:'Linguagens',subject:'Português',topic:'Interpretação',source_question_number:78}
+      ];
+      window.showCurrentQuestion=async()=>{calls.singleQuestion++};
+      client.from=(table)=>{
+        if(table==='questions'){
+          const chain={
+            select(){return chain},eq(){return chain},
+            async single(){return {data:fakeQuestion,error:null}}
+          };
+          return chain;
+        }
+        if(table==='feedback'){
+          const chain={
+            insert(row){calls.feedbackInsert++;calls.feedbackRow=row;return Promise.resolve({data:null,error:null})},
+            select(){return chain},order(){return chain},
+            async limit(){return {data:[{rating:5,message:'Feedback smoke salvo',status:'novo',created_at:'2026-09-22T00:00:00Z'}],error:null}}
+          };
+          return chain;
+        }
+        return originalFrom.call(client,table);
+      };
+
+      if(typeof openPage==='function')openPage('banco');
+      if(typeof renderBank==='function')renderBank();
+      await wait(30);
+      const search=document.querySelector('#bankSearch'),area=document.querySelector('#bankArea');
+      if(search){search.value='Porcentagem';search.dispatchEvent(new Event('input',{bubbles:true}))}
+      await wait(20);
+      const searchRows=[...document.querySelectorAll('#bankList [data-bank]')];
+      if(area){area.value='Matemática';area.dispatchEvent(new Event('change',{bubbles:true}))}
+      await wait(20);
+      const areaRows=[...document.querySelectorAll('#bankList [data-bank]')];
+      areaRows[0]?.click();
+      await wait(45);
+      result.bank={
+        searchFiltered:searchRows.length===1&&Number(searchRows[0]?.dataset.bank)===fakeQuestion.id,
+        areaFiltered:areaRows.length===1&&Number(areaRows[0]?.dataset.bank)===fakeQuestion.id,
+        opened:Boolean(calls.singleQuestion===1&&active()==='questoes'&&Number(state.session?.queue?.[0]?.id)===fakeQuestion.id)
+      };
+
+      if(typeof openPage==='function')openPage('feedback');
+      await wait(25);
+      const rating=document.querySelector('#feedbackRating');
+      const message=document.querySelector('#feedbackText');
+      if(rating)rating.value='5';
+      if(message)message.value='Feedback automatizado seguro';
+      document.querySelector('#sendFeedback')?.click();
+      await wait(80);
+      result.feedback={
+        inserted:calls.feedbackInsert===1,
+        row:Boolean(calls.feedbackRow?.user_id==='smoke-user'&&calls.feedbackRow?.rating===5&&/automatizado seguro/i.test(calls.feedbackRow?.message||'')),
+        cleared:message?.value==='',
+        rendered:/Feedback smoke salvo/i.test(document.querySelector('#feedbackList')?.textContent||'')
+      };
+    }catch(err){
+      result.error=String(err?.stack||err?.message||err);
+    }finally{
+      window.startStudySession=originalStart;
+      window.showCurrentQuestion=originalShow;
+      client.from=originalFrom;
+      state.current=prev.current;state.session=prev.session;state.user=prev.user;
+      state.core=prev.core;state.membership=prev.membership;state.questionMeta=prev.questionMeta;
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return {...result,calls};
+  });
+  const moduleInteractionFailures=[];
+  if(moduleInteractionTest.error)moduleInteractionFailures.push('error='+moduleInteractionTest.error);
+  const simBad=(moduleInteractionTest.simulations?.checks||[]).filter(x=>!x.button||!x.called||x.route!=='questoes'||x.size<=0||!x.examMode||x.sessionMode!=='simulado');
+  if(simBad.length||!moduleInteractionTest.simulations?.area)moduleInteractionFailures.push('simulados='+JSON.stringify(moduleInteractionTest.simulations));
+  const plannerBad=(moduleInteractionTest.planner?.checks||[]).filter(x=>!x.called||x.route!=='questoes'||![5,15].includes(x.size));
+  if(plannerBad.length||!moduleInteractionTest.planner?.eve)moduleInteractionFailures.push('planner='+JSON.stringify(moduleInteractionTest.planner));
+  if(!moduleInteractionTest.bank?.searchFiltered||!moduleInteractionTest.bank?.areaFiltered||!moduleInteractionTest.bank?.opened)moduleInteractionFailures.push('banco='+JSON.stringify(moduleInteractionTest.bank));
+  if(!moduleInteractionTest.feedback?.inserted||!moduleInteractionTest.feedback?.row||!moduleInteractionTest.feedback?.cleared||!moduleInteractionTest.feedback?.rendered)moduleInteractionFailures.push('feedback='+JSON.stringify(moduleInteractionTest.feedback));
+  if(moduleInteractionFailures.length)failures.push(name+': interações reais de módulos falharam: '+moduleInteractionFailures.join(' | '));
   const utilFocus=utilityModuleTest.focus,utilBank=utilityModuleTest.bank,utilFeedback=utilityModuleTest.feedback;
   if(!utilFocus.opened||!utilFocus.durationVisible||!utilFocus.durationChanged||!utilFocus.closed)failures.push(name+': Modo Foco regrediu: '+JSON.stringify(utilFocus));
   if(!utilBank.searchVisible||!utilBank.areaVisible||!utilBank.list||!utilBank.saved)failures.push(name+': Banco de Questões regrediu: '+JSON.stringify(utilBank));
