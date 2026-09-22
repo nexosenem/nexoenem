@@ -427,6 +427,12 @@ function observe(){
   },true);
 }
 
+function applyReferenceCopy(){
+  const brandSmall=$('.brand small');
+  if(brandSmall)brandSmall.textContent='Seu esforço conecta o seu futuro.';
+  const search=$('#globalSearch');
+  if(search)search.placeholder='Pesquisar no NEXO...';
+}
 function init(){
   const home=$('#inicio');
   if(!home||$('.nrx-desktop',home))return;
@@ -438,6 +444,7 @@ function init(){
     addMobileChrome();
     buildReferenceSidebar();
     buildBottomNav();
+    applyReferenceCopy();
     document.body.classList.add('nexo-reference-ui');
     observe();
     syncAll();
