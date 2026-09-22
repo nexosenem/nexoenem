@@ -442,14 +442,32 @@ function syncSideNav(){
   $$('[data-nrx-side-plan]').forEach(el=>el.textContent=role);
   syncReferenceAccess();
 }
+function syncMobileThemeButton(){
+  const button=$('.nrx-mobile-theme');
+  if(!button)return;
+  const light=document.body.classList.contains('light');
+  button.textContent=light?'☀':'☾';
+  button.setAttribute('aria-label',light?'Ativar modo escuro':'Ativar modo claro');
+  button.title=light?'Ativar modo escuro':'Ativar modo claro';
+}
 function addMobileChrome(){
   const top=$('.topbar');
   if(!top)return;
   if(!$('.nrx-mobile-brand',top)){
     const brand=document.createElement('div');
     brand.className='nrx-mobile-brand';
-    brand.innerHTML='<i>N</i><span>NEXO</span>';
+    brand.setAttribute('aria-label','NEXO ENEM');
+    brand.innerHTML='<span class="nrx-mobile-wordmark"><b>NEXO</b><em>ENEM</em></span>';
     top.prepend(brand);
+  }
+  if(!$('.nrx-mobile-theme',top)){
+    const theme=document.createElement('button');
+    theme.type='button';theme.className='nrx-mobile-theme';
+    theme.addEventListener('click',()=>{
+      $('#themeToggle')?.click();
+      requestAnimationFrame(syncMobileThemeButton);
+    });
+    top.appendChild(theme);
   }
   if(!$('.nrx-mobile-crown',top)){
     const crown=document.createElement('button');
@@ -464,6 +482,7 @@ function addMobileChrome(){
     menu.addEventListener('click',()=>$('#moreMobile')?.click());
     top.appendChild(menu);
   }
+  syncMobileThemeButton();
 }
 
 let searchAnchor=null;
@@ -565,7 +584,7 @@ function syncContinueCard(){
   $$('[data-nrx-continue-title]').forEach(el=>el.textContent=title);
   $$('[data-nrx-continue-sub]').forEach(el=>el.textContent=sub);
 }
-function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncLegacyHomeTools();syncSideNav();syncBottom();placeSearch()}
+function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncLegacyHomeTools();syncSideNav();syncBottom();syncMobileThemeButton();placeSearch()}
 
 let referenceSyncQueued=false;
 function scheduleReferenceSync(){
@@ -589,6 +608,7 @@ function observe(){
   document.querySelectorAll('.page').forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));
   const app=$('#app');
   if(app)observer.observe(app,{attributes:true,attributeFilter:['class']});
+  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
   window.addEventListener('resize',()=>{placeSearch();scheduleReferenceSync()},{passive:true});
   document.addEventListener('click',e=>{
     if(!e.target.closest?.('.nrx-side-more-panel')&&!e.target.closest?.('.nrx-side-more-toggle'))closeReferenceMore();
