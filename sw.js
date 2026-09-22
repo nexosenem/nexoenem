@@ -1,4 +1,4 @@
-const NEXO_CACHE='nexo-v16-20260922-27';
+const NEXO_CACHE='nexo-v16-20260922-28';
 const SHELL=[
   './',
   './index.html',
@@ -8,7 +8,7 @@ const SHELL=[
   './assets/nexo-runtime-compat.js?v=20260921-2',
   './assets/nexo-v13-hardening.js?v=20260921-2',
   './assets/nexo-v13.css?v=20260921-3',
-  './assets/nexo-reference-v2.css?v=20260922-20',
+  './assets/nexo-reference-v2.css?v=20260922-21',
   './assets/nexo-v15-ui.css?v=20260922-6',
   './assets/nexo-v13-core.js?v=20260921-2',
   './assets/nexo-v13-planner.js?v=20260921-2',
@@ -21,9 +21,9 @@ const SHELL=[
   './assets/nexo-v13-tutor.js?v=20260921-2',
   './assets/nexo-v13-search-errors.js?v=20260921-3',
   './assets/nexo-v13-ui.js?v=20260921-3',
-  './assets/nexo-reference-v2.js?v=20260922-18',
+  './assets/nexo-reference-v2.js?v=20260922-19',
   './assets/nexo-v14-experience.js?v=20260922-5',
-  './assets/nexo-v15-ui.js?v=20260922-7',
+  './assets/nexo-v15-ui.js?v=20260922-8',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',
