@@ -140,6 +140,8 @@ const fetchQuestionsBlock=app.slice(app.indexOf('async function fetchQuestions(f
 assert(fetchQuestionsBlock.includes('media_path'),'Fila leve conhece caminho de mídia sem buscar o blob visual');
 assert(!fetchQuestionsBlock.includes('data_uri'),'Filas de questões não carregam Base64 antecipadamente');
 assert(app.includes('function hasAccessibleVisualDescription')&&app.includes('function questionVisualCanBeResolved'),'Integridade visual filtra questões irresolvíveis sem apagar descrições acessíveis');
+assert(app.includes('const nonVisualQuadro=')&&app.includes("subject==='artes'"),'Detector visual distingue figura/quadro ambíguos de recursos realmente exibidos');
+assert(app.includes("String([q?.base_text,q?.prompt].filter(Boolean).join(' '))"),'Descrição visual acessível pode estar no texto-base ou no enunciado importado');
 assert(!app.includes('media_type,source_pdf_url,source_page,media_crop'),'Todas as rotas de questão completa preservam media_path');
 assert(fetchQuestionsBlock.includes('if(filters.visualOnly)')&&fetchQuestionsBlock.includes('likelyNeedsQuestionVisual(x)'),'Modo visual considera mídia nativa e questões ENEM recuperáveis, não apenas media_type');
 assert(fetchQuestionsBlock.includes("client.rpc('get_study_question_candidates_v2'")&&fetchQuestionsBlock.includes('p_limit:candidateLimit')&&fetchQuestionsBlock.includes('candidateLimit=Math.min(160,Math.max(30,Math.ceil(requested*1.5)))'),'Treinos usam candidatos leves, aleatórios e proporcionais ao tamanho da sessão');
