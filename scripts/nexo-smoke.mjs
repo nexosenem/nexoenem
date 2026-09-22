@@ -148,6 +148,7 @@ assert(referenceCss.includes('body.nexo-reference-ui #v13SearchButton')&&referen
 assert(referenceCss.includes('body.nexo-reference-ui #v15QuestionModes')&&referenceCss.includes('body.nexo-reference-ui #v15EssayTabs'),'Nós compatíveis duplicados permanecem montados, mas não visíveis');
 assert(referenceCss.includes('#sessionSetup.v15-progressive-setup')&&uiV15.includes("setup.classList.add('v15-progressive-setup')"),'Configuração de Questões usa divulgação progressiva sem perder controles');
 assert(referenceUi.includes("const advanced=$('#v15AdvancedQuestionSetup',setup)")&&referenceUi.includes("advanced.open=true"),'Treino por assunto abre os controles avançados sob demanda')
+assert(referenceUi.includes('function addDesktopCrown()')&&referenceUi.includes("crown.addEventListener('click',openStore)"),'Coroa desktop reutiliza a mesma Loja NEXO do mobile');
 assert(uiV15.includes('v15MaterialTabs')&&uiV15.includes('data-v15-material-tab'),'Biblioteca V15 oferece navegação simples sem remover filtros avançados');
 assert(uiV15.includes('syncSidebarAvatar')&&uiV15.includes('data-nrx-target'),'Avatar real e recursos secundários seguem o sistema visual V15');
 assert(app.includes('scheduleNextVisualPrefetch')&&app.includes('prefetchVisualAsset')&&app.includes('requestIdleCallback'),'Questões visuais pré-carregam somente o próximo recurso em tempo ocioso');
