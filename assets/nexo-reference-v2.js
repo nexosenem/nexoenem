@@ -646,7 +646,10 @@ function buildReferenceInternalActions(){
       ['◎','Treino por assunto','Escolha um tema específico',()=>{
         setup.classList.remove('hidden');
         $('#studyWorkspace')?.classList.add('hidden');
-        setup.scrollIntoView({behavior:'smooth',block:'start'});
+        const advanced=$('#v15AdvancedQuestionSetup',setup);
+        if(advanced)advanced.open=true;
+        setup.classList.add('v15-advanced-open');
+        (advanced||setup).scrollIntoView({behavior:'smooth',block:'start'});
       }],
       ['✦','Questões adaptativas','Foco nas suas dificuldades',()=>{
         const trigger=$('#adaptiveButton')||$('#mobileAdaptive')||$('#startAdaptiveFocus');
