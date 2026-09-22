@@ -883,9 +883,9 @@ async function runProfile(browser,name,viewport){
     };
     const originalFrom=client.from,originalRpc=client.rpc;
     const originalStartStudySession=window.startStudySession;
-    const originalAskNia=window.askNia;
+    const originalNiaAnswer=window.niaAnswer;
     const originalLoadJourney=window.loadNexoJourney;
-    const calls={sessions:[],asks:[]};
+    const calls={sessions:[]};
     const result={};
     const fake={
       id:-880021,title:'Aula NEXO #999 · Visualizador Smoke',format:'image',
@@ -902,15 +902,16 @@ async function runProfile(browser,name,viewport){
       state.contentProgress=new Map();
 
       client.from=(table)=>{
-        if(table==='content_progress')return {async upsert(){return {data:null,error:null}}};
-        if(table==='content_favorites'){
-          return {
+        if(table==='content_progress'||table==='content_favorites'){
+          const chain={
+            select(){return chain},eq(){return chain},order(){return chain},limit(){return chain},in(){return chain},
+            async maybeSingle(){return {data:null,error:null}},
+            async upsert(){return {data:null,error:null}},
             async insert(){return {data:null,error:null}},
-            delete(){
-              const chain={eq(){return chain},then(resolve){return Promise.resolve({data:null,error:null}).then(resolve)}};
-              return chain;
-            }
+            delete(){return chain},
+            then(resolve,reject){return Promise.resolve({data:[],error:null}).then(resolve,reject)}
           };
+          return chain;
         }
         return originalFrom.call(client,table);
       };
@@ -920,9 +921,9 @@ async function runProfile(browser,name,viewport){
       };
       window.loadNexoJourney=async()=>null;
       window.startStudySession=async config=>{calls.sessions.push(config);return null};
-      window.askNia=prompt=>{calls.asks.push(String(prompt||''));return null};
+      window.niaAnswer=async()=>({key:'smoke',category:'smoke',mood:'feliz',text:'Resposta de teste local.'});
 
-      if(typeof openPage==='function')openPage('materiais');
+      pages.forEach(p=>p.classList.toggle('active',p.id==='materiais'));
       await wait(20);
       await openContentViewer('material',fake.id);
       await wait(30);
@@ -952,14 +953,26 @@ async function runProfile(browser,name,viewport){
       await openContentViewer('material',fake.id);
       await wait(20);
       document.querySelector('#viewerPractice')?.click();
-      await wait(35);
+      await wait(25);
+      const guided=document.querySelector('#guidedTrainingModal');
+      result.guidedOpened=visible(guided)&&Boolean(state.pendingGuidedTraining);
+      document.querySelector('#guidedTestNow')?.click();
+      await wait(40);
       result.practice=Boolean(calls.sessions.some(x=>Number(x.size)===5&&x.mode==='content'));
 
       await openContentViewer('material',fake.id);
       await wait(20);
+      const beforeMessages=document.querySelectorAll('#niaMessages .nia-msg.user').length;
       document.querySelector('#viewerAskNexo')?.click();
-      await wait(25);
-      result.ask=Boolean(calls.asks.some(x=>/Porcentagem/i.test(x)&&/exemplo no estilo ENEM/i.test(x)));
+      await wait(30);
+      const userMessages=[...document.querySelectorAll('#niaMessages .nia-msg.user')];
+      const latest=userMessages.at(-1)?.textContent||'';
+      result.ask=Boolean(
+        userMessages.length===beforeMessages+1 &&
+        /Estou estudando Porcentagem/i.test(latest) &&
+        /exemplo no estilo ENEM/i.test(latest) &&
+        !document.querySelector('#niaPanel')?.classList.contains('hidden')
+      );
 
       document.querySelector('#closeNia')?.click();
       if(typeof closeContentViewer==='function')closeContentViewer();
@@ -969,7 +982,7 @@ async function runProfile(browser,name,viewport){
     }finally{
       client.from=originalFrom;client.rpc=originalRpc;
       window.startStudySession=originalStartStudySession;
-      window.askNia=originalAskNia;
+      window.niaAnswer=originalNiaAnswer;
       window.loadNexoJourney=originalLoadJourney;
       state.user=prev.user;state.materials=prev.materials;state.materialSubject=prev.materialSubject;
       state.favorites=prev.favorites;state.contentProgress=prev.contentProgress;state.activeViewer=prev.activeViewer;
@@ -982,7 +995,7 @@ async function runProfile(browser,name,viewport){
     return {...result,calls};
   });
   const viewerActionFailures=[];
-  for(const key of ['opened','checkpointVisible','favoriteVisible','completeVisible','practiceVisible','askVisible','favorite','complete','checkpoint','practice','ask','closed']){
+  for(const key of ['opened','checkpointVisible','favoriteVisible','completeVisible','practiceVisible','askVisible','favorite','complete','checkpoint','guidedOpened','practice','ask','closed']){
     if(!viewerActionTest[key])viewerActionFailures.push(key);
   }
   if(viewerActionTest.error)viewerActionFailures.push('error='+viewerActionTest.error);
