@@ -365,7 +365,7 @@ function syncReferenceAccess(){
   const adminVisible=hasProfile
     ? state.profile.role==='admin'
     : Boolean(adminShortcut&&!adminShortcut.classList.contains('hidden'));
-  $('[data-nrx-admin-tool]').forEach(el=>el.classList.toggle('hidden',!adminVisible));
+  $$('[data-nrx-admin-tool]').forEach(el=>el.classList.toggle('hidden',!adminVisible));
 }
 function buildReferenceSidebar(){
   const sidebar=$('#sidebar');
