@@ -15,6 +15,7 @@ const sw=read('sw.js');
 const app=read('app.js');
 const compat=read('assets/nexo-runtime-compat.js');
 const referenceUi=read('assets/nexo-reference-v2.js');
+const referenceCss=read('assets/nexo-reference-v2.css');
 const experienceV14=read('assets/nexo-v14-experience.js');
 const uiV15=read('assets/nexo-v15-ui.js');
 const cssV15=read('assets/nexo-v15-ui.css');
@@ -139,6 +140,11 @@ assert((app.match(/\.filter\(questionVisualCanBeResolved\)/g)||[]).length>=4,'Re
 assert(app.includes('Este recurso visual é necessário para responder.')&&app.includes("b.disabled=true"),'Questão visual quebrada bloqueia resposta em vez de penalizar o aluno');
 assert(cssV15.includes('.visual-accessible-fallback')&&cssV15.includes('.q-option:disabled'),'UI V15 diferencia descrição acessível de visual quebrado');
 assert(uiV15.includes('v15AdvancedQuestionSetup')&&uiV15.includes('v15LibraryFilters'),'Filtros avançados V15 usam divulgação progressiva');
+assert(referenceCss.includes('body.nexo-reference-ui:not(.nrx-context-open) #nexoContextBar')&&referenceCss.includes('display:none!important'),'Guia contextual fica recolhido por padrão e abre sob demanda');
+assert(referenceCss.includes('body.nexo-reference-ui #v13SearchButton')&&referenceCss.includes('#v15TutorFab'),'Busca/Tutor flutuantes redundantes ficam fora da camada visual');
+assert(referenceCss.includes('body.nexo-reference-ui #v15QuestionModes')&&referenceCss.includes('body.nexo-reference-ui #v15EssayTabs'),'Nós compatíveis duplicados permanecem montados, mas não visíveis');
+assert(referenceCss.includes('#sessionSetup.v15-progressive-setup')&&uiV15.includes("setup.classList.add('v15-progressive-setup')"),'Configuração de Questões usa divulgação progressiva sem perder controles');
+assert(referenceUi.includes("const advanced=$('#v15AdvancedQuestionSetup',setup)")&&referenceUi.includes("advanced.open=true"),'Treino por assunto abre os controles avançados sob demanda')
 assert(uiV15.includes('v15MaterialTabs')&&uiV15.includes('data-v15-material-tab'),'Biblioteca V15 oferece navegação simples sem remover filtros avançados');
 assert(uiV15.includes('syncSidebarAvatar')&&uiV15.includes('data-nrx-target'),'Avatar real e recursos secundários seguem o sistema visual V15');
 assert(app.includes('scheduleNextVisualPrefetch')&&app.includes('prefetchVisualAsset')&&app.includes('requestIdleCallback'),'Questões visuais pré-carregam somente o próximo recurso em tempo ocioso');
