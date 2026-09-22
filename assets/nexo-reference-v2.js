@@ -432,6 +432,25 @@ function applyReferenceCopy(){
   if(brandSmall)brandSmall.textContent='Seu esforço conecta o seu futuro.';
   const search=$('#globalSearch');
   if(search)search.placeholder='Pesquisar no NEXO...';
+
+  const materials=$('#materiais .page-head');
+  if(materials){
+    const h=materials.querySelector('h2'),p=materials.querySelector('p');
+    if(h)h.textContent='Estudar';
+    if(p)p.textContent='Aulas, resumos e macetes organizados por matéria.';
+  }
+  const questions=$('#questoes .page-head');
+  if(questions){
+    const h=questions.querySelector('h2'),p=questions.querySelector('p');
+    if(h)h.textContent='Questões';
+    if(p&& !$('#studyWorkspace')?.classList.contains('hidden')){} else if(p)p.textContent='Treine com questões no nível do ENEM.';
+  }
+  const essay=$('#redacao .page-head');
+  if(essay){
+    const h=essay.querySelector('h2'),p=essay.querySelector('p');
+    if(h)h.textContent='Redação';
+    if(p)p.textContent='Escreva, corrija e evolua.';
+  }
 }
 function init(){
   const home=$('#inicio');
