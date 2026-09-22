@@ -1835,6 +1835,25 @@ body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-continue small,
 body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-bottom-nav button small{font-size:12px!important}
 
 
+/* Context guide must remain responsive at the exact desktop/mobile boundary. */
+@media(min-width:761px) and (max-width:900px){
+  body.nexo-reference-ui #nexoContextBar{
+    grid-template-columns:repeat(2,minmax(0,1fr))!important;
+    gap:7px!important;
+  }
+  body.nexo-reference-ui #nexoContextBar>div{
+    min-width:0!important;
+  }
+  body.nexo-reference-ui #nexoContextBar b{
+    white-space:normal!important;
+    overflow-wrap:anywhere!important;
+  }
+  body.nexo-reference-ui #nexoContextBar #contextNextAction{
+    grid-column:1/-1!important;
+    width:100%!important;
+  }
+}
+
 /* ========= Functional parity + readability restoration ========= */
 body.nexo-reference-ui .nrx-side-more-toggle>b{font-size:12px!important}
 body.nexo-reference-ui .nrx-side-more-head b{font-size:13px!important}
