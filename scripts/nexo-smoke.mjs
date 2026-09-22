@@ -125,6 +125,9 @@ assert(!app.includes('media_type,source_pdf_url,source_page,media_crop'),'Todas 
 assert(fetchQuestionsBlock.includes('if(filters.visualOnly)')&&fetchQuestionsBlock.includes('likelyNeedsQuestionVisual(x)'),'Modo visual considera mídia nativa e questões ENEM recuperáveis, não apenas media_type');
 assert(fetchQuestionsBlock.includes("client.rpc('get_study_question_candidates_v2'")&&fetchQuestionsBlock.includes('p_limit:candidateLimit')&&fetchQuestionsBlock.includes('candidateLimit=Math.min(160,Math.max(30,Math.ceil(requested*1.5)))'),'Treinos usam candidatos leves, aleatórios e proporcionais ao tamanho da sessão');
 assert(app.includes("const hasSeenMetadata=all.length>0&&all.every(x=>typeof x._seen==='boolean')"),'Sessões reaproveitam metadado de visto e evitam consulta extra de histórico');
+assert(app.includes('function canonicalLearningTopic')&&app.includes('function sameLearningTopic'),'Taxonomia canônica conecta conteúdo, Radar e domínio');
+assert(app.includes("state.topicMastery.get(String(canonicalTopic))"),'Domínio de questões reaproveita tópico canônico nos materiais');
+assert(app.includes("sameLearningTopic(subject,r.topic,item?.topic)"),'Prioridade do Radar reconhece aliases editoriais');
 assert(app.includes("explanationHeading:hasEditorialExplanation?'Por que essa é a resposta?':'Gabarito confirmado'"),'Resposta distingue resolução validada de gabarito em revisão');
 assert(app.includes("client.rpc('get_admin_explanation_queue'")&&app.includes("client.rpc('admin_set_question_explanation'"),'Fluxo editorial Admin usa RPCs protegidos');
 assert(index.includes('id="adminExplanationQueue"')&&index.includes('id="adminExplanationModal"'),'Fila e editor de resolução editorial publicados no Admin');
