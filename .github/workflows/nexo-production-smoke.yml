@@ -57,6 +57,32 @@ jobs:
       - name: Browser runtime smoke
         run: node scripts/nexo-browser-smoke.mjs
 
+      - name: Build Cloudflare asset bundle
+        if: github.event_name != 'pull_request'
+        run: |
+          rm -rf dist
+          mkdir -p dist
+          cp index.html styles.css app.js sw.js manifest.webmanifest dist/
+          cp folha-redacao-enem.html privacidade.html termos.html dist/
+          cp -R assets dist/assets
+
+      - name: Require Cloudflare deploy credentials
+        if: github.event_name != 'pull_request'
+        env:
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          test -n "$CF_ACCOUNT" || (echo "::error::Missing CLOUDFLARE_ACCOUNT_ID secret" && exit 1)
+          test -n "$CF_TOKEN" || (echo "::error::Missing CLOUDFLARE_API_TOKEN secret" && exit 1)
+
+      - name: Deploy current main to Cloudflare Worker
+        if: github.event_name != 'pull_request'
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy
+
       - name: Public Cloudflare runtime smoke
         if: github.event_name != 'pull_request'
         run: node scripts/nexo-live-smoke.mjs
