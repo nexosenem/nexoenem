@@ -230,11 +230,11 @@ async function runProfile(browser,name,viewport){
     const search=document.querySelector('.search');
     const heroImg=target?.querySelector('img');
     const mobileBrand=document.querySelector('.nrx-mobile-brand');
-    const logoN=document.querySelector('.nrx-logo-n');
-    const logoExo=document.querySelector('.nrx-logo-exo');
+    const logoWord=document.querySelector('.nrx-logo-word');
+    const logoLetter=document.querySelector('.nrx-logo-letter');
     const mobileTheme=document.querySelector('.nrx-mobile-theme');
     const brandText=(mobileBrand?.textContent||'').replace(/\s+/g,' ').trim();
-    const logoNBackground=logoN?getComputedStyle(logoN).backgroundImage:'';
+    const logoLetterVisible=Boolean(logoLetter&&getComputedStyle(logoLetter).display!=='none'&&logoLetter.getBoundingClientRect().width>0);
     const mobileThemeVisible=Boolean(mobileTheme&&getComputedStyle(mobileTheme).display!=='none'&&mobileTheme.getBoundingClientRect().width>0);
     let mobileThemeWorks=true;
     if(mobile&&mobileThemeVisible){
@@ -264,8 +264,8 @@ async function runProfile(browser,name,viewport){
       heroFirst:mobile?document.querySelector('#inicio')?.firstElementChild===mobileHome:true,
       searchInMobileSlot:Boolean(search?.closest('.nrx-mobile-search-slot')),
       mobileBrandText:brandText,
-      mobileLogoNUsesMascot:logoNBackground.includes('bust-confiante.avif'),
-      mobileLogoExo:(logoExo?.textContent||'').trim(),
+      mobileWordmarkVisible:Boolean(logoWord&&getComputedStyle(logoWord).display!=='none'&&logoWord.getBoundingClientRect().width>0),
+      mobileLogoLetterVisible:logoLetterVisible,
       mobileThemeVisible,
       mobileThemeWorks,
       heroLoaded:Boolean(heroImg?.complete&&heroImg?.naturalWidth>0),
@@ -289,7 +289,7 @@ async function runProfile(browser,name,viewport){
   if(name!=='mobile'&&!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto fora da entrada mobile');
   if(name==='mobile'&&!referenceUiTest.heroFirst)failures.push(name+': hero Disciplina hoje não é o primeiro conteúdo da Home');
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
-  if(name==='mobile'&&(!referenceUiTest.mobileLogoNUsesMascot||referenceUiTest.mobileLogoExo!=='exo'||/enem/i.test(referenceUiTest.mobileBrandText)))failures.push(name+': logo N do mascote + exo não foi aplicada corretamente: '+JSON.stringify({text:referenceUiTest.mobileBrandText,n:referenceUiTest.mobileLogoNUsesMascot,exo:referenceUiTest.mobileLogoExo}));
+  if(name==='mobile'&&(!referenceUiTest.mobileWordmarkVisible||!referenceUiTest.mobileLogoLetterVisible||referenceUiTest.mobileBrandText!=='Nexo'))failures.push(name+': wordmark Nexo mobile não está natural/legível: '+JSON.stringify({text:referenceUiTest.mobileBrandText,wordmark:referenceUiTest.mobileWordmarkVisible,n:referenceUiTest.mobileLogoLetterVisible}));
   if(name==='mobile'&&!referenceUiTest.mobileThemeVisible)failures.push(name+': controle claro/escuro não ficou visível no cabeçalho mobile');
   if(name==='mobile'&&!referenceUiTest.mobileThemeWorks)failures.push(name+': controle claro/escuro mobile não alternou e restaurou o tema');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
@@ -367,9 +367,9 @@ async function runProfile(browser,name,viewport){
     const diagnosticCard=document.querySelector('[data-v14-diagnostic-card]');
     const full=document.querySelector('#simulados [data-sim-mode="full"] b')?.textContent?.trim()||'';
     const desktopBrand=document.querySelector('#sidebar .brand');
-    const chest=desktopBrand?.querySelector('.v14-chest-n');
-    const chestBg=chest?getComputedStyle(chest).backgroundImage:'';
+    const hiddenMark=desktopBrand?.querySelector('.v14-wordmark-hidden');
     const brandName=desktopBrand?.querySelector('b')?.textContent?.trim()||'';
+    const brandVisible=Boolean(desktopBrand?.querySelector('b')&&getComputedStyle(desktopBrand.querySelector('b')).display!=='none'&&desktopBrand.querySelector('b').getBoundingClientRect().width>0);
     const brief=document.querySelector('#v13Brief');
     const briefMoved=!brief||brief.parentElement?.id==='semana';
     const hero=document.querySelector(innerWidth<=760?'.nrx-mob-hero':'.nrx-hero');
@@ -391,7 +391,7 @@ async function runProfile(browser,name,viewport){
     return {
       loop:Boolean(loop),loopActions,diagnostic:Boolean(diagnostic),
       diagnosticCard:Boolean(diagnosticCard),diagnosticWorks,diagnosticCall,full,
-      chestLogo:Boolean(chest&&chestBg.includes('bust-confiante.avif')),
+      naturalBrand:Boolean(hiddenMark&&brandVisible),
       brandName,briefMoved,heroRadius,sidebarWidth
     };
   });
@@ -403,8 +403,8 @@ async function runProfile(browser,name,viewport){
     failures.push(name+': hero perdeu o acabamento arredondado premium: '+JSON.stringify(v14ExperienceTest));
   if(name==='desktop'&&(v14ExperienceTest.sidebarWidth<205||v14ExperienceTest.sidebarWidth>235))
     failures.push(name+': sidebar se afastou da proporção da referência visual: '+JSON.stringify(v14ExperienceTest));
-  if(name==='desktop'&&(!v14ExperienceTest.chestLogo||v14ExperienceTest.brandName!=='exo'))
-    failures.push(name+': marca N do mascote + exo não foi aplicada na sidebar: '+JSON.stringify(v14ExperienceTest));
+  if(name==='desktop'&&(!v14ExperienceTest.naturalBrand||v14ExperienceTest.brandName!=='Nexo'))
+    failures.push(name+': wordmark Nexo desktop não está natural/legível: '+JSON.stringify(v14ExperienceTest));
   if(!v14ExperienceTest.briefMoved)
     failures.push(name+': plano adaptativo ainda polui a Home em vez de ficar no Planner: '+JSON.stringify(v14ExperienceTest));
 
