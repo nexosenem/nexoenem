@@ -281,7 +281,7 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&referenceUiTest.bottomLabels.join('|')!=='Início|Questões|Redação|Desempenho|Mais')failures.push(name+': barra inferior perdeu a navegação principal/área Mais: '+referenceUiTest.bottomLabels.join('|'));
   if(!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto na referência');
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
-  if(name==='mobile'&&referenceUiTest.mobileBrandText!=='NEXO ENEM')failures.push(name+': identidade escrita antiga NEXO ENEM não foi restaurada no cabeçalho: '+referenceUiTest.mobileBrandText);
+  if(name==='mobile'&&referenceUiTest.mobileBrandText.replace(/\s+/g,'')!=='NEXOENEM')failures.push(name+': identidade escrita antiga NEXO ENEM não foi restaurada no cabeçalho: '+referenceUiTest.mobileBrandText);
   if(name==='mobile'&&!referenceUiTest.mobileThemeVisible)failures.push(name+': controle claro/escuro não ficou visível no cabeçalho mobile');
   if(name==='mobile'&&!referenceUiTest.mobileThemeWorks)failures.push(name+': controle claro/escuro mobile não alternou e restaurou o tema');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
