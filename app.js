@@ -2682,7 +2682,7 @@ async function resumePersistedStudySession(){
   const saved=readPersistedStudySession();
   if(!saved)return toast('Não há sessão pendente.');
   try{
-    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop';
     const {data,error}=await client.from('questions').select(fields).in('id',saved.ids).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
@@ -3872,8 +3872,9 @@ function startQuestionBehaviorMonitor(q,seed=null){
 
 async function renderQuestion(q) {
   const card=$('#questionCard');
-  if(q.media_type || q.media_path) await ensureMediaPath(q);
-  const visual = Boolean(q.media_path || (q.media_type && q.source_pdf_url && q.source_page && q.media_crop));
+  // media_type is the lightweight source of truth. The image itself is lazy-loaded
+  // from question_media only when the current question is rendered.
+  const visual = Boolean(q.media_type || q.media_path);
   card.innerHTML=`
     <div class="q-top">
       <div class="q-tags">
@@ -4051,8 +4052,16 @@ async function getPdf(url) {
 
 async function renderVisual(q) {
   try{
-    if(await loadLocalVisual(q)) return true;
+    // Primary path: dedicated visual store. This prevents Base64 assets from
+    // bloating question/session payloads and keeps mobile memory stable.
     if(await loadStoredVisual(q)) return true;
+    // Compatibility path for legacy/local questions that still carry media_path.
+    if(await loadLocalVisual(q)) return true;
+    if(q.media_type && !q.media_path){
+      await ensureMediaPath(q);
+      if(await loadLocalVisual(q)) return true;
+    }
+    // Last resort: reconstruct the crop from the original ENEM PDF.
     if(!q.source_pdf_url || !q.source_page || !q.media_crop) return false;
     const pdf=await getPdf(q.source_pdf_url);
     const page=await pdf.getPage(Number(q.source_page));
@@ -4960,7 +4969,7 @@ async function startReviewQuestionIds(ids,finished={}){
   const clean=[...new Set((ids||[]).map(Number).filter(Boolean))];
   if(!clean.length)return toast('Nenhum erro desta sessão para revisar.','info');
   try{
-    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop';
     const {data,error}=await client.from('questions').select(fields).in('id',clean).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
@@ -5231,7 +5240,7 @@ async function startErrorReview(){
     // Revisar erros também não consome cota até uma nova resposta ser confirmada.
     const ids=(state.errorReviewIds?.length?state.errorReviewIds:await loadErrorNotebook()).slice(0,5);
     if(!ids.length)return toast('Ainda não há erros recentes para revisar.');
-    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+    const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop';
     const {data,error}=await client.from('questions').select(fields).in('id',ids).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
@@ -5397,7 +5406,7 @@ async function loadDueReviewItems(){
   if(!state.user?.id)return [];
   try{
     const {data,error}=await client.from('nexo_review_items')
-      .select('question_id,topic,interval_days,streak,lapses,next_review_at,last_result,status,question:questions(id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop)')
+      .select('question_id,topic,interval_days,streak,lapses,next_review_at,last_result,status,question:questions(id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop)')
       .eq('status','scheduled')
       .lte('next_review_at',new Date().toISOString())
       .order('next_review_at',{ascending:true})
@@ -5451,7 +5460,7 @@ async function startSimilarQuestionById(questionId){
     let source=state.current&&Number(state.current.id)===Number(questionId)?state.current:null;
     if(!source){
       const {data,error}=await client.from('questions')
-        .select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop')
+        .select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop')
         .eq('id',Number(questionId)).single();
       if(error)throw error;
       source=data;
@@ -7210,7 +7219,7 @@ $('#bankSearch').addEventListener('input',renderBank);
 $('#bankArea').addEventListener('change',renderBank);
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){openPage('banco');$('#bankSearch').value=e.target.value;renderBank();setMobileSearchOpen(false,{focus:false})}});
 async function openSingleQuestion(id){
-  const {data,error}=await client.from('questions').select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop').eq('id',id).single();
+  const {data,error}=await client.from('questions').select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,source_pdf_url,source_page,media_crop').eq('id',id).single();
   if(error)return toast('Não foi possível abrir a questão.','error');
   openPage('questoes');state.session={queue:[data],index:0,size:1,area:data.area,subject:data.subject};
   $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
