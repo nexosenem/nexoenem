@@ -233,9 +233,19 @@ async function runProfile(browser,name,viewport){
     const logoWord=document.querySelector('.nrx-logo-word');
     const logoLetter=document.querySelector('.nrx-logo-letter');
     const mobileTheme=document.querySelector('.nrx-mobile-theme');
+    const mobileCrown=document.querySelector('.nrx-mobile-crown');
+    const mobileNotice=[...document.querySelectorAll('.topbar>.top-actions .icon-btn')].find(el=>getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().width>0);
     const brandText=(mobileBrand?.textContent||'').replace(/\s+/g,' ').trim();
     const logoLetterVisible=Boolean(logoLetter&&getComputedStyle(logoLetter).display!=='none'&&logoLetter.getBoundingClientRect().width>0);
     const mobileThemeVisible=Boolean(mobileTheme&&getComputedStyle(mobileTheme).display!=='none'&&mobileTheme.getBoundingClientRect().width>0);
+    const mobileCrownVisible=Boolean(mobileCrown&&getComputedStyle(mobileCrown).display!=='none'&&mobileCrown.getBoundingClientRect().width>0);
+    const headerControlOrder=(()=>{
+      if(!mobileThemeVisible||!mobileCrownVisible)return false;
+      const t=mobileTheme.getBoundingClientRect(),c=mobileCrown.getBoundingClientRect(),n=mobileNotice?.getBoundingClientRect();
+      const sameRow=Math.abs(t.top-c.top)<=4&&(!n||Math.abs(c.top-n.top)<=4);
+      const horizontal=t.left<c.left&&(!n||c.left<n.left);
+      return sameRow&&horizontal;
+    })();
     let mobileThemeWorks=true;
     if(mobile&&mobileThemeVisible){
       const wasLight=document.body.classList.contains('light');
@@ -267,6 +277,8 @@ async function runProfile(browser,name,viewport){
       mobileWordmarkVisible:Boolean(logoWord&&getComputedStyle(logoWord).display!=='none'&&logoWord.getBoundingClientRect().width>0),
       mobileLogoLetterVisible:logoLetterVisible,
       mobileThemeVisible,
+      mobileCrownVisible,
+      headerControlOrder,
       mobileThemeWorks,
       heroLoaded:Boolean(heroImg?.complete&&heroImg?.naturalWidth>0),
       originalHomeHidden:[...document.querySelectorAll('#inicio>.mobile-home,#inicio>.dashboard-grid')].every(el=>getComputedStyle(el).display==='none')
@@ -291,6 +303,8 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
   if(name==='mobile'&&(!referenceUiTest.mobileWordmarkVisible||!referenceUiTest.mobileLogoLetterVisible||referenceUiTest.mobileBrandText!=='Nexo'))failures.push(name+': wordmark Nexo mobile não está natural/legível: '+JSON.stringify({text:referenceUiTest.mobileBrandText,wordmark:referenceUiTest.mobileWordmarkVisible,n:referenceUiTest.mobileLogoLetterVisible}));
   if(name==='mobile'&&!referenceUiTest.mobileThemeVisible)failures.push(name+': controle claro/escuro não ficou visível no cabeçalho mobile');
+  if(name==='mobile'&&!referenceUiTest.mobileCrownVisible)failures.push(name+': botão da coroa não ficou visível no cabeçalho mobile');
+  if(name==='mobile'&&!referenceUiTest.headerControlOrder)failures.push(name+': ordem do cabeçalho mobile não é tema -> coroa -> notificações');
   if(name==='mobile'&&!referenceUiTest.mobileThemeWorks)failures.push(name+': controle claro/escuro mobile não alternou e restaurou o tema');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
 
