@@ -109,6 +109,9 @@ assert(app.includes("const visual = Boolean(q.media_type || q.media_path)"),'Que
 assert(app.indexOf('if(await loadStoredVisual(q)) return true;')<app.indexOf('await ensureMediaPath(q);'),'Mídia dedicada é carregada antes do fallback Base64 legado');
 assert(!app.includes('options,media_type,media_path,source_pdf_url,source_page,media_crop'),'Filas de questões não carregam Base64 antecipadamente');
 assert(uiV15.includes('v15AdvancedQuestionSetup')&&uiV15.includes('v15LibraryFilters'),'Filtros avançados V15 usam divulgação progressiva');
+assert(uiV15.includes('v15MaterialTabs')&&uiV15.includes('data-v15-material-tab'),'Biblioteca V15 oferece navegação simples sem remover filtros avançados');
+assert(uiV15.includes('syncSidebarAvatar')&&uiV15.includes('data-nrx-target'),'Avatar real e recursos secundários seguem o sistema visual V15');
+assert(app.includes('scheduleNextVisualPrefetch')&&app.includes('prefetchVisualAsset')&&app.includes('requestIdleCallback'),'Questões visuais pré-carregam somente o próximo recurso em tempo ocioso');
 
 
 const badReferenceCollections=[...referenceUi.matchAll(/(?<!\$)\$\([^()\n]*\)\.(forEach|find|filter|map)\s*\(/g)].map(m=>m[0]);
