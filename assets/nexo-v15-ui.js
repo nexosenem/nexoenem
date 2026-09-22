@@ -189,6 +189,8 @@
     guide?.insertAdjacentElement('afterend',grid);
 
     $('[data-v15-qmode="topic"]',grid)?.addEventListener('click',()=>{
+      const details=$('#v15AdvancedQuestionSetup');
+      if(details)details.open=true;
       $('#studyAreaGrid')?.scrollIntoView({behavior:'smooth',block:'center'});
       setup.classList.add('v15-advanced-open');
     });
@@ -202,10 +204,40 @@
       document.querySelector('[data-page="desempenho"]')?.click();
     });
 
-    const advanced=document.createElement('div');
-    advanced.className='v15-advanced-label';
-    advanced.innerHTML='<span>Personalizar treino</span><small>área · matéria · dificuldade · quantidade · visual</small>';
-    $('#studyAreaGrid',setup)?.insertAdjacentElement('beforebegin',advanced);
+    const area=$('#studyAreaGrid',setup);
+    const fields=$('.setup-fields',setup);
+    const visualToggle=$('.toggle-row',setup);
+    if(area&&!$('#v15AdvancedQuestionSetup',setup)){
+      const advanced=document.createElement('details');
+      advanced.id='v15AdvancedQuestionSetup';
+      advanced.className='v15-advanced-setup';
+      advanced.innerHTML='<summary><span><b>Personalizar treino</b><small>área · matéria · dificuldade · quantidade · visual</small></span><i>+</i></summary><div class="v15-advanced-body"></div>';
+      area.insertAdjacentElement('beforebegin',advanced);
+      const body=$('.v15-advanced-body',advanced);
+      body.appendChild(area);
+      if(fields)body.appendChild(fields);
+      if(visualToggle)body.appendChild(visualToggle);
+      advanced.addEventListener('toggle',()=>{
+        const signal=advanced.querySelector('summary>i');
+        if(signal)signal.textContent=advanced.open?'−':'+';
+      });
+    }
+  }
+
+  function collapseMaterialFilters(){
+    const page=$('#materiais');
+    const deck=$('.library-filter-deck',page);
+    if(!page||!deck||$('#v15LibraryFilters',page))return;
+    const details=document.createElement('details');
+    details.id='v15LibraryFilters';
+    details.className='v15-library-filters';
+    details.innerHTML='<summary><span><b>Filtros avançados</b><small>status · tipo · prioridade · estudo rápido</small></span><i>+</i></summary><div class="v15-library-filter-body"></div>';
+    deck.insertAdjacentElement('beforebegin',details);
+    $('.v15-library-filter-body',details).appendChild(deck);
+    details.addEventListener('toggle',()=>{
+      const signal=details.querySelector('summary>i');
+      if(signal)signal.textContent=details.open?'−':'+';
+    });
   }
 
   function addEssayTabs(){
@@ -244,6 +276,7 @@
     enhanceSearch();
     enhanceResume();
     addQuestionModes();
+    collapseMaterialFilters();
     addEssayTabs();
     addContextTutorFab();
     markLayout();
