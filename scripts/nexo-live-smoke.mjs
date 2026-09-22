@@ -85,7 +85,7 @@ async function browserProfile(browser,base,name,viewport){
   });
 
   async function load(label){
-    await page.goto(base+'?live_smoke='+encodeURIComponent(name+'-'+label+'-'+Date.now()),{waitUntil:'domcontentloaded',timeout:35000});
+    await page.goto(base+'?live_smoke='+encodeURIComponent(name+'-'+label+'-'+Date.now()),{waitUntil:'commit',timeout:35000});
     await page.waitForFunction(()=>{
       const boot=document.querySelector('#boot');
       const auth=document.querySelector('#authScreen');
