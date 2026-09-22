@@ -201,6 +201,7 @@
         btn.type='button';
         btn.className='sim-card sim-strategy-card v14-diagnostic-card';
         btn.dataset.v14DiagnosticCard='1';
+        btn.dataset.simMode='diagnostic';
         btn.innerHTML='<span>◎</span><b>Diagnóstico NEXO</b><small>20 questões para recalibrar seu mapa</small><i>inteligente</i>';
         btn.addEventListener('click',startAdaptiveDiagnostic);
         grid.insertBefore(btn,grid.firstChild?.nextSibling||null);
