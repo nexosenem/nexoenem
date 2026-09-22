@@ -4162,12 +4162,12 @@ async function getPdf(url) {
 
 async function renderVisual(q) {
   try{
+    // Recovered API files are already known to be absent from NEXO's own
+    // metadata, so render them first and avoid an unnecessary database round-trip.
+    if(q.external_media_files?.length && await loadExternalVisual(q)) return true;
     // Primary path: dedicated visual store. This prevents Base64 assets from
     // bloating question/session payloads and keeps mobile memory stable.
     if(await loadStoredVisual(q)) return true;
-    // Public ENEM API is an on-demand recovery path only for questions whose
-    // visual metadata is absent from NEXO's own catalog.
-    if(await loadExternalVisual(q)) return true;
     // Compatibility path for legacy/local questions that still carry media_path.
     if(await loadLocalVisual(q)) return true;
     if(q.media_type && !q.media_path){
