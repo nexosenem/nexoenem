@@ -8,13 +8,8 @@ const expectedApp=index.match(/app\.js\?v=([^"]+)/)?.[1]||'';
 const expectedHardening=index.match(/nexo-v13-hardening\.js\?v=([^"]+)/)?.[1]||'';
 const expectedReferenceJs=index.match(/nexo-reference-v2\.js\?v=([^"]+)/)?.[1]||'';
 const expectedReferenceCss=index.match(/nexo-reference-v2\.css\?v=([^"]+)/)?.[1]||'';
-const envUrls=(process.env.NEXO_PUBLIC_URL||'').split(',').map(x=>x.trim()).filter(Boolean);
-const candidates=[...new Set([
-  'https://rarshein222.workers.dev/',
-  ...envUrls,
-  'https://nexosenem.miguelcomprarshein222.workers.dev/',
-  'https://nexo-enem.miguelcomprarshein222.workers.dev/'
-])];
+const PUBLIC_PRODUCTION_URL='https://rarshein222.workers.dev/';
+const candidates=[PUBLIC_PRODUCTION_URL];
 const sleep=ms=>new Promise(r=>setTimeout(r,ms));
 const SUPABASE_HEALTH_URL='https://xeesttjsvscuqkeytmdz.supabase.co/auth/v1/health';
 
