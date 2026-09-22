@@ -202,28 +202,43 @@ async function runProfile(browser,name,viewport){
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
 
   markStage('reference-access');
-  const referenceAccessTest=await page.evaluate(()=>{
+  const referenceAccessTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.filter(p=>p.classList.contains('active')).map(p=>p.id)
+    };
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    pages.forEach(p=>p.classList.toggle('active',p.id==='inicio'));
+    await new Promise(r=>requestAnimationFrame(r));
+
     const expected=['focos','radar','banco','temas','feedback','ranking','planos'];
     const side=[...document.querySelectorAll('.nrx-side-more-panel [data-nrx-target]')].map(x=>x.dataset.nrxTarget);
     const profile=[...document.querySelectorAll('.nrx-profile-tools [data-nrx-target]')].map(x=>x.dataset.nrxTarget);
     const missingSide=expected.filter(x=>!side.includes(x));
     const missingProfile=expected.filter(x=>!profile.includes(x));
-    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&getComputedStyle(el).visibility!=='hidden'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
     const candidates=[...document.querySelectorAll('.nrx-shortcut,.nrx-stat-card,.nrx-preview,.nrx-mob-action,.nrx-mob-progress,.nrx-mob-continue')].filter(visible);
     const overflowing=candidates.filter(el=>el.scrollWidth>el.clientWidth+4).map(el=>el.className);
     const mobile=innerWidth<=760;
-    const actionButtons=mobile?[...document.querySelectorAll('.nrx-mob-action')].filter(visible):[];
+    const actionButtons=mobile?[...document.querySelectorAll('.nrx-mobile .nrx-mob-action')].filter(visible):[];
     const minTouch=actionButtons.length?Math.min(...actionButtons.map(el=>el.getBoundingClientRect().height)):0;
     const actionCount=actionButtons.length;
     const hero=document.querySelector(mobile?'.nrx-mob-hero h1':'.nrx-hero h1');
     const heroFont=hero?parseFloat(getComputedStyle(hero).fontSize):0;
-    return {
+    const result={
       missingSide,missingProfile,overflowing,minTouch,heroFont,
       moreToggle:Boolean(document.querySelector('.nrx-side-more-toggle')),
       profileTools:Boolean(document.querySelector('.nrx-profile-tools')),
       notificationWired:Boolean(document.querySelector('#notificationBtn')),
       actionCount
     };
+    pages.forEach(p=>p.classList.toggle('active',prev.active.includes(p.id)));
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    return result;
   });
   if(referenceAccessTest.missingSide.length)failures.push(name+': recursos antigos ausentes do menu Mais: '+referenceAccessTest.missingSide.join(', '));
   if(referenceAccessTest.missingProfile.length)failures.push(name+': recursos antigos ausentes do Perfil: '+referenceAccessTest.missingProfile.join(', '));
@@ -509,7 +524,7 @@ async function runProfile(browser,name,viewport){
     for(const [label,pageId,view] of specs){
       if(typeof openPage==='function')openPage('inicio');
       await wait(45);
-      const btn=[...document.querySelectorAll(selector)].find(el=>(el.innerText||'').replace(/\s+/g,' ').trim()===label);
+      const btn=[...document.querySelectorAll(selector)].find(el=>(el.querySelector('b')?.textContent||'').replace(/\s+/g,' ').trim()===label);
       if(!btn){checks.push({label,ok:false,reason:'missing'});continue}
       const wasVisible=visible(btn);
       btn.click();
