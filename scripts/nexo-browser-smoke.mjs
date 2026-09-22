@@ -234,17 +234,22 @@ async function runProfile(browser,name,viewport){
   if(routeBad.length)failures.push(name+': matriz visual por página/tema/fonte encontrou problemas: '+JSON.stringify(routeBad.slice(0,12)));
 
   const utilityTest=await page.evaluate(()=>{
+    const app=document.querySelector('#app');
+    const auth=document.querySelector('#authScreen');
     const profile=document.querySelector('#profileMenu');
+    const prev={app:app?.className||'',auth:auth?.className||'',profile:profile?.className||''};
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    if(profile)profile.classList.remove('hidden');
     const search=document.querySelector('[data-nrx-utility="search"]');
     const theme=document.querySelector('[data-nrx-utility="theme"]');
     const notification=document.querySelector('#notificationBtn');
     const notificationVisible=Boolean(notification&&getComputedStyle(notification).display!=='none'&&notification.getBoundingClientRect().width>0);
-    return {
-      search:Boolean(search),theme:Boolean(theme),
-      notification:Boolean(notification),
-      notificationVisible,
-      profileScrollable:profile?['auto','scroll'].includes(getComputedStyle(profile).overflowY)||profile.scrollHeight<=profile.clientHeight:true
-    };
+    const profileScrollable=profile?['auto','scroll'].includes(getComputedStyle(profile).overflowY)||profile.scrollHeight<=profile.clientHeight:true;
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    if(profile)profile.className=prev.profile;
+    return {search:Boolean(search),theme:Boolean(theme),notification:Boolean(notification),notificationVisible,profileScrollable};
   });
   if(!utilityTest.search||!utilityTest.theme)failures.push(name+': busca ou tema ficaram sem acesso na interface nova');
   if(name==='mobile'&&!utilityTest.notificationVisible)failures.push(name+': notificações continuam escondidas no topo móvel');
