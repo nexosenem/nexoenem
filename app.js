@@ -2627,6 +2627,106 @@ $('#saveAdminExplanation')?.addEventListener('click',async()=>{
   }
 });
 
+function closeAdminVisualRepairModal(){
+  $('#adminVisualRepairModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+  state.adminVisualRepairTarget=null;
+  if($('#adminVisualRepairFile'))$('#adminVisualRepairFile').value='';
+  if($('#adminVisualRepairUrl'))$('#adminVisualRepairUrl').value='';
+  $('#adminVisualRepairStatus')?.classList.add('hidden');
+}
+function openAdminVisualRepairModal(row){
+  if(state.profile?.role!=='admin'||!row)return;
+  state.adminVisualRepairTarget=row;
+  const modal=$('#adminVisualRepairModal');if(!modal)return;
+  const meta=$('#adminVisualRepairMeta');
+  if(meta)meta.textContent=[
+    'ENEM '+(row.source_year||''),
+    'Q'+(row.source_question_number||row.question_id),
+    row.subject||row.area||'',
+    row.topic||''
+  ].filter(Boolean).join(' · ');
+  const prompt=$('#adminVisualRepairPrompt');
+  if(prompt)prompt.textContent=row.prompt_preview||'Recurso visual obrigatório ainda não restaurado.';
+  if($('#adminVisualRepairType'))$('#adminVisualRepairType').value='image';
+  if($('#adminVisualRepairUrl'))$('#adminVisualRepairUrl').value='';
+  if($('#adminVisualRepairFile'))$('#adminVisualRepairFile').value='';
+  $('#adminVisualRepairStatus')?.classList.add('hidden');
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+async function loadAdminVisualRepairQueue(){
+  if(state.profile?.role!=='admin')return;
+  const target=$('#adminVisualRepairQueue');if(!target)return;
+  try{
+    const {data,error}=await client.rpc('get_admin_visual_repair_queue',{p_limit:100});
+    if(error)throw error;
+    const rows=data||[];
+    if($('#adminVisualRepairCount'))$('#adminVisualRepairCount').textContent=rows.length+' pendente'+(rows.length===1?'':'s');
+    target.innerHTML=rows.length?rows.map(row=>{
+      const attempts=Number(row.attempts||0),wrong=Number(row.wrong||0),reports=Number(row.open_reports||0);
+      const errRate=attempts?Math.round((wrong/attempts)*100):0;
+      return `<div class="feedback-entry admin-visual-repair-row">
+        <span class="mini-avatar">▧</span>
+        <div>
+          <b>ENEM ${esc(row.source_year||'')} · Q${esc(row.source_question_number||row.question_id)} · ${esc(row.subject||row.area||'')}</b>
+          <p>${esc(row.prompt_preview||row.topic||'Recurso visual obrigatório')}</p>
+          <small>${esc(row.topic||'')} · ${attempts} tentativa${attempts===1?'':'s'}${attempts?' · '+errRate+'% de erro':''}${reports?' · '+reports+' reporte'+(reports===1?'':'s')+' visual':''}</small>
+          <div class="comment-actions">
+            <button data-visual-repair="${row.question_id}">Restaurar mídia</button>
+          </div>
+        </div>
+      </div>`;
+    }).join(''):'<p class="learning-empty">Nenhuma questão ativa depende de recurso visual ausente.</p>';
+    const byId=new Map(rows.map(row=>[Number(row.question_id),row]));
+    target.querySelectorAll('[data-visual-repair]').forEach(btn=>btn.onclick=()=>openAdminVisualRepairModal(byId.get(Number(btn.dataset.visualRepair))));
+  }catch(err){
+    console.error('admin visual repair queue',err);
+    target.innerHTML='<p class="learning-empty">Não foi possível carregar a fila de restauração visual agora.</p>';
+  }
+}
+$('#closeAdminVisualRepair')?.addEventListener('click',closeAdminVisualRepairModal);
+$('#cancelAdminVisualRepair')?.addEventListener('click',closeAdminVisualRepairModal);
+$('#adminVisualRepairModal')?.addEventListener('click',e=>{if(e.target===$('#adminVisualRepairModal'))closeAdminVisualRepairModal()});
+$('#saveAdminVisualRepair')?.addEventListener('click',async()=>{
+  const row=state.adminVisualRepairTarget;
+  const file=$('#adminVisualRepairFile')?.files?.[0]||null;
+  const typedUrl=$('#adminVisualRepairUrl')?.value?.trim()||'';
+  const mediaType=$('#adminVisualRepairType')?.value||'image';
+  const btn=$('#saveAdminVisualRepair');
+  const status=$('#adminVisualRepairStatus');
+  if(!row)return;
+  if(!file&&!/^https:\/\//i.test(typedUrl))return toast('Envie uma imagem ou informe uma URL HTTPS válida.','error');
+  if(file&&!/^image\//i.test(file.type||''))return toast('O arquivo precisa ser uma imagem válida.','error');
+  btn.disabled=true;btn.textContent='Salvando...';
+  try{
+    let mediaPath=typedUrl;
+    if(file){
+      if(status){status.classList.remove('hidden');status.textContent='Enviando recurso visual...'}
+      const uploaded=await uploadToCloudinary(file,pct=>{
+        if(status)status.textContent=pct<100?'Enviando recurso visual... '+pct+'%':'Upload concluído. Validando questão...';
+      });
+      mediaPath=uploaded?.secure_url||'';
+    }
+    if(!/^https:\/\//i.test(mediaPath))throw new Error('invalid_media_url');
+    const {error}=await client.rpc('admin_set_question_media_path',{
+      p_question_id:Number(row.question_id),
+      p_media_path:mediaPath,
+      p_media_type:mediaType
+    });
+    if(error)throw error;
+    closeAdminVisualRepairModal();
+    toast('Recurso restaurado. A questão voltou ao Banco e aos treinos.');
+    await Promise.all([loadAdminVisualRepairQueue(),loadQuestionMeta()]);
+  }catch(err){
+    console.error('save visual repair',err);
+    if(status){status.classList.remove('hidden');status.textContent='Falha ao salvar o recurso visual.'}
+    toast('Não foi possível restaurar o recurso visual.','error');
+  }finally{
+    btn.disabled=false;btn.textContent='Salvar e liberar questão';
+  }
+});
+
 
 
 async function loadAdminProductAnalytics(){
@@ -9634,6 +9734,7 @@ async function loadAdmin(){
   loadAdminUsers();
   loadAdminQuestionIssues();
   loadAdminExplanationQueue();
+  loadAdminVisualRepairQueue();
   const [profiles,attempts,feedbacks,videosCount,materialsCount,progressRows,videosRows,materialsRows]=await Promise.all([
     client.from('profiles').select('*',{count:'exact',head:true}),
     client.from('question_attempts').select('*',{count:'exact',head:true}),
