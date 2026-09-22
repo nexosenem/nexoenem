@@ -233,7 +233,7 @@ function syncShellVisibility(){
 }
 function syncBottom(){
   const active=$('.page.active')?.id||'inicio';
-  $('[data-nrx-bottom]').forEach(b=>{
+  $$('[data-nrx-bottom]').forEach(b=>{
     const p=b.dataset.nrxBottom;
     b.classList.toggle('active',p===active||(p==='materiais'&&active==='videoaulas'));
   });
