@@ -118,6 +118,7 @@ assert(missingReferenceRoutes.length===0,'Todas as rotas antigas continuam acess
 assert(referenceUi.includes("$('#openNexoFromMenu')?.click()"),'Professor Nexo preservado na navegação nova');
 assert(referenceUi.includes('nrx-profile-tools')&&referenceUi.includes('nrx-side-more-panel'),'Recursos secundários preservados sem poluir a navegação');
 
+assert(!/id="desktopSidebarToggle"[^>]*onclick=/.test(index),'Toggle da sidebar não possui handler duplicado');
 assert(index.includes('id="contextClose"'),'Botão fechar do contexto publicado');
 assert(/function\s+closeNexoContextBar\s*\(/.test(app),'Ação fechar do contexto disponível');
 

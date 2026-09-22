@@ -1,4 +1,4 @@
-const NEXO_CACHE='nexo-v15-20260922-7';
+const NEXO_CACHE='nexo-v15-20260922-8';
 const SHELL=[
   './',
   './index.html',
