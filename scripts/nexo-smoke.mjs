@@ -37,7 +37,7 @@ for(const name of contentFiles){
   if(Object.values(checks).some(v=>!v))invalidContent.push(name+':'+Object.entries(checks).filter(([,v])=>!v).map(([k])=>k).join(','));
 }
 assert(contentFiles.length>=126,'Biblioteca autoral mantém pelo menos 126 materiais HTML',String(contentFiles.length));
-assert(invalidContent.length===0,'Materiais autorais têm HTML, viewport, responsividade e CTA de treino',invalidContent.slice(0,12).join(' | '));
+assert(invalidContent.length===0,'Materiais autorais têm HTML, viewport, responsividade e CTA de treino',invalidContent.join(' | '));
 
 assert(!index.includes('\\n'),'HTML sem \\n literal');
 assert((index.match(/id="viewerNote"/g)||[]).length===1,'viewerNote único');
