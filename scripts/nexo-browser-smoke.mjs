@@ -133,6 +133,66 @@ async function runProfile(browser,name,viewport){
   first.searchActionWorks=searchActionProbe.ok;
   if(searchActionProbe.error)first.wiringError=(first.wiringError?first.wiringError+' | ':'')+'search-action: '+searchActionProbe.error;
 
+  markStage('search-ui');
+  const globalSearchUiTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const panel=document.querySelector('#niaPanel');
+    const input=document.querySelector('#globalSearch');
+    const box=document.querySelector('#globalSearchResults');
+    const prev={
+      app:app?.className||'',
+      auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      panel:panel?.className||'',
+      inputValue:input?.value||'',
+      boxClass:box?.className||''
+    };
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const active=()=>document.querySelector('.page.active')?.id||'';
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    if(typeof openPage==='function')openPage('inicio');
+    await wait(70);
+
+    async function choose(query,title){
+      if(!input||!box)return {found:false,clicked:false};
+      input.focus();
+      input.value=query;
+      input.dispatchEvent(new Event('input',{bubbles:true}));
+      await wait(220);
+      const buttons=[...box.querySelectorAll('[data-global-result]')];
+      const button=buttons.find(btn=>(btn.querySelector('b')?.textContent||'').trim()===title);
+      const visible=Boolean(button&&!box.classList.contains('hidden')&&getComputedStyle(button).display!=='none');
+      if(button)button.click();
+      await wait(220);
+      return {found:Boolean(button),visible,clicked:Boolean(button)};
+    }
+
+    const radarPick=await choose('radar enem','Radar ENEM');
+    const radarOpened=active()==='radar';
+
+    if(typeof openPage==='function')openPage('inicio');
+    await wait(70);
+    const nexoPick=await choose('professor nexo','Professor Nexo');
+    const nexoOpened=Boolean(panel&&!panel.classList.contains('hidden'));
+    document.querySelector('#closeNia')?.click();
+    await wait(50);
+    const nexoClosed=Boolean(panel?.classList.contains('hidden'));
+
+    if(input)input.value=prev.inputValue;
+    if(box)box.className=prev.boxClass;
+    if(panel)panel.className=prev.panel;
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    return {radarPick,radarOpened,nexoPick,nexoOpened,nexoClosed};
+  });
+  if(!globalSearchUiTest.radarPick.found||!globalSearchUiTest.radarPick.visible||!globalSearchUiTest.radarOpened)
+    failures.push(name+': pesquisa visual não abriu Radar ENEM: '+JSON.stringify(globalSearchUiTest));
+  if(!globalSearchUiTest.nexoPick.found||!globalSearchUiTest.nexoPick.visible||!globalSearchUiTest.nexoOpened||!globalSearchUiTest.nexoClosed)
+    failures.push(name+': pesquisa visual não abriu/fechou Professor Nexo: '+JSON.stringify(globalSearchUiTest));
+
   markStage('service-worker');
   first.serviceWorker=await page.evaluate(async()=>{
     if(!('serviceWorker' in navigator))return false;
@@ -768,7 +828,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,accessibilityTest,experienceControlTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,accessibilityTest,experienceControlTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
