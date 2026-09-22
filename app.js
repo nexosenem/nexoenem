@@ -9467,6 +9467,61 @@ $('#addMaterial').onclick=async()=>{
   }
 };
 
+
+function ensureNotificationPanel(){
+  let panel=$('#notificationPanel');
+  if(panel)return panel;
+  panel=document.createElement('div');
+  panel.id='notificationPanel';
+  panel.className='profile-menu nrx-notification-panel hidden';
+  panel.setAttribute('role','dialog');
+  panel.setAttribute('aria-label','Notificações NEXO');
+  document.body.appendChild(panel);
+  return panel;
+}
+function renderNotificationPanel(){
+  const panel=ensureNotificationPanel();
+  const due=Array.isArray(state.dueReviewItems)?state.dueReviewItems.length:0;
+  let saved=null;
+  try{saved=typeof readPersistedStudySession==='function'?readPersistedStudySession():null}catch(_){}
+  const items=[];
+  if(saved)items.push({icon:'▶',title:'Sessão em andamento',text:'Você pode continuar exatamente de onde parou.',action:'resume'});
+  if(due>0)items.push({icon:'↻',title:due+' revisão'+(due===1?'':'ões')+' pendente'+(due===1?'':'s'),text:'Revise antes que esses conteúdos esfriem.',action:'focos'});
+  if(!items.length)items.push({icon:'✓',title:'Tudo em dia',text:'Nenhuma ação urgente agora.',action:''});
+  panel.innerHTML='<div class="nrx-notification-head"><div><b>Notificações</b><small>Seu próximo passo no NEXO</small></div><button type="button" data-nrx-notification-close aria-label="Fechar">×</button></div>'+
+    '<div class="nrx-notification-list">'+items.map((item,index)=>'<button type="button" data-nrx-notification-action="'+item.action+'" '+(!item.action?'disabled':'')+'><span>'+item.icon+'</span><div><b>'+esc(item.title)+'</b><small>'+esc(item.text)+'</small></div><i>›</i></button>').join('')+'</div>'+
+    '<div class="nrx-notification-footer"><button type="button" data-nrx-notification-page="semana">Abrir Planner</button><button type="button" data-nrx-notification-page="focos">Meus Focos</button></div>';
+  $('[data-nrx-notification-close]',panel)?.addEventListener('click',()=>setNotificationPanel(false));
+  $$('[data-nrx-notification-action]',panel).forEach(btn=>btn.addEventListener('click',()=>{
+    const action=btn.dataset.nrxNotificationAction;
+    if(action==='resume')$('#continueStudy')?.click();
+    else if(action)openPage(action);
+    setNotificationPanel(false);
+  }));
+  $$('[data-nrx-notification-page]',panel).forEach(btn=>btn.addEventListener('click',()=>{
+    openPage(btn.dataset.nrxNotificationPage);
+    setNotificationPanel(false);
+  }));
+  return panel;
+}
+function setNotificationPanel(open){
+  const btn=$('#notificationBtn');
+  const panel=open?renderNotificationPanel():$('#notificationPanel');
+  if(!panel)return;
+  panel.classList.toggle('hidden',!open);
+  btn?.setAttribute('aria-expanded',String(Boolean(open)));
+  if(open)$('#profileMenu')?.classList.add('hidden');
+}
+$('#notificationBtn')?.addEventListener('click',e=>{
+  e.preventDefault();e.stopPropagation();
+  const panel=ensureNotificationPanel();
+  setNotificationPanel(panel.classList.contains('hidden'));
+});
+document.addEventListener('click',e=>{
+  const panel=$('#notificationPanel');
+  if(panel&&!panel.classList.contains('hidden')&&!e.target.closest('#notificationPanel')&&!e.target.closest('#notificationBtn'))setNotificationPanel(false);
+});
+
 window.addEventListener('resize',()=>{if(innerWidth>760)toggleMenu(false)});
 
 // Importante: inicia a restauração da sessão somente após todo o arquivo ter

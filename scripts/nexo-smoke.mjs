@@ -83,6 +83,41 @@ assert(index.includes('nexo-v13-search-errors.js'),'Busca universal publicada');
 assert(index.includes('nexo-v13-hardening.js'),'Hardening publicado');
 assert(/function\s+buildSiteSearchActionResults\s*\(/.test(app),'Busca interna por áreas/funções disponível');
 assert(/function\s+nexoPercentTone\s*\(/.test(app),'Classificação visual de porcentagens disponível');
+
+const allScriptSource=[...new Set(localScripts)].map(file=>read(file)).join('\n');
+const staticButtons=[...index.matchAll(/<button\b([^>]*)>([\s\S]*?)<\/button>/gi)].map(m=>{
+  const attrs=m[1]||'';
+  const id=attrs.match(/\bid="([^"]+)"/i)?.[1]||'';
+  const dataPage=attrs.match(/\bdata-page="([^"]+)"/i)?.[1]||'';
+  const disabled=/\bdisabled\b/i.test(attrs);
+  const submit=/\btype="submit"/i.test(attrs);
+  const inline=/\bonclick\s*=/i.test(attrs);
+  const dataAttrs=[...attrs.matchAll(/\b(data-[\w-]+)(?:="([^"]*)")?/gi)].map(x=>x[1]);
+  return {attrs,id,dataPage,disabled,submit,inline,dataAttrs};
+});
+const deadStaticButtons=staticButtons.filter(btn=>{
+  if(btn.disabled||btn.submit||btn.inline)return false;
+  if(btn.dataPage&&/\$\$\('\[data-page\]'\)/.test(allScriptSource))return false;
+  if(btn.id){
+    const refs=['#'+btn.id,"getElementById('"+btn.id+"')",'getElementById("'+btn.id+'")'];
+    if(refs.some(ref=>allScriptSource.includes(ref)))return false;
+  }
+  for(const attr of btn.dataAttrs){
+    const camel=attr.replace(/^data-/,'').replace(/-([a-z])/g,(_,c)=>c.toUpperCase());
+    if(allScriptSource.includes('['+attr+']')||allScriptSource.includes('dataset.'+camel))return false;
+  }
+  return true;
+});
+assert(deadStaticButtons.length===0,'Todos os controles estáticos visíveis têm ação',deadStaticButtons.map(x=>x.id||x.attrs.slice(0,80)).join(' | '));
+
+const legacyNav=index.match(/<nav class="side-nav">([\s\S]*?)<\/nav>/)?.[1]||'';
+const legacyButtons=[...legacyNav.matchAll(/<button\b([^>]*)>/gi)].map(m=>m[1]);
+const legacyPages=legacyButtons.filter(attrs=>!/retired-video-feature/.test(attrs)).map(attrs=>attrs.match(/data-page="([^"]+)"/)?.[1]).filter(Boolean);
+const missingReferenceRoutes=[...new Set(legacyPages)].filter(page=>!referenceUi.includes("go('"+page+"')")&&!referenceUi.includes('go("'+page+'")'));
+assert(missingReferenceRoutes.length===0,'Todas as rotas antigas continuam acessíveis na interface nova',missingReferenceRoutes.join(', '));
+assert(referenceUi.includes("$('#openNexoFromMenu')?.click()"),'Professor Nexo preservado na navegação nova');
+assert(referenceUi.includes('nrx-profile-tools')&&referenceUi.includes('nrx-side-more-panel'),'Recursos secundários preservados sem poluir a navegação');
+
 assert(index.includes('id="contextClose"'),'Botão fechar do contexto publicado');
 assert(/function\s+closeNexoContextBar\s*\(/.test(app),'Ação fechar do contexto disponível');
 

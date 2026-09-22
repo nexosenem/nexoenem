@@ -155,6 +155,37 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
 
+  const referenceAccessTest=await page.evaluate(()=>{
+    const expected=['focos','radar','banco','temas','feedback','ranking','planos'];
+    const side=[...document.querySelectorAll('.nrx-side-more-panel [data-nrx-target]')].map(x=>x.dataset.nrxTarget);
+    const profile=[...document.querySelectorAll('.nrx-profile-tools [data-nrx-target]')].map(x=>x.dataset.nrxTarget);
+    const missingSide=expected.filter(x=>!side.includes(x));
+    const missingProfile=expected.filter(x=>!profile.includes(x));
+    const visible=el=>Boolean(el&&getComputedStyle(el).display!=='none'&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+    const candidates=[...document.querySelectorAll('.nrx-shortcut,.nrx-stat-card,.nrx-preview,.nrx-mob-action,.nrx-mob-progress,.nrx-mob-continue')].filter(visible);
+    const overflowing=candidates.filter(el=>el.scrollWidth>el.clientWidth+4).map(el=>el.className);
+    const mobile=innerWidth<=760;
+    const actionIcons=mobile?[...document.querySelectorAll('.nrx-mob-action i')].filter(visible):[];
+    const minTouch=actionIcons.length?Math.min(...actionIcons.map(el=>Math.min(el.getBoundingClientRect().width,el.getBoundingClientRect().height))):999;
+    const hero=document.querySelector(mobile?'.nrx-mob-hero h1':'.nrx-hero h1');
+    const heroFont=hero?parseFloat(getComputedStyle(hero).fontSize):0;
+    return {
+      missingSide,missingProfile,overflowing,minTouch,heroFont,
+      moreToggle:Boolean(document.querySelector('.nrx-side-more-toggle')),
+      profileTools:Boolean(document.querySelector('.nrx-profile-tools')),
+      notificationWired:Boolean(document.querySelector('#notificationBtn'))
+    };
+  });
+  if(referenceAccessTest.missingSide.length)failures.push(name+': recursos antigos ausentes do menu Mais: '+referenceAccessTest.missingSide.join(', '));
+  if(referenceAccessTest.missingProfile.length)failures.push(name+': recursos antigos ausentes do Perfil: '+referenceAccessTest.missingProfile.join(', '));
+  if(!referenceAccessTest.moreToggle)failures.push(name+': acesso Mais recursos não foi montado');
+  if(!referenceAccessTest.profileTools)failures.push(name+': recursos secundários não foram preservados no Perfil');
+  if(referenceAccessTest.overflowing.length)failures.push(name+': cards da referência com overflow: '+referenceAccessTest.overflowing.join(', '));
+  if(name==='mobile'&&referenceAccessTest.minTouch<42)failures.push(name+': alvo de toque principal menor que 42px');
+  if(name==='mobile'&&referenceAccessTest.heroFont<26)failures.push(name+': título principal pequeno demais');
+  if(name!=='mobile'&&referenceAccessTest.heroFont<36)failures.push(name+': título principal desktop pequeno demais');
+
+
   if(!first.hardening)failures.push(name+': hardening não carregou');
   if(!first.v13Core)failures.push(name+': V13 core não carregou');
   if(!first.authVisible&&!first.appVisible)failures.push(name+': nenhuma tela principal ficou visível');
@@ -284,7 +315,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,referenceUiTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   await context.close();
 }
 

@@ -265,6 +265,87 @@ function syncBottom(){
   syncShellVisibility();
 }
 
+
+function referenceSecondaryTools(){
+  return [
+    ['focos','◎','Meus Focos',()=>go('focos')],
+    ['radar','◉','Radar ENEM',()=>go('radar')],
+    ['banco','▦','Banco de Questões',()=>go('banco')],
+    ['temas','▧','Temas de Redação',()=>go('temas')],
+    ['feedback','◌','Feedback',()=>go('feedback')],
+    ['ranking','✦','NEXO Jornada',()=>{document.body.dataset.nrxJourneyView='';go('ranking')}],
+    ['planos','＋','Free & Plus',()=>go('planos')],
+    ['admin','♛','Área do Admin',()=>go('admin'),true]
+  ];
+}
+function closeReferenceMore(){
+  $('.nrx-side-more-panel')?.classList.add('hidden');
+  $('.nrx-side-more-toggle')?.setAttribute('aria-expanded','false');
+}
+function runReferenceSecondary(key){
+  const item=referenceSecondaryTools().find(x=>x[0]===key);
+  if(!item)return;
+  closeReferenceMore();
+  $('#profileMenu')?.classList.add('hidden');
+  item[3]();
+  setTimeout(syncSideNav,60);
+}
+function buildReferenceSecondaryAccess(nav,sidebar){
+  if(!nav||!sidebar||$('.nrx-side-more-toggle',nav))return;
+  const toggle=document.createElement('button');
+  toggle.type='button';
+  toggle.className='nrx-side-item nrx-side-more-toggle';
+  toggle.dataset.nrxSide='more';
+  toggle.setAttribute('aria-expanded','false');
+  toggle.innerHTML='<span>•••</span><b>Mais recursos</b>';
+  const community=$('[data-nrx-side="community"]',nav);
+  if(community)nav.insertBefore(toggle,community);else nav.appendChild(toggle);
+
+  const panel=document.createElement('div');
+  panel.className='nrx-side-more-panel hidden';
+  panel.innerHTML='<div class="nrx-side-more-head"><div><b>Mais recursos</b><small>Tudo do NEXO continua aqui</small></div><button type="button" data-nrx-more-close aria-label="Fechar">×</button></div><div class="nrx-side-more-grid"></div>';
+  const grid=$('.nrx-side-more-grid',panel);
+  referenceSecondaryTools().forEach(([key,icon,label,,adminOnly])=>{
+    const b=document.createElement('button');
+    b.type='button';b.dataset.nrxTarget=key;
+    if(adminOnly)b.dataset.nrxAdminTool='1';
+    b.innerHTML='<span>'+icon+'</span><b>'+label+'</b>';
+    b.addEventListener('click',()=>runReferenceSecondary(key));
+    grid.appendChild(b);
+  });
+  $('[data-nrx-more-close]',panel)?.addEventListener('click',closeReferenceMore);
+  toggle.addEventListener('click',e=>{
+    e.stopPropagation();
+    const open=panel.classList.contains('hidden');
+    closeReferenceMore();
+    panel.classList.toggle('hidden',!open);
+    toggle.setAttribute('aria-expanded',String(open));
+  });
+  sidebar.appendChild(panel);
+}
+function buildReferenceProfileTools(){
+  const menu=$('#profileMenu');
+  if(!menu||$('.nrx-profile-tools',menu))return;
+  const section=document.createElement('section');
+  section.className='nrx-profile-tools';
+  section.innerHTML='<div class="nrx-profile-tools-head"><b>Mais recursos</b><small>Todos os módulos continuam disponíveis</small></div><div class="nrx-profile-tools-grid"></div>';
+  const grid=$('.nrx-profile-tools-grid',section);
+  referenceSecondaryTools().forEach(([key,icon,label,,adminOnly])=>{
+    const b=document.createElement('button');
+    b.type='button';b.dataset.nrxTarget=key;
+    if(adminOnly)b.dataset.nrxAdminTool='1';
+    b.innerHTML='<span>'+icon+'</span><b>'+label+'</b>';
+    b.addEventListener('click',()=>runReferenceSecondary(key));
+    grid.appendChild(b);
+  });
+  const firstAction=menu.querySelector('button');
+  if(firstAction)menu.insertBefore(section,firstAction);else menu.appendChild(section);
+}
+function syncReferenceAccess(){
+  const adminShortcut=$('#profileAdminShortcut');
+  const adminVisible=Boolean(adminShortcut&&!adminShortcut.classList.contains('hidden'));
+  $$('[data-nrx-admin-tool]').forEach(el=>el.classList.toggle('hidden',!adminVisible));
+}
 function buildReferenceSidebar(){
   const sidebar=$('#sidebar');
   if(!sidebar||$('.nrx-side-nav',sidebar))return;
@@ -307,17 +388,26 @@ function buildReferenceSidebar(){
   account.innerHTML='<span class="nrx-side-avatar">N</span><div><b data-nrx-side-name>Aluno</b><small data-nrx-side-plan>Plano NEXO</small></div><i>♛</i>';
   account.addEventListener('click',()=>$('#profileButton')?.click());
   sidebar.appendChild(account);
+  buildReferenceSecondaryAccess(nav,sidebar);
+  buildReferenceProfileTools();
+  syncReferenceAccess();
 }
 function syncSideNav(){
   const active=$('.page.active')?.id||'inicio';
   let selected=active;
+  const secondary=new Set(['focos','radar','banco','temas','feedback','planos','admin']);
   if(active==='materiais')selected=document.body.dataset.nrxMaterialsView||'study';
-  if(active==='ranking')selected=document.body.dataset.nrxJourneyView||'';
+  if(secondary.has(active))selected='more';
+  if(active==='ranking'){
+    const journey=document.body.dataset.nrxJourneyView||'';
+    selected=['community','store','avatar'].includes(journey)?journey:'more';
+  }
   $$('[data-nrx-side]').forEach(b=>b.classList.toggle('active',b.dataset.nrxSide===selected));
   const name=firstName();
   $$('[data-nrx-side-name]').forEach(el=>el.textContent=name);
   const role=$('#profileRole')?.textContent?.trim()||'Estudante';
   $$('[data-nrx-side-plan]').forEach(el=>el.textContent=role);
+  syncReferenceAccess();
 }
 function addMobileChrome(){
   const top=$('.topbar');
@@ -445,13 +535,14 @@ function syncContinueCard(){
 function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncSideNav();syncBottom();placeSearch()}
 
 function observe(){
-  const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#studyWorkspace','#inicio','#app'];
+  const targets=['#profileName','#profileAdminShortcut','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#studyWorkspace','#inicio','#app'];
   targets.forEach(sel=>{
     const el=$(sel);if(!el)return;
     new MutationObserver(()=>syncAll()).observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
   });
   window.addEventListener('resize',placeSearch,{passive:true});
   document.addEventListener('click',e=>{
+    if(!e.target.closest?.('.nrx-side-more-panel')&&!e.target.closest?.('.nrx-side-more-toggle'))closeReferenceMore();
     const materialPage=e.target.closest?.('[data-page="materiais"]');
     if(materialPage&&!materialPage.closest?.('.nrx-home'))document.body.dataset.nrxMaterialsView='study';
     const journeyTab=e.target.closest?.('[data-journey-tab]');
