@@ -603,10 +603,98 @@ async function runProfile(browser,name,viewport){
   await context.close();
 }
 
+
+async function runViewportAudit(browser,name,viewport){
+  const context=await browser.newContext({viewport,locale:'pt-BR'});
+  const page=await context.newPage();
+  const localErrors=[];
+  page.on('pageerror',err=>localErrors.push(err.message));
+  await page.goto(baseUrl+'?viewport_audit='+encodeURIComponent(name+'-'+Date.now()),{waitUntil:'commit',timeout:30000});
+  await page.waitForFunction(()=>{
+    const boot=document.querySelector('#boot');
+    const auth=document.querySelector('#authScreen');
+    const app=document.querySelector('#app');
+    const bootGone=!boot||boot.classList.contains('hidden')||getComputedStyle(boot).display==='none';
+    return bootGone||Boolean(auth&&!auth.classList.contains('hidden'))||Boolean(app&&!app.classList.contains('hidden'));
+  },{timeout:16000});
+  await page.waitForTimeout(600);
+
+  const result=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')].filter(p=>p.id!=='videoaulas'&&p.id!=='admin');
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio'
+    };
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    const pageLayout=[];
+    for(const target of pages){
+      pages.forEach(p=>p.classList.toggle('active',p===target));
+      await new Promise(r=>requestAnimationFrame(r));
+      const r=target.getBoundingClientRect();
+      pageLayout.push({
+        id:target.id,
+        visible:r.width>0&&r.height>0&&getComputedStyle(target).display!=='none',
+        documentOverflow:document.documentElement.scrollWidth>innerWidth+4,
+        pageOverflow:target.scrollWidth>target.clientWidth+8&& !['auto','scroll','hidden','clip'].includes(getComputedStyle(target).overflowX)
+      });
+    }
+    const mobile=innerWidth<=760;
+    const bottom=document.querySelector('.nrx-bottom-nav');
+    const bottomVisible=Boolean(bottom&&getComputedStyle(bottom).display!=='none'&&!bottom.hidden&&bottom.getBoundingClientRect().height>0);
+    const sidebar=document.querySelector('#sidebar');
+    const sidebarRect=sidebar?.getBoundingClientRect();
+    const shell=document.querySelector('.shell');
+    const shellRect=shell?.getBoundingClientRect();
+    const chrome={
+      mobile,
+      bottomVisible,
+      sidebarOffscreenMobile:!mobile||!sidebarRect||sidebarRect.right<=1||!sidebar.classList.contains('open'),
+      shellFits:!shellRect||shellRect.right<=innerWidth+4,
+      width:innerWidth
+    };
+
+    if(app)app.classList.add('hidden');
+    if(auth)auth.classList.remove('hidden');
+    const login=document.querySelector('#loginForm'),register=document.querySelector('#registerForm');
+    const loginTab=document.querySelector('#loginTab'),registerTab=document.querySelector('#registerTab');
+    const authInitial=Boolean(login&&!login.classList.contains('hidden')&&register?.classList.contains('hidden'));
+    registerTab?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const registerSwitch=Boolean(register&&!register.classList.contains('hidden')&&login?.classList.contains('hidden'));
+    loginTab?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const loginSwitch=Boolean(login&&!login.classList.contains('hidden')&&register?.classList.contains('hidden'));
+    const authOverflow=Boolean(auth&&auth.scrollWidth>auth.clientWidth+4);
+    const authTabs={initial:authInitial,register:registerSwitch,login:loginSwitch,overflow:authOverflow};
+
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;
+    if(auth)auth.className=prev.auth;
+    return {pageLayout,chrome,authTabs};
+  });
+
+  const badPages=result.pageLayout.filter(x=>!x.visible||x.documentOverflow||x.pageOverflow);
+  if(badPages.length)failures.push(name+': viewport extra com overflow/página invisível: '+JSON.stringify(badPages));
+  if(result.chrome.mobile&&!result.chrome.bottomVisible)failures.push(name+': navegação inferior ausente no breakpoint móvel');
+  if(!result.chrome.mobile&&result.chrome.bottomVisible)failures.push(name+': navegação inferior apareceu no breakpoint desktop');
+  if(!result.chrome.shellFits)failures.push(name+': shell ultrapassa a viewport');
+  if(!result.authTabs.initial||!result.authTabs.register||!result.authTabs.login||result.authTabs.overflow)failures.push(name+': login/cadastro falhou no teste de troca/overflow: '+JSON.stringify(result.authTabs));
+  const realErrors=localErrors.filter(msg=>!/ResizeObserver loop/i.test(msg));
+  if(realErrors.length)failures.push(name+': pageerror no viewport extra: '+[...new Set(realErrors)].join(' | '));
+  info.push({name,viewport,viewportAudit:result,pageErrors:realErrors.length});
+  await context.close();
+}
+
 const browser=await chromium.launch({headless:true});
 try{
   await runProfile(browser,'desktop',{width:1440,height:900});
   await runProfile(browser,'mobile',{width:390,height:844});
+  await runViewportAudit(browser,'mobile-360',{width:360,height:800});
+  await runViewportAudit(browser,'breakpoint-760',{width:760,height:900});
+  await runViewportAudit(browser,'breakpoint-761',{width:761,height:900});
+  await runViewportAudit(browser,'tablet-1024',{width:1024,height:768});
 }finally{
   await browser.close();
 }
@@ -618,4 +706,4 @@ if(failures.length){
   for(const failure of failures)console.error('FAIL',failure);
   process.exit(1);
 }
-console.log('PASS desktop + mobile + reload/PWA sem falhas críticas');
+console.log('PASS desktop + mobile + breakpoints extras + login/cadastro + reload/PWA sem falhas críticas');
