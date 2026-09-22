@@ -105,7 +105,7 @@ assert(uiV15.includes('v15QuestionModes')&&uiV15.includes('v15EssayTabs')&&uiV15
 assert(cssV15.includes('NEXO V15')&&cssV15.includes('.nrx-mob-hero-media:before')&&cssV15.includes('.v15-question-modes'),'Design system V15 publicado');
 assert(app.includes('TEXTO-BASE')&&app.includes('RECURSO VISUAL ORIGINAL')&&app.includes('COMANDO'),'Questão preserva texto-base, recurso visual e comando');
 assert(app.indexOf('TEXTO-BASE')<app.indexOf('RECURSO VISUAL ORIGINAL')&&app.indexOf('RECURSO VISUAL ORIGINAL')<app.indexOf('COMANDO'),'Ordem pedagógica texto → visual → comando preservada');
-assert(app.includes("const visual = Boolean(q.media_type || q.media_path || q.external_media_files?.length)"),'Questão visual usa metadado leve + recuperação externa como fonte de verdade');
+assert(app.includes("const requiredVisual=likelyNeedsQuestionVisual(q)&&!hasAccessibleVisualDescription(q)")&&app.includes("q.external_media_files?.length || requiredVisual"),'Questão visual mantém guarda pedagógica mesmo quando a recuperação externa falha');
 assert(app.includes('function likelyNeedsQuestionVisual')&&app.includes('async function ensureExternalQuestionAssets'),'Recuperação de mídia ausente por semântica publicada');
 assert(app.includes("https://api.enem.dev/v1/exams/")&&app.includes('externalVisualCache'),'Fallback ENEM usa endpoint público com cache local');
 assert(app.includes('function mountVisualGallery')&&app.includes('q.external_media_files'),'Questões com múltiplas imagens são suportadas');
