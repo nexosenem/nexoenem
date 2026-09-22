@@ -1009,6 +1009,92 @@ async function runProfile(browser,name,viewport){
   if(viewerActionTest.error)viewerActionFailures.push('error='+viewerActionTest.error);
   if(viewerActionFailures.length)failures.push(name+': ações do visualizador regrediram: '+viewerActionFailures.join(', ')+' '+JSON.stringify(viewerActionTest));
 
+
+  markStage('viewer-note');
+  const viewerNoteTest=await page.evaluate(async()=>{
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const viewer=document.querySelector('#contentViewer');
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      user:state.user,activeViewer:state.activeViewer,
+      viewerClass:viewer?.className||'',bodyOverflow:document.body.style.overflow
+    };
+    const originalFrom=client.from;
+    let storedNote=null,deleted=false,upserts=0;
+    const result={};
+    const fake={id:-990031,title:'Aula NEXO · Nota Smoke',subject:'Matemática',topic:'Porcentagem'};
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      state.user={id:'smoke-user',email:'smoke@nexo.local'};
+      state.activeViewer={type:'material',item:fake,lastPersistAt:0};
+      viewer?.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+
+      client.from=(table)=>{
+        if(table!=='nexo_content_notes')return originalFrom.call(client,table);
+        let deleting=false;
+        const chain={
+          select(){return chain},
+          eq(){
+            if(deleting){
+              storedNote=null;deleted=true;
+              return Promise.resolve({data:null,error:null});
+            }
+            return chain;
+          },
+          async maybeSingle(){
+            return {data:storedNote?{id:73,note:storedNote}:null,error:null};
+          },
+          async upsert(payload){
+            storedNote=String(payload?.note||'');upserts++;
+            return {data:null,error:null};
+          },
+          delete(){deleting=true;return chain}
+        };
+        return chain;
+      };
+
+      const noteBtn=document.querySelector('#viewerNote');
+      result.buttonVisible=Boolean(noteBtn&&getComputedStyle(noteBtn).display!=='none'&&noteBtn.getBoundingClientRect().width>0);
+      noteBtn?.click();
+      await wait(30);
+      const modal=document.querySelector('#v13Modal');
+      result.opened=Boolean(modal&&!modal.classList.contains('hidden')&&/Anotação do conteúdo/i.test(document.querySelector('#v13MT')?.textContent||''));
+      const textarea=document.querySelector('#v13ContentNoteText');
+      if(textarea)textarea.value='Regra de três: organizar grandezas antes de multiplicar.';
+      document.querySelector('#v13ContentNoteForm')?.dispatchEvent(new Event('submit',{bubbles:true,cancelable:true}));
+      await wait(35);
+      result.saved=upserts===1&&/Regra de três/i.test(storedNote||'')&&modal?.classList.contains('hidden');
+
+      noteBtn?.click();
+      await wait(30);
+      const reopenedText=document.querySelector('#v13ContentNoteText')?.value||'';
+      const deleteBtn=document.querySelector('#v13DeleteContentNote');
+      result.reopened=Boolean(!modal?.classList.contains('hidden')&&/Regra de três/i.test(reopenedText)&&deleteBtn);
+
+      deleteBtn?.click();
+      await wait(35);
+      result.deleted=Boolean(deleted&&storedNote===null&&modal?.classList.contains('hidden'));
+    }catch(err){
+      result.error=String(err?.stack||err?.message||err);
+    }finally{
+      client.from=originalFrom;
+      state.user=prev.user;state.activeViewer=prev.activeViewer;
+      if(viewer)viewer.className=prev.viewerClass;
+      document.body.style.overflow=prev.bodyOverflow;
+      document.querySelector('#v13Modal')?.classList.add('hidden');
+      document.body.classList.remove('v13-modal-open');
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return result;
+  });
+  const viewerNoteFailures=[];
+  for(const key of ['buttonVisible','opened','saved','reopened','deleted'])if(!viewerNoteTest[key])viewerNoteFailures.push(key);
+  if(viewerNoteTest.error)viewerNoteFailures.push('error='+viewerNoteTest.error);
+  if(viewerNoteFailures.length)failures.push(name+': anotações do visualizador regrediram: '+viewerNoteFailures.join(', ')+' '+JSON.stringify(viewerNoteTest));
+
   markStage('advanced-controls');
   const advancedControlTest=await page.evaluate(async()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -1531,7 +1617,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,advancedControlTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
