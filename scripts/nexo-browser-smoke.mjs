@@ -2639,9 +2639,12 @@ try{
   await runProfile(browser,'desktop',{width:1440,height:900});
   await runProfile(browser,'mobile',{width:390,height:844});
   await runViewportAudit(browser,'mobile-360',{width:360,height:800});
+  await runViewportAudit(browser,'mobile-430',{width:430,height:932});
   await runViewportAudit(browser,'breakpoint-760',{width:760,height:900});
   await runViewportAudit(browser,'breakpoint-761',{width:761,height:900});
   await runViewportAudit(browser,'tablet-1024',{width:1024,height:768});
+  await runViewportAudit(browser,'desktop-1280',{width:1280,height:800});
+  await runViewportAudit(browser,'ultrawide-1920',{width:1920,height:1080});
 }finally{
   await browser.close();
 }
