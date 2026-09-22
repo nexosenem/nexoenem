@@ -900,6 +900,129 @@ async function runProfile(browser,name,viewport){
     if(typographyTest.sizes.navIcon<21)failures.push(name+': ícones da navegação ainda pequenos');
     if(typographyTest.sizes.navLabel<10)failures.push(name+': rótulos da navegação ainda pequenos');
   }
+
+  markStage('question-flow');
+  const questionFlowTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      current:state.current,session:state.session,answered:state.answered,
+      selectedOption:state.selectedOption,lastAnswer:state.lastAnswer,
+      questionStartedAt:state.questionStartedAt,questionBehavior:state.questionBehavior,
+      user:state.user
+    };
+    const originalRpc=client.rpc;
+    const fnNames=['loadDashboard','loadNexoCore','loadRecentAttempts','loadNexoMembership','loadNexoJourney','loadNexoWeekPlan','loadTopicMastery','loadSubtopicMastery','loadDueReviewItems','openQuestionComments','nextQuestion'];
+    const originalFns={};
+    for(const key of fnNames)originalFns[key]=window[key];
+    const fake={
+      id:-991337,
+      area:'Matemática',
+      subject:'Matemática',
+      topic:'Porcentagem e matemática financeira',
+      difficulty:2,
+      source_year:2025,
+      source_question_number:999,
+      source_exam:'ENEM · teste local',
+      prompt:'Um produto de R$ 100 recebe desconto de 20%. Qual é o novo preço?',
+      options:['R$ 20','R$ 80','R$ 100','R$ 120','R$ 180'],
+      base_text:'',
+      source_reference:''
+    };
+    let commentsCalled=false,nextCalled=false;
+    try{
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      if(typeof openPage==='function')openPage('questoes');
+      await wait(60);
+
+      state.user=null;
+      state.current=fake;
+      state.session={index:0,questions:[fake],examMode:false,maxHints:3,coreSessionId:null,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
+      state.answered=false;
+      state.selectedOption=null;
+      state.lastAnswer=null;
+      state.questionStartedAt=Date.now()-1400;
+      state.questionBehavior={questionId:fake.id,startedAt:Date.now()-1800,selectionChanges:0,hintCount:0,firstSelectionAt:0,lastReaction:''};
+
+      client.rpc=async(name)=>{
+        if(name==='submit_answer_v2')return {data:{
+          correct:false,
+          correct_option:1,
+          explanation:'Aplicando 20% de desconto em R$ 100, restam R$ 80.',
+          gamification:{xp_gained:0,coins_gained:0,points_gained:0,level:1,title:'Jornada',claimable_missions:0}
+        },error:null};
+        return {data:null,error:null};
+      };
+      for(const key of ['loadDashboard','loadNexoCore','loadRecentAttempts','loadNexoMembership','loadNexoJourney','loadNexoWeekPlan','loadTopicMastery','loadSubtopicMastery','loadDueReviewItems']){
+        if(typeof window[key]==='function')window[key]=async()=>null;
+      }
+      window.openQuestionComments=(id)=>{commentsCalled=Number(id)===Number(fake.id)};
+      window.nextQuestion=async()=>{nextCalled=true};
+
+      await window.renderQuestion(fake);
+      const confidence=document.querySelector('#v13Confidence');
+      const confidenceMounted=Boolean(confidence);
+      document.querySelector('#preAnswerHint')?.click();
+      await wait(20);
+      const preHintVisible=Boolean(document.querySelector('#preAnswerHintBox')&&!document.querySelector('#preAnswerHintBox').classList.contains('hidden'));
+
+      const option=document.querySelector('.q-option[data-option="0"]');
+      option?.click();
+      const confirm=document.querySelector('#confirmAnswer');
+      const selectionWorks=Boolean(option?.classList.contains('selected')&&confirm&&!confirm.disabled&&/Confirmar A/.test(confirm.textContent||''));
+
+      confidence?.querySelector('[data-v13-confidence="unsure"]')?.click();
+      const confidenceSelected=Boolean(confidence?.querySelector('[data-v13-confidence="unsure"]')?.classList.contains('active'));
+      confirm?.click();
+      await wait(140);
+
+      const answerPanel=document.querySelector('.answer-panel');
+      const correctionVisible=Boolean(answerPanel&&answerPanel.textContent.includes('Gabarito B')&&answerPanel.textContent.includes('Aplicando 20%'));
+      const auditVisible=Boolean(document.querySelector('.v13-answer-audit'));
+      const controls={
+        hint:Boolean(document.querySelector('#showHint')),
+        nexo:Boolean(document.querySelector('#askNexoAboutQuestion')),
+        similar:Boolean(document.querySelector('#reviewQuestionTopic')),
+        save:Boolean(document.querySelector('#saveCurrentQuestion')),
+        note:Boolean(document.querySelector('#questionPersonalNote')),
+        report:Boolean(document.querySelector('#reportCurrentQuestion')),
+        comments:Boolean(document.querySelector('#openComments')),
+        next:Boolean(document.querySelector('#nextAfterAnswer'))
+      };
+      document.querySelector('#showHint')?.click();
+      const shortcutVisible=Boolean(document.querySelector('#hintBox')&&!document.querySelector('#hintBox').classList.contains('hidden')&&/Macete do Professor Nexo/.test(document.querySelector('#hintBox')?.textContent||''));
+      document.querySelector('#openComments')?.click();
+      document.querySelector('#nextAfterAnswer')?.click();
+      await wait(20);
+
+      return {
+        supported:true,confidenceMounted,preHintVisible,selectionWorks,confidenceSelected,
+        correctionVisible,auditVisible,controls,shortcutVisible,commentsCalled,nextCalled,error:''
+      };
+    }catch(err){
+      return {supported:false,error:String(err?.stack||err?.message||err)};
+    }finally{
+      client.rpc=originalRpc;
+      for(const [key,value] of Object.entries(originalFns))if(value)window[key]=value;
+      state.current=prev.current;state.session=prev.session;state.answered=prev.answered;
+      state.selectedOption=prev.selectedOption;state.lastAnswer=prev.lastAnswer;
+      state.questionStartedAt=prev.questionStartedAt;state.questionBehavior=prev.questionBehavior;state.user=prev.user;
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+  });
+  const questionControlsOk=questionFlowTest.controls&&Object.values(questionFlowTest.controls).every(Boolean);
+  if(!questionFlowTest.supported||questionFlowTest.error||!questionFlowTest.confidenceMounted||!questionFlowTest.preHintVisible||
+    !questionFlowTest.selectionWorks||!questionFlowTest.confidenceSelected||!questionFlowTest.correctionVisible||
+    !questionFlowTest.auditVisible||!questionControlsOk||!questionFlowTest.shortcutVisible||
+    !questionFlowTest.commentsCalled||!questionFlowTest.nextCalled){
+    failures.push(name+': fluxo completo de questão falhou: '+JSON.stringify(questionFlowTest));
+  }
+
   if(first.wiringError)failures.push(name+': wiring V13 lançou erro: '+first.wiringError);
   if(!first.sharedState)failures.push(name+': state/client não estão compartilhados com o V13');
   if(!first.essayEngine)failures.push(name+': motor de redação V13 não respondeu com 5 competências válidas');
@@ -933,7 +1056,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,accessibilityTest,experienceControlTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,accessibilityTest,experienceControlTest,questionFlowTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
