@@ -15,6 +15,7 @@ const sw=read('sw.js');
 const app=read('app.js');
 const compat=read('assets/nexo-runtime-compat.js');
 const referenceUi=read('assets/nexo-reference-v2.js');
+const experienceV14=read('assets/nexo-v14-experience.js');
 const headers=read('_headers');
 
 assert(!index.includes('\\n'),'HTML sem \\n literal');
@@ -93,6 +94,9 @@ assert(!/Element\.prototype\.forEach/.test(compat),'Sem monkey patch em Element.
 assert(index.includes('nexo-reference-v2.css')&&index.includes('nexo-reference-v2.js'),'Interface de referência conectada');
 assert(!index.includes('nexo-minimal-v1.css'),'Camada minimal antiga desativada');
 assert(sw.includes('nexo-reference-v2.css')&&sw.includes('nexo-reference-v2.js'),'Interface de referência no PWA');
+assert(index.includes('nexo-v14-experience.js'),'Experiência V14 conectada');
+assert(sw.includes('nexo-v14-experience.js'),'Experiência V14 no PWA');
+assert(experienceV14.includes('v14LearningLoop')&&experienceV14.includes('Diagnóstico NEXO')&&experienceV14.includes('ENEM Real'),'Ciclo de aprendizagem/diagnóstico V14 publicados');
 const badReferenceCollections=[...referenceUi.matchAll(/(?<!\$)\$\([^()\n]*\)\.(forEach|find|filter|map)\s*\(/g)].map(m=>m[0]);
 assert(badReferenceCollections.length===0,'Seletores de coleção da interface de referência usam $',badReferenceCollections.join(' | '));
 assert(/\/index\.html[\s\S]*Cache-Control: no-cache/.test(headers),'HTML força revalidação de cache');
