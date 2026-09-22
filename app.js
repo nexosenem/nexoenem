@@ -2687,7 +2687,7 @@ async function resumePersistedStudySession(){
     const {data,error}=await client.from('questions').select(fields).in('id',saved.ids).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
-    const queue=saved.ids.map(id=>byId.get(Number(id))).filter(Boolean);
+    const queue=saved.ids.map(id=>byId.get(Number(id))).filter(Boolean).filter(questionVisualCanBeResolved);
     if(!queue.length)throw new Error('session questions unavailable');
     state.session={...saved,queue,size:queue.length,index:Math.min(Number(saved.index||0),queue.length-1),correctStreak:0,wrongStreak:0,answeredCount:0,resultStats:{correct:0,wrong:0,totalSeconds:0,wrongIds:[],correctIds:[],xp:0,coins:0,patterns:{}}};
     openPage('questoes');
@@ -3108,18 +3108,25 @@ function applyQuestionCatalogSummary(summary){
 }
 
 async function loadQuestionMeta() {
-  const rows=[];
-  const pageSize=1000;
-  for(let from=0;from<10000;from+=pageSize){
-    const {data,error}=await client.from('questions')
-      .select('id,area,subject,topic,difficulty,source_year,source_question_number,media_type')
-      .eq('is_active',true)
-      .order('id',{ascending:true})
-      .range(from,from+pageSize-1);
+  let rows=[];
+  try{
+    const {data,error}=await client.rpc('get_question_catalog_items_v2');
     if(error)throw error;
-    const page=data||[];
-    rows.push(...page);
-    if(page.length<pageSize)break;
+    rows=data||[];
+  }catch(err){
+    console.warn('question catalog items v2 fallback',err);
+    const pageSize=1000;
+    for(let from=0;from<10000;from+=pageSize){
+      const {data,error}=await client.from('questions')
+        .select('id,area,subject,topic,difficulty,source_year,source_question_number,media_type')
+        .eq('is_active',true)
+        .order('id',{ascending:true})
+        .range(from,from+pageSize-1);
+      if(error)throw error;
+      const page=data||[];
+      rows.push(...page.map(q=>({...q,has_visual:Boolean(q.media_type),visual_status:'ready'})));
+      if(page.length<pageSize)break;
+    }
   }
   state.questionMeta=rows;
 
@@ -5152,7 +5159,7 @@ async function startReviewQuestionIds(ids,finished={}){
     const {data,error}=await client.from('questions').select(fields).in('id',clean).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
-    const queue=clean.map(id=>byId.get(id)).filter(Boolean);
+    const queue=clean.map(id=>byId.get(id)).filter(Boolean).filter(questionVisualCanBeResolved);
     if(!queue.length)throw new Error('Questões de revisão indisponíveis.');
     if(state.session?.coreSessionId)await closeNexoSession('abandoned',state.session);
     const config={mode:'review-errors',area:finished.area||'',subject:finished.subject||'',topic:finished.topic||'',size:queue.length};
@@ -5423,7 +5430,7 @@ async function startErrorReview(){
     const {data,error}=await client.from('questions').select(fields).in('id',ids).eq('is_active',true);
     if(error)throw error;
     const byId=new Map((data||[]).map(q=>[Number(q.id),q]));
-    const queue=ids.map(id=>byId.get(Number(id))).filter(Boolean);
+    const queue=ids.map(id=>byId.get(Number(id))).filter(Boolean).filter(questionVisualCanBeResolved);
     if(!queue.length)throw new Error('Não encontrei as questões da revisão.');
     if(state.session?.coreSessionId)await closeNexoSession('abandoned',state.session);
     const coreSessionId=await beginNexoSession({mode:'review'},queue.length);
@@ -7390,9 +7397,12 @@ $('#materialClearFilters')?.addEventListener('click',()=>{
 
 function renderBank(){
   const search=$('#bankSearch').value.toLowerCase().trim(),area=$('#bankArea').value;
-  const list=state.questionMeta.filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search))).slice(0,150);
-  $('#bankList').innerHTML=list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.media_type?' · ◉ visual':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join('');
-  $$('[data-bank]').forEach(b=>b.onclick=()=>openSingleQuestion(Number(b.dataset.bank)));
+  const list=state.questionMeta
+    .filter(q=>q.visual_status!=='repair')
+    .filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search)))
+    .slice(0,150);
+  $('#bankList').innerHTML=list.length?list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.has_visual||q.media_type?' · ◉ visual':''}${q.visual_status==='recoverable'?' · recuperável':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join(''):'<p class="learning-empty">Nenhuma questão respondível encontrada neste filtro.</p>';
+  $('[data-bank]').forEach(b=>b.onclick=()=>openSingleQuestion(Number(b.dataset.bank)));
 }
 $('#bankSearch').addEventListener('input',renderBank);
 $('#bankArea').addEventListener('change',renderBank);
@@ -7400,6 +7410,9 @@ $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){openPage('
 async function openSingleQuestion(id){
   const {data,error}=await client.from('questions').select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop').eq('id',id).single();
   if(error)return toast('Não foi possível abrir a questão.','error');
+  if(!questionVisualCanBeResolved(data)){
+    return toast('Esta questão está em restauração porque o recurso visual obrigatório ainda não está disponível.','info');
+  }
   openPage('questoes');state.session={queue:[data],index:0,size:1,area:data.area,subject:data.subject};
   $('#sessionSetup').classList.add('hidden');$('#studyWorkspace').classList.remove('hidden');
   $('#sessionAreaBadge').textContent=data.area;$('#sessionTitle').textContent=data.subject;
