@@ -212,9 +212,10 @@ async function runProfile(browser,name,viewport){
         await new Promise(r=>requestAnimationFrame(r));
         const rect=target.getBoundingClientRect();
         const style=getComputedStyle(target);
-        const children=[...target.querySelectorAll('button,input,select,textarea,.panel,.question-card,.plan-card,.theme-card,.journey-profile-card')]
+        const probeSelector='.page-head,.panel,.question-card,.plan-card,.theme-card,.journey-profile-card,.essay-workspace-v2,.sim-grid,.week-full-grid,.bank-list,.content-library-layout,.plans-grid,.journey-layout';
+        const children=[...target.querySelectorAll(probeSelector)].slice(0,40)
           .filter(el=>{const cs=getComputedStyle(el),r=el.getBoundingClientRect();return cs.display!=='none'&&cs.visibility!=='hidden'&&r.width>0&&r.height>0;});
-        const overflow=children.filter(el=>el.scrollWidth>el.clientWidth+6).slice(0,8).map(el=>({tag:el.tagName,cls:el.className,id:el.id,sw:el.scrollWidth,cw:el.clientWidth}));
+        const overflow=children.filter(el=>el.scrollWidth>el.clientWidth+8).slice(0,8).map(el=>({tag:el.tagName,cls:el.className,id:el.id,sw:el.scrollWidth,cw:el.clientWidth}));
         results.push({
           page:target.id,theme:mode.theme,font:mode.font,
           visible:style.display!=='none'&&rect.width>0&&rect.height>0,
@@ -278,6 +279,96 @@ async function runProfile(browser,name,viewport){
   });
   if(legacyCapabilityTest.missing.length)failures.push(name+': ações exclusivas da home antiga ficaram inacessíveis: '+legacyCapabilityTest.missing.join(', '));
   if(!legacyCapabilityTest.contextVisible||!legacyCapabilityTest.contextClosed)failures.push(name+': guia contextual não abre/fecha corretamente na interface minimalista');
+
+  const navigationClickTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const original={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      light:document.body.classList.contains('light')
+    };
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    const wait=()=>new Promise(r=>setTimeout(r,45));
+    const checks=[];
+    const active=()=>document.querySelector('.page.active')?.id||'';
+
+    const primary=[
+      ['inicio','inicio'],
+      ['study','materiais'],
+      ['questoes','questoes'],
+      ['redacao','redacao'],
+      ['simulados','simulados'],
+      ['semana','semana'],
+      ['desempenho','desempenho']
+    ];
+    for(const [key,pageId] of primary){
+      const btn=document.querySelector('[data-nrx-side="'+key+'"]');
+      if(!btn){checks.push({kind:'primary',key,ok:false,reason:'missing'});continue}
+      btn.click();await wait();
+      checks.push({kind:'primary',key,expected:pageId,actual:active(),ok:active()===pageId});
+    }
+
+    const secondary=[
+      ['focos','focos'],['radar','radar'],['banco','banco'],['temas','temas'],
+      ['feedback','feedback'],['ranking','ranking'],['planos','planos']
+    ];
+    for(const [key,pageId] of secondary){
+      const btn=document.querySelector('.nrx-side-more-panel [data-nrx-target="'+key+'"]');
+      if(!btn){checks.push({kind:'secondary',key,ok:false,reason:'missing'});continue}
+      btn.click();await wait();
+      checks.push({kind:'secondary',key,expected:pageId,actual:active(),ok:active()===pageId});
+    }
+
+    const theme=document.querySelector('[data-nrx-utility="theme"]');
+    let themeOk=false;
+    if(theme){
+      const before=document.body.classList.contains('light');
+      theme.click();await wait();
+      const changed=document.body.classList.contains('light')!==before;
+      theme.click();await wait();
+      themeOk=changed&&document.body.classList.contains('light')===before;
+    }
+    checks.push({kind:'utility',key:'theme',ok:themeOk});
+
+    const notification=document.querySelector('#notificationBtn');
+    let notificationOk=false;
+    if(notification){
+      notification.click();await wait();
+      const panel=document.querySelector('#notificationPanel');
+      const opened=Boolean(panel&&!panel.classList.contains('hidden'));
+      panel?.querySelector('[data-nrx-notification-close]')?.click();await wait();
+      notificationOk=opened&&Boolean(panel?.classList.contains('hidden'));
+    }
+    checks.push({kind:'utility',key:'notification',ok:notificationOk});
+
+    if(innerWidth<=760){
+      const mobileRoutes=[['questoes','questoes'],['redacao','redacao'],['materiais','materiais']];
+      for(const [key,pageId] of mobileRoutes){
+        const btn=document.querySelector('[data-nrx-bottom="'+key+'"]');
+        if(!btn){checks.push({kind:'mobile-bottom',key,ok:false,reason:'missing'});continue}
+        btn.click();await wait();
+        checks.push({kind:'mobile-bottom',key,expected:pageId,actual:active(),ok:active()===pageId});
+      }
+      const profile=document.querySelector('[data-nrx-bottom="profile"]');
+      if(profile){
+        profile.click();await wait();
+        const menu=document.querySelector('#profileMenu');
+        checks.push({kind:'mobile-bottom',key:'profile',ok:Boolean(menu&&!menu.classList.contains('hidden'))});
+        menu?.classList.add('hidden');
+      }else checks.push({kind:'mobile-bottom',key:'profile',ok:false,reason:'missing'});
+    }
+
+    document.body.classList.toggle('light',original.light);
+    pages.forEach(p=>p.classList.toggle('active',p.id===original.active));
+    if(app)app.className=original.app;
+    if(auth)auth.className=original.auth;
+    return checks;
+  });
+  const navigationFailures=navigationClickTest.filter(x=>!x.ok);
+  if(navigationFailures.length)failures.push(name+': cliques reais de navegação/recursos falharam: '+JSON.stringify(navigationFailures));
+
 
 
 
@@ -411,7 +502,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,navigationClickTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   await context.close();
 }
 
