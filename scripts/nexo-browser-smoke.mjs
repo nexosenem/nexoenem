@@ -32,7 +32,7 @@ async function runProfile(browser,name,viewport){
   const watchdog=setTimeout(()=>{
     console.error('FAIL '+name+': browser smoke watchdog em '+smokeStage);
     process.exit(2);
-  },120000); // browser smoke watchdog
+  },300000); // expanded browser smoke watchdog: full functional + visual audit
   const pageErrors=[];
   const badResponses=[];
   const failedRequests=[];
