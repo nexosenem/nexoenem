@@ -609,7 +609,7 @@ async function runViewportAudit(browser,name,viewport){
   const page=await context.newPage();
   const localErrors=[];
   page.on('pageerror',err=>localErrors.push(err.message));
-  await page.goto(baseUrl+'?viewport_audit='+encodeURIComponent(name+'-'+Date.now()),{waitUntil:'commit',timeout:30000});
+  await page.goto(BASE+'?viewport_audit='+encodeURIComponent(name+'-'+Date.now()),{waitUntil:'commit',timeout:30000});
   await page.waitForFunction(()=>{
     const boot=document.querySelector('#boot');
     const auth=document.querySelector('#authScreen');
