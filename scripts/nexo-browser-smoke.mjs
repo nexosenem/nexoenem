@@ -630,8 +630,8 @@ async function runProfile(browser,name,viewport){
         }):null,
         described2025:typeof questionVisualCanBeResolved==='function'?questionVisualCanBeResolved({
           source_year:2025,source_question_number:14,
-          base_text:'Descrição acessível do gráfico: valores 10, 20, 30, 40, 50, 60 para as seis categorias.',
-          prompt:'De acordo com o gráfico, qual alternativa está correta?',
+          base_text:null,
+          prompt:'Descrição acessível do gráfico: valores 10, 20, 30, 40, 50, 60 para as seis categorias. De acordo com o gráfico, qual alternativa está correta?',
           media_type:null,media_path:null,source_pdf_url:null,source_page:null,media_crop:null
         }):null,
         recoverable2023:typeof questionVisualCanBeResolved==='function'?questionVisualCanBeResolved({
@@ -639,6 +639,14 @@ async function runProfile(browser,name,viewport){
           media_type:null,media_path:null,source_pdf_url:null,source_page:null,media_crop:null
         }):null
       };
+      const semantics=typeof likelyNeedsQuestionVisual==='function'?{
+        historicalFigure:likelyNeedsQuestionVisual({subject:'Ciências Humanas',prompt:'Figuras como as de Voltaire e Duclos circularam nos salões.'}),
+        staffFrame:likelyNeedsQuestionVisual({subject:'Matemática',prompt:'O hospital possui 13 médicos em seu quadro de funcionários.'}),
+        legendaryFigure:likelyNeedsQuestionVisual({subject:'Literatura',prompt:'Hércules é uma figura lendária da mitologia greco-romana.'}),
+        shownFigure:likelyNeedsQuestionVisual({subject:'Física',prompt:'A figura a seguir representa o circuito elétrico.'}),
+        dataFrame:likelyNeedsQuestionVisual({subject:'Química',prompt:'Os resultados aparecem conforme o quadro. Teste Resultado A 10 B 20.'}),
+        artCaption:likelyNeedsQuestionVisual({subject:'Artes',prompt:'Cabeça de uma figura feminina. Escultura em mármore. Metropolitan Museum of Art.'})
+      }:null;
       let fallbackBlocked=false;
       if(typeof showVisualFallback==='function'){
         const box=document.createElement('div');
@@ -654,7 +662,7 @@ async function runProfile(browser,name,viewport){
         files:Array.isArray(q.external_media_files)?q.external_media_files.length:0,
         optionMedia:Array.isArray(q.option_media)?q.option_media.filter(Boolean).length:0,
         mediaType:q.media_type||'',
-        resolvers,fallbackBlocked
+        resolvers,semantics,fallbackBlocked
       };
     }finally{
       window.fetch=originalFetch;
@@ -664,6 +672,9 @@ async function runProfile(browser,name,viewport){
     failures.push(name+': recuperação de visuais ENEM ausentes regrediu: '+JSON.stringify(visualRecoveryTest));
   if(visualRecoveryTest.resolvers?.missing2025!==false||visualRecoveryTest.resolvers?.described2025!==true||visualRecoveryTest.resolvers?.recoverable2023!==true)
     failures.push(name+': filtro de integridade visual classificou questões incorretamente: '+JSON.stringify(visualRecoveryTest));
+  const sem=visualRecoveryTest.semantics||{};
+  if(sem.historicalFigure!==false||sem.staffFrame!==false||sem.legendaryFigure!==false||sem.shownFigure!==true||sem.dataFrame!==true||sem.artCaption!==true)
+    failures.push(name+': detector semântico de recursos visuais confundiu termos ambíguos: '+JSON.stringify(sem));
   if(!visualRecoveryTest.fallbackBlocked)
     failures.push(name+': questão com visual obrigatório indisponível ainda permite resposta: '+JSON.stringify(visualRecoveryTest));
 
