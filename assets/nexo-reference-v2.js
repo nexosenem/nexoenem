@@ -240,9 +240,12 @@ function buildBottomNav(){
     const b=document.createElement('button');
     b.type='button';b.dataset.nrxBottom=page;
     b.innerHTML='<span>'+icon+'</span><small>'+label+'</small>';
-    b.addEventListener('click',()=>{
-      if(page==='profile')$('#profileButton')?.click();
-      else go(page);
+    b.addEventListener('click',e=>{
+      if(page==='profile'){
+        e.preventDefault();
+        e.stopPropagation();
+        $('#profileButton')?.click();
+      }else go(page);
       syncBottom();
     });
     nav.appendChild(b);

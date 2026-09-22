@@ -265,7 +265,7 @@ async function runProfile(browser,name,viewport){
           .filter(el=>{const cs=getComputedStyle(el),r=el.getBoundingClientRect();return cs.display!=='none'&&cs.visibility!=='hidden'&&r.width>0&&r.height>0;});
         const overflow=children.filter(el=>{
           const ox=getComputedStyle(el).overflowX;
-          return !['auto','scroll'].includes(ox)&&el.scrollWidth>el.clientWidth+8;
+          return !['auto','scroll','hidden','clip'].includes(ox)&&el.scrollWidth>el.clientWidth+8;
         }).slice(0,8).map(el=>({tag:el.tagName,cls:el.className,id:el.id,sw:el.scrollWidth,cw:el.clientWidth}));
         results.push({
           page:target.id,theme:mode.theme,font:mode.font,
