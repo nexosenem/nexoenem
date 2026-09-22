@@ -1,7 +1,8 @@
-const NEXO_CACHE='nexo-v16-20260922-21';
+const NEXO_CACHE='nexo-v16-20260922-22';
 const SHELL=[
   './',
   './index.html',
+  './manifest.webmanifest',
   './styles.css?v=20260921-4',
   './app.js?v=20260922-5',
   './assets/nexo-runtime-compat.js?v=20260921-2',
@@ -98,6 +99,7 @@ self.addEventListener('fetch',event=>{
     path.endsWith('.css')||
     path.endsWith('.js')||
     path.endsWith('.html')||
+    path.endsWith('.webmanifest')||
     path.endsWith('.avif')||
     path.endsWith('.webp')||
     path.endsWith('.png')||
