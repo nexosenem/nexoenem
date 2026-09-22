@@ -3439,31 +3439,53 @@ async function getSeenIds() {
 }
 
 async function fetchQuestions(filters={}) {
-  let radarKeys=null;
-  if(filters.radarTopic){
-    try{
-      let rq=client.from('enem_radar_items').select('year,question_index').eq('topic',filters.radarTopic);
-      if(filters.area)rq=rq.eq('area',filters.area);
-      if(filters.subject)rq=rq.eq('subject',filters.subject);
-      const {data:radarRows,error:radarError}=await rq.limit(1000);
-      if(!radarError&&radarRows?.length){
-        radarKeys=new Set(radarRows.map(r=>String(r.year)+'::'+String(r.question_index)));
+  const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
+  let rows=null;
+
+  // Main path: server-side random candidate pool. This avoids biasing mixed
+  // sessions toward the first 1,000 rows while keeping the mobile payload bounded.
+  try{
+    const {data,error}=await client.rpc('get_study_question_candidates',{
+      p_area:filters.area||null,
+      p_subject:filters.subject||null,
+      p_difficulty:filters.difficulty?Number(filters.difficulty):null,
+      p_topic:filters.radarTopic?null:(filters.fallbackTopic||filters.topic||null),
+      p_radar_topic:filters.radarTopic||null,
+      p_limit:1000
+    });
+    if(error)throw error;
+    rows=data||[];
+  }catch(err){
+    console.warn('study question candidate RPC fallback',err);
+
+    // Compatibility fallback for deployments where the RPC has not propagated yet.
+    let radarKeys=null;
+    if(filters.radarTopic){
+      try{
+        let rq=client.from('enem_radar_items').select('year,question_index').eq('topic',filters.radarTopic);
+        if(filters.area)rq=rq.eq('area',filters.area);
+        if(filters.subject)rq=rq.eq('subject',filters.subject);
+        const {data:radarRows,error:radarError}=await rq.limit(1000);
+        if(!radarError&&radarRows?.length){
+          radarKeys=new Set(radarRows.map(r=>String(r.year)+'::'+String(r.question_index)));
+        }
+      }catch(radarErr){
+        console.warn('radar question filter fallback',radarErr);
       }
-    }catch(err){
-      console.warn('radar question filter fallback',err);
     }
+
+    let q=client.from('questions').select(fields).eq('is_active',true).limit(1000);
+    if(filters.area)q=q.eq('area',filters.area);
+    if(filters.subject)q=q.eq('subject',filters.subject);
+    if(filters.difficulty)q=q.eq('difficulty',Number(filters.difficulty));
+    if(!radarKeys&&filters.topic)q=q.eq('topic',filters.fallbackTopic||filters.topic);
+    const {data,error}=await q;
+    if(error)throw error;
+    rows=data||[];
+    if(radarKeys)rows=rows.filter(x=>radarKeys.has(String(x.source_year)+'::'+String(x.source_question_number)));
   }
 
-  let q = client.from('questions').select(
-    'id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop'
-  ).eq('is_active',true).limit(1000);
-  if (filters.area) q=q.eq('area',filters.area);
-  if (filters.subject) q=q.eq('subject',filters.subject);
-  if (filters.difficulty) q=q.eq('difficulty',Number(filters.difficulty));
-  if (!radarKeys&&filters.topic) q=q.eq('topic',filters.fallbackTopic||filters.topic);
-  const { data, error } = await q;
-  if (error) throw error;
-  let rows=(data||[]).filter(questionVisualCanBeResolved);
+  rows=(rows||[]).filter(questionVisualCanBeResolved);
   if(filters.visualOnly){
     rows=rows.filter(x=>Boolean(
       x.media_type||x.media_path||
@@ -3471,8 +3493,7 @@ async function fetchQuestions(filters={}) {
       likelyNeedsQuestionVisual(x)
     ));
   }
-  if(!radarKeys)return rows;
-  return rows.filter(x=>radarKeys.has(String(x.source_year)+'::'+String(x.source_question_number)));
+  return rows;
 }
 
 async function fetchQuestionsResilient(filters={}){
