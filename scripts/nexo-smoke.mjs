@@ -156,6 +156,10 @@ assert(app.includes('scores.map(toEnemCompetencyBand)')&&app.includes('function 
 assert(app.includes('analysis_version:NEXO_ESSAY_ANALYSIS_VERSION')&&app.includes('rubric_version:NEXO_ESSAY_RUBRIC_VERSION'),'Histórico de redação registra versões da análise e rubrica');
 assert(app.includes("client.rpc('get_admin_explanation_queue'")&&app.includes("client.rpc('admin_set_question_explanation'"),'Fluxo editorial Admin usa RPCs protegidos');
 assert(index.includes('id="adminExplanationQueue"')&&index.includes('id="adminExplanationModal"'),'Fila e editor de resolução editorial publicados no Admin');
+assert(index.includes('id="adminVisualRepairQueue"')&&index.includes('id="adminVisualRepairModal"'),'Fila e editor de restauração visual publicados no Admin');
+assert(app.includes("client.rpc('get_admin_visual_repair_queue'")&&app.includes("client.rpc('admin_set_question_media_path'"),'Fluxo Admin restaura mídia apenas por RPC protegido');
+assert(app.includes('await uploadToCloudinary(file')&&app.includes('loadAdminVisualRepairQueue()'),'Restauração visual aceita upload assinado e atualiza a fila');
+assert(cssV15.includes('.admin-visual-repair-panel')&&cssV15.includes('.admin-visual-repair-sheet'),'Restauração visual segue o design system V15');
 assert(cssV15.includes('.answer-editorial-status')&&cssV15.includes('.admin-editorial-row'),'Estados editoriais seguem o design system V15')
 assert(app.includes("client.rpc('get_question_catalog_items_v2'"),'Banco usa catálogo leve com status de integridade visual');
 assert(app.includes("q.visual_status!=='repair'"),'Banco oculta questões visuais em restauração');
