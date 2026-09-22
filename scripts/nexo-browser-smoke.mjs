@@ -212,15 +212,17 @@ async function runProfile(browser,name,viewport){
     const candidates=[...document.querySelectorAll('.nrx-shortcut,.nrx-stat-card,.nrx-preview,.nrx-mob-action,.nrx-mob-progress,.nrx-mob-continue')].filter(visible);
     const overflowing=candidates.filter(el=>el.scrollWidth>el.clientWidth+4).map(el=>el.className);
     const mobile=innerWidth<=760;
-    const actionIcons=mobile?[...document.querySelectorAll('.nrx-mob-action i')].filter(visible):[];
-    const minTouch=actionIcons.length?Math.min(...actionIcons.map(el=>Math.min(el.getBoundingClientRect().width,el.getBoundingClientRect().height))):999;
+    const actionButtons=mobile?[...document.querySelectorAll('.nrx-mob-action')].filter(visible):[];
+    const minTouch=actionButtons.length?Math.min(...actionButtons.map(el=>el.getBoundingClientRect().height)):0;
+    const actionCount=actionButtons.length;
     const hero=document.querySelector(mobile?'.nrx-mob-hero h1':'.nrx-hero h1');
     const heroFont=hero?parseFloat(getComputedStyle(hero).fontSize):0;
     return {
       missingSide,missingProfile,overflowing,minTouch,heroFont,
       moreToggle:Boolean(document.querySelector('.nrx-side-more-toggle')),
       profileTools:Boolean(document.querySelector('.nrx-profile-tools')),
-      notificationWired:Boolean(document.querySelector('#notificationBtn'))
+      notificationWired:Boolean(document.querySelector('#notificationBtn')),
+      actionCount
     };
   });
   if(referenceAccessTest.missingSide.length)failures.push(name+': recursos antigos ausentes do menu Mais: '+referenceAccessTest.missingSide.join(', '));
@@ -228,7 +230,8 @@ async function runProfile(browser,name,viewport){
   if(!referenceAccessTest.moreToggle)failures.push(name+': acesso Mais recursos não foi montado');
   if(!referenceAccessTest.profileTools)failures.push(name+': recursos secundários não foram preservados no Perfil');
   if(referenceAccessTest.overflowing.length)failures.push(name+': cards da referência com overflow: '+referenceAccessTest.overflowing.join(', '));
-  if(name==='mobile'&&referenceAccessTest.minTouch<42)failures.push(name+': alvo de toque principal menor que 42px');
+  if(name==='mobile'&&referenceAccessTest.actionCount<8)failures.push(name+': atalhos principais móveis ausentes: '+referenceAccessTest.actionCount+'/8');
+  if(name==='mobile'&&referenceAccessTest.minTouch<44)failures.push(name+': alvo de toque principal menor que 44px');
   if(name==='mobile'&&referenceAccessTest.heroFont<26)failures.push(name+': título principal pequeno demais');
   if(name!=='mobile'&&referenceAccessTest.heroFont<36)failures.push(name+': título principal desktop pequeno demais');
 
@@ -391,6 +394,13 @@ async function runProfile(browser,name,viewport){
       btn.click();await wait();checks.push({kind:'primary',key,expected:pageId,actual:active(),ok:active()===pageId});
     }
 
+
+    const resumosBtn=document.querySelector('[data-nrx-side="resumos"]');
+    if(resumosBtn){
+      resumosBtn.click();await new Promise(r=>setTimeout(r,100));
+      checks.push({kind:'primary-view',key:'resumos',expected:'materiais/resumos',actual:active()+'/'+String(document.body.dataset.nrxMaterialsView||''),ok:active()==='materiais'&&document.body.dataset.nrxMaterialsView==='resumos'});
+    }else checks.push({kind:'primary-view',key:'resumos',ok:false,reason:'missing'});
+
     const journeyPrimary=[['community','community','groups'],['store','store','store'],['avatar','avatar','avatar']];
     for(const [key,view,tab] of journeyPrimary){
       const btn=document.querySelector('[data-nrx-side="'+key+'"]');
@@ -473,6 +483,54 @@ async function runProfile(browser,name,viewport){
   });
   const navigationFailures=navigationClickTest.filter(x=>!x.ok);
   if(navigationFailures.length)failures.push(name+': cliques reais de navegação/recursos falharam: '+JSON.stringify(navigationFailures));
+
+  markStage('home-shortcuts');
+  const homeShortcutTest=await page.evaluate(async()=>{
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={app:app?.className||'',auth:auth?.className||'',active:pages.find(p=>p.classList.contains('active'))?.id||'inicio'};
+    if(app)app.classList.remove('hidden');
+    if(auth)auth.classList.add('hidden');
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const active=()=>document.querySelector('.page.active')?.id||'';
+    const mobile=innerWidth<=760;
+    const specs=mobile
+      ?[
+        ['Questões','questoes'],['Redação','redacao'],['Simulados','simulados'],['Resumo','materiais','resumos'],
+        ['Planner','semana'],['Meu Desempenho','desempenho'],['Loja','ranking','store'],['Nexo (IA)','nexo']
+      ]
+      :[
+        ['Questões','questoes'],['Redação','redacao'],['Simulados','simulados'],['Resumo','materiais','resumos'],
+        ['Planner','semana'],['Loja NEXO','ranking','store']
+      ];
+    const selector=mobile?'.nrx-mobile .nrx-mob-action':'.nrx-desktop .nrx-shortcut';
+    const checks=[];
+    const visible=el=>{const cs=getComputedStyle(el),r=el.getBoundingClientRect();return cs.display!=='none'&&cs.visibility!=='hidden'&&r.width>0&&r.height>0};
+    for(const [label,pageId,view] of specs){
+      if(typeof openPage==='function')openPage('inicio');
+      await wait(45);
+      const btn=[...document.querySelectorAll(selector)].find(el=>(el.innerText||'').replace(/\s+/g,' ').trim()===label);
+      if(!btn){checks.push({label,ok:false,reason:'missing'});continue}
+      const wasVisible=visible(btn);
+      btn.click();
+      await wait(view==='store'?180:70);
+      if(pageId==='nexo'){
+        const panel=document.querySelector('#niaPanel');
+        const opened=Boolean(panel&&!panel.classList.contains('hidden'));
+        document.querySelector('#closeNia')?.click();
+        checks.push({label,visible:wasVisible,ok:wasVisible&&opened});
+      }else{
+        const routeOk=active()===pageId;
+        const viewOk=!view||document.body.dataset.nrxMaterialsView===view||document.body.dataset.nrxJourneyView===view;
+        checks.push({label,visible:wasVisible,expected:pageId+(view?'/'+view:''),actual:active(),ok:wasVisible&&routeOk&&viewOk});
+      }
+    }
+    pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+    if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    return checks;
+  });
+  const homeShortcutFailures=homeShortcutTest.filter(x=>!x.ok);
+  if(homeShortcutFailures.length)failures.push(name+': atalhos visuais da home falharam: '+JSON.stringify(homeShortcutFailures));
 
   markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
@@ -632,7 +690,7 @@ async function runProfile(browser,name,viewport){
   if(badResponses.length)failures.push(name+': respostas HTTP locais ruins: '+[...new Set(badResponses)].join(' | '));
   if(failedRequests.length)failures.push(name+': requests locais falharam: '+[...new Set(failedRequests)].join(' | '));
 
-  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,accessibilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,accessibilityTest,second,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
