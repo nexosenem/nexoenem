@@ -1237,6 +1237,129 @@ async function runProfile(browser,name,viewport){
   }
   if(advancedFailures.length)failures.push(name+': controles avançados regrediram: '+advancedFailures.join(', ')+' '+JSON.stringify(advancedControlTest));
 
+
+  markStage('safe-external-actions');
+  const safeExternalActionsTest=await page.evaluate(async()=>{
+    const wait=ms=>new Promise(r=>setTimeout(r,ms));
+    const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+    const pages=[...document.querySelectorAll('.page')];
+    const prev={
+      app:app?.className||'',auth:auth?.className||'',
+      active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',
+      user:state.user,profile:state.profile,membership:state.membership,
+      haptics:localStorage.getItem('nexo-haptics')
+    };
+    const originalReset=client.auth.resetPasswordForEmail;
+    const originalSignOut=client.auth.signOut;
+    const originalFrom=client.from;
+    const originalRpc=client.rpc;
+    const originalAnchorClick=HTMLAnchorElement.prototype.click;
+    const originalOpen=window.open;
+    const calls={reset:0,signOut:0,plus:0,downloads:0,opens:[]};
+    const result={};
+    try{
+      // Recuperação de senha sem enviar e-mail real.
+      if(app)app.classList.add('hidden');
+      if(auth)auth.classList.remove('hidden');
+      const email=document.querySelector('#loginEmail');
+      if(email)email.value='smoke@nexo.local';
+      client.auth.resetPasswordForEmail=async()=>{calls.reset++;return {data:{},error:null}};
+      document.querySelector('#forgotPassword')?.click();
+      await wait(35);
+      result.passwordRecovery=Boolean(calls.reset===1&&/Link de recuperação enviado/i.test(document.querySelector('#authMessage')?.textContent||''));
+
+      // Exportação sem baixar arquivo e sem consultar dados reais.
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      state.user={id:'smoke-user',email:'smoke@nexo.local',created_at:'2026-01-01T00:00:00Z'};
+      client.from=()=>{
+        const chain={
+          select(){return chain},eq(){return chain},order(){return chain},limit(){return chain},in(){return chain},
+          async maybeSingle(){return {data:null,error:null}},
+          then(resolve,reject){return Promise.resolve({data:[],error:null}).then(resolve,reject)}
+        };
+        return chain;
+      };
+      HTMLAnchorElement.prototype.click=function(){
+        if(String(this.download||'').startsWith('nexo-meus-dados-'))calls.downloads++;
+      };
+      document.querySelector('#exportMyData')?.click();
+      await wait(80);
+      const exportBtn=document.querySelector('#exportMyData');
+      result.exportData=Boolean(calls.downloads===1&&exportBtn&&!exportBtn.disabled&&/Exportar meus dados/i.test(exportBtn.textContent||''));
+
+      // Logout sem encerrar sessão real.
+      client.auth.signOut=async()=>{calls.signOut++;return {error:null}};
+      document.querySelector('#logoutBtn')?.click();
+      await wait(30);
+      result.logout=Boolean(calls.signOut===1);
+
+      // Interesse Plus sem gravar RPC real.
+      state.membership={plan:'free',is_plus:false,is_ultra:false,usage:{},limits:{}};
+      if(typeof renderPlanExperience==='function')renderPlanExperience();
+      client.rpc=async(name,...args)=>{
+        if(name==='request_nexo_plus'){calls.plus++;return {data:{ok:true},error:null}}
+        return originalRpc.call(client,name,...args);
+      };
+      const plus=document.querySelector('#requestPlusBtn');
+      if(plus){plus.disabled=false;plus.innerHTML='Quero o Plus · R$ 9,99/mês <span>→</span>'}
+      plus?.click();
+      await wait(40);
+      result.plus=Boolean(calls.plus===1&&/Interesse registrado/i.test(plus?.textContent||''));
+
+      // Haptics: preferência local deve alternar e voltar ao valor original.
+      const haptic=document.querySelector('#toggleNexoHaptics');
+      const before=localStorage.getItem('nexo-haptics');
+      haptic?.click();
+      const afterOne=localStorage.getItem('nexo-haptics');
+      haptic?.click();
+      const afterTwo=localStorage.getItem('nexo-haptics');
+      result.haptics=Boolean(haptic&&afterOne!==before&&afterTwo===before);
+
+      // Links oficiais sem abrir nova janela real.
+      window.open=(...args)=>{calls.opens.push(args);return null};
+      const sheet=document.querySelector('#officialEssaySheetBtn');
+      if(sheet)sheet.disabled=false;
+      sheet?.click();
+      document.querySelector('#officialEssayGuideBtn')?.click();
+      await wait(10);
+      result.essayLinks=Boolean(
+        calls.opens.some(x=>/folha-redacao-enem\.html/i.test(String(x[0]||''))) &&
+        calls.opens.some(x=>/gov\.br\/inep/i.test(String(x[0]||'')))
+      );
+
+      // Atalhos originais do topo/perfil continuam roteando.
+      if(typeof openPage==='function')openPage('inicio');
+      document.querySelector('#headerJourneyPill')?.click();
+      await wait(30);
+      result.headerJourney=Boolean(document.querySelector('#ranking')?.classList.contains('active'));
+      document.querySelector('#profilePlanShortcut')?.click();
+      await wait(30);
+      result.profilePlan=Boolean(document.querySelector('#planos')?.classList.contains('active'));
+    }catch(err){
+      result.error=String(err?.stack||err?.message||err);
+    }finally{
+      client.auth.resetPasswordForEmail=originalReset;
+      client.auth.signOut=originalSignOut;
+      client.from=originalFrom;client.rpc=originalRpc;
+      HTMLAnchorElement.prototype.click=originalAnchorClick;
+      window.open=originalOpen;
+      state.user=prev.user;state.profile=prev.profile;state.membership=prev.membership;
+      if(prev.haptics===null)localStorage.removeItem('nexo-haptics');else localStorage.setItem('nexo-haptics',prev.haptics);
+      if(typeof renderHapticPreference==='function')renderHapticPreference();
+      if(typeof renderPlanExperience==='function')renderPlanExperience();
+      pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
+      if(app)app.className=prev.app;if(auth)auth.className=prev.auth;
+    }
+    return {...result,calls};
+  });
+  const safeExternalFailures=[];
+  for(const key of ['passwordRecovery','exportData','logout','plus','haptics','essayLinks','headerJourney','profilePlan']){
+    if(!safeExternalActionsTest[key])safeExternalFailures.push(key);
+  }
+  if(safeExternalActionsTest.error)safeExternalFailures.push('error='+safeExternalActionsTest.error);
+  if(safeExternalFailures.length)failures.push(name+': ações externas mockadas regrediram: '+safeExternalFailures.join(', ')+' '+JSON.stringify(safeExternalActionsTest));
+
   markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -1617,7 +1740,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
