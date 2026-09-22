@@ -281,14 +281,14 @@ function buildReferenceSidebar(){
 }
 function syncSideNav(){
   const active=$('.page.active')?.id||'inicio';
-  $('[data-nrx-side]').forEach(b=>{
+  $$('[data-nrx-side]').forEach(b=>{
     const key=b.dataset.nrxSide;
     b.classList.toggle('active',key===active||(key==='materiais'&&active==='videoaulas'));
   });
   const name=firstName();
-  $('[data-nrx-side-name]').forEach(el=>el.textContent=name);
+  $$('[data-nrx-side-name]').forEach(el=>el.textContent=name);
   const role=$('#profileRole')?.textContent?.trim()||'Estudante';
-  $('[data-nrx-side-plan]').forEach(el=>el.textContent=role);
+  $$('[data-nrx-side-plan]').forEach(el=>el.textContent=role);
 }
 function addMobileChrome(){
   const top=$('.topbar');
