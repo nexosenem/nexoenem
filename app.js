@@ -4059,18 +4059,45 @@ function startQuestionBehaviorMonitor(q,seed=null){
 
 function likelyNeedsQuestionVisual(q){
   if(!q)return false;
-  const text=String([q.base_text,q.prompt].filter(Boolean).join(' ')).toLocaleLowerCase('pt-BR');
-  return /\b(figura|figuras|gráfico|grafico|imagem|mapa|diagrama|esquema|tirinha|charge|cartum|tabela|quadro)\b/.test(text);
+  const raw=String([q.base_text,q.prompt].filter(Boolean).join(' '));
+  const text=normalizeTextKey(raw);
+
+  // Unambiguous visual resources.
+  if(/\b(grafico|imagem|mapa|diagrama|esquema|tirinha|charge|cartum|tabela|fotografia|ilustracao)\b/.test(text))return true;
+
+  // "Figura" is ambiguous in Portuguese ("figura histórica", "figura lendária").
+  // Treat it as visual only when the wording points to an actual displayed object.
+  const figureVisual=
+    /\bfiguras?\s+(?:a seguir|abaixo|acima|seguinte)\b/.test(text)||
+    /\b(?:na|nas|pela|pelas|conforme a|conforme as)\s+figuras?\b/.test(text)||
+    /\bfiguras?\b.{0,60}\b(?:apresenta|apresentada|apresentado|mostra|mostrada|mostrado|representa|representando|representada|representado|ilustra|ilustrada|ilustrado)\b/.test(text)||
+    /\b(?:apresenta|apresentada|apresentado|mostra|mostrada|mostrado|representa|representando|representada|representado|ilustra|ilustrada|ilustrado)\b.{0,60}\bfiguras?\b/.test(text);
+  if(figureVisual)return true;
+
+  // "Quadro" can mean a table/box, but also staff, clinical condition, political
+  // landscape etc. Exclude common non-visual meanings before contextual matching.
+  const nonVisualQuadro=/\bquadro\s+(?:de\s+funcionarios|clinico|social|politico|economico|historico|geral)\b/.test(text);
+  const quadroVisual=!nonVisualQuadro&&(
+    /\b(?:conforme o|no|pelo)\s+quadro\b/.test(text)||
+    /\b(?:o|um)\s+quadro\b.{0,45}\b(?:a seguir|abaixo|acima|seguinte|apresenta|mostra|indica|registra|relaciona|informa|dados|valores|teste|resultado)\b/.test(text)||
+    /\bquadro\b.{0,45}\b(?:apresenta|mostra|indica|registra|relaciona|informa|dados|valores|teste|resultado)\b/.test(text)
+  );
+  if(quadroVisual)return true;
+
+  // Art items often identify the work through captions instead of saying
+  // "imagem a seguir". Museum/work vocabulary is a stronger cue in Artes only.
+  const subject=normalizeTextKey(q.subject||'');
+  return subject==='artes'&&/\b(escultura|pintura|gravura|obra|museu|museum|acervo|instalacao)\b/.test(text);
 }
 function hasAccessibleVisualDescription(q){
-  const text=String(q?.base_text||'').toLocaleLowerCase('pt-BR');
+  const text=String([q?.base_text,q?.prompt].filter(Boolean).join(' ')).toLocaleLowerCase('pt-BR');
   if(!text)return false;
   if(/descri[cç][aã]o acess[ií]vel/.test(text))return true;
   if(/representa[cç][aã]o (?:acess[ií]vel|textual)/.test(text))return true;
   // Some imported official items transcribe all values of a table/graph into the
-  // base text. Keep only clearly data-rich descriptions as a non-image fallback.
+  // statement. Keep only clearly data-rich descriptions as a non-image fallback.
   const numeric=(text.match(/\d+(?:[.,]\d+)?/g)||[]).length;
-  return numeric>=6&&/(gr[aá]fico|tabela|quadro).{0,90}(apresenta|mostra|dados|valores|classifica)/.test(text);
+  return numeric>=6&&/(gr[aá]fico|tabela|quadro).{0,120}(apresenta|mostra|dados|valores|classifica|teste|resultado)/.test(text);
 }
 function questionVisualCanBeResolved(q){
   if(!likelyNeedsQuestionVisual(q))return true;
