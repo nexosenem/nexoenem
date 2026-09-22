@@ -1528,6 +1528,38 @@ async function runProfile(browser,name,viewport){
   if(safeExternalActionsTest.error)safeExternalFailures.push('error='+safeExternalActionsTest.error);
   if(safeExternalFailures.length)failures.push(name+': ações externas mockadas regrediram: '+safeExternalFailures.join(', ')+' '+JSON.stringify(safeExternalActionsTest));
 
+
+  markStage('study-shortcuts');
+  const studyShortcutTest=await page.evaluate(async()=>{
+    const wait=ms=>new Promise(r=>setTimeout(r,ms)),pages=[...document.querySelectorAll('.page')];
+    const prev={active:pages.find(p=>p.classList.contains('active'))?.id||'inicio',user:state.user,core:state.core,materials:state.materials,modules:state.systemModules};
+    const oldStart=window.startStudySession,calls=[],out={};
+    try{
+      state.user={id:'smoke-shortcuts',email:'smoke@nexo.local'};state.systemModules=new Map();
+      state.core={recommended_action:{area:'Matemática',subject:'Matemática',topic:'Porcentagem',size:8,reason:'smoke'}};
+      window.startStudySession=async cfg=>{calls.push({...cfg})};
+      document.querySelector('#adaptiveButton')?.click();await wait(20);
+      document.querySelector('#mobileAdaptive')?.click();await wait(20);
+      out.adaptive=calls.filter(x=>x.mode==='adaptive'&&x.topic==='Porcentagem'&&Number(x.size)===8).length===2;
+      document.querySelector('#quickTen')?.click();await wait(10);
+      out.quickTen=document.querySelector('#sessionSize')?.value==='10'&&document.querySelector('#questoes')?.classList.contains('active');
+      if(document.querySelector('#visualOnly'))document.querySelector('#visualOnly').checked=false;
+      document.querySelector('#quickVisual')?.click();await wait(10);out.quickVisual=document.querySelector('#visualOnly')?.checked===true;
+      if(document.querySelector('#sessionSize'))document.querySelector('#sessionSize').value='20';
+      document.querySelector('#mobileQuickTen')?.click();await wait(10);out.mobileQuickTen=document.querySelector('#sessionSize')?.value==='10';
+      if(document.querySelector('#visualOnly'))document.querySelector('#visualOnly').checked=false;
+      document.querySelector('#mobileQuickVisual')?.click();await wait(10);out.mobileQuickVisual=document.querySelector('#visualOnly')?.checked===true;
+      try{localStorage.removeItem(studyResumeKey())}catch(_){}
+      state.materials=[];openPage('inicio');document.querySelector('#continueStudy')?.click();await wait(15);
+      out.continueFallback=document.querySelector('#questoes')?.classList.contains('active');
+    }catch(e){out.error=String(e?.stack||e)}
+    finally{window.startStudySession=oldStart;state.user=prev.user;state.core=prev.core;state.materials=prev.materials;state.systemModules=prev.modules;pages.forEach(p=>p.classList.toggle('active',p.id===prev.active))}
+    return {...out,calls};
+  });
+  const studyShortcutFailures=[];for(const k of ['adaptive','quickTen','quickVisual','mobileQuickTen','mobileQuickVisual','continueFallback'])if(!studyShortcutTest[k])studyShortcutFailures.push(k);
+  if(studyShortcutTest.error)studyShortcutFailures.push('error='+studyShortcutTest.error);
+  if(studyShortcutFailures.length)failures.push(name+': atalhos de estudo regrediram: '+studyShortcutFailures.join(', ')+' '+JSON.stringify(studyShortcutTest));
+
   markStage('accessibility');
   const accessibilityTest=await page.evaluate(()=>{
     const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
@@ -1908,7 +1940,7 @@ async function runProfile(browser,name,viewport){
   }
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
-  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
