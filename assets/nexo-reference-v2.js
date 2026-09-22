@@ -248,6 +248,10 @@ function buildReferenceSidebar(){
   const old=$('.side-nav',sidebar);
   if(old)old.classList.add('nrx-original-nav');
   $('.sidebar-quote',sidebar)?.classList.add('nrx-original-quote');
+  const brand=$('.brand',sidebar);
+  brand?.classList.add('nrx-brand-ref');
+  const tagline=brand?.querySelector('small');
+  if(tagline)tagline.textContent='Seu esforço conecta o seu futuro.';
 
   const nav=document.createElement('nav');
   nav.className='nrx-side-nav';
