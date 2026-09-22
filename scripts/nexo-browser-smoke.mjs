@@ -1,8 +1,26 @@
 import { chromium } from 'playwright';
+import { mkdir } from 'node:fs/promises';
 
 const BASE=process.env.NEXO_SMOKE_URL||'http://127.0.0.1:4173/';
 const failures=[];
 const info=[];
+
+async function captureVisualReference(page,name){
+  await mkdir('artifacts/visual',{recursive:true});
+  const targets=['inicio','materiais','questoes','redacao'];
+  for(const id of targets){
+    await page.evaluate(pageId=>{
+      const app=document.querySelector('#app'),auth=document.querySelector('#authScreen');
+      if(app)app.classList.remove('hidden');
+      if(auth)auth.classList.add('hidden');
+      document.querySelectorAll('.page').forEach(p=>p.classList.toggle('active',p.id===pageId));
+      document.body.dataset.v15Page=pageId;
+      window.scrollTo(0,0);
+    },id);
+    await page.waitForTimeout(120);
+    await page.screenshot({path:'artifacts/visual/'+name+'-'+id+'.png',fullPage:false});
+  }
+}
 
 async function runProfile(browser,name,viewport){
   const context=await browser.newContext({viewport,locale:'pt-BR'});
@@ -2525,6 +2543,8 @@ async function runProfile(browser,name,viewport){
   if(!offlineShellTest.ok)failures.push(name+': shell PWA não abriu offline: '+JSON.stringify(offlineShellTest));
 
   info.push({name,viewport,first,globalSearchUiTest,referenceUiTest,referenceAccessTest,routeMatrixTest,utilityTest,legacyCapabilityTest,preservedGuidanceTest,navigationClickTest,adminAccessTest,homeShortcutTest,coreFeatureAccessTest,utilityModuleTest,moduleInteractionTest,contentWorkflowTest,journeyPersistenceTest,essayRenderAndViewerTest,viewerActionTest,viewerNoteTest,advancedControlTest,safeExternalActionsTest,studyShortcutTest,accessibilityTest,experienceControlTest,questionFlowTest,second,offlineShellTest,pageErrors:realErrors.length,badResponses:badResponses.length,failedRequests:failedRequests.length});
+  markStage('visual-reference');
+  await captureVisualReference(page,name);
   markStage('done');
   clearTimeout(watchdog);
   await context.close();
