@@ -422,6 +422,11 @@ function syncWeakness(){
     if(pct!==null)el.classList.add(toneClass(pct));
   });
 }
+function syncQuestionModes(){
+  const modes=$('.nrx-question-modes');
+  const workspace=$('#studyWorkspace');
+  if(modes&&workspace)modes.classList.toggle('hidden',!workspace.classList.contains('hidden'));
+}
 function syncContinueCard(){
   const host=$('#mobileRecent')||$('#recentAttempts');
   const resume=host?.querySelector('.resume-study-row');
@@ -438,10 +443,10 @@ function syncContinueCard(){
   $$('[data-nrx-continue-title]').forEach(el=>el.textContent=title);
   $$('[data-nrx-continue-sub]').forEach(el=>el.textContent=sub);
 }
-function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncSideNav();syncBottom();placeSearch()}
+function syncAll(){syncIdentity();syncProgress();syncWeakness();syncContinueCard();syncQuestionModes();syncSideNav();syncBottom();placeSearch()}
 
 function observe(){
-  const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#inicio','#app'];
+  const targets=['#profileName','#progressPct','#mobileProgressPct','#weaknessBars','#mobileRecent','#recentAttempts','#studyWorkspace','#inicio','#app'];
   targets.forEach(sel=>{
     const el=$(sel);if(!el)return;
     new MutationObserver(()=>syncAll()).observe(el,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style']});
