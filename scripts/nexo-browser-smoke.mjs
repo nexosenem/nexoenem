@@ -983,7 +983,7 @@ async function runProfile(browser,name,viewport){
       state.materialOpenTopic='';
       state.libraryQuickFive=false;
       document.body.dataset.nrxMaterialsView='study';
-      if(typeof openPage==='function')openPage('materiais');
+      pages.forEach(p=>p.classList.toggle('active',p.id==='materiais'));
       if(typeof renderMaterials==='function')renderMaterials();
       await wait(30);
       const cardCount=()=>document.querySelectorAll('#materialGrid .content-resource-card').length;
