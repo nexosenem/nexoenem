@@ -221,6 +221,7 @@
     const area=$('#studyAreaGrid',setup);
     const fields=$('.setup-fields',setup);
     const visualToggle=$('.toggle-row',setup);
+    const sessionGuide=$('.nexo-guide-card',setup);
     if(area&&!$('#v15AdvancedQuestionSetup',setup)){
       const advanced=document.createElement('details');
       advanced.id='v15AdvancedQuestionSetup';
@@ -228,12 +229,27 @@
       advanced.innerHTML='<summary><span><b>Personalizar treino</b><small>área · matéria · dificuldade · quantidade · visual</small></span><i>+</i></summary><div class="v15-advanced-body"></div>';
       area.insertAdjacentElement('beforebegin',advanced);
       const body=$('.v15-advanced-body',advanced);
+      if(sessionGuide)body.appendChild(sessionGuide);
       body.appendChild(area);
       if(fields)body.appendChild(fields);
       if(visualToggle)body.appendChild(visualToggle);
-      advanced.addEventListener('toggle',()=>{
+      setup.classList.add('v15-progressive-setup');
+      const syncAdvanced=()=>{
         const signal=advanced.querySelector('summary>i');
         if(signal)signal.textContent=advanced.open?'−':'+';
+        setup.classList.toggle('v15-advanced-open',advanced.open);
+      };
+      advanced.addEventListener('toggle',syncAdvanced);
+      syncAdvanced();
+
+      const revealAdvanced=()=>setTimeout(()=>{
+        advanced.open=true;
+        syncAdvanced();
+        advanced.scrollIntoView({behavior:'smooth',block:'nearest'});
+      },0);
+      $('#changeSession')?.addEventListener('click',revealAdvanced);
+      ['#quickVisual','#quickTen','#mobileQuickVisual','#mobileQuickTen'].forEach(selector=>{
+        $(selector)?.addEventListener('click',revealAdvanced);
       });
     }
   }
