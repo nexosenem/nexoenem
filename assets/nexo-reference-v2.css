@@ -2540,3 +2540,60 @@ body.light.nexo-reference-ui .v14-loop-grid>button{
   border-color:rgba(54,71,105,.11)!important;
 }
 body.light.nexo-reference-ui .v14-loop-grid small{color:#718097!important}
+
+
+/* V14 learning analytics */
+.v14-consistency{margin:0 0 14px!important;padding:18px!important}
+.v14-consistency-head{margin-bottom:13px}
+.v14-consistency-head h3{margin:5px 0 5px;font-size:20px}
+.v14-consistency-head p{margin:0;color:var(--muted);font-size:11px;line-height:1.45}
+.v14-consistency-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}
+.v14-consistency-grid>button{
+  min-height:100px;
+  position:relative;
+  display:grid;
+  align-content:start;
+  gap:5px;
+  padding:12px 46px 12px 12px;
+  text-align:left;
+  border:1px solid rgba(128,143,184,.13);
+  border-radius:13px;
+  background:linear-gradient(180deg,rgba(17,30,53,.93),rgba(10,21,39,.93));
+  color:var(--text);
+  cursor:pointer;
+}
+.v14-consistency-grid>button:hover{border-color:rgba(123,91,255,.42)}
+.v14-consistency-grid>button>span{font-size:8.5px;font-weight:800;letter-spacing:.75px;text-transform:uppercase;color:#8d9bb0}
+.v14-consistency-grid>button>b{font-size:12px;line-height:1.25}
+.v14-consistency-grid>button>small{font-size:9px;color:#8492a8;line-height:1.35}
+.v14-consistency-grid>button>strong{position:absolute;right:11px;top:12px;font-size:11px;color:#a9b5c7}
+.v14-consistency-grid>button.up>span,.v14-consistency-grid>button.up>strong{color:#5edfb4}
+.v14-consistency-grid>button.down>span,.v14-consistency-grid>button.down>strong{color:#ff7183}
+.v14-consistency-grid>button.stable>span,.v14-consistency-grid>button.stable>strong{color:#69cef4}
+.v14-consistency-grid>button.new>span,.v14-consistency-grid>button.new>strong{color:#a78cff}
+
+@media(min-width:761px){
+  body.nexo-reference-ui #app::after{
+    content:"";
+    position:fixed;
+    z-index:9999;
+    inset:12px;
+    border:1px solid rgba(117,84,255,.42);
+    border-radius:22px;
+    pointer-events:none;
+    box-shadow:inset 0 0 0 1px rgba(72,56,165,.08),0 0 46px rgba(67,43,170,.08);
+  }
+}
+@media(max-width:760px){
+  .v14-consistency{padding:14px!important}
+  .v14-consistency-head h3{font-size:18px!important}
+  .v14-consistency-head p{font-size:11px!important}
+  .v14-consistency-grid{grid-template-columns:1fr 1fr!important}
+  .v14-consistency-grid>button{min-height:96px}
+}
+@media(max-width:390px){
+  .v14-consistency-grid{grid-template-columns:1fr!important}
+}
+body.light.nexo-reference-ui .v14-consistency-grid>button{
+  background:#fff!important;color:#172239!important;border-color:rgba(54,71,105,.11)!important;
+}
