@@ -104,7 +104,8 @@ async function runProfile(browser,name,viewport){
         'Além disso, desigualdades sociais afetam oportunidades e exigem ações coordenadas. Por meio de programas permanentes, '+
         'escolas e governos podem promover acompanhamento, formação docente e inclusão, a fim de reduzir barreiras e garantir direitos. ').repeat(4);
       const scores=typeof window.essayScores==='function'?window.essayScores(sample):null;
-      return {ok:Array.isArray(scores)&&scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200),error:null};
+      const officialBands=Array.isArray(scores)&&scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200&&n%40===0);
+      return {ok:officialBands,scores,error:null};
     }catch(err){return {ok:false,error:String(err?.message||err)}}
   });
   first.essayEngine=essayProbe.ok;
@@ -1783,12 +1784,14 @@ async function runProfile(browser,name,viewport){
       const result=document.querySelector('#essayResult');
       essay={
         shortValidation,
-        fiveScores:scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200),
+        fiveScores:scores.length===5&&scores.every(n=>Number.isFinite(n)&&n>=0&&n<=200&&n%40===0),
         fiveCards:result?.querySelectorAll('.essay-comp-card').length===5,
         resultVisible:visible(result?.querySelector('.essay-correction-shell')),
+        officialRubric:/ENEM 2026/.test(result?.textContent||''),
+        rangeVisible:/faixa\s+\d+[–-]\d+/i.test(result?.textContent||''),
         score:total
       };
-      essay.ok=essay.shortValidation&&essay.fiveScores&&essay.fiveCards&&essay.resultVisible&&total>=200&&total<=1000;
+      essay.ok=essay.shortValidation&&essay.fiveScores&&essay.fiveCards&&essay.resultVisible&&essay.officialRubric&&essay.rangeVisible&&total>=200&&total<=1000;
 
       state.user=null;
       const fake={id:-733001,title:'Resumo NEXO - visualizador',format:'image',file_url:'./assets/nexo-family/bust-confiante.avif',area:'Matemática',subject:'Matemática',topic:'Porcentagem',plus_only:false,is_published:true};
