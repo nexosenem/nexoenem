@@ -422,6 +422,7 @@ body.nexo-reference-ui #inicio>.dashboard-grid{display:none!important}
   background:linear-gradient(145deg,#8a5eff,#5077ff);
   color:#fff;font-size:13px;
 }
+.nrx-mobile-theme,
 .nrx-mobile-crown,
 .nrx-mobile-menu{
   display:none;
@@ -429,6 +430,11 @@ body.nexo-reference-ui #inicio>.dashboard-grid{display:none!important}
   border:1px solid rgba(129,144,179,.13);
   background:rgba(15,25,43,.72);color:#dbe3f2;
   font-size:16px;
+}
+.nrx-mobile-theme{
+  color:#dfe7f5!important;
+  font-size:17px!important;
+  cursor:pointer;
 }
 .nrx-mobile-crown{color:#efc75a!important;font-size:15px!important}
 
@@ -563,7 +569,7 @@ body.nexo-reference-ui .q-option:hover:not(:disabled){transform:none!important}
     width:33px!important;height:33px!important;
   }
   .nrx-mobile-brand{display:flex!important}
-  .nrx-mobile-crown,.nrx-mobile-menu{display:grid!important;place-items:center!important}
+  .nrx-mobile-theme,.nrx-mobile-crown,.nrx-mobile-menu{display:grid!important;place-items:center!important}
 
   .nrx-home{max-width:none}
   .nrx-mobile-search-slot .search{display:flex!important}
@@ -777,8 +783,9 @@ body.light.nexo-reference-ui .nrx-side-account{
 /* Mobile header reference order */
 @media(max-width:760px){
   .nrx-mobile-brand{order:1}
-  .nrx-mobile-crown{order:2;margin-left:auto}
-  body.nexo-reference-ui .top-actions{order:3!important;margin-left:0!important}
+  .nrx-mobile-theme{order:2;margin-left:auto}
+  .nrx-mobile-crown{order:3;margin-left:0}
+  body.nexo-reference-ui .top-actions{order:4!important;margin-left:0!important}
   .nrx-mobile-menu{display:none!important}
 }
 
@@ -1903,4 +1910,47 @@ body.nexo-reference-ui #questoes .toggle-row small{font-size:9.5px!important}
   body.nexo-reference-ui #questoes .nexo-guide-card p{font-size:11px!important}
   body.nexo-reference-ui #questoes .setup-fields label{font-size:11px!important}
   body.nexo-reference-ui #questoes .setup-fields select{font-size:14px!important}
+}
+
+
+/* Restore the original written NEXO ENEM identity on mobile. */
+.nrx-mobile-brand{
+  min-width:max-content;
+  gap:0!important;
+  font-weight:900;
+  letter-spacing:0!important;
+}
+.nrx-mobile-wordmark{
+  display:flex;
+  align-items:baseline;
+  gap:5px;
+  white-space:nowrap;
+  line-height:1;
+}
+.nrx-mobile-wordmark b,
+.nrx-mobile-wordmark em{
+  font-style:normal;
+  font-size:20px;
+  line-height:1;
+  letter-spacing:.2px;
+}
+.nrx-mobile-wordmark b{color:#f3f6ff}
+.nrx-mobile-wordmark em{color:#765bff}
+
+body.light.nexo-reference-ui .nrx-mobile-wordmark b{color:#172239}
+body.light.nexo-reference-ui .nrx-mobile-theme{
+  background:#fff!important;
+  color:#172239!important;
+  border-color:rgba(70,88,120,.16)!important;
+}
+
+@media(max-width:390px){
+  .nrx-mobile-wordmark b,
+  .nrx-mobile-wordmark em{font-size:18px}
+  .nrx-mobile-theme,
+  .nrx-mobile-crown,
+  body.nexo-reference-ui .top-actions .icon-btn{
+    width:32px!important;
+    height:32px!important;
+  }
 }
