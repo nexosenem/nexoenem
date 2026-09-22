@@ -836,3 +836,44 @@ body.light.nexo-reference-ui #questoes .learning-block.editorial-pending .answer
   #questoes .answer-editorial-status{font-size:7.5px}
   .admin-explanation-sheet textarea{min-height:180px}
 }
+
+
+/* V15 admin visual restoration workflow */
+.admin-visual-repair-panel .panel-title{align-items:flex-start!important}
+.admin-visual-repair-panel #adminVisualRepairCount{
+  display:inline-flex;align-items:center;min-height:25px;padding:0 8px;border-radius:999px;
+  color:#75d9f6;background:rgba(63,180,219,.09);border:1px solid rgba(81,196,232,.16);
+  font-size:9px;font-weight:800;white-space:nowrap;
+}
+.admin-visual-repair-row{align-items:flex-start!important}
+.admin-visual-repair-row .mini-avatar{
+  background:rgba(59,188,220,.10)!important;color:#6bd8f4!important;
+  border-color:rgba(82,202,232,.16)!important;
+}
+.admin-visual-repair-row>div{min-width:0}
+.admin-visual-repair-row p{
+  display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;
+  margin:4px 0!important;color:var(--text)!important;font-size:10.5px!important;line-height:1.45!important;
+}
+.admin-visual-repair-row small{color:var(--muted)!important;font-size:9.5px!important;line-height:1.45!important}
+.admin-visual-repair-row .comment-actions{margin-top:8px}
+.admin-visual-repair-row .comment-actions button{
+  border-color:rgba(79,194,226,.22)!important;background:rgba(55,171,207,.09)!important;color:#a9eaff!important;
+}
+.admin-visual-repair-sheet{max-width:720px!important}
+.admin-visual-repair-sheet .admin-visual-prompt{
+  max-height:140px;overflow:auto;margin:0 0 12px;padding:11px 12px;border-radius:11px;
+  color:var(--muted);background:rgba(11,25,42,.66);border:1px solid rgba(116,138,175,.12);
+  font-size:10.5px;line-height:1.5;white-space:pre-wrap;
+}
+.admin-visual-repair-sheet input[type="file"]{
+  width:100%;padding:10px;border-radius:11px;border:1px solid rgba(116,138,175,.16);
+  background:rgba(10,22,38,.7);color:var(--text);
+}
+body.light.nexo-reference-ui .admin-visual-repair-sheet .admin-visual-prompt,
+body.light.nexo-reference-ui .admin-visual-repair-sheet input[type="file"]{
+  background:#f7f9fd!important;border-color:rgba(64,82,121,.12)!important;color:#26344d!important;
+}
+@media(max-width:760px){
+  .admin-visual-repair-sheet .admin-visual-prompt{max-height:110px}
+}
