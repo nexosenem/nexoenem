@@ -427,6 +427,86 @@ function observe(){
   },true);
 }
 
+function buildReferenceInternalActions(){
+  const q=$('#questoes');
+  const setup=$('#sessionSetup');
+  if(q&&setup&&!$('.nrx-question-modes',q)){
+    const modes=document.createElement('section');
+    modes.className='nrx-question-modes';
+    const defs=[
+      ['◎','Treino por assunto','Escolha um tema específico',()=>{
+        setup.classList.remove('hidden');
+        $('#studyWorkspace')?.classList.add('hidden');
+        setup.scrollIntoView({behavior:'smooth',block:'start'});
+      }],
+      ['✦','Questões adaptativas','Foco nas suas dificuldades',()=>{
+        const trigger=$('#adaptiveButton')||$('#mobileAdaptive')||$('#startAdaptiveFocus');
+        if(trigger)trigger.click(); else setup.scrollIntoView({behavior:'smooth',block:'start'});
+      }],
+      ['▤','Simulado personalizado','Monte seu simulado',()=>go('simulados')],
+      ['◌','Questões comentadas','Veja questões e discussões',()=>go('banco')],
+      ['▣','Provas do ENEM','Acervo 2009–2025',()=>go('banco')],
+      ['×','Meus erros','Revise e evolua',()=>{
+        go('desempenho');
+        setTimeout(()=>$('#errorNotebook')?.scrollIntoView({behavior:'smooth',block:'start'}),120);
+      }]
+    ];
+    defs.forEach(([icon,title,sub,run])=>{
+      const b=document.createElement('button');
+      b.type='button';b.className='nrx-question-mode';
+      b.innerHTML='<i>'+icon+'</i><span><b>'+title+'</b><small>'+sub+'</small></span><em>›</em>';
+      b.addEventListener('click',run);
+      modes.appendChild(b);
+    });
+    setup.insertAdjacentElement('beforebegin',modes);
+  }
+
+  const essay=$('#redacao');
+  const flow=$('.essay-flow-bar',essay||document);
+  if(essay&&flow&&!$('.nrx-essay-tabs',essay)){
+    const tabs=document.createElement('div');
+    tabs.className='nrx-essay-tabs';
+    const defs=[
+      ['Corrigir redação',()=>$('#essayText')?.scrollIntoView({behavior:'smooth',block:'center'})],
+      ['Temas sugeridos',()=>go('temas')],
+      ['Minhas redações',()=>$('#essayHistoryList')?.scrollIntoView({behavior:'smooth',block:'start'})]
+    ];
+    defs.forEach(([label,run],i)=>{
+      const b=document.createElement('button');
+      b.type='button';b.textContent=label;
+      if(i===0)b.classList.add('active');
+      b.addEventListener('click',run);
+      tabs.appendChild(b);
+    });
+    flow.insertAdjacentElement('beforebegin',tabs);
+  }
+}
+
+function augmentProfileMenu(){
+  const menu=$('#profileMenu');
+  if(!menu||$('.nrx-profile-extra',menu))return;
+  const box=document.createElement('div');
+  box.className='nrx-profile-extra';
+  const defs=[
+    ['◉','Radar ENEM',()=>go('radar')],
+    ['▦','Banco de Questões',()=>go('banco')],
+    ['▧','Temas de Redação',()=>go('temas')],
+    ['◌','Feedback',()=>go('feedback')],
+    ['✦','NEXO Jornada',()=>go('ranking')],
+    ['＋','Free & Plus',()=>go('planos')],
+    ['☾','Trocar tema',()=>$('#themeToggle')?.click()]
+  ];
+  defs.forEach(([icon,label,run])=>{
+    const b=document.createElement('button');
+    b.type='button';
+    b.innerHTML='<span>'+icon+'</span>'+label;
+    b.addEventListener('click',()=>{menu.classList.add('hidden');run()});
+    box.appendChild(b);
+  });
+  const logout=$('#logoutBtn',menu);
+  if(logout)menu.insertBefore(box,logout); else menu.appendChild(box);
+}
+
 function applyReferenceCopy(){
   const brandSmall=$('.brand small');
   if(brandSmall)brandSmall.textContent='Seu esforço conecta o seu futuro.';
@@ -463,6 +543,8 @@ function init(){
     addMobileChrome();
     buildReferenceSidebar();
     buildBottomNav();
+    buildReferenceInternalActions();
+    augmentProfileMenu();
     applyReferenceCopy();
     document.body.classList.add('nexo-reference-ui');
     observe();
