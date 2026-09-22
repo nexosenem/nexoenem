@@ -925,6 +925,9 @@ async function runProfile(browser,name,viewport){
 
       pages.forEach(p=>p.classList.toggle('active',p.id==='materiais'));
       await wait(20);
+      state.materials=[fake];
+      state.contentProgress=new Map();
+      state.favorites=new Set();
       await openContentViewer('material',fake.id);
       await wait(30);
       const modal=document.querySelector('#contentViewer');
