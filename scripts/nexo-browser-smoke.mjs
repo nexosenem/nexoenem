@@ -22,7 +22,7 @@ async function runProfile(browser,name,viewport){
   });
 
   async function load(label){
-    await page.goto(BASE+'?smoke='+encodeURIComponent(name+'-'+label),{waitUntil:'domcontentloaded',timeout:30000});
+    await page.goto(BASE+'?smoke='+encodeURIComponent(name+'-'+label),{waitUntil:'commit',timeout:30000});
     await page.waitForFunction(()=>{
       const boot=document.querySelector('#boot');
       const auth=document.querySelector('#authScreen');
