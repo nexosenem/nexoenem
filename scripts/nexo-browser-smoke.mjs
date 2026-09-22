@@ -229,6 +229,21 @@ async function runProfile(browser,name,viewport){
     const bottom=document.querySelector('.nrx-bottom-nav');
     const search=document.querySelector('.search');
     const heroImg=target?.querySelector('img');
+    const mobileBrand=document.querySelector('.nrx-mobile-brand');
+    const mobileTheme=document.querySelector('.nrx-mobile-theme');
+    const brandText=(mobileBrand?.textContent||'').replace(/\s+/g,' ').trim();
+    const mobileThemeVisible=Boolean(mobileTheme&&getComputedStyle(mobileTheme).display!=='none'&&mobileTheme.getBoundingClientRect().width>0);
+    let mobileThemeWorks=true;
+    if(mobile&&mobileThemeVisible){
+      const wasLight=document.body.classList.contains('light');
+      mobileTheme.click();
+      await new Promise(r=>setTimeout(r,30));
+      const changed=document.body.classList.contains('light')!==wasLight;
+      mobileTheme.click();
+      await new Promise(r=>setTimeout(r,30));
+      const restored=document.body.classList.contains('light')===wasLight;
+      mobileThemeWorks=changed&&restored;
+    }
     const result={
       bodyClass:document.body.classList.contains('nexo-reference-ui'),
       desktopMounted:Boolean(desktopHome),
@@ -244,6 +259,9 @@ async function runProfile(browser,name,viewport){
       bottomLabels:bottom?[...bottom.querySelectorAll('small')].map(x=>x.textContent.trim()):[],
       contextVisible:Boolean(document.querySelector('#nexoContextBar')&&getComputedStyle(document.querySelector('#nexoContextBar')).display!=='none'),
       searchInMobileSlot:Boolean(search?.closest('.nrx-mobile-search-slot')),
+      mobileBrandText:brandText,
+      mobileThemeVisible,
+      mobileThemeWorks,
       heroLoaded:Boolean(heroImg?.complete&&heroImg?.naturalWidth>0),
       originalHomeHidden:[...document.querySelectorAll('#inicio>.mobile-home,#inicio>.dashboard-grid')].every(el=>getComputedStyle(el).display==='none')
     };
@@ -263,6 +281,9 @@ async function runProfile(browser,name,viewport){
   if(name==='mobile'&&referenceUiTest.bottomLabels.join('|')!=='Início|Questões|Redação|Desempenho|Mais')failures.push(name+': barra inferior perdeu a navegação principal/área Mais: '+referenceUiTest.bottomLabels.join('|'));
   if(!referenceUiTest.contextVisible)failures.push(name+': guia Onde estou / Próximo ficou oculto na referência');
   if(name==='mobile'&&!referenceUiTest.searchInMobileSlot)failures.push(name+': busca não foi movida para a posição móvel da referência');
+  if(name==='mobile'&&referenceUiTest.mobileBrandText!=='NEXO ENEM')failures.push(name+': identidade escrita antiga NEXO ENEM não foi restaurada no cabeçalho: '+referenceUiTest.mobileBrandText);
+  if(name==='mobile'&&!referenceUiTest.mobileThemeVisible)failures.push(name+': controle claro/escuro não ficou visível no cabeçalho mobile');
+  if(name==='mobile'&&!referenceUiTest.mobileThemeWorks)failures.push(name+': controle claro/escuro mobile não alternou e restaurou o tema');
   if(!referenceUiTest.heroLoaded)failures.push(name+': mascote da home de referência não carregou');
 
   markStage('reference-access');
