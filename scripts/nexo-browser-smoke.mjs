@@ -950,19 +950,23 @@ async function runProfile(browser,name,viewport){
       await wait(35);
       result.checkpoint=Boolean(calls.sessions.some(x=>Number(x.size)===2&&x.mode==='content'));
 
+      state.materials=[fake];
       state.contentProgress.set('material:'+fake.id,{user_id:'smoke-user',content_type:'material',content_id:fake.id,progress_seconds:0,progress_percent:10,completed:false,last_opened_at:new Date().toISOString(),updated_at:new Date().toISOString()});
       await openContentViewer('material',fake.id);
       await wait(20);
       document.querySelector('#viewerPractice')?.click();
       await wait(25);
       const guided=document.querySelector('#guidedTrainingModal');
+      result.practiceViewerReopened=Boolean(state.activeViewer?.item?.id===fake.id);
       result.guidedOpened=visible(guided)&&Boolean(state.pendingGuidedTraining);
       document.querySelector('#guidedTestNow')?.click();
       await wait(40);
       result.practice=Boolean(calls.sessions.some(x=>Number(x.size)===5&&x.mode==='content'));
 
+      state.materials=[fake];
       await openContentViewer('material',fake.id);
       await wait(20);
+      result.askViewerReopened=Boolean(state.activeViewer?.item?.id===fake.id);
       const beforeMessages=document.querySelectorAll('#niaMessages .nia-msg.user').length;
       document.querySelector('#viewerAskNexo')?.click();
       await wait(30);
@@ -996,7 +1000,7 @@ async function runProfile(browser,name,viewport){
     return {...result,calls};
   });
   const viewerActionFailures=[];
-  for(const key of ['opened','checkpointVisible','favoriteVisible','completeVisible','practiceVisible','askVisible','favorite','complete','checkpoint','guidedOpened','practice','ask','closed']){
+  for(const key of ['opened','checkpointVisible','favoriteVisible','completeVisible','practiceVisible','askVisible','favorite','complete','checkpoint','practiceViewerReopened','guidedOpened','practice','askViewerReopened','ask','closed']){
     if(!viewerActionTest[key])viewerActionFailures.push(key);
   }
   if(viewerActionTest.error)viewerActionFailures.push('error='+viewerActionTest.error);
