@@ -2112,6 +2112,14 @@ function radarTrainingTopic(subject,topic){
   return bySubject[subject]||'';
 }
 
+function canonicalLearningTopic(subject,topic){
+  const raw=String(topic||'').trim();
+  return radarTrainingTopic(subject||'',raw)||raw;
+}
+function sameLearningTopic(subject,a,b){
+  return normalizeTextKey(canonicalLearningTopic(subject,a))===normalizeTextKey(canonicalLearningTopic(subject,b));
+}
+
 function bindRadarControls(){
   const area=$('#radarArea'),subject=$('#radarSubject'),search=$('#radarSearch');
   if(area&&!area.dataset.bound){
@@ -6813,8 +6821,8 @@ async function loadTopicMastery(){
 
 function topicMaterials(topic,subject='Matemática'){
   return (state.materials||[]).filter(m=>
-    String(m.topic||'').toLocaleLowerCase('pt-BR')===String(topic||'').toLocaleLowerCase('pt-BR') &&
-    (!subject||!m.subject||String(m.subject).toLocaleLowerCase('pt-BR')===String(subject).toLocaleLowerCase('pt-BR'))
+    sameLearningTopic(subject||m.subject||'',m.topic,topic) &&
+    (!subject||!m.subject||normalizeTextKey(m.subject)===normalizeTextKey(subject))
   );
 }
 
@@ -6824,7 +6832,8 @@ function topicLesson(topic,subject='Matemática'){
 
 function topicLearningMeta(topic,subject='Matemática'){
   const materials=topicMaterials(topic,subject);
-  const mastery=state.topicMastery.get(String(topic))||{attempts:0,accuracy:0,masteryScore:0,confidence:0,avgSeconds:0,lastAt:null,daysSince:999};
+  const canonicalTopic=canonicalLearningTopic(subject,topic);
+  const mastery=state.topicMastery.get(String(canonicalTopic))||state.topicMastery.get(String(topic))||{attempts:0,accuracy:0,masteryScore:0,confidence:0,avgSeconds:0,lastAt:null,daysSince:999};
   const completed=materials.filter(m=>getContentProgress('material',m.id).completed).length;
   const progress=materials.length
     ? Math.round(materials.reduce((sum,m)=>sum+(getContentProgress('material',m.id).completed?100:Number(getContentProgress('material',m.id).progress_percent||0)),0)/materials.length)
@@ -6854,8 +6863,8 @@ function openLibraryTopic(subject,topic){
     state.materialOpenTopic=key;
     renderMaterials();
     setTimeout(()=>{
-      const nodes=$$('.content-topic-group');
-      const target=nodes.find(el=>el.querySelector('.content-topic-name h3')?.textContent?.trim()===String(topic||'').trim());
+      const nodes=$('.content-topic-group');
+      const target=nodes.find(el=>sameLearningTopic(subject,el.querySelector('.content-topic-name h3')?.textContent?.trim(),topic));
       target?.scrollIntoView({behavior:'smooth',block:'start'});
     },80);
   });
@@ -7325,9 +7334,10 @@ function materialKind(item){
 }
 
 function materialRadarMeta(item){
+  const subject=item?.subject||'';
   const row=(state.radarTopics||[]).find(r=>
-    String(r.topic||'').toLocaleLowerCase('pt-BR')===String(item?.topic||'').toLocaleLowerCase('pt-BR') &&
-    (!item?.subject||String(r.subject||'').toLocaleLowerCase('pt-BR')===String(item.subject).toLocaleLowerCase('pt-BR'))
+    sameLearningTopic(subject,r.topic,item?.topic) &&
+    (!subject||normalizeTextKey(r.subject||'')===normalizeTextKey(subject))
   );
   if(row){
     return {
