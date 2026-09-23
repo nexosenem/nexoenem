@@ -3144,8 +3144,6 @@ function openPage(id) {
   window.scrollTo({top:0,behavior:isMobileNav||document.body.dataset.motion==='reduced'?'auto':'smooth'});
   logProductEvent('page_view',{},id);
 
-  // Paint the destination first on mobile, then hydrate expensive modules.
-  // This keeps the bottom navigation feeling immediate even on long pages / modest phones.
   const hydratePage=()=>{
     if (id==='inicio') { renderNexoToday(); renderMathTrail(); }
     if (id==='desempenho') renderPerformance();
