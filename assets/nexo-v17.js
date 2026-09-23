@@ -297,3 +297,47 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
   new MutationObserver(()=>requestAnimationFrame(run)).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
 })();
+
+
+/* V17.8 — Accessibility + network resilience + low-cost reveal */
+(function(){
+  'use strict';
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  function ensureOffline(){
+    let bar=$('#nx17Offline');
+    if(!bar){
+      bar=document.createElement('div');bar.id='nx17Offline';bar.className='nx17-offline hidden';bar.setAttribute('role','status');
+      bar.innerHTML='<i></i><span>Sem conexão · o NEXO mantém o que estiver disponível offline</span>';
+      document.body.appendChild(bar);
+    }
+    bar.classList.toggle('hidden',navigator.onLine!==false);
+  }
+  function ariaPass(){
+    $$('button').forEach(btn=>{
+      if(btn.getAttribute('aria-label')||btn.textContent.trim())return;
+      const title=btn.getAttribute('title');if(title)btn.setAttribute('aria-label',title);
+    });
+    $$('img').forEach(img=>{
+      if(!img.hasAttribute('decoding'))img.decoding='async';
+      const hero=img.closest('.nrx-hero,.nrx-mob-hero,.auth-visual');
+      if(!hero&&!img.hasAttribute('loading'))img.loading='lazy';
+    });
+    const active=$('.page.active');
+    if(active){active.setAttribute('aria-live','off');active.setAttribute('aria-current','page')}
+    $$('.page:not(.active)[aria-current]').forEach(x=>x.removeAttribute('aria-current'));
+  }
+  function revealPass(){
+    if(!('IntersectionObserver' in window)||window.NEXOV17?.reduceMotion?.())return;
+    if(window.__nx17RevealObserver)return;
+    window.__nx17RevealObserver=new IntersectionObserver(entries=>{
+      entries.forEach(e=>{if(e.isIntersecting){e.target.classList.add('nx17-revealed');window.__nx17RevealObserver.unobserve(e.target)}});
+    },{rootMargin:'80px 0px'});
+    $$('.panel,.nrx-shortcut,.nrx-stat-card,.nrx-preview,.sim-card').forEach(el=>window.__nx17RevealObserver.observe(el));
+  }
+  function run(){ensureOffline();ariaPass();revealPass()}
+  window.addEventListener('online',ensureOffline);
+  window.addEventListener('offline',ensureOffline);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+  setTimeout(run,900);
+})();
