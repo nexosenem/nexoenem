@@ -2641,3 +2641,35 @@ body.nexo-reference-ui #viewerComplete.nx2-complete-pulse{
 @media(prefers-reduced-motion:reduce){
   body.nexo-reference-ui #viewerComplete.nx2-complete-pulse{animation:none!important}
 }
+
+
+/* === PHASE 2 S2.7.5 · essay overflow hardening === */
+body.nexo-reference-ui #redacao .essay-editor-v2,
+body.nexo-reference-ui #redacao .essay-editor-v2>*{
+  min-width:0;
+  max-width:100%;
+}
+body.nexo-reference-ui #redacao .essay-editor-actions{
+  flex-wrap:wrap;
+  align-items:center;
+}
+body.nexo-reference-ui #redacao .essay-editor-actions>small{
+  flex:1 1 180px;
+  max-width:none;
+  min-width:0;
+}
+body.nexo-reference-ui #redacao .essay-editor-actions .primary-btn{
+  flex:1 1 210px;
+  min-width:0;
+  max-width:100%;
+}
+body.nexo-reference-ui #redacao .essay-writing-head>*,
+body.nexo-reference-ui #redacao .essay-editor-heading>*{
+  min-width:0;
+}
+body.nexo-reference-ui #redacao .essay-enem-chip,
+body.nexo-reference-ui #redacao .essay-writing-head>span{
+  max-width:100%;
+  white-space:normal;
+  text-align:center;
+}
