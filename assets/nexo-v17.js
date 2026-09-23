@@ -165,8 +165,8 @@
     const answered=Boolean($('.q-option.correct,.q-option.wrong,.q-option.incorrect',card));
     const label=answered?'Resposta registrada':selected?'Alternativa selecionada — confirme quando estiver pronto':'Escolha uma alternativa antes de confirmar';
     if(!cue){cue=document.createElement('div');cue.className='nx17-question-state';cue.innerHTML='<i></i><span></span>';const options=$('.q-options',card);options?.insertAdjacentElement('beforebegin',cue)}
-    const span=cue&&cue.querySelector('span');if(span)span.textContent=label;
-    if(confirm)confirm.setAttribute('aria-live','polite');
+    const span=cue&&cue.querySelector('span');if(span&&span.textContent!==label)span.textContent=label;
+    if(confirm&&confirm.getAttribute('aria-live')!=='polite')confirm.setAttribute('aria-live','polite');
   }
   function run(){bindMedia();answerCue()}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
@@ -188,7 +188,9 @@
     }
     const text=String(area.value||'').trim();
     const words=text?(text.match(/\S+/g)||[]).length:0;
-    const stats=$('[data-nx17-essay-stats]',pulse);if(stats)stats.textContent=words+' palavra'+(words===1?'':'s')+' · '+String(area.value||'').length+' caracteres';
+    const stats=$('[data-nx17-essay-stats]',pulse);
+    const summary=words+' palavra'+(words===1?'':'s')+' · '+String(area.value||'').length+' caracteres';
+    if(stats&&stats.textContent!==summary)stats.textContent=summary;
     if(!area.dataset.nx17Writing){
       area.dataset.nx17Writing='1';
       area.addEventListener('input',enhanceEssay,{passive:true});
