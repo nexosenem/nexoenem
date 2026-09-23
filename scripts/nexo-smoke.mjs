@@ -123,6 +123,8 @@ assert(app.includes("['Linguagens','Ciências Humanas']")&&app.includes("['Ciên
 assert(app.includes('const areaList=Array.isArray(filters.areas)')&&app.includes('blocks.push(...ordered.slice(0,quota))'),'Sessões com múltiplas áreas mantêm cotas balanceadas antes de montar a fila');
 assert(app.includes("document.querySelectorAll('[data-real-exam-day]')")&&app.includes("document.querySelectorAll('[data-sim-area], [data-sim-mode]')"),'Bindings de Simulados usam coleções reais e não quebram com múltiplos botões');
 assert(index.includes('nexo-v15-ui.css')&&index.includes('nexo-v15-ui.js'),'Experiência V15 conectada');
+assert(index.includes('<meta name="nexo-build" content="V16.3.0">')&&app.includes("const NEXO_BUILD='V16.3.0'"),'Build V16.3 é verificável no HTML e no runtime');
+assert(liveSmoke.includes('expectedBuild')&&liveSmoke.includes('hasBuild')&&liveSmoke.includes("first.build!==expectedBuild"),'Smoke público rejeita deploy antigo mesmo com HTTP 200');
 assert(sw.includes('nexo-v15-ui.css')&&sw.includes('nexo-v15-ui.js'),'Experiência V15 no PWA');
 assert(uiV15.includes('v15QuestionModes')&&uiV15.includes('v15EssayTabs')&&uiV15.includes('v15-voice-search'),'V15 mantém modos de questão, navegação de redação e busca por voz progressiva');
 assert(cssV15.includes('NEXO V15')&&cssV15.includes('.nrx-mob-hero-media:before')&&cssV15.includes('.v15-question-modes'),'Design system V15 publicado');
