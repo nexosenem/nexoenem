@@ -9571,43 +9571,8 @@ $('#sendComment').onclick=async()=>{
     btn.disabled=false;btn.removeAttribute('aria-busy');
   }
 };
-function askCommentReportReason(){
-  return new Promise(resolve=>{
-    let modal=$('#commentReportModal');
-    if(!modal){
-      modal=document.createElement('div');
-      modal.id='commentReportModal';
-      modal.className='community-modal hidden';
-      modal.setAttribute('role','dialog');
-      modal.setAttribute('aria-modal','true');
-      modal.setAttribute('aria-labelledby','commentReportTitle');
-      modal.innerHTML='<section class="community-sheet nx2-report-sheet"><button type="button" id="closeCommentReport" class="community-close" aria-label="Fechar">×</button><div><span class="eyebrow">MODERAÇÃO</span><h3 id="commentReportTitle">Denunciar comentário</h3><p>Escolha o motivo. A denúncia vai para moderação e não publica seus detalhes para outros alunos.</p></div><label>Motivo<select id="commentReportReason"><option value="ofensa">Ofensa ou assédio</option><option value="spam">Spam</option><option value="improprio">Conteúdo impróprio</option><option value="desinformacao">Informação enganosa</option><option value="outro">Outro motivo</option></select></label><label>Detalhes opcionais<textarea id="commentReportDetail" rows="3" maxlength="280" placeholder="Explique em poucas palavras, se necessário."></textarea></label><div class="community-modal-actions"><button type="button" id="cancelCommentReport" class="ghost-btn">Cancelar</button><button type="button" id="submitCommentReport" class="primary-btn">Enviar denúncia</button></div></section>';
-      document.body.appendChild(modal);
-    }
-    modal.classList.remove('hidden');
-    document.body.style.overflow='hidden';
-    const select=$('#commentReportReason'),detail=$('#commentReportDetail');
-    if(select)select.value='ofensa';
-    if(detail)detail.value='';
-    const finish=value=>{
-      modal.classList.add('hidden');
-      document.body.style.overflow='';
-      resolve(value);
-    };
-    $('#closeCommentReport').onclick=()=>finish('');
-    $('#cancelCommentReport').onclick=()=>finish('');
-    modal.onclick=e=>{if(e.target===modal)finish('')};
-    $('#submitCommentReport').onclick=()=>{
-      const reason=String(select?.value||'outro');
-      const extra=String(detail?.value||'').trim();
-      const labels={ofensa:'Ofensa ou assédio',spam:'Spam',improprio:'Conteúdo impróprio',desinformacao:'Informação enganosa',outro:'Outro motivo'};
-      finish(labels[reason]+(extra?' · '+extra:''));
-    };
-    requestAnimationFrame(()=>select?.focus());
-  });
-}
 async function reportComment(id){
-  const reason=await askCommentReportReason();
+  const reason=window.prompt('Por que você está denunciando este comentário?\nEx.: ofensa, spam, conteúdo impróprio');
   if(!reason?.trim())return;
   const {data,error}=await client.rpc('report_comment',{p_comment_id:id,p_reason:reason.trim()});
   if(error)return toast('Não foi possível enviar a denúncia.','error');
