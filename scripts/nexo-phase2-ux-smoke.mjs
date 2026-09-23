@@ -100,6 +100,29 @@ try{
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     const draftStatus=document.querySelector('#redacao .nx2-draft-status');
     const focusMode=document.querySelector('#redacao .nx2-essay-focus-btn');
+    const advancedToggle=document.querySelector('#redacao .nx2-essay-advanced-toggle');
+    const advancedInitiallyHidden=Boolean(
+      document.querySelector('#redacao .essay-history-card') &&
+      getComputedStyle(document.querySelector('#redacao .essay-history-card')).display==='none'
+    );
+    advancedToggle?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const advancedOpened=Boolean(
+      document.querySelector('#redacao')?.classList.contains('nx2-essay-advanced-open') &&
+      getComputedStyle(document.querySelector('#redacao .essay-history-card')).display!=='none'
+    );
+
+    const loader=document.querySelector('#essayLoader');
+    loader?.classList.remove('hidden');
+    await new Promise(r=>requestAnimationFrame(r));
+    const loaderStyle=loader?getComputedStyle(loader):null;
+    const loaderNonBlocking=Boolean(loaderStyle&&loaderStyle.pointerEvents==='none'&&loaderStyle.backdropFilter==='none');
+    loader?.classList.add('hidden');
+
+    const hapticsDefault=localStorage.getItem('nexo-haptics')===null
+      ? (typeof nexoHapticsEnabled==='function'?!nexoHapticsEnabled():false)
+      : true;
+
     const flowHints=[...document.querySelectorAll('#redacao .essay-flow-bar small')].map(x=>({
       text:x.textContent.trim(),
       display:getComputedStyle(x).display,
@@ -149,6 +172,9 @@ try{
       moreGroups,
       draftStatus:Boolean(draftStatus),
       focusMode:Boolean(focusMode),
+      essayAdvanced:{toggle:Boolean(advancedToggle),initiallyHidden:advancedInitiallyHidden,opened:advancedOpened},
+      loaderNonBlocking,
+      hapticsDefault,
       flowHints,
       dialogSemantics:{
         role:dialog?.getAttribute('role')||'',
@@ -175,6 +201,9 @@ try{
   if(!result.current.includes('redacao'))failures.push('aria-current-route');
   if(!['continue','review','recommend'].every(x=>result.studyPriority.includes(x)))failures.push('study-priority-actions');
   if(!result.draftStatus||!result.focusMode)failures.push('essay-writing-tools');
+  if(!result.essayAdvanced.toggle||!result.essayAdvanced.initiallyHidden||!result.essayAdvanced.opened)failures.push('essay-progressive-depth');
+  if(!result.loaderNonBlocking)failures.push('essay-loader-blocking');
+  if(!result.hapticsDefault)failures.push('haptics-not-opt-in');
   if(result.flowHints.some(x=>x.display==='none'||x.height<=0))failures.push('essay-guidance-hidden');
   if(result.dialogSemantics.role!=='dialog'||result.dialogSemantics.modal!=='true')failures.push('dialog-semantics');
   if(result.moreGroups.length<2)failures.push('more-menu-groups');
