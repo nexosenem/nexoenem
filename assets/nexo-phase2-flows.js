@@ -782,6 +782,7 @@ function sync(){
 
 document.addEventListener('keydown',trapDialogKeydown,true);
 document.addEventListener('nexo:pagechange',()=>requestAnimationFrame(sync));
+document.addEventListener('nexo:core-updated',()=>requestAnimationFrame(()=>{ensureHomeNextAction();syncQuestionRecommendation();ensureStudyPriority()}));
 document.addEventListener('click',e=>{
   if(e.target.closest?.('#openComments'))setTimeout(()=>{ensureCommentSort();sortComments()},80);
   if(e.target.closest?.('[data-nexo-today-action],[data-library-continue]'))requestAnimationFrame(sync);
