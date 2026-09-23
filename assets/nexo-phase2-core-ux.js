@@ -152,6 +152,59 @@ function ensureEssayFlow(){
   paint();
 }
 
+function ensureSearchKeyboard(){
+  const input=$('#globalSearch');
+  const results=$('#globalSearchResults');
+  if(!input||!results||input.dataset.nx2Keyboard==='1')return;
+  input.dataset.nx2Keyboard='1';
+
+  const options=()=>Array.from(results.querySelectorAll('button[data-global-result],button[data-search-recent]'))
+    .filter(el=>getComputedStyle(el).display!=='none');
+
+  const move=(delta)=>{
+    const list=options();
+    if(!list.length)return;
+    const current=list.indexOf(document.activeElement);
+    const next=current<0?(delta>0?0:list.length-1):(current+delta+list.length)%list.length;
+    list[next]?.focus({preventScroll:true});
+  };
+
+  input.addEventListener('keydown',e=>{
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();
+      move(e.key==='ArrowDown'?1:-1);
+      return;
+    }
+    if(e.key==='Escape'){
+      results.classList.add('hidden');
+      input.select?.();
+    }
+  });
+
+  results.addEventListener('keydown',e=>{
+    const target=e.target.closest?.('button[data-global-result],button[data-search-recent]');
+    if(!target)return;
+    if(e.key==='ArrowDown'||e.key==='ArrowUp'){
+      e.preventDefault();
+      move(e.key==='ArrowDown'?1:-1);
+    }else if(e.key==='Escape'){
+      e.preventDefault();
+      input.focus({preventScroll:true});
+      results.classList.add('hidden');
+    }
+  });
+
+  const semantics=()=>{
+    results.querySelectorAll('button[data-global-result],button[data-search-recent]').forEach((btn,index)=>{
+      btn.setAttribute('role','option');
+      if(!btn.id)btn.id='nx2-search-option-'+index;
+    });
+  };
+  new MutationObserver(()=>requestAnimationFrame(semantics))
+    .observe(results,{childList:true,subtree:true});
+  semantics();
+}
+
 function ensureTouchLabels(){
   const active=$('.page.active');
   const nodes=[
@@ -174,6 +227,7 @@ function syncAll(){
   ensureQuestionPrimary();
   updateContinueProgress();
   ensureEssayFlow();
+  ensureSearchKeyboard();
   ensureTouchLabels();
 }
 
