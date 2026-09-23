@@ -1,36 +1,15 @@
 /* NEXO V18.2 · approved reference home */
 body.v17-live .nrx-hero{border:1px solid rgba(117,84,248,.30)!important;box-shadow:0 22px 70px rgba(0,0,0,.20)!important}
 body.v17-live .nrx-hero-copy{display:flex;flex-direction:column;justify-content:center}
-body.v17-live .nrx-greeting{color:#9db0ca!important}
-body.v17-live .nrx-greeting b{color:#cf90ff!important}
+body.v17-live .nrx-greeting{color:#9db0ca!important}body.v17-live .nrx-greeting b{color:#cf90ff!important}
 body.v17-live .nrx-btn.primary{background:linear-gradient(135deg,#7659ff,#6548ef)!important;color:#fff!important;box-shadow:0 10px 28px rgba(101,72,239,.22)!important}
 body.v17-live .nrx-btn:not(.primary){background:rgba(8,15,31,.54)!important;border-color:rgba(147,160,198,.18)!important}
 body.v17-live .nrx-shortcuts{gap:10px!important}
 body.v17-live .nrx-shortcut{background:linear-gradient(180deg,rgba(14,26,48,.95),rgba(9,19,36,.95))!important}
 body.v17-live .nrx-shortcut small{color:#8897ad!important}
-body.v17-live .nrx-stat-grid{gap:10px!important}
-body.v17-live .nrx-progress-layout{align-items:center!important}
-body.v17-live .nrx-stat-copy strong{color:#73ddb8!important}
+body.v17-live .nrx-stat-grid{gap:10px!important}body.v17-live .nrx-stat-copy strong{color:#73ddb8!important}
 body.v17-live .nrx-preview{background:linear-gradient(180deg,rgba(13,25,46,.96),rgba(8,18,34,.96))!important}
 body.v17-live .nrx-preview:hover{transform:translateY(-2px)!important;border-color:rgba(120,92,255,.27)!important}
-@media(min-width:1060px){
- body.v17-live .nrx-hero{min-height:318px!important;grid-template-columns:minmax(0,56%) minmax(390px,44%)!important}
- body.v17-live .nrx-hero h1{font-size:clamp(44px,3.8vw,52px)!important;line-height:1.01!important}
- body.v17-live .nrx-hero-art img{object-fit:cover!important;object-position:center 46%!important;filter:saturate(1.05) contrast(1.02)}
- body.v17-live .nrx-shortcut{min-height:112px!important}
-}
-@media(max-width:760px){
- body.v17-live .nrx-mobile{gap:11px!important}
- body.v17-live .nrx-mob-hero{height:220px!important;min-height:220px!important;background:
-  linear-gradient(90deg,rgba(7,18,38,.98) 0%,rgba(9,20,44,.96) 51%,rgba(20,18,66,.92) 100%)!important}
- body.v17-live .nrx-mob-hero-copy{width:70%!important;padding:19px 0 16px 17px!important}
- body.v17-live .nrx-mob-hero h1{font-size:clamp(25px,7.5vw,31px)!important}
- body.v17-live .nrx-mob-hero-media{right:-10px!important;width:49%!important}
- body.v17-live .nrx-mob-hero-media img{height:98%!important;filter:saturate(1.08) drop-shadow(0 10px 25px rgba(76,56,219,.20))}
- body.v17-live .nrx-mobile-search-slot .search{height:46px!important}
- body.v17-live .nrx-mob-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px 5px!important}
- body.v17-live .nrx-mob-action i{width:48px!important;height:48px!important}
- body.v17-live .nrx-mob-progress{min-height:102px!important}
- body.v17-live .nrx-mob-continue{min-height:78px!important}
-}
+@media(min-width:1060px){body.v17-live .nrx-hero{min-height:318px!important;grid-template-columns:minmax(0,56%) minmax(390px,44%)!important}body.v17-live .nrx-hero h1{font-size:clamp(44px,3.8vw,52px)!important;line-height:1.01!important}body.v17-live .nrx-hero-art img{object-fit:cover!important;object-position:center 46%!important;filter:saturate(1.05) contrast(1.02)}body.v17-live .nrx-shortcut{min-height:112px!important}}
+@media(max-width:760px){body.v17-live .nrx-mobile{gap:11px!important}body.v17-live .nrx-mob-hero{height:220px!important;min-height:220px!important;background:linear-gradient(90deg,rgba(7,18,38,.98) 0%,rgba(9,20,44,.96) 51%,rgba(20,18,66,.92) 100%)!important}body.v17-live .nrx-mob-hero-copy{width:70%!important;padding:19px 0 16px 17px!important}body.v17-live .nrx-mob-hero h1{font-size:clamp(25px,7.5vw,31px)!important}body.v17-live .nrx-mob-hero-media{right:-10px!important;width:49%!important}body.v17-live .nrx-mob-hero-media img{height:98%!important;filter:saturate(1.08) drop-shadow(0 10px 25px rgba(76,56,219,.20))}body.v17-live .nrx-mobile-search-slot .search{height:46px!important}body.v17-live .nrx-mob-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px 5px!important}body.v17-live .nrx-mob-action i{width:48px!important;height:48px!important}body.v17-live .nrx-mob-progress{min-height:102px!important}body.v17-live .nrx-mob-continue{min-height:78px!important}}
 @media(max-width:360px){body.v17-live .nrx-mob-hero{height:205px!important;min-height:205px!important}}
