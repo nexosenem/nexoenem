@@ -5653,9 +5653,9 @@ async function startRealExamDay(day){
 }
 $('#closeRealExam')?.addEventListener('click',closeRealExamModal);
 $('#realExamModal')?.addEventListener('click',e=>{if(e.target===$('#realExamModal'))closeRealExamModal()});
-$('[data-real-exam-day]').forEach(btn=>btn.addEventListener('click',()=>startRealExamDay(btn.dataset.realExamDay)));
+document.querySelectorAll('[data-real-exam-day]').forEach(btn=>btn.addEventListener('click',()=>startRealExamDay(btn.dataset.realExamDay)));
 
-$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
+document.querySelectorAll('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
   const mode=b.dataset.simMode||'area';
   const startExam=async(config,label,title,subtitle)=>{
     openPage('questoes');
