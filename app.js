@@ -1713,7 +1713,7 @@ function renderRecentNexoSearches(){
   box.innerHTML='<div class="search-recent-head"><b>Pesquisas recentes</b><button type="button" data-search-clear-recents>Limpar</button></div>'+
     recent.map(q=>'<button type="button" data-search-recent="'+esc(q)+'"><span>↺</span><div><b>'+esc(q)+'</b><small>Pesquisar novamente</small></div><i>→</i></button>').join('');
   box.classList.remove('hidden');
-  $('[data-search-recent]',box).forEach(btn=>btn.addEventListener('click',()=>{
+  box.querySelectorAll('[data-search-recent]').forEach(btn=>btn.addEventListener('click',()=>{
     const q=btn.dataset.searchRecent||'';
     globalSearch.value=q;
     globalSearch.dispatchEvent(new Event('input',{bubbles:true}));
@@ -1795,7 +1795,7 @@ function renderGlobalSearchResults(query){
   const labels={action:'Ação',material:'Material',topic:'Assunto',subtopic:'Subassunto',essay:'Redação'};
   box.innerHTML=items.map((item,index)=>'<button data-global-result="'+index+'" data-search-kind="'+esc(item.type)+'"><span>'+(item.icon||icons[item.type]||'→')+'</span><div><em class="search-kind-label">'+esc(labels[item.type]||'Resultado')+'</em><b>'+esc(item.title)+'</b><small>'+esc(item.meta||'')+'</small></div><i>→</i></button>').join('');
   box.classList.remove('hidden');
-  $('[data-global-result]',box).forEach(btn=>btn.onclick=async()=>{
+  box.querySelectorAll('[data-global-result]').forEach(btn=>btn.onclick=async()=>{
     const item=state.globalSearchItems[Number(btn.dataset.globalResult)];if(!item)return;
     saveRecentNexoSearch(globalSearch.value);
     box.classList.add('hidden');globalSearch.value='';setMobileSearchOpen(false,{focus:false});
@@ -1852,7 +1852,7 @@ let globalSearchTimer=null;
 globalSearch.addEventListener('input',e=>{
   clearTimeout(globalSearchTimer);
   const value=e.target.value||'';
-  globalSearchTimer=setTimeout(()=>renderGlobalSearchResults(value),120);
+  globalSearchTimer=setTimeout(()=>renderGlobalSearchResults(value),45);
 });
 
 
