@@ -113,7 +113,7 @@ async function browserProfile(browser,base,name,viewport){
       duplicateIds:[],
       sw:false,
       supabaseGlobal:false,
-      pdfjsGlobal:false,
+      pdfjsLazy:false,
       screenVisible:false,
       wiringError:null,
       siteSearch:false,
@@ -131,7 +131,7 @@ async function browserProfile(browser,base,name,viewport){
     try{
       result.build=String(window.NEXO_BUILD||document.querySelector('meta[name="nexo-build"]')?.content||'');
       result.supabaseGlobal=Boolean(window.supabase?.createClient);
-      result.pdfjsGlobal=Boolean(window.pdfjsLib);
+      result.pdfjsLazy=typeof ensurePdfJs==='function';
       result.sharedState=typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13;
       const queries=['perfil de evolução','professor nexo','caderno de erros','simulado','radar enem'];
       result.searchSamples=queries.map(q=>({
@@ -212,7 +212,7 @@ async function browserProfile(browser,base,name,viewport){
   if(!first.searchActionWorks)failures.push('ação pesquisada do deploy público não abriu Meu perfil de evolução');
   if(!first.percentTones)failures.push('faixas de porcentagem do deploy público incorretas: '+JSON.stringify(first.percentToneMap));
     if(!first.supabaseGlobal)failures.push('SDK Supabase não carregou');
-  if(!first.pdfjsGlobal)failures.push('PDF.js não carregou');
+  if(!first.pdfjsLazy)failures.push('Loader lazy do PDF.js não carregou');
   if(!first.sharedState)failures.push('state/client não compartilhados');
   if(first.wiringError)failures.push('wiring: '+first.wiringError);
   for(const [key,val] of Object.entries(first.wrappers))if(!val)failures.push('wrapper '+key+' inativo');
