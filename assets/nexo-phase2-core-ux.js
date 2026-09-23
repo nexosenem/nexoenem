@@ -155,10 +155,10 @@ function ensureEssayFlow(){
 function ensureTouchLabels(){
   const active=$('.page.active');
   const nodes=[
-    ...$( 'button',active||document ),
-    ...$('.nrx-bottom-nav button'),
-    ...$('.nrx-side-panel button'),
-    ...$('.topbar button')
+    ...Array.from((active||document).querySelectorAll('button')),
+    ...Array.from(document.querySelectorAll('.nrx-bottom-nav button')),
+    ...Array.from(document.querySelectorAll('.nrx-side-panel button')),
+    ...Array.from(document.querySelectorAll('.topbar button'))
   ];
   [...new Set(nodes)].forEach(btn=>{
     if(btn.getAttribute('aria-label'))return;
