@@ -87,6 +87,61 @@ function syncQuestionRecommendation(){
   }
 }
 
+function syncContinueRich(){
+  const card=$('.nrx-mob-continue');
+  if(!card)return;
+  const title=$('[data-nrx-continue-title]',card);
+  const sub=$('[data-nrx-continue-sub]',card);
+  const play=$('[data-nrx-resume]',card);
+  const s=safeState();
+  let source=s?.session?.queue?.length?s.session:null;
+  if(!source&&typeof readPersistedStudySession==='function'){
+    try{source=readPersistedStudySession()}catch(_){}
+  }
+  if(source){
+    const total=Number(source.size||source.queue?.length||source.ids?.length||0);
+    const current=Math.min(total,Math.max(1,Number(source.index||0)+1));
+    const topic=String(source.topic||source.subject||source.area||'treino').trim();
+    if(title)title.textContent=topic&&topic!=='treino'?'Continuar · '+topic:'Continuar sessão';
+    if(sub)sub.textContent='Questão '+current+' de '+Math.max(current,total)+(topic?' · '+topic:'');
+    if(play)play.setAttribute('aria-label','Continuar '+topic+' na questão '+current+' de '+Math.max(current,total));
+    card.dataset.nx2Resume='session';
+  }else{
+    card.dataset.nx2Resume='fallback';
+    if(play&&!play.getAttribute('aria-label'))play.setAttribute('aria-label','Continuar estudando');
+  }
+}
+
+function ensureQuestionKeyboard(){
+  const card=$('#questionCard');
+  if(!card)return;
+  const group=$('.q-options',card);
+  if(!group)return;
+  group.setAttribute('role','radiogroup');
+  group.setAttribute('aria-label','Alternativas da questão');
+  if(group.dataset.nx2Keyboard)return;
+  group.dataset.nx2Keyboard='1';
+  group.addEventListener('keydown',e=>{
+    const opts=$('.q-option',group).filter(x=>!x.disabled&&x.getAttribute('aria-disabled')!=='true');
+    if(!opts.length)return;
+    const current=Math.max(0,opts.indexOf(document.activeElement));
+    let next=current;
+    if(e.key==='ArrowDown'||e.key==='ArrowRight')next=(current+1)%opts.length;
+    else if(e.key==='ArrowUp'||e.key==='ArrowLeft')next=(current-1+opts.length)%opts.length;
+    else if(e.key==='Home')next=0;
+    else if(e.key==='End')next=opts.length-1;
+    else if(e.key===' '||e.key==='Enter'){
+      if(document.activeElement?.classList?.contains('q-option')){
+        e.preventDefault();
+        document.activeElement.click();
+      }
+      return;
+    }else return;
+    e.preventDefault();
+    opts[next]?.focus();
+  });
+}
+
 function enhanceQuestionCard(){
   const card=$('#questionCard');
   if(!card)return;
@@ -492,7 +547,9 @@ function ensureMediaPinch(){
 function sync(){
   ensureStudyPriority();
   syncQuestionRecommendation();
+  syncContinueRich();
   ensureQuestionObserver();
+  ensureQuestionKeyboard();
   ensureEssayTools();
   ensureCommentReportExperience();
   ensureCommentSort();
