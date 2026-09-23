@@ -2527,3 +2527,117 @@ body.nexo-reference-ui .nx2-topic-status[data-status="mastered"]{
   body.nexo-reference-ui #app .page small{font-size:12.5px}
   body.nexo-reference-ui .nrx-side-item>b{font-size:14px}
 }
+
+
+/* === PHASE 2 S2.6 · completion UX === */
+body.nexo-reference-ui .nx2-essay-organizer{
+  display:grid;
+  gap:10px;
+  margin:0 0 14px;
+  padding:16px;
+  border:1px solid rgba(122,94,255,.18);
+  border-radius:16px;
+  background:linear-gradient(180deg,rgba(75,59,169,.08),rgba(8,18,34,.72));
+}
+body.nexo-reference-ui .nx2-essay-organizer>div{
+  display:grid;
+  gap:3px;
+}
+body.nexo-reference-ui .nx2-essay-organizer>div>b{
+  font-size:15px;
+}
+body.nexo-reference-ui .nx2-essay-organizer>div>small{
+  color:#8f9db3;
+  font-size:12px;
+  line-height:1.4;
+}
+body.nexo-reference-ui .nx2-essay-organizer-text{
+  width:100%;
+  min-height:112px;
+  resize:vertical;
+  border:1px solid rgba(133,149,188,.16);
+  border-radius:13px;
+  background:rgba(4,11,23,.72);
+  color:#edf2fb;
+  padding:12px 13px;
+  font:inherit;
+  line-height:1.55;
+}
+body.nexo-reference-ui .nx2-organizer-status{
+  color:#78d9bd;
+  font-size:11px;
+  font-weight:700;
+}
+body.nexo-reference-ui .essay-repertoire-list article{
+  position:relative;
+}
+body.nexo-reference-ui .nx2-repertoire-save{
+  min-height:38px;
+  margin-top:9px;
+  padding:0 11px;
+  border:1px solid rgba(112,216,255,.16);
+  border-radius:10px;
+  background:rgba(82,190,227,.055);
+  color:#91dbf2;
+  font-size:11px;
+  font-weight:750;
+}
+body.nexo-reference-ui .nx2-repertoire-save:hover{
+  border-color:rgba(112,216,255,.3);
+  background:rgba(82,190,227,.09);
+}
+body.nexo-reference-ui #viewerComplete.nx2-complete-pulse{
+  animation:nx2-complete-pulse .62s ease-out both;
+}
+@keyframes nx2-complete-pulse{
+  0%{transform:scale(1);box-shadow:0 0 0 0 rgba(101,221,185,.28)}
+  45%{transform:scale(1.025);box-shadow:0 0 0 10px rgba(101,221,185,.06)}
+  100%{transform:scale(1);box-shadow:0 0 0 18px rgba(101,221,185,0)}
+}
+
+/* Desktop readability and line-length control: large screens should feel spacious, not tiny. */
+@media(min-width:1025px){
+  body.nexo-reference-ui .page:not(#inicio){
+    max-width:1220px;
+    margin-inline:auto;
+  }
+  body.nexo-reference-ui .page:not(#inicio)>.page-head p,
+  body.nexo-reference-ui .page:not(#inicio)>.nexo-page-head p{
+    max-width:72ch;
+    font-size:15px!important;
+    line-height:1.55!important;
+  }
+  body.nexo-reference-ui .page:not(#inicio) :is(.panel,.card) p{
+    font-size:14.5px;
+    line-height:1.52;
+  }
+  body.nexo-reference-ui .page:not(#inicio) :is(.panel,.card) small{
+    font-size:12px;
+    line-height:1.4;
+  }
+}
+
+@media(max-width:760px){
+  body.nexo-reference-ui .nx2-essay-organizer{
+    padding:14px;
+    border-radius:15px;
+  }
+  body.nexo-reference-ui .nx2-essay-organizer>div>b{
+    font-size:16px!important;
+  }
+  body.nexo-reference-ui .nx2-essay-organizer>div>small{
+    font-size:12.5px!important;
+  }
+  body.nexo-reference-ui .nx2-essay-organizer-text{
+    min-height:126px;
+    font-size:16px!important;
+  }
+  body.nexo-reference-ui .nx2-repertoire-save{
+    min-height:44px;
+    font-size:12.5px!important;
+  }
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.nexo-reference-ui #viewerComplete.nx2-complete-pulse{animation:none!important}
+}
