@@ -20,6 +20,7 @@ const experienceV14=read('assets/nexo-v14-experience.js');
 const uiV15=read('assets/nexo-v15-ui.js');
 const cssV15=read('assets/nexo-v15-ui.css');
 const liveSmoke=read('scripts/nexo-live-smoke.mjs');
+const browserSmoke=read('scripts/nexo-browser-smoke.mjs');
 const headers=read('_headers');
 
 const contentDir=path.join(root,'assets','conteudo');
@@ -126,6 +127,7 @@ assert(app.includes("document.querySelectorAll('[data-real-exam-day]')")&&app.in
 assert(index.includes('nexo-v15-ui.css')&&index.includes('nexo-v15-ui.js'),'Experiência V15 conectada');
 assert(index.includes('<meta name="nexo-build" content="V16.3.0">')&&app.includes("const NEXO_BUILD='V16.3.0'"),'Build V16.3 é verificável no HTML e no runtime');
 assert(liveSmoke.includes('expectedBuild')&&liveSmoke.includes('hasBuild')&&liveSmoke.includes("first.build!==expectedBuild"),'Smoke público rejeita deploy antigo mesmo com HTTP 200');
+assert(browserSmoke.includes('Viewport audits validate layout only')&&browserSmoke.includes("runProfile(browser,'desktop'")&&browserSmoke.includes('Promise.all(['),'CI V16 roda perfis em paralelo sem navegação concorrente nos audits de breakpoint');
 assert(sw.includes('nexo-v15-ui.css')&&sw.includes('nexo-v15-ui.js'),'Experiência V15 no PWA');
 assert(uiV15.includes('v15QuestionModes')&&uiV15.includes('v15EssayTabs')&&uiV15.includes('v15-voice-search'),'V15 mantém modos de questão, navegação de redação e busca por voz progressiva');
 assert(cssV15.includes('NEXO V15')&&cssV15.includes('.nrx-mob-hero-media:before')&&cssV15.includes('.v15-question-modes'),'Design system V15 publicado');
