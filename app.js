@@ -9536,8 +9536,8 @@ async function loadQuestionComments(questionId){
   $('#questionComments').innerHTML='<div class="comment-empty">Carregando comentários...</div>';
   const {data,error}=await client.rpc('get_question_comments_v3',{p_question_id:Number(questionId)});
   if(error){console.error(error);$('#questionComments').innerHTML='<div class="comment-empty">Não foi possível carregar os comentários.</div>';return}
-  $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item">
-    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${c.is_mine&&isNexoUltra()?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${Number(c.reputation||0)} ajuda(s) · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
+  $('#questionComments').innerHTML=data?.length?data.map((c,index)=>`<article class="comment-item ${(c.is_nexo||/professor nexo/i.test(String(c.author_name||'')))?'nexo-comment':''}">
+    <div class="comment-top"><div class="comment-author"><span class="comment-social-avatar" data-comment-avatar="${index}"></span><div class="comment-meta"><b>${esc(c.author_name)} ${(c.is_nexo||/professor nexo/i.test(String(c.author_name||'')))?'<i class="comment-nexo-badge">NEXO</i>':c.is_mine&&isNexoUltra()?'<i class="comment-plus-badge ultra">ULTRA</i>':c.plan==='plus'?'<i class="comment-plus-badge">PLUS</i>':''}</b><small>NV. ${Number(c.level||1)} · ${esc(c.league||'Bronze')} · ${Number(c.reputation||0)} ajuda(s) · ${new Date(c.created_at).toLocaleString('pt-BR')}</small></div></div>
     <div class="comment-actions">${c.is_mine?'<button data-delete-comment="'+c.id+'" class="danger">Excluir</button>':'<button data-report-comment="'+c.id+'">Denunciar</button>'}</div></div>
     <p>${esc(c.body)}</p>
     <div class="comment-helpful"><button data-helpful-comment="${c.id}" class="${c.helpful_by_me?'active':''}">✦ Útil <b>${Number(c.helpful_count||0)}</b></button><small>Marque quando a explicação realmente ajudar.</small></div>
@@ -9564,8 +9564,43 @@ $('#sendComment').onclick=async()=>{
   if(error)return toast('Não foi possível comentar.','error');
   $('#commentText').value='';toast('Comentário publicado.');loadQuestionComments(qid);
 };
+function askCommentReportReason(){
+  return new Promise(resolve=>{
+    let modal=$('#commentReportModal');
+    if(!modal){
+      modal=document.createElement('div');
+      modal.id='commentReportModal';
+      modal.className='community-modal hidden';
+      modal.setAttribute('role','dialog');
+      modal.setAttribute('aria-modal','true');
+      modal.setAttribute('aria-labelledby','commentReportTitle');
+      modal.innerHTML='<section class="community-sheet nx2-report-sheet"><button type="button" id="closeCommentReport" class="community-close" aria-label="Fechar">×</button><div><span class="eyebrow">MODERAÇÃO</span><h3 id="commentReportTitle">Denunciar comentário</h3><p>Escolha o motivo. A denúncia vai para moderação e não publica seus detalhes para outros alunos.</p></div><label>Motivo<select id="commentReportReason"><option value="ofensa">Ofensa ou assédio</option><option value="spam">Spam</option><option value="improprio">Conteúdo impróprio</option><option value="desinformacao">Informação enganosa</option><option value="outro">Outro motivo</option></select></label><label>Detalhes opcionais<textarea id="commentReportDetail" rows="3" maxlength="280" placeholder="Explique em poucas palavras, se necessário."></textarea></label><div class="community-modal-actions"><button type="button" id="cancelCommentReport" class="ghost-btn">Cancelar</button><button type="button" id="submitCommentReport" class="primary-btn">Enviar denúncia</button></div></section>';
+      document.body.appendChild(modal);
+    }
+    modal.classList.remove('hidden');
+    document.body.style.overflow='hidden';
+    const select=$('#commentReportReason'),detail=$('#commentReportDetail');
+    if(select)select.value='ofensa';
+    if(detail)detail.value='';
+    const finish=value=>{
+      modal.classList.add('hidden');
+      document.body.style.overflow='';
+      resolve(value);
+    };
+    $('#closeCommentReport').onclick=()=>finish('');
+    $('#cancelCommentReport').onclick=()=>finish('');
+    modal.onclick=e=>{if(e.target===modal)finish('')};
+    $('#submitCommentReport').onclick=()=>{
+      const reason=String(select?.value||'outro');
+      const extra=String(detail?.value||'').trim();
+      const labels={ofensa:'Ofensa ou assédio',spam:'Spam',improprio:'Conteúdo impróprio',desinformacao:'Informação enganosa',outro:'Outro motivo'};
+      finish(labels[reason]+(extra?' · '+extra:''));
+    };
+    requestAnimationFrame(()=>select?.focus());
+  });
+}
 async function reportComment(id){
-  const reason=window.prompt('Por que você está denunciando este comentário?\nEx.: ofensa, spam, conteúdo impróprio');
+  const reason=await askCommentReportReason();
   if(!reason?.trim())return;
   const {data,error}=await client.rpc('report_comment',{p_comment_id:id,p_reason:reason.trim()});
   if(error)return toast('Não foi possível enviar a denúncia.','error');
