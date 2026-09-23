@@ -4,7 +4,46 @@ if(window.NEXO_PHASE2?.coreUx)return;
 window.NEXO_PHASE2={...(window.NEXO_PHASE2||{}),coreUx:true,version:'2.1.0'};
 
 const $=(s,r=document)=>r.querySelector(s);
-const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const $=(s,r=document)=>Array.from(r.querySelectorAll(s));
+
+function ensureGlobalA11y(){
+  const main=$('main');
+  if(main&&!main.id)main.id='nexoMain';
+  let skip=$('.nx2-skip-link');
+  if(main&&!skip){
+    skip=document.createElement('a');
+    skip.className='nx2-skip-link';
+    skip.href='#'+main.id;
+    skip.textContent='Pular para o conteúdo';
+    document.body.prepend(skip);
+  }
+  let live=$('#nx2RouteLive');
+  if(!live){
+    live=document.createElement('div');
+    live.id='nx2RouteLive';
+    live.className='nx2-sr-only';
+    live.setAttribute('aria-live','polite');
+    live.setAttribute('aria-atomic','true');
+    document.body.appendChild(live);
+  }
+  const moreToggle=$('.nrx-side-more-toggle');
+  const morePanel=$('.nrx-side-more-panel');
+  if(moreToggle&&morePanel){
+    if(!morePanel.id)morePanel.id='nrxMorePanel';
+    moreToggle.setAttribute('aria-controls',morePanel.id);
+  }
+}
+
+function announceRoute(){
+  const page=$('.page.active');
+  if(!page)return;
+  const heading=$('h1,h2,h3',page);
+  const label=(heading?.textContent||page.id||'Página').replace(/\s+/g,' ').trim();
+  const live=$('#nx2RouteLive');
+  if(live)live.textContent='Página: '+label;
+  document.body.dataset.nx2Route=page.id||'';
+}
+
 
 function ensureSearchUx(){
   const input=$('#globalSearch');
@@ -121,6 +160,7 @@ function ensureTouchLabels(){
 }
 
 function syncAll(){
+  ensureGlobalA11y();
   ensureSearchUx();
   ensureNavA11y();
   ensureQuestionPrimary();
@@ -129,12 +169,12 @@ function syncAll(){
   ensureTouchLabels();
 }
 
-document.addEventListener('nexo:pagechange',()=>requestAnimationFrame(syncAll));
+document.addEventListener('nexo:pagechange',()=>requestAnimationFrame(()=>{syncAll();announceRoute()}));
 document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(syncAll),{once:true});
 
 const continueSub=$('[data-nrx-continue-sub]');
 if(continueSub)new MutationObserver(()=>requestAnimationFrame(updateContinueProgress))
   .observe(continueSub,{childList:true,characterData:true,subtree:true});
 
-if(document.readyState!=='loading')requestAnimationFrame(syncAll);
+if(document.readyState!=='loading')requestAnimationFrame(()=>{syncAll();announceRoute()});
 })();
