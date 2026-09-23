@@ -1735,3 +1735,88 @@ body.nexo-reference-ui .page:not(#inicio)>:is(.panel,.nrx-question-modes,.nx2-qu
     font-size:16px!important;
   }
 }
+
+
+/* Phase 2 S1.3 · Global readable controls + touch ergonomics */
+@media(max-width:760px){
+  /* A true product-wide readability floor. */
+  body.nexo-reference-ui #app .page :is(p,li,dd){
+    font-size:16px!important;
+    line-height:1.58!important;
+  }
+  body.nexo-reference-ui #app .page small,
+  body.nexo-reference-ui #app :is(.meta,.muted,.hint,.helper-text,.field-help,.caption,.stat-label){
+    font-size:13px!important;
+    line-height:1.42!important;
+  }
+  body.nexo-reference-ui #app .page label{
+    font-size:14.5px!important;
+    line-height:1.4!important;
+  }
+  body.nexo-reference-ui #app .page :is(button,input,select,textarea){
+    font-size:16px!important;
+  }
+
+  /* Student controls should never require precision tapping. */
+  body.nexo-reference-ui #app .page button:not(.chip):not(.tag):not(.badge){
+    min-height:44px;
+  }
+  body.nexo-reference-ui #app .page :is(input,select){
+    min-height:48px!important;
+  }
+  body.nexo-reference-ui #app .page textarea{
+    min-height:120px;
+  }
+
+  /* Global search is portaled outside #app. */
+  body.nexo-reference-ui #globalSearch{
+    font-size:17px!important;
+    min-height:50px!important;
+  }
+  body.nexo-reference-ui #globalSearch::placeholder{
+    font-size:16.5px!important;
+  }
+
+  /* Bottom navigation: larger labels and a stable hit target. */
+  body.nexo-reference-ui .nrx-bottom-nav button{
+    min-height:64px!important;
+  }
+  body.nexo-reference-ui .nrx-bottom-nav button small{
+    font-size:13.5px!important;
+    line-height:1.05!important;
+  }
+
+  /* Home actions: readable without changing the 4-column structure. */
+  body.nexo-reference-ui .nrx-mob-action b{
+    font-size:14px!important;
+    line-height:1.2!important;
+  }
+  body.nexo-reference-ui .nrx-mob-action i{
+    min-width:58px!important;
+    min-height:58px!important;
+  }
+
+  /* Avoid micro-copy inside the main learning flows. */
+  body.nexo-reference-ui #questoes :is(.nrx-question-mode small,.v15-question-modes small,.v15-advanced-setup small),
+  body.nexo-reference-ui #materiais :is(.material-topic-card small,#materialGrid small),
+  body.nexo-reference-ui #redacao :is(.essay-guide-card small,.essay-sheet-card small,.essay-history-card small){
+    font-size:13px!important;
+    line-height:1.42!important;
+  }
+
+  /* Long controls should not clip on 360–430 px phones. */
+  body.nexo-reference-ui #app :is(
+    .page,.panel,.session-setup,.setup-fields,.essay-workspace-v2,.essay-editor-v2,
+    .v15-advanced-setup,.nrx-question-modes,.nrx-question-mode
+  ){
+    min-width:0!important;
+    max-width:100%!important;
+    box-sizing:border-box;
+  }
+}
+
+@media(max-width:390px){
+  body.nexo-reference-ui #app .page :is(p,li,dd){font-size:15.5px!important}
+  body.nexo-reference-ui #app .page small{font-size:12.8px!important}
+  body.nexo-reference-ui .nrx-bottom-nav button small{font-size:13px!important}
+}
