@@ -1,6 +1,6 @@
-NEXO PHASE 2 · Sprint 2.4.2
+NEXO PHASE 2 · Sprint 2.5
 release_date=2026-09-23
-build=student-flow-accessibility-hardening
-completed=global-readability,touch-targets,fuzzy-search,search-recents,search-categories,ctrl-k,study-priority-actions,question-recommendation,question-progressive-feedback,question-pace,visual-caption,pinch-zoom,essay-focus,essay-autosave-status,essay-step-navigation,repertoire-tags,comment-sorting,comment-report-dialog,nexo-comment-badge,dialog-focus-trap,drawer-swipe,keyboard-safe-nav,notification-sheet,grouped-more-menu,light-theme-prepaint,tablet-landscape,css-consolidation,question-runtime-fix,rich-resume-card,question-keyboard-radio,semantic-score-cues
+build=learning-state-clarity
+completed=global-readability,touch-targets,fuzzy-search,search-recents,search-categories,ctrl-k,study-priority-actions,study-status-signals,question-recommendation,question-progressive-feedback,question-keyboard-radio,question-pace,visual-caption,pinch-zoom,essay-focus,essay-autosave-status,essay-step-navigation,repertoire-tags,comment-sorting,comment-report-dialog,nexo-comment-badge,dialog-focus-trap,drawer-swipe,keyboard-safe-nav,notification-sheet,grouped-more-menu,light-theme-prepaint,tablet-landscape,css-consolidation,rich-resume-card,semantic-score-cues
 quality_gates=phase1+phase2-ux+architecture+runtime
 status=validation
