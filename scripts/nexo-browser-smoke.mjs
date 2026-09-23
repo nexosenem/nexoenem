@@ -610,7 +610,8 @@ async function runProfile(browser,name,viewport){
             question_id:-99041,source_year:2025,source_exam:'ENEM 2025',source_question_number:114,
             area:'Ciências da Natureza',subject:'Física',topic:'Fenômenos físicos e energia',
             prompt_preview:'A tirinha ilustra um processo físico em que uma onda sonora causa a quebra das taças.',
-            attempts:18,wrong:9,open_reports:1,source_reference:'INEP'
+            attempts:18,wrong:9,open_reports:1,
+            source_reference:'https://download.inep.gov.br/enem/provas_e_gabaritos/2025_PV_impresso_D2_CD7.pdf'
           }],error:null};
         }
         if(name==='admin_set_question_media_path'){
@@ -622,12 +623,16 @@ async function runProfile(browser,name,viewport){
       };
       await loadAdminVisualRepairQueue();
       const row=document.querySelector('#adminVisualRepairQueue [data-visual-repair="-99041"]');
+      const queueSource=document.querySelector('#adminVisualRepairQueue .admin-source-link');
       out.queue=Boolean(row&&/18 tentativa/i.test(document.querySelector('#adminVisualRepairQueue')?.textContent||''));
+      out.officialSource=Boolean(queueSource&&queueSource.href.includes('download.inep.gov.br/enem/provas_e_gabaritos/2025_PV_impresso_D2_CD7.pdf'));
       row?.click();await wait(20);
       const modal=document.querySelector('#adminVisualRepairModal');
       const url=document.querySelector('#adminVisualRepairUrl');
       const type=document.querySelector('#adminVisualRepairType');
+      const modalSource=document.querySelector('#adminVisualRepairSource');
       out.modal=Boolean(modal&&!modal.classList.contains('hidden')&&url&&type);
+      out.modalSource=Boolean(modalSource&&!modalSource.classList.contains('hidden')&&modalSource.href.includes('download.inep.gov.br/enem/provas_e_gabaritos/2025_PV_impresso_D2_CD7.pdf'));
       if(url)url.value='https://example.invalid/enem-2025-q114.webp';
       if(type)type.value='image';
       document.querySelector('#saveAdminVisualRepair')?.click();
@@ -644,7 +649,7 @@ async function runProfile(browser,name,viewport){
     }
     return out;
   });
-  if(adminVisualRepairTest.error||!adminVisualRepairTest.queue||!adminVisualRepairTest.modal||!adminVisualRepairTest.saved||!adminVisualRepairTest.closed){
+  if(adminVisualRepairTest.error||!adminVisualRepairTest.queue||!adminVisualRepairTest.officialSource||!adminVisualRepairTest.modal||!adminVisualRepairTest.modalSource||!adminVisualRepairTest.saved||!adminVisualRepairTest.closed){
     failures.push(name+': fluxo Admin de restauração visual regrediu: '+JSON.stringify(adminVisualRepairTest));
   }
 
