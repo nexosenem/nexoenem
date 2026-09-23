@@ -4,7 +4,7 @@ if(window.NEXO_PHASE2?.coreUx)return;
 window.NEXO_PHASE2={...(window.NEXO_PHASE2||{}),coreUx:true,version:'2.1.0'};
 
 const $=(s,r=document)=>r.querySelector(s);
-const $=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 
 function ensureGlobalA11y(){
   const main=$('main');
