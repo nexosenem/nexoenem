@@ -199,3 +199,31 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceEssay,{once:true});else enhanceEssay();
   const page=$('#redacao');if(page)new MutationObserver(()=>requestAnimationFrame(enhanceEssay)).observe(page,{subtree:true,childList:true});
 })();
+
+
+/* V17.6 — Unified module rhythm and semantic percentage tones */
+(function(){
+  'use strict';
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const ids=['simulados','desempenho','semana','ranking','feedback','focos','radar','banco'];
+  function applyModuleRhythm(){
+    ids.forEach(id=>{
+      const page=$('#'+id);if(!page)return;
+      const head=$('.page-head',page);
+      if(head&&!head.nextElementSibling?.classList?.contains('nx17-module-rhythm')){
+        const hr=document.createElement('hr');hr.className='nx17-module-rhythm';head.insertAdjacentElement('afterend',hr);
+      }
+      $$('b,strong,em,span',page).forEach(el=>{
+        const txt=(el.textContent||'').trim();
+        if(!/^\d{1,3}(?:[.,]\d+)?%$/.test(txt))return;
+        const cls=window.NEXOV17?.scoreClass?.(txt)||'';
+        ['nx17-score-low','nx17-score-mid','nx17-score-high'].forEach(x=>{if(x!==cls)el.classList.remove(x)});
+        if(cls)el.classList.add(cls);
+      });
+    });
+  }
+  const run=()=>requestAnimationFrame(applyModuleRhythm);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+  new MutationObserver(run).observe(document.body,{subtree:true,childList:true,characterData:true});
+})();
