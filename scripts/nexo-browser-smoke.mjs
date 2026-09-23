@@ -82,9 +82,13 @@ async function runProfile(browser,name,viewport){
       searchActionWorks:false,
       searchSamples:[],
       percentTones:false,
-      percentToneMap:[]
+      percentToneMap:[],
+      buildRuntime:'',
+      buildMeta:''
     };
     try{
+      result.buildRuntime=String(window.NEXO_BUILD||'');
+      result.buildMeta=String(document.querySelector('meta[name="nexo-build"]')?.content||'');
       result.sharedState=typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13;
       result.wrappers.render=typeof window.renderQuestion==='function'&&/mountConfidence/.test(String(window.renderQuestion));
       result.wrappers.submit=typeof window.submitAnswer==='function'&&/v13State/.test(String(window.submitAnswer));
@@ -2750,6 +2754,7 @@ async function runProfile(browser,name,viewport){
     failures.push(name+': fluxo completo de questão falhou: '+JSON.stringify(questionFlowTest));
   }
 
+  if(!first.buildRuntime||first.buildRuntime!==first.buildMeta)failures.push(name+': identidade de build runtime/meta divergente: '+JSON.stringify({runtime:first.buildRuntime,meta:first.buildMeta}));
   if(first.wiringError)failures.push(name+': wiring V13 lançou erro: '+first.wiringError);
   if(!first.sharedState)failures.push(name+': state/client não estão compartilhados com o V13');
   if(!first.essayEngine)failures.push(name+': motor de redação V13 não respondeu com 5 competências válidas');
