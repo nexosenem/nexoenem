@@ -304,3 +304,36 @@ body.light.nexo-reference-ui .nx2-draft-status{
     transition:none!important;
   }
 }
+
+
+/* Phase 2 · grouped secondary navigation */
+body.nexo-reference-ui .nrx-side-more-grid{
+  display:grid!important;
+  gap:12px!important;
+}
+body.nexo-reference-ui .nx2-more-group{
+  display:grid;
+  gap:7px;
+}
+body.nexo-reference-ui .nx2-more-group>h4{
+  margin:0;
+  padding:0 4px;
+  color:#78869b;
+  font-size:10px;
+  line-height:1.2;
+  letter-spacing:1.35px;
+  text-transform:uppercase;
+}
+body.nexo-reference-ui .nx2-more-group>div{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:7px;
+}
+body.nexo-reference-ui .nx2-more-group button{
+  min-width:0;
+  min-height:48px;
+}
+@media(max-width:760px){
+  body.nexo-reference-ui .nx2-more-group>h4{font-size:11px!important}
+  body.nexo-reference-ui .nx2-more-group button b{font-size:13px!important}
+}
