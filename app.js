@@ -2999,28 +2999,39 @@ function openPage(id) {
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));
   $$('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   toggleMenu(false);
-  window.scrollTo({top:0,behavior:document.body.dataset.motion==='reduced'?'auto':'smooth'});
+  const isMobileNav=window.matchMedia?.('(max-width:760px)')?.matches||innerWidth<=760;
+  window.scrollTo({top:0,behavior:isMobileNav||document.body.dataset.motion==='reduced'?'auto':'smooth'});
   logProductEvent('page_view',{},id);
-  if (id==='inicio') { renderNexoToday(); renderMathTrail(); }
-  if (id==='desempenho') renderPerformance();
-  if (id==='focos') renderFocus();
-  if (id==='videoaulas') loadVideos();
-  if (id==='materiais') loadMaterials();
-  if (id==='radar') loadEnemRadar({silent:false});
-  if (id==='banco') { renderBank(); renderSavedQuestions(); }
-  if (id==='semana') loadNexoWeekPlan({silent:false});
-  if (id==='redacao') {
-    loadEssayThemeProgress({rerender:true}).catch(()=>{});
-    updateOfficialEssaySheetAction().catch(()=>{});
-    loadEssayHistory().catch(()=>{});
+
+  // Paint the destination first on mobile, then hydrate expensive modules.
+  // This keeps the bottom navigation feeling immediate even on long pages / modest phones.
+  const hydratePage=()=>{
+    if (id==='inicio') { renderNexoToday(); renderMathTrail(); }
+    if (id==='desempenho') renderPerformance();
+    if (id==='focos') renderFocus();
+    if (id==='videoaulas') loadVideos();
+    if (id==='materiais') loadMaterials();
+    if (id==='radar') loadEnemRadar({silent:false});
+    if (id==='banco') { renderBank(); renderSavedQuestions(); }
+    if (id==='semana') loadNexoWeekPlan({silent:false});
+    if (id==='redacao') {
+      loadEssayThemeProgress({rerender:true}).catch(()=>{});
+      updateOfficialEssaySheetAction().catch(()=>{});
+      loadEssayHistory().catch(()=>{});
+    }
+    if (id==='feedback') loadMyFeedback();
+    if (id==='ranking') loadNexoJourney();
+    if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
+    if (id==='admin') { loadAdmin(); loadAdminProductAnalytics(); }
+    renderNexoContextBar(id);
+    if(id==='semana')renderLongRangePlan();
+    if(typeof scheduleNexoPercentTones==='function')scheduleNexoPercentTones();
+  };
+  if(isMobileNav){
+    requestAnimationFrame(()=>setTimeout(hydratePage,0));
+  }else{
+    hydratePage();
   }
-  if (id==='feedback') loadMyFeedback();
-  if (id==='ranking') loadNexoJourney();
-  if (id==='planos') { loadNexoMembership({silent:true}); renderPlanExperience(); }
-  if (id==='admin') { loadAdmin(); loadAdminProductAnalytics(); }
-  renderNexoContextBar(id);
-  if(id==='semana')renderLongRangePlan();
-  if(typeof scheduleNexoPercentTones==='function')scheduleNexoPercentTones();
 }
 $$('[data-page]').forEach(b=>b.addEventListener('click',e=>{
   e.preventDefault();
