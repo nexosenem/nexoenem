@@ -6615,10 +6615,147 @@ function updateEssayPrompt(){
   }
   renderEssayRepertoires();
 }
-$('#essayTheme').addEventListener('change',updateEssayPrompt);
-$('#customEssayTheme').addEventListener('input',updateEssayPrompt);
-$('#customEssayPrompt').addEventListener('input',updateEssayPrompt);
-$('#essayText').addEventListener('input',()=>$('#wordCount').textContent=(($('#essayText').value.match(/\S+/g)||[]).length)+' palavras');
+const NEXO_ESSAY_DRAFT_KEY='nexo-essay-draft-v1:';
+let essayDraftLocalTimer=0;
+let essayDraftRemoteTimer=0;
+let essayDraftLoadedUser='';
+let essayDraftRestoring=false;
+
+function essayDraftStorageKey(){
+  return NEXO_ESSAY_DRAFT_KEY+String(state.user?.id||'guest');
+}
+function currentEssayDraftPayload(){
+  const text=String($('#essayText')?.value||'');
+  const themeId=String($('#essayTheme')?.value||'');
+  const custom=themeId==='custom';
+  const selected=custom?null:THEMES.find(t=>String(t.id)===themeId);
+  return {
+    theme_id:themeId||null,
+    theme_axis:String($('#essayAxis')?.value||'all'),
+    theme_title:custom?String($('#customEssayTheme')?.value||'').trim():String(selected?.title||''),
+    custom_prompt:custom?String($('#customEssayPrompt')?.value||'').trim():null,
+    essay_text:text,
+    word_count:(text.match(/\S+/g)||[]).length,
+    updated_at:new Date().toISOString()
+  };
+}
+function persistEssayDraftLocal(){
+  try{
+    const payload=currentEssayDraftPayload();
+    if(!payload.essay_text.trim()&&!payload.theme_title){
+      localStorage.removeItem(essayDraftStorageKey());
+      return;
+    }
+    localStorage.setItem(essayDraftStorageKey(),JSON.stringify(payload));
+    document.body.dataset.essayDraftState='local';
+  }catch(_){}
+}
+async function persistEssayDraftRemote(){
+  if(!state.user?.id||!navigator.onLine||essayDraftRestoring)return;
+  const payload=currentEssayDraftPayload();
+  if(!payload.essay_text.trim()&&!payload.theme_title)return;
+  try{
+    const {error}=await client.from('nexo_essay_drafts').upsert({
+      user_id:state.user.id,
+      ...payload
+    },{onConflict:'user_id'});
+    if(error)throw error;
+    document.body.dataset.essayDraftState='saved';
+  }catch(err){
+    console.warn('essay draft sync unavailable',err);
+    document.body.dataset.essayDraftState='local';
+  }
+}
+function scheduleEssayDraftSave(){
+  if(essayDraftRestoring)return;
+  clearTimeout(essayDraftLocalTimer);
+  clearTimeout(essayDraftRemoteTimer);
+  essayDraftLocalTimer=setTimeout(persistEssayDraftLocal,220);
+  essayDraftRemoteTimer=setTimeout(()=>persistEssayDraftRemote(),3500);
+}
+function readLocalEssayDraft(){
+  try{return JSON.parse(localStorage.getItem(essayDraftStorageKey())||'null')}catch(_){return null}
+}
+async function clearEssayDraft(){
+  clearTimeout(essayDraftLocalTimer);
+  clearTimeout(essayDraftRemoteTimer);
+  try{localStorage.removeItem(essayDraftStorageKey())}catch(_){}
+  document.body.dataset.essayDraftState='clear';
+  if(state.user?.id&&navigator.onLine){
+    try{await client.from('nexo_essay_drafts').delete().eq('user_id',state.user.id)}catch(_){}
+  }
+}
+function applyEssayDraft(draft){
+  if(!draft?.essay_text)return false;
+  essayDraftRestoring=true;
+  try{
+    const axis=$('#essayAxis');
+    if(axis&&draft.theme_axis&&[...axis.options].some(o=>o.value===draft.theme_axis)){
+      axis.value=draft.theme_axis;
+      renderEssayThemeOptions({keepSelection:false});
+    }
+    const theme=$('#essayTheme');
+    if(theme&&draft.theme_id&&[...theme.options].some(o=>o.value===String(draft.theme_id))){
+      theme.value=String(draft.theme_id);
+    }else if(theme&&draft.theme_id==='custom'){
+      theme.value='custom';
+    }
+    if(draft.theme_id==='custom'){
+      if($('#customEssayTheme'))$('#customEssayTheme').value=draft.theme_title||'';
+      if($('#customEssayPrompt'))$('#customEssayPrompt').value=draft.custom_prompt||'';
+    }
+    updateEssayPrompt();
+    if($('#essayText'))$('#essayText').value=String(draft.essay_text||'');
+    if($('#wordCount'))$('#wordCount').textContent=Number(draft.word_count||0)+' palavras';
+    document.body.dataset.essayDraftState='restored';
+    return true;
+  }finally{
+    essayDraftRestoring=false;
+  }
+}
+async function restoreEssayDraft(){
+  const uid=String(state.user?.id||'');
+  if(!uid||essayDraftLoadedUser===uid)return false;
+  essayDraftLoadedUser=uid;
+  if(String($('#essayText')?.value||'').trim())return false;
+
+  const local=readLocalEssayDraft();
+  let remote=null;
+  if(navigator.onLine){
+    try{
+      const {data,error}=await client.from('nexo_essay_drafts')
+        .select('theme_id,theme_axis,theme_title,custom_prompt,essay_text,word_count,updated_at')
+        .eq('user_id',uid).maybeSingle();
+      if(!error)remote=data||null;
+    }catch(_){}
+  }
+  const localAt=Date.parse(local?.updated_at||0)||0;
+  const remoteAt=Date.parse(remote?.updated_at||0)||0;
+  const chosen=remoteAt>localAt?remote:local;
+  if(!chosen?.essay_text?.trim())return false;
+  const restored=applyEssayDraft(chosen);
+  if(restored&&remoteAt>localAt){
+    try{localStorage.setItem(essayDraftStorageKey(),JSON.stringify(chosen))}catch(_){}
+  }
+  return restored;
+}
+
+$('#essayTheme').addEventListener('change',()=>{updateEssayPrompt();scheduleEssayDraftSave()});
+$('#essayAxis')?.addEventListener('change',scheduleEssayDraftSave);
+$('#customEssayTheme').addEventListener('input',()=>{updateEssayPrompt();scheduleEssayDraftSave()});
+$('#customEssayPrompt').addEventListener('input',()=>{updateEssayPrompt();scheduleEssayDraftSave()});
+$('#essayText').addEventListener('input',()=>{
+  $('#wordCount').textContent=(($('#essayText').value.match(/\S+/g)||[]).length)+' palavras';
+  scheduleEssayDraftSave();
+});
+
+document.addEventListener('nexo:pagechange',e=>{
+  if(e.detail?.id==='redacao')restoreEssayDraft().catch(()=>{});
+});
+document.addEventListener('visibilitychange',()=>{
+  if(document.visibilityState==='hidden')persistEssayDraftLocal();
+});
+window.addEventListener('pagehide',persistEssayDraftLocal);
 
 const OFFICIAL_ENEM_ESSAY_SHEET={
   localUrl:'./folha-redacao-enem.html',
@@ -6827,6 +6964,7 @@ $('#analyzeEssay').onclick=async()=>{
     if(handlePlanLimitError(error))return;
     toast('A análise foi feita, mas não consegui salvar o histórico.','error');
   }else{
+    clearEssayDraft().catch(()=>{});
     if($('#essayTheme').value!=='custom'){
       state.completedEssayThemes.add(t.title);
       renderEssayThemeOptions({keepSelection:true});
