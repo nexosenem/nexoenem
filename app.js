@@ -3173,7 +3173,6 @@ async function initApp(session) {
     loadAssistantIntents(),
     loadNexoJourney({silent:true}),
     loadSystemModules({silent:true}),
-    loadVideos({silent:true}),
     loadMaterials({silent:true}),
     loadTopicMastery(),
     loadSavedQuestions({render:false}),
@@ -3183,7 +3182,7 @@ async function initApp(session) {
   ]);
   results.forEach((result,index)=>{
     if(result.status==='rejected'){
-      const areas=['questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','videoaulas','materiais','domínio por assunto','questões salvas','Semana NEXO','feature flags'];
+      const areas=['catálogo de questões','dashboard','NEXO Core','Professor Nexo','NEXO Jornada','status dos módulos','materiais','domínio por assunto','questões salvas','Semana NEXO','feature flags','revisões pendentes'];
       console.error('bootstrap '+areas[index],result.reason);
       logClientError('bootstrap',result.reason,'bootstrap_'+index);
     }
