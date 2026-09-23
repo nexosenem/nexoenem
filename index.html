@@ -22,6 +22,13 @@
   <link rel="stylesheet" href="./assets/nexo-v17.css?v=20260923-8">  <link rel="stylesheet" href="./assets/nexo-phase1-ui.css?v=20260923-6">  <link rel="stylesheet" href="./assets/nexo-phase2-flows.css?v=20260923-1">
 </head>
 <body>
+  <script data-nexo-pretheme>
+    try{
+      var __nexoTheme=localStorage.getItem('nexo-theme')||'dark';
+      document.documentElement.dataset.nexoTheme=__nexoTheme;
+      if(__nexoTheme==='light')document.body.classList.add('light');
+    }catch(_){}
+  </script>
   <div id="boot" class="boot-screen">
     <div class="boot-logo"><span>N</span></div>
     <h1>Nexo</h1>
@@ -1954,14 +1961,14 @@
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2" defer></script>  <script src="./assets/nexo-mascot.js?v=20260920-3" defer></script>
   <script src="./assets/nexo-runtime-compat.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-hardening.js?v=20260921-2" defer></script>
-  <script src="./app.js?v=20260923-33" defer></script>
+  <script src="./app.js?v=20260923-34" defer></script>
   <script src="./assets/nexo-v13-core.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-planner.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-questions.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-essay.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-recall.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-content.js?v=20260921-2" defer></script>
-  <script src="./assets/nexo-v13-repertoire.js?v=20260921-2" defer></script>
+  <script src="./assets/nexo-v13-repertoire.js?v=20260923-1" defer></script>
   <script src="./assets/nexo-v13-calendar.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-tutor.js?v=20260921-2" defer></script>
   <script src="./assets/nexo-v13-search-errors.js?v=20260921-3" defer></script>
