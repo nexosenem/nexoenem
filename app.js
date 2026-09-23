@@ -23,6 +23,10 @@ const esc = (value='') => String(value).replace(/[&<>"']/g, c => ({
 const clamp = (n,a,b) => Math.max(a,Math.min(b,n));
 const shuffle = arr => arr.map(v=>[Math.random(),v]).sort((a,b)=>a[0]-b[0]).map(x=>x[1]);
 const sleep = ms => new Promise(r=>setTimeout(r,ms));
+document.addEventListener('DOMContentLoaded',()=>{
+  const buildLabel=document.querySelector('#nexoBuildLabel');
+  if(buildLabel)buildLabel.textContent='Versão '+NEXO_BUILD;
+});
 
 const CLOUDINARY = Object.freeze({
   cloudName:'nmhbq6sd',
