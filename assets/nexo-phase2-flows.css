@@ -611,3 +611,54 @@ body.nexo-reference-ui .nrx-mob-continue[data-nx2-resume="session"]{
 body.nexo-reference-ui .nrx-mob-continue[data-nx2-resume="session"] .nrx-play{
   box-shadow:0 0 0 1px rgba(95,216,255,.12),0 10px 24px rgba(83,76,230,.22)!important;
 }
+
+
+/* Phase 2 S2.5 · learning-state clarity */
+body.nexo-reference-ui .nx2-topic-status{
+  display:inline-flex;
+  align-items:center;
+  min-height:22px;
+  margin-left:7px;
+  padding:0 8px;
+  border-radius:999px;
+  border:1px solid rgba(135,151,188,.16);
+  background:rgba(135,151,188,.06);
+  color:#9cabc0;
+  font-size:9.5px;
+  font-weight:850;
+  letter-spacing:.55px;
+  vertical-align:middle;
+}
+body.nexo-reference-ui .nx2-topic-status[data-status="learning"],
+body.nexo-reference-ui .nx2-topic-status[data-status="training"]{
+  color:#74d9f4;
+  border-color:rgba(89,216,255,.18);
+  background:rgba(89,216,255,.07);
+}
+body.nexo-reference-ui .nx2-topic-status[data-status="review"]{
+  color:#f1c86b;
+  border-color:rgba(241,200,107,.2);
+  background:rgba(241,200,107,.07);
+}
+body.nexo-reference-ui .nx2-topic-status[data-status="consolidating"]{
+  color:#a996ff;
+  border-color:rgba(143,120,255,.22);
+  background:rgba(143,120,255,.08);
+}
+body.nexo-reference-ui .nx2-topic-status[data-status="mastered"]{
+  color:#67ddb9;
+  border-color:rgba(103,221,185,.22);
+  background:rgba(103,221,185,.08);
+}
+@media(max-width:760px){
+  body.nexo-reference-ui .nx2-topic-status{
+    min-height:24px;
+    font-size:10.5px!important;
+  }
+}
+@media(min-width:761px){
+  body.nexo-reference-ui #app{font-size:16px}
+  body.nexo-reference-ui #app .page p{font-size:15px}
+  body.nexo-reference-ui #app .page small{font-size:12.5px}
+  body.nexo-reference-ui .nrx-side-item>b{font-size:14px}
+}
