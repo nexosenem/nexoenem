@@ -25,6 +25,15 @@ async function captureVisualReference(page,name){
 async function runProfile(browser,name,viewport){
   const context=await browser.newContext({viewport,locale:'pt-BR'});
   const page=await context.newPage();
+  // Mock only telemetry/preferences endpoints touched by synthetic smoke users.
+  // This keeps CI from polluting production logs with deliberately fake user IDs
+  // while every functional interaction is still exercised in the browser.
+  await page.route('https://xeesttjsvscuqkeytmdz.supabase.co/rest/v1/nexo_product_events**',route=>
+    route.fulfill({status:201,contentType:'application/json',body:'[]'})
+  );
+  await page.route('https://xeesttjsvscuqkeytmdz.supabase.co/rest/v1/nexo_learning_preferences**',route=>
+    route.fulfill({status:200,contentType:'application/json',body:'[]'})
+  );
   page.setDefaultTimeout(20000);
   page.setDefaultNavigationTimeout(30000);
   let smokeStage='boot';
