@@ -1,0 +1,80 @@
+/* NEXO Phase 1 · Architecture + performance foundation
+   Safe consolidation layer: tokens, mobile overflow guards, accessibility scale. */
+
+:root{
+  --nx-space-1:4px;
+  --nx-space-2:8px;
+  --nx-space-3:12px;
+  --nx-space-4:16px;
+  --nx-space-5:20px;
+  --nx-space-6:24px;
+  --nx-space-8:32px;
+  --nx-radius-input:12px;
+  --nx-radius-button:12px;
+  --nx-radius-card:16px;
+  --nx-radius-panel:20px;
+  --nx-shadow-surface:0 8px 22px rgba(0,0,0,.14);
+  --nx-shadow-raised:0 14px 36px rgba(0,0,0,.20);
+  --nx-perf-fast:100ms;
+}
+
+/* Prevent grid children from creating horizontal overflow. */
+body.nexo-reference-ui .nrx-mob-actions>*,
+body.nexo-reference-ui .nrx-mob-action,
+body.nexo-reference-ui .nrx-mob-action b{
+  min-width:0!important;
+  max-width:100%!important;
+}
+body.nexo-reference-ui .nrx-mob-action{
+  width:100%!important;
+  overflow:visible!important;
+}
+body.nexo-reference-ui .nrx-mob-action b{
+  white-space:normal!important;
+  word-break:normal!important;
+  overflow-wrap:break-word!important;
+  text-wrap:balance;
+}
+
+/* Accessibility font scaling must remain functional after the global mobile type floor. */
+@media(max-width:760px){
+  body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-action b{font-size:14.5px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-action b{font-size:16px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .nrx-bottom-nav button small{font-size:14px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-bottom-nav button small{font-size:15.5px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .page p{font-size:16px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .page p{font-size:17.5px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .page small{font-size:13.5px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .page small{font-size:15px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .page button{font-size:16px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .page button{font-size:17px!important}
+}
+@media(min-width:761px){
+  body.nexo-reference-ui[data-font-scale="large"] .nrx-side-item>b{font-size:14px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-side-item>b{font-size:16px!important}
+}
+
+/* When the device is under main-thread pressure, pause ambient decoration before UX-critical motion. */
+body.nexo-perf-pressure :is(
+  .nrx-ring,
+  .nrx-mob-hero-media img,
+  .nrx-hero-art img,
+  .nrx-mob-action i,
+  .nx18-life-orb,
+  .page-nexo-mentor img
+){
+  animation-play-state:paused!important;
+}
+body.nexo-perf-pressure :is(.nx17-spark-burst,.nx18-ripple){
+  display:none!important;
+}
+
+/* Navigation/search stay GPU-cheap and responsive. */
+body.nexo-reference-ui .nrx-bottom-slider{
+  transform:translate3d(calc(var(--nrx-active-index) * 100%),0,0);
+  will-change:transform;
+}
+body.nexo-reference-ui .nrx-mobile-search-slot .search,
+body.nexo-reference-ui .nrx-bottom-nav{
+  -webkit-tap-highlight-color:transparent;
+}
