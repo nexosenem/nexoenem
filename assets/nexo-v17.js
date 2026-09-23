@@ -42,11 +42,9 @@
   window.NEXOV17.refresh=apply;
   const boot=()=>{
     apply();
-    let timer=0;
-    const schedule=()=>{if(timer)return;timer=setTimeout(()=>{timer=0;apply()},80)};
-    const root=document.querySelector('#app')||document.body;
-    const mo=new MutationObserver(schedule);
-    mo.observe(root,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+    let queued=false;
+    const schedule=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;apply()})};
+    document.addEventListener('nexo:pagechange',schedule);
     window.addEventListener('resize',schedule,{passive:true});
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
