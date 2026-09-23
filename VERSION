@@ -1,5 +1,5 @@
-NEXO PHASE 1 · Blocks 2–8
+NEXO PHASE 1 · Validation 2
 release_date=2026-09-23
-build=architecture-loading-resilience-observability-data-qa
-completed=design-system-guard,parallel-boot,precache-trim,lazy-question-catalog,offline-session-selection,essay-drafts,health-performance,rls-consolidation,architecture-budget,resilience-smoke,safe-update
+build=phase1-final-hardening
+completed=blocks-1-through-8
 status=validation
