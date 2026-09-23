@@ -1,5 +1,7 @@
-NEXO PHASE 1 · Validation 4
+NEXO PHASE 1 · COMPLETE
 release_date=2026-09-23
-build=phase1-final-hardening-3
+build=phase1-complete
 completed=blocks-1-through-8
-status=validation
+quality_gates=static,architecture,interaction,resilience,browser-matrix
+deploy=conditional-on-cloudflare-repository-secrets
+status=complete
