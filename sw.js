@@ -1,18 +1,18 @@
 // NEXO V17.8 release · reference interface + living experience
-const NEXO_CACHE='nexo-phase2-s2-5-2-20260923';
+const NEXO_CACHE='nexo-phase2-s2-6-20260923';
 const SHELL=[
   './',
   './index.html',
   './manifest.webmanifest',
   './styles.css?v=20260921-4',
-  './app.js?v=20260923-42',
+  './app.js?v=20260923-43',
   './assets/nexo-runtime-compat.js?v=20260921-2',
   './assets/nexo-v13-hardening.js?v=20260921-2',
   './assets/nexo-v13.css?v=20260921-3',
   './assets/nexo-reference-v2.css?v=20260922-22',
   './assets/nexo-v15-ui.css?v=20260923-10',
   './assets/nexo-v17.css?v=20260923-8',
-  './assets/nexo-phase1-ui.css?v=20260923-9',
+  './assets/nexo-phase1-ui.css?v=20260923-10',
   './assets/nexo-v13-core.js?v=20260921-2',
   './assets/nexo-v13-planner.js?v=20260921-2',
   './assets/nexo-v13-questions.js?v=20260921-2',
@@ -31,7 +31,7 @@ const SHELL=[
   './assets/nexo-v18-11-life.js?v=20260923-1',
   './assets/nexo-phase1-core.js?v=20260923-1',
   './assets/nexo-phase2-core-ux.js?v=20260923-4',
-  './assets/nexo-phase2-flows.js?v=20260923-9',
+  './assets/nexo-phase2-flows.js?v=20260923-10',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',
