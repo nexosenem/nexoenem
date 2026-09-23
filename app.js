@@ -2,6 +2,7 @@
 
 const SUPABASE_URL = 'https://xeesttjsvscuqkeytmdz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Y0hp9KlIhb_asEnVNUoTAw_XR22Cw2F';
+const NEXO_RELEASE = document.querySelector('meta[name="nexo-release"]')?.content || 'phase1-dev';
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
@@ -588,7 +589,8 @@ async function logClientError(area,error,code='runtime'){
       user_id:state.user.id,
       area:String(area||'app').slice(0,80),
       code:String(code||'runtime').slice(0,80),
-      message
+      message,
+      release:NEXO_RELEASE
     });
   }catch(logError){
     console.warn('NEXO telemetry unavailable',logError);
@@ -602,7 +604,10 @@ async function logProductEvent(eventName,metadata={},page=null){
       user_id:state.user.id,
       event_name:String(eventName||'event').slice(0,80),
       page:String(page||$('.page.active')?.id||'').slice(0,80)||null,
-      metadata:metadata&&typeof metadata==='object'?metadata:{}
+      metadata:{
+        ...(metadata&&typeof metadata==='object'?metadata:{}),
+        release:NEXO_RELEASE
+      }
     });
   }catch(err){
     console.warn('product analytics unavailable',err);
@@ -1563,7 +1568,10 @@ function updateNetworkStatus(){
     el.classList.toggle('hidden',online);
     const b=el.querySelector('b');if(b)b.textContent=online?'Online':'Offline parcial';
   }
-  if(online)logProductEvent('network_restored',{},$('.page.active')?.id||null);
+  if(online){
+    logProductEvent('network_restored',{},$('.page.active')?.id||null);
+    flushContentProgressQueue().catch(()=>{});
+  }
 }
 window.addEventListener('online',()=>{updateNetworkStatus();toast('Conexão restaurada.')});
 window.addEventListener('offline',()=>{updateNetworkStatus();toast('Sem internet. Aulas já carregadas podem continuar disponíveis.','info')});
@@ -2776,17 +2784,23 @@ async function loadAdminProductAnalytics(){
   if(state.profile?.role!=='admin')return;
   const el=$('#adminProductAnalytics');if(!el)return;
   try{
-    const {data,error}=await client.rpc('get_admin_product_metrics');
+    let {data,error}=await client.rpc('get_admin_product_metrics_v2');
+    if(error){
+      console.warn('admin metrics v2 fallback',error);
+      ({data,error}=await client.rpc('get_admin_product_metrics'));
+    }
     if(error)throw error;
     const pages=Array.isArray(data?.page_views_7d)?data.page_views_7d:[];
+    const perf=Array.isArray(data?.performance_24h)?data.performance_24h:[];
     el.innerHTML='<div class="admin-product-kpis">'+[
       ['Usuários ativos · 7d',Number(data?.active_users_7d||0)],
       ['Questões · 7d',Number(data?.attempts_7d||0)],
       ['Acerto · 7d',Number(data?.accuracy_7d||0)+'%'],
       ['Conteúdos concluídos · 7d',Number(data?.content_completions_7d||0)],
       ['Redações · 30d',Number(data?.essays_30d||0)],
-      ['Sessões · 7d',Number(data?.sessions_7d||0)]
+      ['Erros cliente · 24h',Number(data?.client_errors_24h||0)]
     ].map(x=>'<article><small>'+x[0]+'</small><b>'+x[1]+'</b></article>').join('')+'</div>'+
+    '<div class="admin-page-views"><b>Performance lenta · 24 horas</b>'+(perf.length?perf.map(x=>'<div><span>'+esc(x.kind||'interação')+' · p50 '+Number(x.p50_ms||0)+'ms</span><strong>p95 '+Number(x.p95_ms||0)+'ms</strong></div>').join(''):'<p>Sem violações de orçamento registradas.</p>')+'</div>'+
     '<div class="admin-page-views"><b>Páginas mais abertas · 7 dias</b>'+(pages.length?pages.map(x=>'<div><span>'+esc(x.page)+'</span><strong>'+Number(x.views||0)+'</strong></div>').join(''):'<p>Sem eventos suficientes ainda.</p>')+'</div>';
   }catch(err){
     console.error('admin product analytics',err);
@@ -3485,7 +3499,11 @@ async function loadDashboard() {
 
 async function loadNexoCore(){
   try{
-    const {data,error}=await client.rpc('get_nexo_core');
+    let {data,error}=await client.rpc('get_nexo_core_v4');
+    if(error){
+      console.warn('NEXO Core v4 fallback',error);
+      ({data,error}=await client.rpc('get_nexo_core'));
+    }
     if(error)throw error;
     state.core=data||null;
   }catch(err){
@@ -3515,7 +3533,10 @@ function renderNexoCore(){
   };
   const signalInfo=signalMeta[signal]||signalMeta.balanced;
   $$('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
-  $$('[data-core-status]').forEach(el=>el.textContent=initial?'primeiro diagnóstico':rec?('adaptativo · '+signalInfo.label.toLowerCase()):'calibrando');
+  $('[data-core-status]').forEach(el=>{
+    const confidence=rec?.confidence_label&&!initial?' · confiança '+rec.confidence_label:'';
+    el.textContent=initial?'primeiro diagnóstico':rec?('adaptativo · '+signalInfo.label.toLowerCase()+confidence):'calibrando';
+  });
   $$('[data-core-behavior]').forEach(el=>{
     const measured=Number(behavior.measured_attempts||0);
     const visible=Boolean(rec && !initial && (measured>=3 || ['content','hesitation','guided'].includes(signal)));
@@ -7213,6 +7234,31 @@ async function toggleContentFavorite(type,id){
   updateViewerFavoriteButton();
 }
 
+const NEXO_PROGRESS_QUEUE_KEY='nexo-progress-queue-v1';
+function readProgressQueue(){
+  try{return JSON.parse(localStorage.getItem(NEXO_PROGRESS_QUEUE_KEY)||'[]')}catch(_){return []}
+}
+function queueContentProgress(row){
+  const rows=readProgressQueue().filter(x=>!(x.user_id===row.user_id&&x.content_type===row.content_type&&Number(x.content_id)===Number(row.content_id)));
+  rows.push(row);
+  try{localStorage.setItem(NEXO_PROGRESS_QUEUE_KEY,JSON.stringify(rows.slice(-120)))}catch(_){}
+}
+async function flushContentProgressQueue(){
+  if(!navigator.onLine||!state.user?.id)return false;
+  const rows=readProgressQueue().filter(x=>x.user_id===state.user.id);
+  if(!rows.length)return true;
+  try{
+    const {error}=await client.from('content_progress').upsert(rows,{onConflict:'user_id,content_type,content_id'});
+    if(error)throw error;
+    const keep=readProgressQueue().filter(x=>x.user_id!==state.user.id);
+    localStorage.setItem(NEXO_PROGRESS_QUEUE_KEY,JSON.stringify(keep));
+    rows.forEach(row=>state.contentProgress.set(contentKey(row.content_type,row.content_id),row));
+    return true;
+  }catch(err){
+    console.warn('content progress queue',err);
+    return false;
+  }
+}
 async function saveContentProgress(type,id,{seconds=0,percent=0,completed=false}={}){
   if(!state.user?.id||!id)return;
   const safePercent=Math.max(0,Math.min(100,Number(percent)||0));
@@ -7226,9 +7272,17 @@ async function saveContentProgress(type,id,{seconds=0,percent=0,completed=false}
     last_opened_at:new Date().toISOString(),
     updated_at:new Date().toISOString()
   };
-  const {error}=await client.from('content_progress').upsert(row,{onConflict:'user_id,content_type,content_id'});
-  if(error){console.error('content progress',error);return false}
   state.contentProgress.set(contentKey(type,id),row);
+  if(!navigator.onLine){
+    queueContentProgress(row);
+    return true;
+  }
+  const {error}=await client.from('content_progress').upsert(row,{onConflict:'user_id,content_type,content_id'});
+  if(error){
+    console.error('content progress',error);
+    queueContentProgress(row);
+    return false;
+  }
   if(completed){
     client.rpc('refresh_my_learning_achievements').then(()=>{
       loadNexoJourney({silent:true}).catch(()=>{});
@@ -7833,7 +7887,10 @@ async function loadMaterials({silent=false}={}){
   if(error){
     console.error('load materials',error);
     logClientError('materials',error,'material_load');
-    if(grid)grid.innerHTML='<article class="panel"><p style="color:var(--muted)">Não consegui carregar os materiais agora.</p></article>';
+    if(grid){
+      grid.innerHTML='<article class="panel content-empty"><b>Não consegui carregar os materiais agora.</b><p>Seu progresso continua salvo. Tente novamente quando a conexão estabilizar.</p><button class="outline-btn" id="retryMaterialsLoad">Tentar novamente</button></article>';
+      $('#retryMaterialsLoad')?.addEventListener('click',()=>loadMaterials({silent:false}));
+    }
     if(!silent)toast('Não foi possível carregar os materiais.','error');
     return state.materials;
   }
