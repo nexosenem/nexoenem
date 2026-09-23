@@ -1,0 +1,192 @@
+/* NEXO V18.13 · GLOBAL READABILITY + INSTANT TOUCH
+   A single mobile typography floor for the whole product. */
+
+@media (max-width:760px){
+  html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+
+  body.v17-live.nexo-reference-ui{
+    font-size:17px!important;
+  }
+
+  /* Global text floor — all pages, not only Home/Questions/Essay. */
+  body.v17-live.nexo-reference-ui .page h1{
+    font-size:34px!important;
+    line-height:1.04!important;
+  }
+  body.v17-live.nexo-reference-ui .page h2{
+    font-size:32px!important;
+    line-height:1.07!important;
+  }
+  body.v17-live.nexo-reference-ui .page h3{
+    font-size:20px!important;
+    line-height:1.22!important;
+  }
+  body.v17-live.nexo-reference-ui .page h4{
+    font-size:17px!important;
+    line-height:1.28!important;
+  }
+  body.v17-live.nexo-reference-ui .page p{
+    font-size:15px!important;
+    line-height:1.58!important;
+  }
+  body.v17-live.nexo-reference-ui .page li{
+    font-size:14.5px!important;
+    line-height:1.5!important;
+  }
+  body.v17-live.nexo-reference-ui .page label{
+    font-size:14px!important;
+    line-height:1.36!important;
+  }
+  body.v17-live.nexo-reference-ui .page small{
+    font-size:12.5px!important;
+    line-height:1.42!important;
+  }
+  body.v17-live.nexo-reference-ui .page button{
+    font-size:15px;
+    line-height:1.2;
+  }
+  body.v17-live.nexo-reference-ui .page :is(input,select,textarea){
+    font-size:16.5px!important;
+    line-height:1.35!important;
+  }
+
+  body.v17-live.nexo-reference-ui .page :is(
+    .muted,.meta,.hint,.helper-text,.field-help,.subtle,.caption,
+    .eyebrow+small,.panel-title small,.card-meta,.stat-label
+  ){
+    font-size:12.5px!important;
+    line-height:1.42!important;
+  }
+
+  body.v17-live.nexo-reference-ui .panel-title>div>b{
+    font-size:17px!important;
+    line-height:1.2!important;
+  }
+  body.v17-live.nexo-reference-ui .panel-title>div>small{
+    font-size:12.5px!important;
+    line-height:1.38!important;
+  }
+
+  /* Common card copy across the product. */
+  body.v17-live.nexo-reference-ui .page :is(
+    .panel,.card,.stat,.sim-card,.material-topic-card,.performance-card,
+    .mastery-card,.planner-card,.journey-store-card,.wardrobe-card
+  ) :is(b,strong){
+    line-height:1.25!important;
+  }
+
+  /* Search: the first touch must feel native and immediate. */
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search{
+    touch-action:manipulation!important;
+    cursor:text!important;
+    contain:layout paint;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search input{
+    font-size:16.5px!important;
+    min-height:48px!important;
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search input::placeholder{
+    font-size:16px!important;
+  }
+
+  /* Bottom navigation: readable and optimized for direct touch. */
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav{
+    touch-action:manipulation!important;
+    contain:layout paint;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button{
+    touch-action:manipulation!important;
+    -webkit-tap-highlight-color:transparent!important;
+    user-select:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{
+    font-size:13px!important;
+    line-height:1.05!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-slider{
+    will-change:transform;
+    backface-visibility:hidden;
+  }
+
+  /* Questions */
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes b{
+    font-size:17px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes small{
+    font-size:13.5px!important;
+    line-height:1.42!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary b{
+    font-size:16px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary small{
+    font-size:12.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .q-option{
+    font-size:16px!important;
+  }
+
+  /* Study */
+  body.v17-live.nexo-reference-ui #materiais .material-subject-nav button,
+  body.v17-live.nexo-reference-ui #materiais .v15-material-tabs button{
+    font-size:14px!important;
+  }
+  body.v17-live.nexo-reference-ui #materiais #materialGrid small{
+    font-size:12.5px!important;
+  }
+
+  /* Essay */
+  body.v17-live.nexo-reference-ui #redacao .v15-essay-tabs button{
+    font-size:15px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-flow-bar b{
+    font-size:13.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-flow-bar small{
+    font-size:11.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao #essayText{
+    font-size:17px!important;
+    line-height:1.76!important;
+  }
+
+  /* Drawer / dialogs / assistant / notifications also follow the same scale. */
+  body.v17-live.nexo-reference-ui :is(
+    .nrx-side-panel,.profile-menu,.nia-panel,.community-modal,
+    .notifications-panel,.notification-sheet,.nrx-notification-panel
+  ) p{
+    font-size:14px!important;
+    line-height:1.5!important;
+  }
+  body.v17-live.nexo-reference-ui :is(
+    .nrx-side-panel,.profile-menu,.nia-panel,.community-modal,
+    .notifications-panel,.notification-sheet,.nrx-notification-panel
+  ) small{
+    font-size:12.5px!important;
+    line-height:1.4!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-side-item>b{
+    font-size:16.5px!important;
+  }
+
+  /* Prevent small utility labels from becoming unreadable. */
+  body.v17-live.nexo-reference-ui :is(
+    .chip,.tag,.badge,.pill,.status-badge,.topic-chip,.q-tag
+  ){
+    font-size:12px!important;
+    line-height:1.2!important;
+  }
+}
+
+@media (max-width:390px){
+  body.v17-live.nexo-reference-ui{font-size:16.5px!important}
+  body.v17-live.nexo-reference-ui .page h2{font-size:30px!important}
+  body.v17-live.nexo-reference-ui .page p{font-size:14.5px!important}
+  body.v17-live.nexo-reference-ui .page small{font-size:12px!important}
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{font-size:12px!important}
+}
