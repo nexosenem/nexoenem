@@ -8100,7 +8100,7 @@ function renderMaterials(){
 let materialSearchTimer=0;
 $('#materialSearch')?.addEventListener('input',()=>{
   clearTimeout(materialSearchTimer);
-  materialSearchTimer=setTimeout(renderMaterials,100);
+  materialSearchTimer=setTimeout(renderMaterials,16);
 });
 $('#materialFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active');renderMaterials()});
 $('#materialStatusFilter')?.addEventListener('change',renderMaterials);
@@ -8144,7 +8144,7 @@ function renderBank({reset=false}={}){
 }
 $('#bankSearch').addEventListener('input',()=>{
   clearTimeout(bankSearchTimer);
-  bankSearchTimer=setTimeout(()=>renderBank({reset:true}),100);
+  bankSearchTimer=setTimeout(()=>renderBank({reset:true}),16);
 });
 $('#bankArea').addEventListener('change',()=>renderBank({reset:true}));
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){openPage('banco');$('#bankSearch').value=e.target.value;renderBank();setMobileSearchOpen(false,{focus:false})}});
