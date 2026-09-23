@@ -1666,7 +1666,13 @@ body.nexo-reference-ui .page:not(#inicio)>:is(.panel,.nrx-question-modes,.nx2-qu
     font-size:12.5px!important;
   }
   body.nexo-reference-ui #redacao .essay-flow-bar small{
-    display:none!important;
+    display:block!important;
+    font-size:11px!important;
+    line-height:1.2!important;
+    opacity:.72!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
   }
   body.nexo-reference-ui #redacao #essayText{
     min-height:430px!important;
