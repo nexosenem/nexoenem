@@ -13,7 +13,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: nexo-production-latest-${{ github.ref }}
+  group: nexo-production-final-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
