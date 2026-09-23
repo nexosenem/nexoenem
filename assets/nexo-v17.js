@@ -11,9 +11,12 @@
     return n<=39?'nx17-score-low':n<=79?'nx17-score-mid':'nx17-score-high';
   }
   function normalizeScores(){
-    $$('[data-nrx-pct],[data-nrx-weak-pct],#progressPct,#mobileProgressPct,.percent,.percentage,[data-percent]').forEach(el=>{
+    $('[data-nrx-pct],[data-nrx-weak-pct],#progressPct,#mobileProgressPct,.percent,.percentage,[data-percent]').forEach(el=>{
       const cls=scoreClass(el.textContent||el.dataset.percent);
-      el.classList.remove('nx17-score-low','nx17-score-mid','nx17-score-high');
+      const tones=['nx17-score-low','nx17-score-mid','nx17-score-high'];
+      const current=tones.find(x=>el.classList.contains(x))||'';
+      if(current===cls)return;
+      tones.forEach(x=>el.classList.remove(x));
       if(cls)el.classList.add(cls);
     });
   }
@@ -39,8 +42,10 @@
   window.NEXOV17.refresh=apply;
   const boot=()=>{
     apply();
-    const mo=new MutationObserver(()=>requestAnimationFrame(apply));
-    mo.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','style','aria-hidden']});
+    let queued=false;
+    const schedule=()=>{if(queued)return;queued=true;requestAnimationFrame(()=>{queued=false;apply()})};
+    const mo=new MutationObserver(schedule);
+    mo.observe(document.body,{subtree:true,childList:true,characterData:true,attributes:true,attributeFilter:['class','aria-hidden']});
     window.addEventListener('resize',()=>requestAnimationFrame(apply),{passive:true});
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
@@ -95,4 +100,29 @@
     setInterval(greeting,60000);
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
+
+
+/* V17.3 — Study page semantic enhancement */
+(function(){
+  'use strict';
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  function enhanceStudy(){
+    const page=$('#materiais');if(!page)return;
+    const tabs=$('#v15MaterialTabs',page);
+    if(tabs&&!$('.nx17-study-live',page)){
+      const live=document.createElement('div');
+      live.className='nx17-study-live';
+      live.innerHTML='<i></i><span><b>Biblioteca NEXO</b> · aprenda, revise e pratique no mesmo fluxo</span>';
+      tabs.insertAdjacentElement('afterend',live);
+    }
+    $$('#materialGrid>*',page).forEach((card,index)=>{
+      card.dataset.nx17StudyCard=String(index+1);
+      if(!card.hasAttribute('tabindex')&&card.matches('article,div'))card.setAttribute('tabindex','0');
+    });
+  }
+  const run=()=>requestAnimationFrame(enhanceStudy);
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+  const page=$('#materiais');if(page)new MutationObserver(run).observe(page,{subtree:true,childList:true});
 })();
