@@ -21,7 +21,7 @@ for(const [file,budget] of Object.entries(budgets)){
 
 const externalScripts=[...text['index.html'].matchAll(/<script\s+([^>]*?)src="([^"]+)"[^>]*><\/script>/g)]
   .map(match=>({attrs:match[1],src:match[2],full:match[0]}));
-const blocking=externalScripts.filter(x=>!/(^|\s)defer(\s|$)/.test(x.attrs)&&!/(^|\s)async(\s|$)/.test(x.attrs));
+const blocking=externalScripts.filter(x=>!/(^|\s)defer(?:\s|>|=)/.test(x.full)&&!/(^|\s)async(?:\s|>|=)/.test(x.full));
 if(blocking.length)failures.push('parser-blocking scripts: '+blocking.map(x=>x.src).join(', '));
 
 const cssLinks=[...text['index.html'].matchAll(/<link[^>]+rel="stylesheet"[^>]+href="([^"]+)"/g)].map(x=>x[1]);
