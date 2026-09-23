@@ -1,6 +1,6 @@
 'use strict';
 
-const NEXO_BUILD='V16.3.0';
+const NEXO_BUILD='V16.4.0';
 window.NEXO_BUILD=NEXO_BUILD;
 document.documentElement.dataset.nexoBuild=NEXO_BUILD;
 
