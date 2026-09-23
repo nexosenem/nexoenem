@@ -538,3 +538,41 @@ body.light.v17-live #desempenho .performance-stat,
 body.light.v17-live #desempenho .v14-loop-grid>button,
 body.light.v17-live #desempenho .v14-consistency-grid>button,
 body.light.v17-live #semana :is(.week-full-hero,.long-range-plan){background:#fff!important}
+
+
+/* V17.7 — The site feels alive without becoming noisy */
+.nx17-ripple{
+  position:absolute!important;width:10px;height:10px;border-radius:50%;pointer-events:none;
+  background:rgba(255,255,255,.28);transform:translate(-50%,-50%) scale(0);
+  animation:nx17-ripple .52s ease-out forwards;
+}
+@keyframes nx17-ripple{to{opacity:0;transform:translate(-50%,-50%) scale(12)}}
+.nx17-spark-burst{
+  position:fixed;z-index:140;pointer-events:none;width:6px;height:6px;border-radius:50%;
+  background:#a889ff;box-shadow:0 0 16px rgba(168,137,255,.7);
+  animation:nx17-spark .72s cubic-bezier(.2,.8,.2,1) forwards;
+}
+@keyframes nx17-spark{
+  0%{opacity:0;transform:translate(0,0) scale(.2)}
+  20%{opacity:1}
+  100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(1.1)}
+}
+body.v17-live .nrx-side-item.active>span,
+body.v17-live .nrx-bottom-nav button.active>span{
+  animation:nx17-active-breathe 3.8s ease-in-out infinite;
+}
+@keyframes nx17-active-breathe{50%{filter:drop-shadow(0 0 7px rgba(137,104,255,.42))}}
+body.v17-live #niaButton img,
+body.v17-live #nexoLauncherAvatar{transition:transform .2s ease,filter .2s ease!important}
+body.v17-live #niaButton:hover img{transform:translateY(-2px) rotate(-2deg) scale(1.04)}
+body.v17-live .toast:not(.hidden){animation:nx17-toast-in .24s ease both}
+@keyframes nx17-toast-in{from{opacity:0;transform:translateY(8px) scale(.98)}to{opacity:1;transform:none}}
+body.v17-live .achievement-celebration:not(.hidden) .achievement-celebration-card{
+  animation:nx17-achievement-in .38s cubic-bezier(.2,.8,.2,1) both;
+}
+@keyframes nx17-achievement-in{from{opacity:0;transform:translateY(12px) scale(.96)}to{opacity:1;transform:none}}
+@media(prefers-reduced-motion:reduce){
+  .nx17-ripple,.nx17-spark-burst,
+  body.v17-live .nrx-side-item.active>span,
+  body.v17-live .nrx-bottom-nav button.active>span{animation:none!important}
+}
