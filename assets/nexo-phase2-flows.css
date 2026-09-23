@@ -539,10 +539,10 @@ body.nexo-reference-ui .nx2-rep-tags span{
 }
 
 /* Inline loading reads as a local state, not a frozen app. */
-body.nexo-reference-ui button[disabled]{
+body.nexo-reference-ui button[aria-busy="true"]{
   position:relative;
 }
-body.nexo-reference-ui button[disabled]:not([aria-disabled="true"])::after{
+body.nexo-reference-ui button[aria-busy="true"]::after{
   content:"";
   display:inline-block;
   width:11px;
@@ -574,5 +574,5 @@ body.nexo-reference-ui button[disabled]:not([aria-disabled="true"])::after{
 }
 
 @media(prefers-reduced-motion:reduce){
-  body.nexo-reference-ui button[disabled]::after{animation:none!important}
+  body.nexo-reference-ui button[aria-busy="true"]::after{animation:none!important}
 }
