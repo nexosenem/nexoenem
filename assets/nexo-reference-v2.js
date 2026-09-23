@@ -662,12 +662,19 @@ function observe(){
   Array.from(document.querySelectorAll('[data-nexo-today-title],[data-nexo-today-text]'))
     .filter(el=>!el.closest?.('.nrx-home'))
     .forEach(el=>observer.observe(el,{subtree:true,childList:true,characterData:true}));
-  document.querySelectorAll('.page').forEach(el=>observer.observe(el,{attributes:true,attributeFilter:['class']}));
   const app=$('#app');
   if(app)observer.observe(app,{attributes:true,attributeFilter:['class']});
-  observer.observe(document.body,{attributes:true,attributeFilter:['class']});
-  window.addEventListener('resize',()=>{placeSearch();scheduleReferenceSync()},{passive:true});
+
+  document.addEventListener('nexo:pagechange',()=>{
+    syncBottom();
+    syncSideNav();
+    placeSearch();
+    scheduleReferenceSync();
+  });
+
+  // Theme is the only body-class change the generated shell needs to mirror.
   document.addEventListener('click',e=>{
+    if(e.target.closest?.('#themeToggle,.nrx-mobile-theme,[data-nrx-utility="theme"]'))requestAnimationFrame(scheduleReferenceSync);
     if(!e.target.closest?.('.nrx-side-more-panel')&&!e.target.closest?.('.nrx-side-more-toggle'))closeReferenceMore();
     const materialPage=e.target.closest?.('[data-page="materiais"]');
     if(materialPage&&!materialPage.closest?.('.nrx-home'))document.body.dataset.nrxMaterialsView='study';
@@ -677,8 +684,8 @@ function observe(){
       document.body.dataset.nrxJourneyView=tab==='groups'?'community':tab;
       setTimeout(syncSideNav,40);
     }
-    if(e.target.closest?.('[data-page],.nav-item'))setTimeout(()=>{syncBottom();syncSideNav();placeSearch()},40);
   },true);
+  window.addEventListener('resize',()=>{placeSearch();scheduleReferenceSync()},{passive:true});
 }
 
 function buildReferenceInternalActions(){
