@@ -4207,8 +4207,28 @@ function startQuestionBehaviorMonitor(q,seed=null){
   },Math.max(1000,longSeconds*1000-elapsed)));
 }
 
+const NEXO_VISUAL_TEXT_SUFFICIENT_IDS=new Set([
+  2024015,2024091,2024098,2024119,2024126,2024142,2024145,2024155,2024173,
+  2025015,2025097,2025106,2025114,2025126,2025139,2025164,2025170
+]);
+const NEXO_VISUAL_FALSE_POSITIVE_IDS=new Set([2024032,2024037,2024163,2025032,2025059]);
+const NEXO_VISUAL_REQUIRED_IDS=new Set([
+  2024019,2024039,2024104,2024114,2024123,2024144,2024148,2024152,2024161,
+  2025023,2025068,2025077,2025109,2025128,2025134
+]);
+function editorialVisualDisposition(q){
+  const id=Number(q?.id||0);
+  if(NEXO_VISUAL_FALSE_POSITIVE_IDS.has(id))return 'not_visual';
+  if(NEXO_VISUAL_TEXT_SUFFICIENT_IDS.has(id))return 'text_sufficient';
+  if(NEXO_VISUAL_REQUIRED_IDS.has(id))return 'visual_required';
+  return '';
+}
+
 function likelyNeedsQuestionVisual(q){
   if(!q)return false;
+  const reviewed=editorialVisualDisposition(q);
+  if(reviewed==='not_visual')return false;
+  if(reviewed==='text_sufficient'||reviewed==='visual_required')return true;
   const raw=String([q.base_text,q.prompt].filter(Boolean).join(' '));
   const text=normalizeTextKey(raw);
 
@@ -4240,6 +4260,9 @@ function likelyNeedsQuestionVisual(q){
   return subject==='artes'&&/\b(escultura|pintura|gravura|obra|museu|museum|acervo|instalacao)\b/.test(text);
 }
 function hasAccessibleVisualDescription(q){
+  const reviewed=editorialVisualDisposition(q);
+  if(reviewed==='text_sufficient'||reviewed==='not_visual')return true;
+  if(reviewed==='visual_required')return false;
   const raw=String([q?.base_text,q?.prompt].filter(Boolean).join('\n'));
   const text=raw.toLocaleLowerCase('pt-BR');
   if(!text)return false;
