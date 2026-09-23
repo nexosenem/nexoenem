@@ -1,4 +1,5 @@
-const NEXO_CACHE='nexo-v17-20260923-08';
+// NEXO V17.8 release · reference interface + living experience
+const NEXO_CACHE='nexo-v17-20260923-09';
 const SHELL=[
   './',
   './index.html',
