@@ -1630,18 +1630,6 @@ globalSearch.addEventListener('keydown',e=>{
     setMobileSearchOpen(false,{focus:false});
   }
 });
-document.addEventListener('keydown',e=>{
-  const key=String(e.key||'').toLowerCase();
-  if((e.ctrlKey||e.metaKey)&&key==='k'){
-    e.preventDefault();
-    if(innerWidth<=760&&$('#inicio')&&!$('#inicio').classList.contains('active'))openPage('inicio');
-    requestAnimationFrame(()=>{
-      setMobileSearchOpen(innerWidth<=760,{focus:false});
-      try{globalSearch.focus({preventScroll:false})}catch(_){globalSearch.focus()}
-      globalSearch.select?.();
-    });
-  }
-});
 
 function getSiteSearchActions(){
   const actions=[
