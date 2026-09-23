@@ -1320,12 +1320,28 @@ async function runProfile(browser,name,viewport){
         if(typeof openPage==='function')openPage('simulados');
         await wait(15);
       }
+      const fullBtn=document.querySelector('[data-sim-mode="full"]');
+      const beforeDay1=calls.sessions.length;
+      fullBtn?.click();await wait(35);
+      const fullModalOpen=Boolean(document.querySelector('#realExamModal')&&!document.querySelector('#realExamModal').classList.contains('hidden'));
+      document.querySelector('[data-real-exam-day="1"]')?.click();await wait(50);
+      const day1Cfg=calls.sessions[beforeDay1];
+      if(typeof openPage==='function')openPage('simulados');await wait(15);
+      const beforeDay2=calls.sessions.length;
+      fullBtn?.click();await wait(35);
+      document.querySelector('[data-real-exam-day="2"]')?.click();await wait(50);
+      const day2Cfg=calls.sessions[beforeDay2];
+
       const areaBtn=document.querySelector('[data-sim-area="Matemática"]');
       const beforeArea=calls.sessions.length;
+      if(typeof openPage==='function')openPage('simulados');await wait(15);
       areaBtn?.click();await wait(45);
       const areaCfg=calls.sessions[beforeArea];
       result.simulations={
         checks:simChecks,
+        realModal:fullModalOpen,
+        realDay1:Boolean(day1Cfg&&Number(day1Cfg.size)===90&&day1Cfg.examMode===true&&day1Cfg.examDay===1&&JSON.stringify(day1Cfg.areas)===JSON.stringify(['Linguagens','Ciências Humanas'])),
+        realDay2:Boolean(day2Cfg&&Number(day2Cfg.size)===90&&day2Cfg.examMode===true&&day2Cfg.examDay===2&&JSON.stringify(day2Cfg.areas)===JSON.stringify(['Ciências da Natureza','Matemática'])),
         area:Boolean(areaBtn&&areaCfg&&areaCfg.area==='Matemática'&&Number(areaCfg.size)===20&&areaCfg.mode==='simulado'&&areaCfg.examMode===true)
       };
 
@@ -1444,7 +1460,7 @@ async function runProfile(browser,name,viewport){
   const moduleInteractionFailures=[];
   if(moduleInteractionTest.error)moduleInteractionFailures.push('error='+moduleInteractionTest.error);
   const simBad=(moduleInteractionTest.simulations?.checks||[]).filter(x=>!x.button||!x.called||x.route!=='questoes'||x.size<=0||!x.examMode||x.sessionMode!=='simulado');
-  if(simBad.length||!moduleInteractionTest.simulations?.area)moduleInteractionFailures.push('simulados='+JSON.stringify(moduleInteractionTest.simulations));
+  if(simBad.length||!moduleInteractionTest.simulations?.realModal||!moduleInteractionTest.simulations?.realDay1||!moduleInteractionTest.simulations?.realDay2||!moduleInteractionTest.simulations?.area)moduleInteractionFailures.push('simulados='+JSON.stringify(moduleInteractionTest.simulations));
   const plannerBad=(moduleInteractionTest.planner?.checks||[]).filter(x=>!x.called||x.route!=='questoes'||![5,15].includes(x.size));
   if(plannerBad.length||!moduleInteractionTest.planner?.eve)moduleInteractionFailures.push('planner='+JSON.stringify(moduleInteractionTest.planner));
   if(!moduleInteractionTest.bank?.searchFiltered||!moduleInteractionTest.bank?.areaFiltered||!moduleInteractionTest.bank?.repairHidden||!moduleInteractionTest.bank?.repairRejected||!moduleInteractionTest.bank?.opened)moduleInteractionFailures.push('banco='+JSON.stringify(moduleInteractionTest.bank));
