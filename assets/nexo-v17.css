@@ -1,0 +1,167 @@
+/* NEXO V17 · reference UI living-system layer
+   V17.1 — foundation, density, overflow, accessibility and responsive shell */
+:root{
+  --nx17-bg:#050914;
+  --nx17-surface:#0b1427;
+  --nx17-surface-2:#0e1930;
+  --nx17-surface-3:#111d36;
+  --nx17-line:rgba(135,149,190,.14);
+  --nx17-line-strong:rgba(126,92,255,.34);
+  --nx17-violet:#785cff;
+  --nx17-violet-2:#a080ff;
+  --nx17-cyan:#58d7ff;
+  --nx17-mint:#67e0b7;
+  --nx17-gold:#efca69;
+  --nx17-danger:#ff7387;
+  --nx17-text:#f5f7ff;
+  --nx17-muted:#91a0b7;
+  --nx17-r1:10px;
+  --nx17-r2:12px;
+  --nx17-r3:16px;
+  --nx17-r4:20px;
+  --nx17-r5:24px;
+  --nx17-shadow:0 20px 54px rgba(0,0,0,.22);
+}
+html{scroll-behavior:smooth}
+body.v17-live{overflow-x:hidden}
+body.v17-live *,
+body.v17-live *::before,
+body.v17-live *::after{box-sizing:border-box}
+body.v17-live button,
+body.v17-live input,
+body.v17-live select,
+body.v17-live textarea{font:inherit}
+body.v17-live button{touch-action:manipulation}
+body.v17-live img,
+body.v17-live svg,
+body.v17-live canvas{max-width:100%}
+body.v17-live .shell,
+body.v17-live main,
+body.v17-live .page,
+body.v17-live .panel,
+body.v17-live article,
+body.v17-live section,
+body.v17-live div{min-width:0}
+body.v17-live :is(h1,h2,h3,h4,p,b,strong,small,span,label){overflow-wrap:anywhere}
+body.v17-live .page.active{animation:nx17-page-in .24s ease both}
+@keyframes nx17-page-in{from{opacity:.45;transform:translateY(5px)}to{opacity:1;transform:none}}
+body.v17-live :is(button,a,input,select,textarea):focus-visible{
+  outline:2px solid rgba(115,216,255,.9)!important;
+  outline-offset:2px!important;
+}
+body.v17-live .hidden{pointer-events:none}
+body.v17-live .nrx-side-item,
+body.v17-live .nrx-shortcut,
+body.v17-live .nrx-mob-action,
+body.v17-live .nrx-bottom-nav button,
+body.v17-live .sim-card,
+body.v17-live .v15-question-modes>button{
+  -webkit-tap-highlight-color:transparent;
+}
+body.v17-live .nrx-side-item:hover,
+body.v17-live .nrx-shortcut:hover,
+body.v17-live .sim-card:hover,
+body.v17-live .v15-question-modes>button:hover{
+  border-color:rgba(126,92,255,.30)!important;
+}
+body.v17-live .nrx-side-item:active,
+body.v17-live .nrx-shortcut:active,
+body.v17-live .nrx-mob-action:active,
+body.v17-live .nrx-bottom-nav button:active{transform:scale(.985)!important}
+body.v17-live .panel,
+body.v17-live .nrx-stat-card,
+body.v17-live .nrx-preview,
+body.v17-live .nrx-mob-progress,
+body.v17-live .nrx-mob-continue{
+  contain:layout paint;
+}
+body.v17-live .page:not(#inicio) .page-head h2{
+  font-size:clamp(25px,2.5vw,31px)!important;
+  line-height:1.04!important;
+}
+body.v17-live .page:not(#inicio) .page-head p{max-width:760px}
+body.v17-live .text-input,
+body.v17-live input,
+body.v17-live select,
+body.v17-live textarea{max-width:100%}
+
+/* one coherent outer frame, without debug-neon */
+@media(min-width:901px){
+  body.v17-live #app:not(.hidden)::after{
+    content:"";position:fixed;z-index:99;inset:8px;pointer-events:none;
+    border:1px solid rgba(116,83,246,.28);border-radius:21px;
+    box-shadow:inset 0 0 28px rgba(89,64,194,.025);
+  }
+}
+@media(min-width:761px){
+  body.v17-live .sidebar{overflow:visible!important}
+  body.v17-live .nrx-side-nav{padding-bottom:4px}
+  body.v17-live .nrx-side-item>b{white-space:normal!important;line-height:1.14!important}
+  body.v17-live .topbar{overflow:visible!important}
+  body.v17-live .topbar .search{min-width:260px!important}
+  body.v17-live .topbar .search input{min-width:0!important}
+}
+
+/* tablet density: preserve functionality without horizontal clipping */
+@media(min-width:761px) and (max-width:1100px){
+  body.v17-live .nrx-shortcuts{grid-template-columns:repeat(3,minmax(0,1fr))!important}
+  body.v17-live .nrx-stat-grid{grid-template-columns:1fr!important}
+  body.v17-live .nrx-preview-row{grid-template-columns:1fr!important}
+  body.v17-live .nrx-preview-row .nrx-preview:last-child{grid-column:auto!important}
+}
+
+/* small phones */
+@media(max-width:760px){
+  body.v17-live{padding-bottom:env(safe-area-inset-bottom)}
+  body.v17-live main{overflow:visible!important}
+  body.v17-live .topbar{
+    min-width:0!important;overflow:visible!important;
+    padding-left:max(12px,env(safe-area-inset-left))!important;
+    padding-right:max(12px,env(safe-area-inset-right))!important;
+  }
+  body.v17-live .nrx-mobile,
+  body.v17-live .nrx-mob-hero,
+  body.v17-live .nrx-mob-actions,
+  body.v17-live .nrx-mob-progress,
+  body.v17-live .nrx-mob-continue{width:100%!important;max-width:100%!important}
+  body.v17-live .nrx-mob-action b{line-height:1.15!important}
+  body.v17-live .nrx-bottom-nav{
+    left:max(8px,env(safe-area-inset-left))!important;
+    right:max(8px,env(safe-area-inset-right))!important;
+    bottom:max(8px,env(safe-area-inset-bottom))!important;
+  }
+  body.v17-live .nrx-bottom-nav button{min-width:0!important}
+  body.v17-live .nrx-bottom-nav button b{font-size:9px!important;white-space:nowrap!important}
+  body.v17-live .v15-tutor-fab{bottom:calc(86px + env(safe-area-inset-bottom))!important}
+}
+@media(max-width:390px){
+  body.v17-live main{padding-left:10px!important;padding-right:10px!important}
+  body.v17-live .nrx-mob-actions{gap:9px 6px!important}
+  body.v17-live .nrx-mob-action b{font-size:9px!important}
+  body.v17-live .nrx-bottom-nav{left:6px!important;right:6px!important}
+}
+@media(max-width:360px){
+  body.v17-live .nrx-logo-word{font-size:22px!important}
+  body.v17-live .nrx-mobile-theme,
+  body.v17-live .nrx-mobile-crown{width:35px!important;height:35px!important}
+  body.v17-live .nrx-bottom-nav button b{font-size:8px!important}
+}
+
+/* shared semantic score colors */
+body.v17-live .nx17-score-low{color:var(--nx17-danger)!important}
+body.v17-live .nx17-score-mid{color:var(--nx17-gold)!important}
+body.v17-live .nx17-score-high{color:var(--nx17-mint)!important}
+
+body.light.v17-live{
+  --nx17-bg:#f5f8ff;
+  --nx17-surface:#fff;
+  --nx17-surface-2:#f7f9ff;
+  --nx17-surface-3:#eef3ff;
+  --nx17-line:rgba(56,74,111,.11);
+  --nx17-text:#172239;
+  --nx17-muted:#65758e;
+}
+@media(prefers-reduced-motion:reduce){
+  body.v17-live .page.active{animation:none!important}
+  html{scroll-behavior:auto}
+}
