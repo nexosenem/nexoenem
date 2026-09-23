@@ -79,6 +79,22 @@ try{
     }));
     const dialog=document.querySelector('#commentModal');
 
+    // Search quality: typo tolerance, recent queries and Ctrl/Cmd+K access.
+    const fuzzyRedacao=typeof buildSiteSearchActionResults==='function'
+      ? buildSiteSearchActionResults('redcao').some(x=>x.actionId==='redacao')
+      : false;
+    let recentVisible=false;
+    if(typeof saveRecentNexoSearch==='function'&&typeof renderRecentNexoSearches==='function'){
+      saveRecentNexoSearch('simulados');
+      if(search)search.value='';
+      renderRecentNexoSearches();
+      recentVisible=Boolean(document.querySelector('[data-search-recent]'));
+    }
+    search?.blur();
+    document.dispatchEvent(new KeyboardEvent('keydown',{key:'k',ctrlKey:true,bubbles:true,cancelable:true}));
+    await new Promise(r=>requestAnimationFrame(r));
+    const ctrlKFocused=document.activeElement===search;
+
     return {
       phase2:Boolean(window.NEXO_PHASE2?.coreUx&&window.NEXO_PHASE2?.flows),
       search:{
@@ -103,7 +119,8 @@ try{
       dialogSemantics:{
         role:dialog?.getAttribute('role')||'',
         modal:dialog?.getAttribute('aria-modal')||''
-      }
+      },
+      searchQuality:{fuzzyRedacao,recentVisible,ctrlKFocused}
     };
   });
 
@@ -124,6 +141,9 @@ try{
   if(result.flowHints.some(x=>x.display==='none'||x.height<=0))failures.push('essay-guidance-hidden');
   if(result.dialogSemantics.role!=='dialog'||result.dialogSemantics.modal!=='true')failures.push('dialog-semantics');
   if(result.moreGroups.length<2)failures.push('more-menu-groups');
+  if(!result.searchQuality.fuzzyRedacao)failures.push('search-fuzzy-typo');
+  if(!result.searchQuality.recentVisible)failures.push('search-recents');
+  if(!result.searchQuality.ctrlKFocused)failures.push('search-ctrl-k');
 
   console.log(JSON.stringify({name:'NEXO Phase 2 core UX smoke',result,failures},null,2));
   await context.close();
