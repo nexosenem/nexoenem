@@ -1739,9 +1739,8 @@ function scheduleNexoPercentTones(){
     nexoApplyPercentTones(document.querySelector('#v13Modal')||document.createElement('div'));
   });
 }
-const nexoPercentObserver=new MutationObserver(scheduleNexoPercentTones);
-nexoPercentObserver.observe(document.body,{subtree:true,childList:true,characterData:true});
 scheduleNexoPercentTones();
+document.addEventListener('nexo:pagechange',scheduleNexoPercentTones);
 window.nexoApplyPercentTones=nexoApplyPercentTones;
 window.nexoPercentTone=nexoPercentTone;
 
