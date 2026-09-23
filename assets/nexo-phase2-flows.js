@@ -206,6 +206,7 @@ function ensureEssayTools(){
   }
 }
 
+let sortingComments=false;
 function ensureCommentSort(){
   const modal=$('#commentModal'),list=$('#questionComments');
   if(!modal||!list)return;
@@ -216,34 +217,45 @@ function ensureCommentSort(){
     bar.setAttribute('aria-label','Ordenar comentários');
     bar.innerHTML='<button type="button" class="active" data-nx2-comment-sort="recent">Recentes</button><button type="button" data-nx2-comment-sort="helpful">Mais úteis</button>';
     list.insertAdjacentElement('beforebegin',bar);
-    $$('[data-nx2-comment-sort]',bar).forEach(btn=>btn.addEventListener('click',()=>{
-      $$('[data-nx2-comment-sort]',bar).forEach(x=>x.classList.toggle('active',x===btn));
+    $('[data-nx2-comment-sort]',bar).forEach(btn=>btn.addEventListener('click',()=>{
+      $('[data-nx2-comment-sort]',bar).forEach(x=>x.classList.toggle('active',x===btn));
       modal.dataset.nx2Sort=btn.dataset.nx2CommentSort;
       sortComments();
     }));
   }
   if(!list.dataset.nx2Observer){
     list.dataset.nx2Observer='1';
-    new MutationObserver(()=>requestAnimationFrame(sortComments)).observe(list,{childList:true});
+    new MutationObserver(()=>{
+      if(sortingComments)return;
+      requestAnimationFrame(sortComments);
+    }).observe(list,{childList:true});
   }
 }
 function sortComments(){
   const modal=$('#commentModal'),list=$('#questionComments');
-  if(!modal||!list)return;
-  const items=$$('.comment-item',list);
-  items.forEach((item,index)=>{
+  if(!modal||!list||sortingComments)return;
+  const current=$('.comment-item',list);
+  current.forEach((item,index)=>{
     if(item.dataset.nx2Original==null)item.dataset.nx2Original=String(index);
   });
-  if(modal.dataset.nx2Sort==='helpful'){
-    items.sort((a,b)=>{
+  const sorted=[...current].sort((a,b)=>{
+    if(modal.dataset.nx2Sort==='helpful'){
       const av=Number($('.comment-helpful b',a)?.textContent||0);
       const bv=Number($('.comment-helpful b',b)?.textContent||0);
       return bv-av||Number(a.dataset.nx2Original)-Number(b.dataset.nx2Original);
-    });
-  }else{
-    items.sort((a,b)=>Number(a.dataset.nx2Original)-Number(b.dataset.nx2Original));
+    }
+    return Number(a.dataset.nx2Original)-Number(b.dataset.nx2Original);
+  });
+  const changed=sorted.some((item,index)=>item!==current[index]);
+  if(!changed)return;
+  sortingComments=true;
+  try{
+    const frag=document.createDocumentFragment();
+    sorted.forEach(item=>frag.appendChild(item));
+    list.appendChild(frag);
+  }finally{
+    queueMicrotask(()=>{sortingComments=false});
   }
-  items.forEach(item=>list.appendChild(item));
 }
 
 function visibleDialog(){
@@ -271,6 +283,28 @@ function trapDialogKeydown(e){
   const first=focusables[0],last=focusables[focusables.length-1];
   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
   else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus()}
+}
+
+function ensureMoreGroups(){
+  const grid=$('.nrx-side-more-grid');
+  if(!grid||grid.dataset.nx2Grouped)return;
+  grid.dataset.nx2Grouped='1';
+  const groups=[
+    ['Estudo',['materiais','simulados','semana','focos','radar','banco','temas']],
+    ['Comunidade e jornada',['ranking','store','avatar','feedback']],
+    ['Conta e NEXO',['planos','nexo','settings','admin']]
+  ];
+  groups.forEach(([label,keys])=>{
+    const section=document.createElement('section');
+    section.className='nx2-more-group';
+    section.innerHTML='<h4>'+label+'</h4><div></div>';
+    const host=$('div',section);
+    keys.forEach(key=>{
+      const btn=grid.querySelector('[data-nrx-target="'+key+'"]');
+      if(btn)host.appendChild(btn);
+    });
+    if(host.children.length)grid.appendChild(section);
+  });
 }
 
 function ensureDialogSemantics(){
@@ -367,6 +401,7 @@ function sync(){
   ensureQuestionObserver();
   ensureEssayTools();
   ensureCommentSort();
+  ensureMoreGroups();
   ensureDialogSemantics();
   ensureDrawerSwipe();
   ensureViewportKeyboard();
