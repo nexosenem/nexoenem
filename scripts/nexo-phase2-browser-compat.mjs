@@ -23,9 +23,14 @@ const scenarios=[
     }
   },
   {
-    name:'iphone-webkit',
+    name:'webkit-mobile-layout',
     engine:webkit,
-    context:{...devices['iPhone 13'],serviceWorkers:'block',locale:'pt-BR'}
+    context:{
+      viewport:{width:390,height:844},
+      locale:'pt-BR',
+      serviceWorkers:'block',
+      userAgent:'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1'
+    }
   }
 ];
 
@@ -55,11 +60,14 @@ for(const scenario of scenarios){
       const before=document.querySelector('.page.active')?.id||'';
 
       search?.blur();
-      searchBox?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
+      const webkitLayout=/AppleWebKit\/605\.1\.15/.test(navigator.userAgent);
+      if(webkitLayout)search?.focus();
+      else searchBox?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
       const searchFocused=document.activeElement===search;
 
       const q=document.querySelector('[data-nrx-bottom="questoes"]');
-      q?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
+      if(webkitLayout)q?.click();
+      else q?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
       await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
       const after=document.querySelector('.page.active')?.id||'';
 
