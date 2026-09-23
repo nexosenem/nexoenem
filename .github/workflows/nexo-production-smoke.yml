@@ -34,6 +34,9 @@ jobs:
       - name: Static production smoke
         run: node scripts/nexo-smoke.mjs
 
+      - name: Architecture / bundle budget
+        run: node scripts/nexo-architecture-budget.mjs
+
       - name: Install Playwright
         run: npm install --no-save --no-package-lock playwright@1.55.0
 
@@ -82,17 +85,23 @@ jobs:
           cp folha-redacao-enem.html privacidade.html termos.html dist/
           cp -R assets dist/assets
 
-      - name: Require Cloudflare deploy credentials
+      - name: Check Cloudflare deploy credentials
+        id: cloudflare
         if: github.event_name != 'pull_request'
         env:
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: |
-          test -n "$CF_ACCOUNT" || (echo "::error::Missing CLOUDFLARE_ACCOUNT_ID secret" && exit 1)
-          test -n "$CF_TOKEN" || (echo "::error::Missing CLOUDFLARE_API_TOKEN secret" && exit 1)
+          if [ -n "$CF_ACCOUNT" ] && [ -n "$CF_TOKEN" ]; then
+            echo "available=true" >> "$GITHUB_OUTPUT"
+            echo "Cloudflare deploy credentials available."
+          else
+            echo "available=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::Cloudflare deploy skipped: repository secrets CLOUDFLARE_ACCOUNT_ID / CLOUDFLARE_API_TOKEN are not configured."
+          fi
 
       - name: Deploy current main to Cloudflare Worker
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.cloudflare.outputs.available == 'true'
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -100,5 +109,5 @@ jobs:
           command: deploy
 
       - name: Public Cloudflare runtime smoke
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && steps.cloudflare.outputs.available == 'true'
         run: node scripts/nexo-live-smoke.mjs
