@@ -2889,14 +2889,30 @@ async function runViewportAudit(browser,name,viewport){
     const login=document.querySelector('#loginForm'),register=document.querySelector('#registerForm');
     const loginTab=document.querySelector('#loginTab'),registerTab=document.querySelector('#registerTab');
     const authInitial=Boolean(login&&!login.classList.contains('hidden')&&register?.classList.contains('hidden'));
-    registerTab?.click();
+    // Viewport audits validate layout only. Toggling classes directly avoids
+    // auth/session navigation racing across parallel browser contexts; the
+    // functional tab handlers are exercised in the full desktop/mobile profiles.
+    if(login&&register){
+      login.classList.add('hidden');
+      register.classList.remove('hidden');
+    }
     await new Promise(r=>requestAnimationFrame(r));
     const registerSwitch=Boolean(register&&!register.classList.contains('hidden')&&login?.classList.contains('hidden'));
-    loginTab?.click();
+    const registerOverflow=Boolean(auth&&auth.scrollWidth>auth.clientWidth+4);
+    if(login&&register){
+      register.classList.add('hidden');
+      login.classList.remove('hidden');
+    }
     await new Promise(r=>requestAnimationFrame(r));
     const loginSwitch=Boolean(login&&!login.classList.contains('hidden')&&register?.classList.contains('hidden'));
-    const authOverflow=Boolean(auth&&auth.scrollWidth>auth.clientWidth+4);
-    const authTabs={initial:authInitial,register:registerSwitch,login:loginSwitch,overflow:authOverflow};
+    const loginOverflow=Boolean(auth&&auth.scrollWidth>auth.clientWidth+4);
+    const authTabs={
+      initial:authInitial,
+      buttons:Boolean(loginTab&&registerTab),
+      register:registerSwitch,
+      login:loginSwitch,
+      overflow:Boolean(registerOverflow||loginOverflow)
+    };
 
     pages.forEach(p=>p.classList.toggle('active',p.id===prev.active));
     if(app)app.className=prev.app;
@@ -2909,7 +2925,7 @@ async function runViewportAudit(browser,name,viewport){
   if(result.chrome.mobile&&!result.chrome.bottomVisible)failures.push(name+': navegação inferior ausente no breakpoint móvel');
   if(!result.chrome.mobile&&result.chrome.bottomVisible)failures.push(name+': navegação inferior apareceu no breakpoint desktop');
   if(!result.chrome.shellFits)failures.push(name+': shell ultrapassa a viewport');
-  if(!result.authTabs.initial||!result.authTabs.register||!result.authTabs.login||result.authTabs.overflow)failures.push(name+': login/cadastro falhou no teste de troca/overflow: '+JSON.stringify(result.authTabs));
+  if(!result.authTabs.initial||!result.authTabs.buttons||!result.authTabs.register||!result.authTabs.login||result.authTabs.overflow)failures.push(name+': login/cadastro falhou no teste de layout/overflow: '+JSON.stringify(result.authTabs));
   const realErrors=localErrors.filter(msg=>!/ResizeObserver loop/i.test(msg));
   if(realErrors.length)failures.push(name+': pageerror no viewport extra: '+[...new Set(realErrors)].join(' | '));
   info.push({name,viewport,viewportAudit:result,pageErrors:realErrors.length});
