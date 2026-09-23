@@ -364,7 +364,7 @@ const state = {
 };
 
 function nexoHapticsEnabled(){
-  return localStorage.getItem('nexo-haptics')!=='off';
+  return localStorage.getItem('nexo-haptics')==='on';
 }
 function nexoHaptic(pattern){
   if(!nexoHapticsEnabled())return;
@@ -3616,6 +3616,7 @@ async function loadNexoCore(){
     state.core=null;
   }
   renderNexoCore();
+  document.dispatchEvent(new CustomEvent('nexo:core-updated',{detail:{core:state.core}}));
   return state.core;
 }
 
@@ -7117,7 +7118,7 @@ $('#analyzeEssay').onclick=async()=>{
   const loader=$('#essayLoader');loader.classList.remove('hidden');
   const msgs=['Avaliando estrutura e repertório.','Analisando coesão e progressão textual.','Verificando argumentação.','Estimando as cinco competências.','Salvando seu histórico.'];let i=0;
   const timer=setInterval(()=>{$('#loaderText').textContent=msgs[++i%msgs.length]},520);
-  await sleep(350);
+  await new Promise(resolve=>requestAnimationFrame(resolve));
   const t=selectedTheme;
   const scores=essayScores(text,t),total=scores.reduce((a,b)=>a+b,0);
   const estimateRange=essayEstimateRange(total,text,t);
