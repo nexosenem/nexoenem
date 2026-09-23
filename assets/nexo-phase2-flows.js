@@ -71,7 +71,7 @@ function ensureStudyStatusSignals(){
   if(!page||!page.classList.contains('active'))return;
   const s=safeState();
   const materials=Array.isArray(s?.materials)?s.materials:[];
-  $('.content-topic-group',page).forEach(group=>{
+  $$('.content-topic-group',page).forEach(group=>{
     const topic=$('.content-topic-name h3',group)?.textContent?.trim()||'';
     if(!topic)return;
     const item=materials.find(m=>String(m.topic||'').trim()===topic)||null;
