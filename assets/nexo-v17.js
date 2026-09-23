@@ -11,7 +11,7 @@
     return n<=39?'nx17-score-low':n<=79?'nx17-score-mid':'nx17-score-high';
   }
   function normalizeScores(){
-    $('[data-nrx-pct],[data-nrx-weak-pct],#progressPct,#mobileProgressPct,.percent,.percentage,[data-percent]').forEach(el=>{
+    Array.from(document.querySelectorAll('[data-nrx-pct],[data-nrx-weak-pct],#progressPct,#mobileProgressPct,.percent,.percentage,[data-percent]')).forEach(el=>{
       const cls=scoreClass(el.textContent||el.dataset.percent);
       const tones=['nx17-score-low','nx17-score-mid','nx17-score-high'];
       const current=tones.find(x=>el.classList.contains(x))||'';
