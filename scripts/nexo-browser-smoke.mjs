@@ -703,7 +703,10 @@ async function runProfile(browser,name,viewport){
         legendaryFigure:likelyNeedsQuestionVisual({subject:'Literatura',prompt:'Hércules é uma figura lendária da mitologia greco-romana.'}),
         shownFigure:likelyNeedsQuestionVisual({subject:'Física',prompt:'A figura a seguir representa o circuito elétrico.'}),
         dataFrame:likelyNeedsQuestionVisual({subject:'Química',prompt:'Os resultados aparecem conforme o quadro. Teste Resultado A 10 B 20.'}),
-        artCaption:likelyNeedsQuestionVisual({subject:'Artes',prompt:'Cabeça de uma figura feminina. Escultura em mármore. Metropolitan Museum of Art.'})
+        artCaption:likelyNeedsQuestionVisual({subject:'Artes',prompt:'Cabeça de uma figura feminina. Escultura em mármore. Metropolitan Museum of Art.'}),
+        reviewedFalsePositive:likelyNeedsQuestionVisual({id:2025059,subject:'Geografia',prompt:'Se olharmos o mapa do Brasil, a Amazônia fornece umidade.'}),
+        reviewedTextSufficient:questionVisualCanBeResolved({id:2025170,source_year:2025,source_question_number:170,subject:'Matemática',prompt:'Caixa 2,5 dm por 1,5 dm, altura 2 dm, conforme a figura.',media_type:null,media_path:null}),
+        reviewedRequired:questionVisualCanBeResolved({id:2025128,source_year:2025,source_question_number:128,subject:'Física',prompt:'O gráfico apresenta cinco sensores.',media_type:null,media_path:null})
       }:null;
       let fallbackBlocked=false;
       if(typeof showVisualFallback==='function'){
@@ -733,6 +736,8 @@ async function runProfile(browser,name,viewport){
   const sem=visualRecoveryTest.semantics||{};
   if(sem.historicalFigure!==false||sem.staffFrame!==false||sem.legendaryFigure!==false||sem.shownFigure!==true||sem.dataFrame!==true||sem.artCaption!==true)
     failures.push(name+': detector semântico de recursos visuais confundiu termos ambíguos: '+JSON.stringify(sem));
+  if(sem.reviewedFalsePositive!==false||sem.reviewedTextSufficient!==true||sem.reviewedRequired!==false)
+    failures.push(name+': revisão editorial visual 2024/2025 não foi respeitada no cliente: '+JSON.stringify(sem));
   if(!visualRecoveryTest.fallbackBlocked)
     failures.push(name+': questão com visual obrigatório indisponível ainda permite resposta: '+JSON.stringify(visualRecoveryTest));
 
