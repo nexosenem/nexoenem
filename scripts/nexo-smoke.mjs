@@ -135,6 +135,7 @@ assert(app.includes('TEXTO-BASE')&&app.includes('RECURSO VISUAL ORIGINAL')&&app.
 assert(app.indexOf('TEXTO-BASE')<app.indexOf('RECURSO VISUAL ORIGINAL')&&app.indexOf('RECURSO VISUAL ORIGINAL')<app.indexOf('COMANDO'),'Ordem pedagógica texto → visual → comando preservada');
 assert(app.includes("const requiredVisual=likelyNeedsQuestionVisual(q)&&!hasAccessibleVisualDescription(q)")&&app.includes("q.external_media_files?.length || requiredVisual"),'Questão visual mantém guarda pedagógica mesmo quando a recuperação externa falha');
 assert(app.includes('function likelyNeedsQuestionVisual')&&app.includes('async function ensureExternalQuestionAssets'),'Recuperação de mídia ausente por semântica publicada');
+assert(!index.includes('cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js')&&app.includes('function ensurePdfJs()')&&app.includes('const pdfjs=await ensurePdfJs()'),'PDF.js sai do boot crítico e carrega somente no fallback de PDF');
 assert(app.includes("https://api.enem.dev/v1/exams/")&&app.includes('externalVisualCache'),'Fallback ENEM usa endpoint público com cache local');
 assert(app.includes('function mountVisualGallery')&&app.includes('q.external_media_files'),'Questões com múltiplas imagens são suportadas');
 assert(app.includes('q.option_media')&&app.includes('q-option-media'),'Alternativas com recurso visual são suportadas');
