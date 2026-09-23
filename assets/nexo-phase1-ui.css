@@ -2853,3 +2853,141 @@ body.light.nexo-reference-ui .search:focus-within{
     animation:none!important;
   }
 }
+
+
+/* === PHASE 2 S2.9 · progressive essay depth === */
+body.nexo-reference-ui .nx2-essay-advanced-toggle{
+  display:none;
+  width:100%;
+  min-height:58px;
+  align-items:center;
+  justify-content:space-between;
+  gap:14px;
+  text-align:left;
+}
+body.nexo-reference-ui .nx2-essay-advanced-toggle>span{
+  display:grid;
+  gap:3px;
+  min-width:0;
+}
+body.nexo-reference-ui .nx2-essay-advanced-toggle b{
+  font-size:15px;
+}
+body.nexo-reference-ui .nx2-essay-advanced-toggle small{
+  color:#8f9db3;
+  font-size:12px;
+  line-height:1.35;
+}
+body.nexo-reference-ui .nx2-essay-advanced-toggle>i{
+  font-style:normal;
+  font-size:20px;
+  flex:0 0 auto;
+}
+
+@media(max-width:760px){
+  body.nexo-reference-ui #redacao .nx2-essay-advanced-toggle{
+    display:flex;
+    margin:12px 0 4px;
+    padding:12px 14px;
+    border-radius:15px!important;
+  }
+  body.nexo-reference-ui #redacao .nx2-essay-advanced-toggle b{
+    font-size:15.5px!important;
+  }
+  body.nexo-reference-ui #redacao .nx2-essay-advanced-toggle small{
+    font-size:12px!important;
+  }
+
+  /* First layer stays focused on theme, writing, correction and checklist. */
+  body.nexo-reference-ui #redacao:not(.nx2-essay-advanced-open) :is(
+    .essay-history-card,
+    .essay-plan-v5-card,
+    .essay-intelligence-v5
+  ){
+    display:none!important;
+  }
+
+  body.nexo-reference-ui #redacao.nx2-essay-advanced-open :is(
+    .essay-history-card,
+    .essay-plan-v5-card,
+    .essay-intelligence-v5
+  ){
+    animation:nx2-essay-section-in .2s ease-out both;
+  }
+
+  body.nexo-reference-ui #redacao .essay-theme-full-title{
+    padding:10px 12px!important;
+    border-radius:12px!important;
+  }
+  body.nexo-reference-ui #redacao .essay-theme-full-title>span{
+    font-size:10px!important;
+    letter-spacing:.9px!important;
+  }
+  body.nexo-reference-ui #redacao .essay-theme-full-title>b{
+    font-size:14px!important;
+    line-height:1.35!important;
+  }
+
+  body.nexo-reference-ui #redacao .essay-writing-head{
+    align-items:center!important;
+    gap:10px!important;
+  }
+  body.nexo-reference-ui #redacao .nx2-writing-tools{
+    display:flex!important;
+    flex-wrap:wrap!important;
+    align-items:center!important;
+    gap:7px!important;
+  }
+  body.nexo-reference-ui #redacao .nx2-draft-status{
+    font-size:11.5px!important;
+  }
+  body.nexo-reference-ui #redacao .nx2-essay-focus-btn{
+    min-height:40px!important;
+    padding-inline:11px!important;
+    font-size:12px!important;
+  }
+
+  body.nexo-reference-ui #redacao .essay-history-list{
+    display:grid;
+    gap:8px;
+  }
+  body.nexo-reference-ui #redacao .essay-history-row{
+    position:relative;
+    min-height:68px!important;
+    padding:11px 12px 11px 16px!important;
+    border-radius:13px!important;
+  }
+  body.nexo-reference-ui #redacao .essay-history-row::before{
+    content:"";
+    position:absolute;
+    left:5px;
+    top:12px;
+    bottom:12px;
+    width:3px;
+    border-radius:999px;
+    background:linear-gradient(180deg,#7c63ff,#59d4f5);
+    opacity:.55;
+  }
+  body.nexo-reference-ui #redacao .essay-history-row b{
+    font-size:14px!important;
+  }
+  body.nexo-reference-ui #redacao .essay-history-row small{
+    font-size:11.5px!important;
+  }
+
+  body.nexo-reference-ui #redacao .essay-repertoire-list article{
+    padding:13px!important;
+    border-radius:14px!important;
+    background:rgba(9,19,36,.62)!important;
+    border-color:rgba(125,143,183,.12)!important;
+  }
+}
+@keyframes nx2-essay-section-in{
+  from{opacity:.2;transform:translateY(5px)}
+  to{opacity:1;transform:none}
+}
+@media(prefers-reduced-motion:reduce){
+  body.nexo-reference-ui #redacao.nx2-essay-advanced-open :is(
+    .essay-history-card,.essay-plan-v5-card,.essay-intelligence-v5
+  ){animation:none!important}
+}
