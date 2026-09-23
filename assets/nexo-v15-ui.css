@@ -877,3 +877,107 @@ body.light.nexo-reference-ui .admin-visual-repair-sheet input[type="file"]{
 @media(max-width:760px){
   .admin-visual-repair-sheet .admin-visual-prompt{max-height:110px}
 }
+
+
+/* Tablet bridge: preserve desktop navigation at 761–900px without horizontal overflow. */
+@media(min-width:761px) and (max-width:900px){
+  body.nexo-reference-ui{
+    --nrx-sidebar:176px!important;
+    overflow-x:clip!important;
+  }
+  body.nexo-reference-ui .sidebar{
+    width:176px!important;
+    padding-left:10px!important;
+    padding-right:10px!important;
+  }
+  body.nexo-reference-ui .shell{
+    margin-left:176px!important;
+    width:calc(100vw - 176px)!important;
+    max-width:calc(100vw - 176px)!important;
+    min-width:0!important;
+    overflow-x:clip!important;
+  }
+  body.nexo-reference-ui main,
+  body.nexo-reference-ui .page,
+  body.nexo-reference-ui .nrx-desktop,
+  body.nexo-reference-ui .nrx-home{
+    width:100%!important;
+    max-width:100%!important;
+    min-width:0!important;
+    box-sizing:border-box!important;
+  }
+  body.nexo-reference-ui main{padding:16px 14px 32px!important}
+
+  body.nexo-reference-ui .topbar{
+    gap:6px!important;
+    padding:11px 12px!important;
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  body.nexo-reference-ui .topbar .search{
+    width:auto!important;
+    min-width:0!important;
+    max-width:none!important;
+    flex:1 1 0!important;
+    padding-right:52px!important;
+  }
+  body.nexo-reference-ui .topbar .search input{min-width:0!important}
+  body.nexo-reference-ui .top-actions{
+    flex:0 0 auto!important;
+    gap:5px!important;
+  }
+  body.nexo-reference-ui .header-journey-pill{display:none!important}
+  body.nexo-reference-ui .topbar-profile-slot{
+    flex:0 0 39px!important;
+    min-width:39px!important;
+  }
+  body.nexo-reference-ui .v15-search-example{display:none!important}
+
+  body.nexo-reference-ui .nrx-hero{
+    min-height:300px!important;
+    grid-template-columns:minmax(0,56%) minmax(0,44%)!important;
+    overflow:hidden!important;
+  }
+  body.nexo-reference-ui .nrx-hero-copy{
+    min-width:0!important;
+    padding:30px 16px 28px 24px!important;
+  }
+  body.nexo-reference-ui .nrx-hero h1{
+    max-width:none!important;
+    font-size:34px!important;
+    line-height:1.02!important;
+    letter-spacing:-1.35px!important;
+  }
+  body.nexo-reference-ui .nrx-hero p{
+    font-size:12px!important;
+    margin:11px 0 16px!important;
+  }
+  body.nexo-reference-ui .nrx-hero-art{
+    min-width:0!important;
+    overflow:hidden!important;
+  }
+  body.nexo-reference-ui .nrx-hero-art:after{
+    left:-55px!important;
+    width:110px!important;
+  }
+  body.nexo-reference-ui .nrx-hero-art img{
+    width:100%!important;
+    max-width:100%!important;
+    object-fit:cover!important;
+  }
+  body.nexo-reference-ui .nrx-hero-note{font-size:14px!important}
+  body.nexo-reference-ui .nrx-hero-values{font-size:7.5px!important}
+
+  body.nexo-reference-ui .nrx-shortcuts{
+    grid-template-columns:repeat(3,minmax(0,1fr))!important;
+  }
+  body.nexo-reference-ui .nrx-stat-grid{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui .nrx-preview-row{
+    grid-template-columns:minmax(0,1fr)!important;
+  }
+  body.nexo-reference-ui .nrx-preview-row .nrx-preview:last-child{
+    grid-column:auto!important;
+  }
+}
