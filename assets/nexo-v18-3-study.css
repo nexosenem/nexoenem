@@ -9,10 +9,5 @@ body.v17-live #materiais #materialGrid>*::before{content:"";position:absolute;le
 body.v17-live #materiais #materialGrid>*:hover::before{opacity:1}
 body.v17-live #materiais .library-filter-deck,body.v17-live #materiais .content-filter-line{background:rgba(9,18,35,.68)!important}
 body.v17-live #materiais .nexo-content-head h3{letter-spacing:-.4px}
-@media(min-width:900px){
- body.v17-live #materiais .library-shell,body.v17-live #materiais .material-library-shell{max-width:1120px;margin-inline:auto}
-}
-@media(max-width:760px){
- body.v17-live #materiais .page-head h2{font-size:25px!important}
- body.v17-live #materiais #materialGrid>*{min-height:78px!important}
-}
+@media(min-width:900px){body.v17-live #materiais .library-shell,body.v17-live #materiais .material-library-shell{max-width:1120px;margin-inline:auto}}
+@media(max-width:760px){body.v17-live #materiais .page-head h2{font-size:25px!important}body.v17-live #materiais #materialGrid>*{min-height:78px!important}}
