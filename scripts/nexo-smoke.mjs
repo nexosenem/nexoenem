@@ -19,6 +19,7 @@ const referenceCss=read('assets/nexo-reference-v2.css');
 const experienceV14=read('assets/nexo-v14-experience.js');
 const uiV15=read('assets/nexo-v15-ui.js');
 const cssV15=read('assets/nexo-v15-ui.css');
+const liveSmoke=read('scripts/nexo-live-smoke.mjs');
 const headers=read('_headers');
 
 const contentDir=path.join(root,'assets','conteudo');
