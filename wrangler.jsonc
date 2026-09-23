@@ -2,6 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nexosenem",
   "compatibility_date": "2026-09-22",
+  "build": {
+    "command": "rm -rf dist && mkdir -p dist && cp index.html styles.css app.js sw.js manifest.webmanifest folha-redacao-enem.html privacidade.html termos.html dist/ && cp -R assets dist/assets"
+  },
   "assets": {
     "directory": "./dist",
     "not_found_handling": "single-page-application"
