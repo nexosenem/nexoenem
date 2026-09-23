@@ -221,6 +221,37 @@ function essayOrganizerKey(){
   const theme=String($('#essayTheme')?.value||'draft');
   return 'nexo-essay-organizer-v1:'+uid+':'+theme;
 }
+function ensureEssayAdvancedDisclosure(){
+  const page=$('#redacao');
+  const workspace=$('.essay-workspace-v2',page);
+  if(!page||!workspace)return;
+  let toggle=$('.nx2-essay-advanced-toggle',page);
+  if(!toggle){
+    toggle=document.createElement('button');
+    toggle.type='button';
+    toggle.className='nx2-essay-advanced-toggle outline-btn';
+    toggle.setAttribute('aria-expanded','false');
+    toggle.innerHTML='<span><b>Histórico e ferramentas de evolução</b><small>Reescritas, repertórios, plano de competência e comparação</small></span><i>＋</i>';
+    workspace.insertAdjacentElement('afterend',toggle);
+    toggle.addEventListener('click',()=>{
+      const open=page.classList.toggle('nx2-essay-advanced-open');
+      toggle.setAttribute('aria-expanded',String(open));
+      const icon=$('i',toggle);if(icon)icon.textContent=open?'−':'＋';
+      if(open)requestAnimationFrame(()=>$('.essay-history-card',page)?.scrollIntoView({behavior:'smooth',block:'nearest'}));
+    });
+  }
+  if(!page.dataset.nx2AdvancedTab){
+    page.dataset.nx2AdvancedTab='1';
+    page.addEventListener('click',e=>{
+      if(!e.target.closest?.('[data-v15-essay-tab="history"]'))return;
+      page.classList.add('nx2-essay-advanced-open');
+      toggle.setAttribute('aria-expanded','true');
+      const icon=$('i',toggle);if(icon)icon.textContent='−';
+      setTimeout(()=>$('.essay-history-card',page)?.scrollIntoView({behavior:'smooth',block:'start'}),30);
+    },true);
+  }
+}
+
 function ensureEssayOrganizer(){
   const page=$('#redacao');
   const editor=$('.essay-editor-v2',page);
@@ -736,6 +767,7 @@ function sync(){
   ensureQuestionObserver();
   ensureQuestionKeyboard();
   ensureEssayTools();
+  ensureEssayAdvancedDisclosure();
   ensureEssayOrganizer();
   ensureLearningCompletionFeedback();
   ensureCommentReportExperience();
