@@ -1,0 +1,278 @@
+/* NEXO V18.12 · RESPONSIVE NAV + BOLDER TYPE + PRODUCT "SPICE"
+   Keeps motion cheap (transform/opacity) and fixes bottom-navigation state. */
+
+:root{
+  --nx12-violet:#8d73ff;
+  --nx12-cyan:#58d9ff;
+  --nx12-mint:#66e0bd;
+  --nx12-panel:#0a1528;
+}
+
+/* More visual identity without adding JS work */
+body.v17-live.nexo-reference-ui main{
+  background:
+    radial-gradient(36rem 22rem at 86% 4%,rgba(112,78,255,.065),transparent 68%),
+    radial-gradient(28rem 20rem at 4% 52%,rgba(55,188,231,.035),transparent 70%);
+}
+body.v17-live.nexo-reference-ui :is(.primary-btn,.nrx-btn.primary,.nrx-play){
+  position:relative;
+  overflow:hidden;
+}
+body.v17-live.nexo-reference-ui :is(.primary-btn,.nrx-btn.primary,.nrx-play)::after{
+  content:"";
+  position:absolute;
+  inset:-40% auto -40% -45%;
+  width:28%;
+  transform:skewX(-18deg) translateX(-260%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
+  animation:nx12-sheen 6.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes nx12-sheen{
+  0%,74%,100%{transform:skewX(-18deg) translateX(-260%)}
+  88%{transform:skewX(-18deg) translateX(620%)}
+}
+body.v17-live.nexo-reference-ui .nrx-ring{
+  animation:nx12-ring-breathe 4.8s ease-in-out infinite;
+}
+@keyframes nx12-ring-breathe{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.018)}
+}
+
+/* Page headers get a subtle energetic cue */
+body.v17-live.nexo-reference-ui .page.active .eyebrow{
+  text-shadow:0 0 16px rgba(142,113,255,.24);
+}
+body.v17-live.nexo-reference-ui .page.active .page-head h2{
+  text-wrap:balance;
+}
+
+/* Fix crowded panel titles seen in essay history / intelligence cards */
+body.v17-live.nexo-reference-ui .panel-title{
+  gap:12px!important;
+}
+body.v17-live.nexo-reference-ui .panel-title>div{
+  min-width:0!important;
+  display:grid!important;
+  gap:4px!important;
+}
+body.v17-live.nexo-reference-ui .panel-title>div>b,
+body.v17-live.nexo-reference-ui .panel-title>div>small{
+  display:block!important;
+}
+body.v17-live.nexo-reference-ui .panel-title>div>small{
+  color:#8f9db2!important;
+}
+
+/* Tap energy */
+body.v17-live.nexo-reference-ui :is(.panel,.nrx-mob-continue,.v15-question-modes>button,.nrx-mob-action i){
+  transition:transform .16s cubic-bezier(.2,.8,.2,1),border-color .18s ease,background-color .18s ease,box-shadow .18s ease!important;
+}
+body.v17-live.nexo-reference-ui :is(.nrx-mob-continue,.v15-question-modes>button,.nrx-mob-action i):active{
+  transform:scale(.978)!important;
+}
+
+/* Bottom navigation: one moving pill, no duplicate active blocks/underlines */
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.active::after{
+  content:none!important;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav{
+  --nrx-active-index:0;
+  isolation:isolate;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-slider{
+  position:absolute;
+  z-index:0;
+  top:7px;
+  bottom:7px;
+  left:7px;
+  width:calc((100% - 14px) / 5);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(140,110,255,.18),transparent 64%),
+    linear-gradient(180deg,rgba(91,71,203,.25),rgba(63,50,145,.16));
+  border:1px solid rgba(142,113,255,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.028);
+  transform:translateX(calc(var(--nrx-active-index) * 100%));
+  transition:transform .20s cubic-bezier(.22,.82,.28,1);
+  pointer-events:none;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button{
+  position:relative!important;
+  z-index:1!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  touch-action:manipulation;
+  transition:color .13s ease,transform .09s ease!important;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.active,
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.nrx-pending{
+  color:#ae94ff!important;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.nrx-pending{
+  transform:scale(.965)!important;
+}
+
+/* A tiny status line below the active bottom item */
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.active small::after{
+  content:"";
+  display:block;
+  width:22px;
+  height:2px;
+  margin:5px auto -3px;
+  border-radius:999px;
+  background:#9d7fff;
+  box-shadow:0 0 10px rgba(157,127,255,.45);
+  animation:nx12-active-line .28s ease-out both;
+}
+@keyframes nx12-active-line{
+  from{opacity:0;transform:scaleX(.35)}
+  to{opacity:1;transform:scaleX(1)}
+}
+
+@media(max-width:760px){
+  /* Minimum readable scale for the text that was still tiny */
+  body.v17-live.nexo-reference-ui .page:not(#inicio) p{
+    font-size:14px!important;
+    line-height:1.56!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) small{
+    font-size:11.5px!important;
+    line-height:1.38!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) label{
+    font-size:13px!important;
+    line-height:1.35!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) button{
+    font-size:14px;
+  }
+
+  /* Question-mode cards were visually too small */
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes>button{
+    min-height:118px!important;
+    padding:18px 16px!important;
+    grid-template-columns:54px minmax(0,1fr) 20px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes>button>.v15-icon:first-child{
+    width:28px!important;height:28px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes b{
+    font-size:15.5px!important;
+    line-height:1.2!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes small{
+    font-size:12.5px!important;
+    line-height:1.38!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary b{
+    font-size:15px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary small{
+    font-size:11.5px!important;
+  }
+
+  /* Study */
+  body.v17-live.nexo-reference-ui #materiais :is(.material-topic-card,.panel) p{
+    font-size:13.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #materiais :is(.material-topic-card,.panel) small{
+    font-size:11.5px!important;
+  }
+
+  /* Essay lower sections had readable titles but micro-copy was too small */
+  body.v17-live.nexo-reference-ui #redacao :is(.essay-guide-card,.essay-sheet-card,.essay-history-card,.essay-version-compare-card,.essay-repertoire-card,.essay-argument-card) h3{
+    font-size:17px!important;
+    line-height:1.25!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao :is(.essay-guide-card,.essay-sheet-card,.essay-history-card,.essay-version-compare-card,.essay-repertoire-card,.essay-argument-card) p{
+    font-size:13.5px!important;
+    line-height:1.55!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao :is(.essay-guide-card,.essay-sheet-card,.essay-history-card,.essay-version-compare-card,.essay-repertoire-card,.essay-argument-card) small{
+    font-size:11.5px!important;
+    line-height:1.4!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-competency-mini small{
+    font-size:11px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-repertoire-list :is(b,strong){
+    font-size:15px!important;
+    line-height:1.35!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-repertoire-list :is(p,span){
+    font-size:13px!important;
+    line-height:1.5!important;
+  }
+
+  /* Bottom nav: responsive, instantly legible, one state at a time */
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav{
+    height:82px!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:calc(7px + env(safe-area-inset-bottom))!important;
+    padding:7px!important;
+    border-radius:23px!important;
+    background:#081323!important;
+    border-color:rgba(129,146,185,.17)!important;
+    box-shadow:0 -8px 28px rgba(0,0,0,.24),0 12px 30px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.028)!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button{
+    min-height:68px!important;
+    gap:3px!important;
+    border-radius:16px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button>span{
+    min-width:28px!important;
+    min-height:28px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button>span :is(svg,.v15-icon,.nx18-icon-svg){
+    width:25px!important;height:25px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{
+    font-size:12.5px!important;
+    line-height:1.05!important;
+    font-weight:760!important;
+    letter-spacing:-.1px!important;
+  }
+  body.v17-live.nexo-reference-ui main{
+    padding-bottom:calc(112px + env(safe-area-inset-bottom))!important;
+  }
+
+  /* Header actions gain a touch of depth */
+  body.v17-live.nexo-reference-ui :is(.nrx-mobile-theme,.nrx-mobile-crown,.nrx-mobile-menu){
+    box-shadow:0 8px 18px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  }
+
+  /* Home quick actions get a subtle staggered "breath" only on transforms */
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(1) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(5) i{animation:nx12-icon-breathe 5.6s ease-in-out infinite}
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(2) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(6) i{animation:nx12-icon-breathe 5.6s .45s ease-in-out infinite}
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(3) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(7) i{animation:nx12-icon-breathe 5.6s .9s ease-in-out infinite}
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(4) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(8) i{animation:nx12-icon-breathe 5.6s 1.35s ease-in-out infinite}
+  @keyframes nx12-icon-breathe{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-2px)}
+  }
+}
+
+@media(max-width:390px){
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{font-size:11.5px!important}
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes b{font-size:14.5px!important}
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes small{font-size:11.8px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.v17-live.nexo-reference-ui :is(.primary-btn,.nrx-btn.primary,.nrx-play)::after,
+  body.v17-live.nexo-reference-ui .nrx-ring,
+  body.v17-live.nx11-ready .nrx-mob-action i{
+    animation:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-slider{transition:none!important}
+}
