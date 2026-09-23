@@ -1,0 +1,10 @@
+/* NEXO V18.6 · Learning system */
+body.v17-live :is(#simulados,#desempenho,#semana,#focos,#radar) .panel{background:linear-gradient(180deg,rgba(13,25,46,.96),rgba(8,18,34,.96))!important;border-color:rgba(132,146,188,.12)!important}
+body.v17-live #simulados .sim-card{border-radius:16px!important;overflow:hidden}
+body.v17-live #desempenho :is(.stat,.performance-card,.mastery-card){border-radius:15px!important}
+body.v17-live #semana :is(.planner-day,.planner-card,.day-column){border-radius:15px!important}
+body.v17-live .nx17-score-low,[data-score-band="low"]{color:#ff7387!important}
+body.v17-live .nx17-score-mid,[data-score-band="mid"]{color:#efc96b!important}
+body.v17-live .nx17-score-high,[data-score-band="high"]{color:#68e1ba!important}
+body.v17-live :is(#desempenho,#radar) progress{accent-color:#785cff}
+@media(max-width:760px){body.v17-live :is(#simulados,#desempenho,#semana) .page-head{margin-bottom:12px!important}}
