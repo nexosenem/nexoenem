@@ -58,6 +58,9 @@ jobs:
       - name: Interaction performance budget
         run: node scripts/nexo-interaction-budget.mjs
 
+      - name: Resilience smoke
+        run: node scripts/nexo-resilience-smoke.mjs
+
       - name: Browser runtime smoke
         run: node scripts/nexo-browser-smoke.mjs
 
