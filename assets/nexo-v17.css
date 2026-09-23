@@ -445,3 +445,45 @@ body.v17-live #questoes .q-option-media{cursor:zoom-in}
   .nx17-media-zoom>button{right:12px;top:12px}
 }
 body.light.v17-live #questoes .confirm-answer-wrap{background:rgba(255,255,255,.92)!important}
+
+
+/* V17.5 — Redação: calm writing room, visible writing pulse, same advanced tools */
+body.v17-live #redacao .essay-workspace-v2{align-items:start!important}
+body.v17-live #redacao .essay-editor-v2{
+  border-color:rgba(126,92,255,.18)!important;
+  background:linear-gradient(180deg,rgba(13,25,47,.98),rgba(9,19,36,.98))!important;
+  box-shadow:0 18px 48px rgba(0,0,0,.15)!important;
+}
+body.v17-live #redacao .essay-writing-shell{
+  background:rgba(5,12,25,.52)!important;border-color:rgba(132,148,190,.12)!important;
+}
+body.v17-live #redacao #essayText{
+  min-height:390px!important;font-size:14px!important;line-height:1.78!important;
+  letter-spacing:.005em!important;resize:vertical!important;
+}
+body.v17-live #redacao .essay-side-v2{position:sticky;top:82px}
+body.v17-live #redacao .essay-guide-card,
+body.v17-live #redacao .essay-sheet-card,
+body.v17-live #redacao .essay-history-card{
+  background:linear-gradient(180deg,rgba(14,26,48,.96),rgba(9,19,36,.96))!important;
+}
+.nx17-writing-pulse{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin:8px 0 0;padding:8px 10px;border-radius:11px;
+  background:rgba(111,80,246,.055);border:1px solid rgba(126,92,255,.11);
+  color:#7f8ea6;font-size:9px;
+}
+.nx17-writing-pulse span{display:flex;align-items:center;gap:6px}
+.nx17-writing-pulse i{width:6px;height:6px;border-radius:50%;background:#7e68ff;box-shadow:0 0 0 4px rgba(126,104,255,.07)}
+.nx17-writing-pulse b{color:#b9c4d5;font-size:9px}
+@media(max-width:900px){body.v17-live #redacao .essay-side-v2{position:static}}
+@media(max-width:760px){
+  body.v17-live #redacao #essayText{min-height:330px!important;font-size:16px!important;line-height:1.68!important}
+  body.v17-live #redacao .v15-essay-tabs{width:100%!important}
+  .nx17-writing-pulse{flex-wrap:wrap}
+}
+body.light.v17-live #redacao .essay-editor-v2,
+body.light.v17-live #redacao .essay-guide-card,
+body.light.v17-live #redacao .essay-sheet-card,
+body.light.v17-live #redacao .essay-history-card{background:#fff!important}
+body.light.v17-live .nx17-writing-pulse{background:#f5f2ff;border-color:rgba(102,78,195,.10)}
