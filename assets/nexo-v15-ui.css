@@ -1077,3 +1077,15 @@ body.light.nexo-reference-ui .real-exam-options>button{
   .real-exam-options{grid-template-columns:1fr}
   .real-exam-options>button{min-height:112px}
 }
+
+
+/* V16.3 · visible build fingerprint */
+.nexo-build-label{
+  display:block!important;
+  margin-top:4px!important;
+  color:#8f82ca!important;
+  font-size:7.5px!important;
+  font-weight:750!important;
+  letter-spacing:.35px!important;
+}
+body.light.nexo-reference-ui .nexo-build-label{color:#6954b7!important}
