@@ -576,3 +576,38 @@ body.nexo-reference-ui button[aria-busy="true"]::after{
 @media(prefers-reduced-motion:reduce){
   body.nexo-reference-ui button[aria-busy="true"]::after{animation:none!important}
 }
+
+
+/* Phase 2 S2.4 · semantic score cues + keyboard question navigation */
+body.nexo-reference-ui [data-score-tone]{
+  display:inline-flex;
+  align-items:center;
+  gap:.28em;
+}
+body.nexo-reference-ui [data-score-tone]::before{
+  display:inline-grid;
+  place-items:center;
+  width:1.05em;
+  height:1.05em;
+  border-radius:50%;
+  font-size:.72em;
+  font-weight:900;
+  line-height:1;
+  border:1px solid currentColor;
+  opacity:.9;
+}
+body.nexo-reference-ui [data-score-tone="low"]::before{content:"!";}
+body.nexo-reference-ui [data-score-tone="mid"]::before{content:"~";}
+body.nexo-reference-ui [data-score-tone="high"]::before{content:"✓";}
+
+body.nexo-reference-ui #questoes .q-options[role="radiogroup"] .q-option:focus-visible{
+  outline:3px solid rgba(94,215,255,.72)!important;
+  outline-offset:3px!important;
+}
+
+body.nexo-reference-ui .nrx-mob-continue[data-nx2-resume="session"]{
+  border-color:rgba(95,216,255,.22)!important;
+}
+body.nexo-reference-ui .nrx-mob-continue[data-nx2-resume="session"] .nrx-play{
+  box-shadow:0 0 0 1px rgba(95,216,255,.12),0 10px 24px rgba(83,76,230,.22)!important;
+}
