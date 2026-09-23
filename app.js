@@ -1945,7 +1945,6 @@ window.addEventListener('resize',()=>{
   }
 });
 
-// mobileMenu legado removido: a navegação responsiva atual usa sidebar + bottom nav.
 $('#closeMenu')?.addEventListener('click',()=>toggleMenu(false));
 $('#scrim')?.addEventListener('click',()=>toggleMenu(false));
 $('#moreMobile')?.addEventListener('click',()=>toggleMenu(true));
@@ -2014,8 +2013,6 @@ function handlePlanLimitError(error){
     loadNexoJourney({silent:true})
   ]).catch(()=>{});
 
-  // Não arranca o aluno da questão e joga direto para a página de planos.
-  // O limite continua existindo, mas a oferta de upgrade passa a ser uma escolha.
   toast(message,'info');
 
   if(String(error?.message||error||'').includes('nexo_free_daily_question_limit')){
@@ -2096,8 +2093,6 @@ async function loadNexoMembership({silent=true}={}){
   }catch(err){
     console.error('NEXO membership',err);
 
-    // Plano e uso são coisas diferentes: se a leitura de contadores falhar,
-    // nunca rebaixe visualmente um Ultra/Plus para Free.
     try{
       const {data:fallback,error:fallbackError}=await client.rpc('get_nexo_access_tier');
       if(fallbackError)throw fallbackError;
@@ -3400,8 +3395,6 @@ async function handleSession(session) {
     return;
   }
 
-  // Regra de ouro do NEXO: sessão válida abre o produto primeiro.
-  // Core, Jornada, conteúdos e personalizações nunca podem bloquear o acesso.
   state.user=session.user;
   showAuthenticatedShell();
 
@@ -3415,7 +3408,6 @@ async function handleSession(session) {
     }catch(err){
       console.error('NEXO init parcial',err);
       try{logClientError('auth_session',err,'session_partial_init')}catch(_){}
-      // A sessão permanece utilizável mesmo se um módulo secundário falhar.
       showAuthenticatedShell();
       toast('O NEXO abriu em modo seguro. Alguns módulos podem terminar de carregar em instantes.','info');
     }
@@ -3433,8 +3425,6 @@ function reportSessionError(err) {
   console.error('Falha ao carregar a sessão/app:', err);
   logClientError('auth_session',err,'session_load');
 
-  // Se o Supabase já entregou uma sessão válida, um erro de inicialização da UI
-  // não deve derrubar a conta nem mandar o usuário de volta para o login.
   if(state.user?.id){
     showAuthenticatedShell();
     toast('Sua sessão continua ativa. O NEXO entrou em modo seguro sem desconectar sua conta.','error');
@@ -3457,7 +3447,6 @@ function startAuthBootstrap(){
   authBootstrapStarted=true;
 
   client.auth.onAuthStateChange((event, session) => {
-    // Mantém o callback síncrono e agenda a inicialização para o próximo tick.
     setTimeout(async() => {
       if(event==='PASSWORD_RECOVERY'&&session){
         try{
@@ -3876,14 +3865,9 @@ async function getSeenIds() {
 async function fetchQuestions(filters={}) {
   const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
   const requested=Math.max(1,Number(filters.size||10));
-  // The server already removes visual repairs and puts unseen items first, so a
-  // compact 1.5x buffer is enough for resilience without downloading hundreds
-  // of full statements unnecessarily on mobile.
   const candidateLimit=Math.min(160,Math.max(30,Math.ceil(requested*1.5)));
   let rows=null;
 
-  // Main path: fetch only a lightweight randomized candidate list from the full
-  // 2009–2025 archive, already prioritizing unseen and excluding visual repairs.
   try{
     const {data:candidates,error:candidateError}=await client.rpc('get_study_question_candidates_v2',{
       p_area:filters.area||null,
@@ -3908,7 +3892,6 @@ async function fetchQuestions(filters={}) {
   }catch(err){
     console.warn('study question candidate v2 fallback',err);
 
-    // Compatibility fallback for a deploy where the RPC has not propagated yet.
     let radarKeys=null;
     if(filters.radarTopic){
       try{
@@ -4109,8 +4092,6 @@ async function startStudySession(config={}) {
   const btn=$('#startSession'); if(btn){btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Montando sessão...';}
   try{
     if(!state.membership)await loadNexoMembership({silent:true});
-    // Abrir/montar uma sessão não consome a cota de questões.
-    // O limite Free é validado somente no submit_answer_v2, ao confirmar uma nova resposta.
     if(config?.mode==='core'&&planUsageReached('core'))return openNexoPlans('Você já usou a sessão NEXO Core disponível hoje no Free.');
     if(config?.mode==='arena'&&planUsageReached('arena'))return openNexoPlans('Você já usou sua entrada gratuita da Arena nesta semana.');
     if(state.session?.coreSessionId) await closeNexoSession('abandoned',state.session);
@@ -4449,11 +4430,8 @@ function likelyNeedsQuestionVisual(q){
   const raw=String([q.base_text,q.prompt].filter(Boolean).join(' '));
   const text=normalizeTextKey(raw);
 
-  // Unambiguous visual resources.
   if(/\b(grafico|imagem|mapa|diagrama|esquema|tirinha|charge|cartum|tabela|fotografia|ilustracao)\b/.test(text))return true;
 
-  // "Figura" is ambiguous in Portuguese ("figura histórica", "figura lendária").
-  // Treat it as visual only when the wording points to an actual displayed object.
   const figureVisual=
     /\bfiguras?\s+(?:a seguir|abaixo|acima|seguinte)\b/.test(text)||
     /\b(?:na|nas|pela|pelas|conforme a|conforme as)\s+figuras?\b/.test(text)||
@@ -4461,8 +4439,6 @@ function likelyNeedsQuestionVisual(q){
     /\b(?:apresenta|apresentada|apresentado|mostra|mostrada|mostrado|representa|representando|representada|representado|ilustra|ilustrada|ilustrado)\b.{0,60}\bfiguras?\b/.test(text);
   if(figureVisual)return true;
 
-  // "Quadro" can mean a table/box, but also staff, clinical condition, political
-  // landscape etc. Exclude common non-visual meanings before contextual matching.
   const nonVisualQuadro=/\bquadro\s+(?:de\s+funcionarios|clinico|social|politico|economico|historico|geral)\b/.test(text);
   const quadroVisual=!nonVisualQuadro&&(
     /\b(?:conforme o|no|pelo)\s+quadro\b/.test(text)||
@@ -4471,8 +4447,6 @@ function likelyNeedsQuestionVisual(q){
   );
   if(quadroVisual)return true;
 
-  // Art items often identify the work through captions instead of saying
-  // "imagem a seguir". Museum/work vocabulary is a stronger cue in Artes only.
   const subject=normalizeTextKey(q.subject||'');
   return subject==='artes'&&/\b(escultura|pintura|gravura|obra|museu|museum|acervo|instalacao)\b/.test(text);
 }
@@ -4486,17 +4460,12 @@ function hasAccessibleVisualDescription(q){
   if(/descri[cç][aã]o acess[ií]vel/.test(text))return true;
   if(/representa[cç][aã]o (?:acess[ií]vel|textual)/.test(text))return true;
 
-  // Some official imports fully transcribe tables/frames into the statement.
-  // Accept only strongly structured text: many line breaks plus a semantic table
-  // header. This keeps photographs, maps, diagrams and non-described charts blocked.
   const lineBreaks=(raw.match(/\n/g)||[]).length;
   const transcribedTable=/(tabela|quadro)/i.test(raw)
     &&lineBreaks>=8
     &&/(resultado|pre[cç]o|pot[eê]ncia|velocidade|etapa|processo|descri[cç][aã]o|cidade|aparelho|componente)/i.test(raw);
   if(transcribedTable)return true;
 
-  // Data-rich graph/table descriptions can also be sufficient when all values are
-  // explicitly present in text.
   const numeric=(text.match(/\d+(?:[.,]\d+)?/g)||[]).length;
   return numeric>=6&&/(gr[aá]fico|tabela|quadro).{0,120}(apresenta|mostra|dados|valores|classifica|teste|resultado)/.test(text);
 }
@@ -4506,8 +4475,6 @@ function questionVisualCanBeResolved(q){
   if(q?.source_pdf_url&&q?.source_page&&q?.media_crop)return true;
   if(hasAccessibleVisualDescription(q))return true;
   const year=Number(q?.source_year||0);
-  // ENEM.dev currently exposes original media for 2009-2023 and is used only
-  // as a recovery path when NEXO-owned media is absent.
   return year>=2009&&year<=2023&&Number(q?.source_question_number||0)>0;
 }
 
@@ -4544,8 +4511,6 @@ async function ensureExternalQuestionAssets(q){
 
 async function renderQuestion(q) {
   const card=$('#questionCard');
-  // Use NEXO-owned media first. When metadata is absent but the statement clearly
-  // references a visual, recover official ENEM assets on demand (2009-2023).
   await ensureExternalQuestionAssets(q);
   const requiredVisual=likelyNeedsQuestionVisual(q)&&!hasAccessibleVisualDescription(q);
   const visual = Boolean(q.media_type || q.media_path || q.external_media_files?.length || requiredVisual);
@@ -4795,19 +4760,13 @@ async function getPdf(url) {
 
 async function renderVisual(q) {
   try{
-    // Recovered API files are already known to be absent from NEXO's own
-    // metadata, so render them first and avoid an unnecessary database round-trip.
     if(q.external_media_files?.length && await loadExternalVisual(q)) return true;
-    // Primary path: dedicated visual store. This prevents Base64 assets from
-    // bloating question/session payloads and keeps mobile memory stable.
     if(await loadStoredVisual(q)) return true;
-    // Compatibility path for legacy/local questions that still carry media_path.
     if(await loadLocalVisual(q)) return true;
     if(q.media_type && !q.media_path){
       await ensureMediaPath(q);
       if(await loadLocalVisual(q)) return true;
     }
-    // Last resort: reconstruct the crop from the original ENEM PDF.
     if(!q.source_pdf_url || !q.source_page || !q.media_crop) return false;
     const pdf=await getPdf(q.source_pdf_url);
     const page=await pdf.getPage(Number(q.source_page));
@@ -6039,7 +5998,6 @@ async function loadErrorNotebook(){
 async function startErrorReview(){
   try{
     if(!state.membership)await loadNexoMembership({silent:true});
-    // Revisar erros também não consome cota até uma nova resposta ser confirmada.
     const ids=(state.errorReviewIds?.length?state.errorReviewIds:await loadErrorNotebook()).slice(0,5);
     if(!ids.length)return toast('Ainda não há erros recentes para revisar.');
     const fields='id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop';
@@ -7423,7 +7381,6 @@ async function toggleContentFavorite(type,id){
     updated_at:new Date().toISOString()
   };
 
-  // Optimistic state: the star reacts in the same frame as the tap.
   contentFavoriteOverrides.set(key,{favorite:nextFavorite,until:Date.now()+5000});
   if(nextFavorite)state.favorites.add(key);
   else state.favorites.delete(key);
@@ -7452,7 +7409,6 @@ async function toggleContentFavorite(type,id){
     if(result?.error)throw result.error;
     return true;
   }catch(err){
-    // Preserve the user's action and reconcile it when connectivity/API recovers.
     queueFavoriteMutation(mutation);
     console.warn('favorite sync deferred',err);
     return false;
@@ -7588,7 +7544,6 @@ async function loadTopicMastery(){
       row.accuracy=row.attempts?Math.round(row.correct*100/row.attempts):0;
       row.avgSeconds=row.attempts?Math.round(row.totalSeconds/row.attempts):0;
       row.avgDifficulty=row.attempts?Number((row.difficultyTotal/row.attempts).toFixed(1)):0;
-      // Bayesian prior prevents 1/1 from looking like real mastery.
       const priorWeight=3,priorRate=.5;
       const posterior=(row.weightedCorrect+priorWeight*priorRate)/(row.weightTotal+priorWeight);
       const confidence=1-Math.exp(-row.attempts/6);
@@ -8062,7 +8017,6 @@ async function loadVideos({silent=false}={}) {
 
   let result=await client.from('videos').select('*').eq('is_published',true).order('created_at',{ascending:false});
   if(result.error){
-    // Uma falha momentânea de rede não deve fazer a biblioteca "sumir".
     await sleep(450);
     result=await client.from('videos').select('*').eq('is_published',true).order('created_at',{ascending:false});
   }
@@ -8678,8 +8632,6 @@ function renderJourneyStore(){
 
   if($('#storeCoinBalance'))$('#storeCoinBalance').textContent=coins.toLocaleString('pt-BR')+' N¢';
 
-  // The Store sells only explicit store items.
-  // Starter and level rewards belong to progression / wardrobe, not checkout.
   const catalog=(j.catalog||[])
     .filter(item=>String(item.grant_mode||'store')==='store')
     .filter(item=>avatarItemCompatibleWithBase(item,base));
@@ -8831,7 +8783,6 @@ function celebrateUnlockedAchievements(list=[]){
   const seen=achievementSeenSet();
   const unlocked=(list||[]).filter(a=>a.unlocked&&a.code);
   const fresh=unlocked.filter(a=>!seen.has(a.code));
-  // First load establishes baseline; future unlocks celebrate.
   const baselineKey=achievementSeenKey()+'-ready';
   if(!localStorage.getItem(baselineKey)){
     unlocked.forEach(a=>seen.add(a.code));
@@ -10677,6 +10628,4 @@ document.addEventListener('click',e=>{
 
 window.addEventListener('resize',()=>{if(innerWidth>760)toggleMenu(false)});
 
-// Importante: inicia a restauração da sessão somente após todo o arquivo ter
-// terminado de declarar NEXO_EMOTIONS, imagens, Jornada e demais constantes.
 queueMicrotask(startAuthBootstrap);
