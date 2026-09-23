@@ -1,3 +1,4 @@
+// NEXO V17.8 production configuration — reference UI + living experience
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "nexosenem",
