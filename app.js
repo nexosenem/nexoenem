@@ -7349,6 +7349,7 @@ async function loadContentState(type){
   if(!favoritesRes.error){
     for(const key of [...state.favorites]) if(key.startsWith(type+':')) state.favorites.delete(key);
     for(const row of favoritesRes.data||[]) state.favorites.add(contentKey(type,row.content_id));
+    applyFavoriteOverrides(type);
   }
 }
 
@@ -7357,6 +7358,15 @@ function getContentProgress(type,id){
 }
 
 function favoriteContent(type,id){return state.favorites.has(contentKey(type,id))}
+const contentFavoriteOverrides=new Map();
+function applyFavoriteOverrides(type){
+  const now=Date.now(),prefix=String(type)+':';
+  for(const [key,row] of contentFavoriteOverrides){
+    if(Number(row.until||0)<=now){contentFavoriteOverrides.delete(key);continue}
+    if(!key.startsWith(prefix))continue;
+    if(row.favorite)state.favorites.add(key);else state.favorites.delete(key);
+  }
+}
 
 const NEXO_FAVORITE_QUEUE_KEY='nexo-favorite-queue-v1';
 function readFavoriteQueue(){
@@ -7414,6 +7424,7 @@ async function toggleContentFavorite(type,id){
   };
 
   // Optimistic state: the star reacts in the same frame as the tap.
+  contentFavoriteOverrides.set(key,{favorite:nextFavorite,until:Date.now()+5000});
   if(nextFavorite)state.favorites.add(key);
   else state.favorites.delete(key);
   updateViewerFavoriteButton();
