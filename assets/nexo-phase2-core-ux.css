@@ -335,3 +335,39 @@ body.nexo-reference-ui .page:not(#inicio)>:is(.panel,.nrx-question-modes,.nx2-qu
     transition:none!important;
   }
 }
+
+
+/* Sprint 2.7.6 — hard containment for the essay workspace.
+   The editor must never become wider than its grid track at desktop/tablet,
+   including when accessibility font scaling is enabled. */
+body.nexo-reference-ui #redacao .essay-workspace-v2,
+body.nexo-reference-ui #redacao .essay-editor-v2,
+body.nexo-reference-ui #redacao .essay-editor-v2>*{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+body.nexo-reference-ui #redacao .essay-editor-v2 :is(
+  .essay-editor-heading,.essay-theme-control,.essay-theme-tools,
+  .essay-prompt-v2,.essay-writing-head,.essay-writing-shell,
+  .essay-structure-check,.essay-editor-actions,.nx2-writing-tools,
+  .nx2-essay-organizer,.nx2-essay-organizer-text
+){
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+body.nexo-reference-ui #redacao .essay-editor-v2 :is(
+  input,select,textarea,button
+){
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
+body.nexo-reference-ui #redacao .essay-theme-tools{
+  grid-template-columns:minmax(0,1fr) auto!important;
+}
+body.nexo-reference-ui #redacao .essay-editor-heading,
+body.nexo-reference-ui #redacao .essay-writing-head,
+body.nexo-reference-ui #redacao .essay-editor-actions{
+  flex-wrap:wrap!important;
+}
