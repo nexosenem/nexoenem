@@ -179,6 +179,7 @@ assert(referenceUi.includes('function addDesktopCrown()')&&referenceUi.includes(
 assert(uiV15.includes('v15MaterialTabs')&&uiV15.includes('data-v15-material-tab'),'Biblioteca V15 oferece navegação simples sem remover filtros avançados');
 assert(uiV15.includes('syncSidebarAvatar')&&uiV15.includes('data-nrx-target'),'Avatar real e recursos secundários seguem o sistema visual V15');
 assert(app.includes('scheduleNextVisualPrefetch')&&app.includes('prefetchVisualAsset')&&app.includes('requestIdleCallback'),'Questões visuais pré-carregam somente o próximo recurso em tempo ocioso');
+assert(app.includes('const recoverableExternal=!q.media_type&&!q.media_path&&likelyNeedsQuestionVisual(q)')&&app.includes('await ensureExternalQuestionAssets(q)'),'Pré-carregamento alcança também o próximo visual ENEM recuperável');
 
 
 const badReferenceCollections=[...referenceUi.matchAll(/(?<!\$)\$\([^()\n]*\)\.(forEach|find|filter|map)\s*\(/g)].map(m=>m[0]);
