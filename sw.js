@@ -1,5 +1,5 @@
 // NEXO V17.8 release · reference interface + living experience
-const NEXO_CACHE='nexo-phase2-s1-4-20260923';
+const NEXO_CACHE='nexo-phase2-s1-4b-20260923';
 const SHELL=[
   './',
   './index.html',
@@ -30,7 +30,7 @@ const SHELL=[
   './assets/nexo-v17.js?v=20260923-14',
   './assets/nexo-v18-11-life.js?v=20260923-1',
   './assets/nexo-phase1-core.js?v=20260923-1',
-  './assets/nexo-phase2-core-ux.js?v=20260923-2',
+  './assets/nexo-phase2-core-ux.js?v=20260923-3',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',
