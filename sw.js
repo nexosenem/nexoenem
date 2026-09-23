@@ -1,10 +1,10 @@
-const NEXO_CACHE='nexo-v16-20260922-34';
+const NEXO_CACHE='nexo-v16-20260922-35';
 const SHELL=[
   './',
   './index.html',
   './manifest.webmanifest',
   './styles.css?v=20260921-4',
-  './app.js?v=20260922-15',
+  './app.js?v=20260922-16',
   './assets/nexo-runtime-compat.js?v=20260921-2',
   './assets/nexo-v13-hardening.js?v=20260921-2',
   './assets/nexo-v13.css?v=20260921-3',
