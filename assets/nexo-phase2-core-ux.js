@@ -54,10 +54,11 @@ function ensureSearchUx(){
     input.setAttribute('autocomplete','off');
   }
   box?.setAttribute('role','search');
-  const results=$('#searchResults');
+  const results=$('#globalSearchResults');
   if(results){
     results.setAttribute('aria-live','polite');
     results.setAttribute('aria-label','Resultados da pesquisa');
+    results.setAttribute('role','listbox');
   }
 }
 
@@ -152,7 +153,14 @@ function ensureEssayFlow(){
 }
 
 function ensureTouchLabels(){
-  $$('button').forEach(btn=>{
+  const active=$('.page.active');
+  const nodes=[
+    ...$( 'button',active||document ),
+    ...$('.nrx-bottom-nav button'),
+    ...$('.nrx-side-panel button'),
+    ...$('.topbar button')
+  ];
+  [...new Set(nodes)].forEach(btn=>{
     if(btn.getAttribute('aria-label'))return;
     const text=(btn.textContent||'').replace(/\s+/g,' ').trim();
     if(text)btn.setAttribute('aria-label',text.slice(0,120));
