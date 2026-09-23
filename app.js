@@ -576,9 +576,12 @@ function toast(message, type='info') {
   const el = $('#toast');
   el.textContent = message;
   el.dataset.type = type;
+  el.setAttribute('role',type==='error'?'alert':'status');
+  el.setAttribute('aria-live',type==='error'?'assertive':'polite');
+  el.setAttribute('aria-atomic','true');
   el.classList.remove('hidden');
   clearTimeout(toast.timer);
-  toast.timer = setTimeout(()=>el.classList.add('hidden'), 2900);
+  toast.timer = setTimeout(()=>el.classList.add('hidden'), 3200);
 }
 
 async function logClientError(area,error,code='runtime'){
@@ -648,6 +651,7 @@ function initials(name='NEXO') {
 }
 
 function setTheme(mode) {
+  document.documentElement.dataset.nexoTheme=mode;
   document.body.classList.toggle('light', mode === 'light');
   localStorage.setItem('nexo-theme', mode);
   $('#themeToggle').textContent = mode === 'light' ? '☀' : '☾';
@@ -1624,6 +1628,18 @@ globalSearch.addEventListener('keydown',e=>{
   if(e.key==='Escape'){
     e.preventDefault();
     setMobileSearchOpen(false,{focus:false});
+  }
+});
+document.addEventListener('keydown',e=>{
+  const key=String(e.key||'').toLowerCase();
+  if((e.ctrlKey||e.metaKey)&&key==='k'){
+    e.preventDefault();
+    if(innerWidth<=760&&$('#inicio')&&!$('#inicio').classList.contains('active'))openPage('inicio');
+    requestAnimationFrame(()=>{
+      setMobileSearchOpen(innerWidth<=760,{focus:false});
+      try{globalSearch.focus({preventScroll:false})}catch(_){globalSearch.focus()}
+      globalSearch.select?.();
+    });
   }
 });
 
@@ -4641,6 +4657,13 @@ function bindVisualZoom(stage){
   };
 }
 
+function questionVisualLabel(q,index=null,total=null){
+  const parts=['Recurso visual original'];
+  if(q?.source_year)parts.push('ENEM '+q.source_year);
+  if(q?.source_question_number)parts.push('questão '+q.source_question_number);
+  if(index!==null&&total)parts.push('imagem '+index+' de '+total);
+  return parts.join(' · ');
+}
 function mountVisualImage(q, src){
   return new Promise(resolve=>{
     const img=new Image();
@@ -4649,9 +4672,13 @@ function mountVisualImage(q, src){
       const stage=$('#visualStage');
       if(!stage || state.current?.id!==q.id) return resolve(false);
       img.className='q-media-image';
-      img.alt='Recurso visual original da questão';
+      img.alt=questionVisualLabel(q);
       stage.innerHTML='';
       stage.appendChild(img);
+      const caption=document.createElement('small');
+      caption.className='nx2-visual-caption';
+      caption.textContent=questionVisualLabel(q);
+      stage.appendChild(caption);
       const head=$('#visualWrap .visual-head span:last-child');
       if(head) head.textContent=innerWidth<=760?'Toque para ampliar':'Imagem da prova';
       bindVisualZoom(stage);
@@ -4677,6 +4704,10 @@ function mountVisualGallery(q,sources){
       if(!loaded)return resolve(false);
       stage.innerHTML='';
       stage.appendChild(gallery);
+      const caption=document.createElement('small');
+      caption.className='nx2-visual-caption';
+      caption.textContent=questionVisualLabel(q);
+      stage.appendChild(caption);
       const head=$('#visualWrap .visual-head span:last-child');
       if(head)head.textContent=innerWidth<=760?'Toque para ampliar':(loaded>1?loaded+' imagens da prova':'Imagem da prova');
       bindVisualZoom(stage);
@@ -4686,7 +4717,7 @@ function mountVisualGallery(q,sources){
       const img=new Image();
       img.decoding='async';
       img.loading=index?'lazy':'eager';
-      img.alt='Recurso visual original da questão'+(clean.length>1?' '+(index+1):'');
+      img.alt=questionVisualLabel(q,index+1,clean.length);
       img.className='q-media-image';
       img.onload=()=>{loaded++;gallery.appendChild(img);done()};
       img.onerror=()=>done();
@@ -5375,6 +5406,11 @@ async function submitAnswer(option) {
   $('.confirm-answer-wrap')?.remove();
   const detail=buildAnswerExplanation(state.current,data,option);
   const shortcut=getQuestionShortcut(state.current);
+  const sessionAnswerCount=Number(state.session?.resultStats?.correct||0)+Number(state.session?.resultStats?.wrong||0);
+  const sessionAvgSeconds=sessionAnswerCount>0?Math.round(Number(state.session?.resultStats?.totalSeconds||0)/sessionAnswerCount):0;
+  const paceText=sessionAvgSeconds>0
+    ? (duration>sessionAvgSeconds*1.2?'acima da sua média':duration<sessionAvgSeconds*.8?'abaixo da sua média':'perto da sua média')
+    : 'primeira resposta da sessão';
   const box=document.createElement('div');
   box.className='answer-panel '+(data.correct?'':'wrong');
   box.innerHTML=`
@@ -5388,6 +5424,8 @@ async function submitAnswer(option) {
           <div class="nexo-reaction-meta">
             <small>${esc(reaction.badge)}</small>
             <small>⏱ ${formatAnswerReactionTime(duration)}</small>
+            <small>${sessionAvgSeconds>0?'SUA MÉDIA '+formatAnswerReactionTime(sessionAvgSeconds)+' · '+paceText:paceText}</small>
+            <small>RITMO ENEM · tente decidir em cerca de 2–3 min quando a questão permitir</small>
             ${reaction.difficulty?'<small>NÍVEL '+reaction.difficulty+'</small>':''}
           </div>
         </div>
