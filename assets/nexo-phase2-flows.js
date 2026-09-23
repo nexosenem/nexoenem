@@ -207,6 +207,59 @@ function ensureEssayTools(){
 }
 
 let sortingComments=false;
+function ensureCommentReportExperience(){
+  if(window.__nx2ReportOverride)return;
+  if(typeof window.reportComment!=='function')return;
+  window.__nx2ReportOverride=true;
+  window.reportComment=async function(id){
+    const reason=await new Promise(resolve=>{
+      let modal=$('#commentReportModal');
+      if(!modal){
+        modal=document.createElement('div');
+        modal.id='commentReportModal';
+        modal.className='community-modal hidden';
+        modal.setAttribute('role','dialog');
+        modal.setAttribute('aria-modal','true');
+        modal.setAttribute('aria-labelledby','commentReportTitle');
+        modal.innerHTML='<section class="community-sheet nx2-report-sheet"><button type="button" id="closeCommentReport" class="community-close" aria-label="Fechar">×</button><div><span class="eyebrow">MODERAÇÃO</span><h3 id="commentReportTitle">Denunciar comentário</h3><p>Escolha o motivo. A denúncia vai para moderação e não publica seus detalhes para outros alunos.</p></div><label>Motivo<select id="commentReportReason"><option value="Ofensa ou assédio">Ofensa ou assédio</option><option value="Spam">Spam</option><option value="Conteúdo impróprio">Conteúdo impróprio</option><option value="Informação enganosa">Informação enganosa</option><option value="Outro motivo">Outro motivo</option></select></label><label>Detalhes opcionais<textarea id="commentReportDetail" rows="3" maxlength="280" placeholder="Explique em poucas palavras, se necessário."></textarea></label><div class="community-modal-actions"><button type="button" id="cancelCommentReport" class="ghost-btn">Cancelar</button><button type="button" id="submitCommentReport" class="primary-btn">Enviar denúncia</button></div></section>';
+        document.body.appendChild(modal);
+      }
+      const previous=document.activeElement;
+      modal.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+      const select=$('#commentReportReason'),detail=$('#commentReportDetail');
+      if(select)select.selectedIndex=0;
+      if(detail)detail.value='';
+      let settled=false;
+      const finish=value=>{
+        if(settled)return;settled=true;
+        modal.classList.add('hidden');
+        document.body.style.overflow='';
+        previous?.focus?.({preventScroll:true});
+        resolve(value);
+      };
+      $('#closeCommentReport').onclick=()=>finish('');
+      $('#cancelCommentReport').onclick=()=>finish('');
+      modal.onclick=e=>{if(e.target===modal)finish('')};
+      $('#submitCommentReport').onclick=()=>{
+        const base=String(select?.value||'Outro motivo');
+        const extra=String(detail?.value||'').trim();
+        finish(base+(extra?' · '+extra:''));
+      };
+      requestAnimationFrame(()=>select?.focus());
+    });
+    if(!reason)return;
+    try{
+      const {data,error}=await client.rpc('report_comment',{p_comment_id:id,p_reason:reason});
+      if(error)throw error;
+      toast(data?.auto_hidden?'Comentário ocultado após múltiplas denúncias.':'Denúncia enviada para moderação.');
+      loadQuestionComments(Number($('#commentModal')?.dataset.questionId||0));
+    }catch(_){
+      toast('Não foi possível enviar a denúncia.','error');
+    }
+  };
+}
+
 function ensureCommentSort(){
   const modal=$('#commentModal'),list=$('#questionComments');
   if(!modal||!list)return;
@@ -400,6 +453,7 @@ function sync(){
   syncQuestionRecommendation();
   ensureQuestionObserver();
   ensureEssayTools();
+  ensureCommentReportExperience();
   ensureCommentSort();
   ensureMoreGroups();
   ensureDialogSemantics();
@@ -416,6 +470,7 @@ document.addEventListener('click',e=>{
 },{passive:true});
 new MutationObserver(syncDraftStatus).observe(document.body,{attributes:true,attributeFilter:['data-essay-draft-state']});
 
-if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>requestAnimationFrame(sync),{once:true});
-else requestAnimationFrame(sync);
+const boot=()=>requestAnimationFrame(()=>{sync();requestAnimationFrame(()=>document.body.classList.add('theme-ready'))});
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
+else boot();
 })();
