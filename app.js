@@ -4114,7 +4114,7 @@ function renderExamRegisteredAnswer(option,duration){
 async function startStudySession(config={}) {
   if(blockMaintenance('questions'))return;
   if(['core','adaptive'].includes(config?.mode)&&blockMaintenance('core'))return;
-  const btn=$('#startSession'); if(btn){btn.disabled=true;btn.textContent='Montando sessão...';}
+  const btn=$('#startSession'); if(btn){btn.disabled=true;btn.setAttribute('aria-busy','true');btn.textContent='Montando sessão...';}
   try{
     if(!state.membership)await loadNexoMembership({silent:true});
     // Abrir/montar uma sessão não consome a cota de questões.
@@ -4166,7 +4166,7 @@ async function startStudySession(config={}) {
     console.error(err);logClientError('study_session',err,'session_build');
     if(!handlePlanLimitError(err))toast(err.message||'Não foi possível montar a sessão.','error');
   }finally{
-    if(btn){btn.disabled=false;btn.innerHTML='Começar sessão <span>→</span>';}
+    if(btn){btn.disabled=false;btn.removeAttribute('aria-busy');btn.innerHTML='Começar sessão <span>→</span>';}
   }
 }
 
@@ -5332,7 +5332,7 @@ async function submitAnswer(option) {
   const hintCount=Number(behaviorSnapshot?.hintCount||0);
   stopQuestionBehaviorMonitor();
   const confirm=$('#confirmAnswer');
-  if(confirm){confirm.disabled=true;confirm.textContent='Corrigindo...';}
+  if(confirm){confirm.disabled=true;confirm.setAttribute('aria-busy','true');confirm.textContent='Corrigindo...';}
   state.answered=true;
   $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=true);
   const duration=Math.max(1,Math.round((Date.now()-state.questionStartedAt)/1000));
@@ -5361,7 +5361,7 @@ async function submitAnswer(option) {
     state.answered=false;
     if(state.current)startQuestionBehaviorMonitor(state.current,behaviorSnapshot);
     $$('.q-option',$('#questionCard')).forEach(b=>b.disabled=false);
-    if(confirm){confirm.disabled=false;confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
+    if(confirm){confirm.disabled=false;confirm.removeAttribute('aria-busy');confirm.textContent=`Confirmar ${'ABCDE'[option]}`;}
     if(handlePlanLimitError(error))return;
     logClientError('questions',error,'submit_answer');
     const msg=error?.message==='timeout_submit_answer'
@@ -7160,6 +7160,7 @@ $('#analyzeEssay').onclick=async()=>{
   if(essayWordCount<80)return toast('Para estimar as 5 competências, escreva pelo menos 80 palavras.','error');
   const analyzeBtn=$('#analyzeEssay');
   analyzeBtn.disabled=true;
+  analyzeBtn.setAttribute('aria-busy','true');
   analyzeBtn.textContent='Professor Nexo está lendo...';
   const loader=$('#essayLoader');loader.classList.remove('hidden');
   const msgs=['Avaliando estrutura e repertório.','Analisando coesão e progressão textual.','Verificando argumentação.','Estimando as cinco competências.','Salvando seu histórico.'];let i=0;
@@ -7187,7 +7188,7 @@ $('#analyzeEssay').onclick=async()=>{
     analysis_version:NEXO_ESSAY_ANALYSIS_VERSION,
     rubric_version:NEXO_ESSAY_RUBRIC_VERSION
   });
-  clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.textContent='Analisar e salvar';
+  clearInterval(timer);loader.classList.add('hidden');analyzeBtn.disabled=false;analyzeBtn.removeAttribute('aria-busy');analyzeBtn.textContent='Analisar e salvar';
   if(error){
     console.error(error);logClientError('essay',error,'essay_save');
     if(handlePlanLimitError(error))return;
@@ -9560,9 +9561,15 @@ $('#sendComment').onclick=async()=>{
   if(blockMaintenance('community'))return;
   const qid=Number($('#commentModal').dataset.questionId),body=$('#commentText').value.trim();
   if(!qid||body.length<2)return toast('Escreva um comentário antes de enviar.','error');
-  const {error}=await client.from('question_comments').insert({question_id:qid,user_id:state.user.id,body});
-  if(error)return toast('Não foi possível comentar.','error');
-  $('#commentText').value='';toast('Comentário publicado.');loadQuestionComments(qid);
+  const btn=$('#sendComment');
+  btn.disabled=true;btn.setAttribute('aria-busy','true');
+  try{
+    const {error}=await client.from('question_comments').insert({question_id:qid,user_id:state.user.id,body});
+    if(error)return toast('Não foi possível comentar.','error');
+    $('#commentText').value='';toast('Comentário publicado.');loadQuestionComments(qid);
+  }finally{
+    btn.disabled=false;btn.removeAttribute('aria-busy');
+  }
 };
 function askCommentReportReason(){
   return new Promise(resolve=>{
