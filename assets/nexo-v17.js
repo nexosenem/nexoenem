@@ -172,3 +172,30 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
   const page=$('#questoes');if(page)new MutationObserver(()=>requestAnimationFrame(run)).observe(page,{subtree:true,childList:true,attributes:true,attributeFilter:['class','disabled']});
 })();
+
+
+/* V17.5 — Essay writing pulse from the real editor content */
+(function(){
+  'use strict';
+  const $=(s,r=document)=>r.querySelector(s);
+  function enhanceEssay(){
+    const area=$('#essayText');if(!area)return;
+    let pulse=$('#nx17WritingPulse');
+    if(!pulse){
+      pulse=document.createElement('div');pulse.id='nx17WritingPulse';pulse.className='nx17-writing-pulse';
+      pulse.innerHTML='<span><i></i><b>Modo escrita</b></span><span data-nx17-essay-stats>0 palavras · 0 caracteres</span>';
+      const counter=$('#wordCount');(counter||area).insertAdjacentElement('afterend',pulse);
+    }
+    const text=String(area.value||'').trim();
+    const words=text?(text.match(/\S+/g)||[]).length:0;
+    const stats=$('[data-nx17-essay-stats]',pulse);if(stats)stats.textContent=words+' palavra'+(words===1?'':'s')+' · '+String(area.value||'').length+' caracteres';
+    if(!area.dataset.nx17Writing){
+      area.dataset.nx17Writing='1';
+      area.addEventListener('input',enhanceEssay,{passive:true});
+      area.addEventListener('focus',()=>pulse.classList.add('active'));
+      area.addEventListener('blur',()=>pulse.classList.remove('active'));
+    }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',enhanceEssay,{once:true});else enhanceEssay();
+  const page=$('#redacao');if(page)new MutationObserver(()=>requestAnimationFrame(enhanceEssay)).observe(page,{subtree:true,childList:true});
+})();
