@@ -4,6 +4,7 @@ import { chromium } from 'playwright';
 const index=fs.readFileSync('index.html','utf8');
 const appSource=fs.readFileSync('app.js','utf8');
 const supabasePublishableKey=appSource.match(/const SUPABASE_KEY = '([^']+)'/)?.[1]||'';
+const expectedBuild=index.match(/<meta\s+name="nexo-build"\s+content="([^"]+)"/i)?.[1]||'';
 const expectedApp=index.match(/app\.js\?v=([^"]+)/)?.[1]||'';
 const expectedHardening=index.match(/nexo-v13-hardening\.js\?v=([^"]+)/)?.[1]||'';
 const expectedReferenceJs=index.match(/nexo-reference-v2\.js\?v=([^"]+)/)?.[1]||'';
@@ -32,12 +33,13 @@ async function discoverLive(){
       const url=base.endsWith('/')?base:base+'/';
       const r=await fetchText(url+'?deploy_check='+Date.now());
       const hasBrand=/NEXO ENEM/i.test(r.text);
+      const hasBuild=expectedBuild&&r.text.includes('name="nexo-build" content="'+expectedBuild+'"');
       const hasAppVersion=expectedApp&&r.text.includes('app.js?v='+expectedApp);
       const hasReferenceJs=expectedReferenceJs&&r.text.includes('nexo-reference-v2.js?v='+expectedReferenceJs);
       const hasReferenceCss=expectedReferenceCss&&r.text.includes('nexo-reference-v2.css?v='+expectedReferenceCss);
       const hasVersion=Boolean(hasAppVersion&&hasReferenceJs&&hasReferenceCss);
-      seen.push({attempt,url,status:r.status,hasBrand,hasAppVersion,hasReferenceJs,hasReferenceCss,hasVersion,error:r.error||null});
-      if(r.ok&&hasBrand&&hasVersion)return {base:url,index:r,seen};
+      seen.push({attempt,url,status:r.status,hasBrand,hasBuild,hasAppVersion,hasReferenceJs,hasReferenceCss,hasVersion,error:r.error||null});
+      if(r.ok&&hasBrand&&hasBuild&&hasVersion)return {base:url,index:r,seen};
     }
     if(attempt<15)await sleep(5000);
   }
@@ -123,9 +125,11 @@ async function browserProfile(browser,base,name,viewport){
       referenceDesktop:false,
       referenceMobile:false,
       referenceSecondary:false,
-      referenceUtilities:false
+      referenceUtilities:false,
+      build:''
     };
     try{
+      result.build=String(window.NEXO_BUILD||document.querySelector('meta[name="nexo-build"]')?.content||'');
       result.supabaseGlobal=Boolean(window.supabase?.createClient);
       result.pdfjsGlobal=Boolean(window.pdfjsLib);
       result.sharedState=typeof state==='object'&&typeof client==='object'&&typeof v13State==='function'&&v13State()===state.v13;
@@ -189,6 +193,7 @@ async function browserProfile(browser,base,name,viewport){
 
   const failures=[];
   if(!first.hardening||!first.v13Core)failures.push('V13 não carregou');
+  if(first.build!==expectedBuild)failures.push('build público '+first.build+' difere do esperado '+expectedBuild);
   if(name==='mobile'){
     const closeTest=await page.evaluate(()=>{
       const bar=document.querySelector('#nexoContextBar');
@@ -230,6 +235,7 @@ const assetFailures=await verifyAssets(live.base,live.index.text);
 const supabaseHealth=await fetchText(SUPABASE_HEALTH_URL,12000,supabasePublishableKey?{apikey:supabasePublishableKey}:{});
 if(!supabaseHealth.ok)assetFailures.push('Supabase health HTTP '+supabaseHealth.status);
 console.log('LIVE_URL='+live.base);
+console.log('BUILD='+expectedBuild);
 console.log('APP_VERSION='+expectedApp);
 console.log('REFERENCE_UI_VERSION='+expectedReferenceJs);
 console.log('CF_CACHE_STATUS='+(live.index.headers['cf-cache-status']||''));
@@ -246,7 +252,7 @@ try{
 }finally{await browser.close()}
 
 const failures=[...assetFailures,...profiles.flatMap(p=>p.failures.map(x=>p.name+': '+x))];
-console.log(JSON.stringify({live:live.base,expectedApp,expectedHardening,profiles},null,2));
+console.log(JSON.stringify({live:live.base,expectedBuild,expectedApp,expectedHardening,profiles},null,2));
 if(failures.length){
   for(const x of failures)console.error('FAIL',x);
   process.exit(1);
