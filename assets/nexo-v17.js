@@ -45,3 +45,54 @@
   };
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
+
+
+/* V17.2 — Home life: ambient field, contextual greeting and restrained parallax */
+(function(){
+  'use strict';
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  function ensureAmbient(){
+    if(document.querySelector('.nx17-ambient'))return;
+    const layer=document.createElement('div');
+    layer.className='nx17-ambient';
+    layer.setAttribute('aria-hidden','true');
+    layer.innerHTML='<i></i><i></i><i></i>';
+    document.body.prepend(layer);
+  }
+  function greeting(){
+    const h=new Date().getHours();
+    const text=h<5?'Boa noite':h<12?'Bom dia':h<18?'Boa tarde':'Boa noite';
+    $$('[data-nrx-greeting]').forEach(el=>{if(el.textContent!==text)el.textContent=text});
+  }
+  function bindHero(hero){
+    if(!hero||hero.dataset.nx17Parallax)return;
+    hero.dataset.nx17Parallax='1';
+    if(window.NEXOV17&&window.NEXOV17.reduceMotion&&window.NEXOV17.reduceMotion())return;
+    hero.addEventListener('pointermove',ev=>{
+      if(ev.pointerType==='touch')return;
+      const r=hero.getBoundingClientRect();
+      const x=Math.max(0,Math.min(100,(ev.clientX-r.left)/r.width*100));
+      const y=Math.max(0,Math.min(100,(ev.clientY-r.top)/r.height*100));
+      hero.style.setProperty('--nx17-x',x.toFixed(1)+'%');
+      hero.style.setProperty('--nx17-y',y.toFixed(1)+'%');
+      const img=hero.querySelector('.nrx-hero-art img');
+      if(img)img.style.translate=((x-50)*.035).toFixed(2)+'px '+((y-50)*.025).toFixed(2)+'px';
+    },{passive:true});
+    hero.addEventListener('pointerleave',()=>{
+      hero.style.removeProperty('--nx17-x');hero.style.removeProperty('--nx17-y');
+      const img=hero.querySelector('.nrx-hero-art img');if(img)img.style.translate='';
+    },{passive:true});
+  }
+  function applyHomeLife(){
+    ensureAmbient();greeting();
+    bindHero($('.nrx-hero'));bindHero($('.nrx-mob-hero'));
+  }
+  const start=()=>{
+    applyHomeLife();
+    const mo=new MutationObserver(()=>requestAnimationFrame(applyHomeLife));
+    const home=$('#inicio');if(home)mo.observe(home,{subtree:true,childList:true});
+    setInterval(greeting,60000);
+  };
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',start,{once:true});else start();
+})();
