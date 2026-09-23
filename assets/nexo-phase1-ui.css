@@ -3018,3 +3018,87 @@ body.nexo-reference-ui #materiais .material-subject-chip .nx2-subject-progress>e
 body.nexo-reference-ui #materiais .material-subject-chip small{
   padding-bottom:4px;
 }
+
+
+/* === PHASE 2 S2.11 · non-blocking progress and opt-in haptics === */
+/* Essay analysis must communicate progress without freezing the entire product. */
+body.nexo-reference-ui #essayLoader.loader{
+  inset:auto 18px 18px auto!important;
+  width:min(420px,calc(100vw - 36px))!important;
+  min-height:0!important;
+  padding:0!important;
+  background:transparent!important;
+  backdrop-filter:none!important;
+  -webkit-backdrop-filter:none!important;
+  pointer-events:none!important;
+  place-items:stretch!important;
+}
+body.nexo-reference-ui #essayLoader .loader-card{
+  display:grid;
+  grid-template-columns:44px minmax(0,1fr);
+  column-gap:12px;
+  align-items:center;
+  padding:14px 15px;
+  border:1px solid rgba(124,141,181,.18);
+  border-radius:16px;
+  background:rgba(8,18,34,.96);
+  box-shadow:0 16px 42px rgba(0,0,0,.28);
+  text-align:left;
+}
+body.nexo-reference-ui #essayLoader .loader-card h3{
+  margin:0;
+  font-size:14px;
+  line-height:1.25;
+}
+body.nexo-reference-ui #essayLoader .loader-card p{
+  grid-column:2;
+  margin:3px 0 0;
+  font-size:12px;
+  line-height:1.35;
+}
+body.nexo-reference-ui #essayLoader .orb-loader{
+  grid-row:1 / span 2;
+  width:42px;
+  height:42px;
+}
+body.nexo-reference-ui #essayLoader .orb-loader i{
+  width:30px;
+  height:30px;
+  box-shadow:none;
+}
+body.nexo-reference-ui #essayLoader .orb-loader i:nth-child(2){width:38px;height:38px}
+body.nexo-reference-ui #essayLoader .orb-loader i:nth-child(3){width:21px;height:21px}
+
+body.light.nexo-reference-ui #essayLoader .loader-card{
+  background:rgba(255,255,255,.98);
+  color:#1d2940;
+  border-color:rgba(67,86,127,.14);
+  box-shadow:0 16px 38px rgba(52,67,101,.16);
+}
+body.light.nexo-reference-ui #essayLoader .loader-card p{
+  color:#647289!important;
+}
+
+@media(max-width:760px){
+  body.nexo-reference-ui #essayLoader.loader{
+    left:14px!important;
+    right:14px!important;
+    bottom:calc(104px + env(safe-area-inset-bottom))!important;
+    width:auto!important;
+  }
+  body.nexo-reference-ui #essayLoader .loader-card{
+    padding:12px 13px;
+    border-radius:14px;
+  }
+  body.nexo-reference-ui #essayLoader .loader-card h3{font-size:13.5px!important}
+  body.nexo-reference-ui #essayLoader .loader-card p{font-size:11.5px!important}
+}
+
+/* Haptics are optional and remain completely silent until explicitly enabled. */
+body.nexo-reference-ui #toggleNexoHaptics{
+  min-height:44px;
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.nexo-reference-ui #essayLoader .orb-loader i{animation:none!important}
+}
