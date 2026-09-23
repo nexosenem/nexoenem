@@ -118,6 +118,9 @@ assert(sw.includes('nexo-reference-v2.css')&&sw.includes('nexo-reference-v2.js')
 assert(index.includes('nexo-v14-experience.js'),'Experiência V14 conectada');
 assert(sw.includes('nexo-v14-experience.js'),'Experiência V14 no PWA');
 assert(experienceV14.includes('v14LearningLoop')&&experienceV14.includes('Diagnóstico NEXO')&&experienceV14.includes('ENEM Real'),'Ciclo de aprendizagem/diagnóstico V14 publicados');
+assert(index.includes('id="realExamModal"')&&index.includes('data-real-exam-day="1"')&&index.includes('data-real-exam-day="2"'),'ENEM Real oferece escolha de Dia 1 e Dia 2 sem poluir a grade de simulados');
+assert(app.includes("['Linguagens','Ciências Humanas']")&&app.includes("['Ciências da Natureza','Matemática']")&&app.includes('examDay:dayNumber')&&app.includes('size:90'),'ENEM Real preserva 45+45 áreas oficiais por dia');
+assert(app.includes('const areaList=Array.isArray(filters.areas)')&&app.includes('blocks.push(...ordered.slice(0,quota))'),'Sessões com múltiplas áreas mantêm cotas balanceadas antes de montar a fila');
 assert(index.includes('nexo-v15-ui.css')&&index.includes('nexo-v15-ui.js'),'Experiência V15 conectada');
 assert(sw.includes('nexo-v15-ui.css')&&sw.includes('nexo-v15-ui.js'),'Experiência V15 no PWA');
 assert(uiV15.includes('v15QuestionModes')&&uiV15.includes('v15EssayTabs')&&uiV15.includes('v15-voice-search'),'V15 mantém modos de questão, navegação de redação e busca por voz progressiva');
