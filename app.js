@@ -4006,10 +4006,20 @@ async function ensureMediaPath(q){
 }
 
 async function prefetchVisualAsset(q){
-  if(!q?.media_type)return;
+  if(!q)return;
   const id=Number(q.id);
-  if(!id||state.visualCache.has(id)||state.visualCache.has('path:'+id)||q.media_path)return;
+  const year=Number(q.source_year||0);
+  const recoverableExternal=!q.media_type&&!q.media_path&&likelyNeedsQuestionVisual(q)&&year>=2009&&year<=2023&&Number(q.source_question_number||0)>0;
+  if(!q.media_type&&!q.media_path&&!recoverableExternal)return;
+  if(id&&(state.visualCache.has(id)||state.visualCache.has('path:'+id)||q.media_path))return;
   try{
+    if(recoverableExternal){
+      await ensureExternalQuestionAssets(q);
+      const urls=[...(q.external_media_files||[]),...(q.option_media||[])].filter(Boolean).slice(0,3);
+      urls.forEach(url=>{const img=new Image();img.decoding='async';img.src=url;});
+      if(q.external_media_files?.length)return;
+    }
+    if(!id||!q.media_type)return;
     const {data,error}=await client.from('question_media')
       .select('data_uri')
       .eq('question_id',id)
@@ -4028,7 +4038,10 @@ function scheduleNextVisualPrefetch(){
   const session=state.session;
   if(!session?.queue?.length)return;
   const next=session.queue[Number(session.index||0)+1];
-  if(!next?.media_type)return;
+  if(!next)return;
+  const year=Number(next.source_year||0);
+  const recoverableExternal=!next.media_type&&!next.media_path&&likelyNeedsQuestionVisual(next)&&year>=2009&&year<=2023&&Number(next.source_question_number||0)>0;
+  if(!next.media_type&&!next.media_path&&!recoverableExternal)return;
   const sessionRef=session;
   const run=()=>{
     if(state.session!==sessionRef)return;
