@@ -2829,11 +2829,14 @@ async function runProfile(browser,name,viewport){
 
 
 async function runViewportAudit(browser,name,viewport){
-  const context=await browser.newContext({viewport,locale:'pt-BR'});
+  // The full desktop/mobile profiles already validate PWA registration and reload.
+  // Layout-only viewport audits block service workers so a newly activated SW cannot
+  // navigate the page while Playwright is inside page.evaluate().
+  const context=await browser.newContext({viewport,locale:'pt-BR',serviceWorkers:'block'});
   const page=await context.newPage();
   const localErrors=[];
   page.on('pageerror',err=>localErrors.push(err.message));
-  await page.goto(BASE+'?viewport_audit='+encodeURIComponent(name+'-'+Date.now()),{waitUntil:'commit',timeout:30000});
+  await page.goto(BASE+'?viewport_audit='+encodeURIComponent(name+'-'+Date.now()),{waitUntil:'domcontentloaded',timeout:30000});
   await page.waitForFunction(()=>{
     const boot=document.querySelector('#boot');
     const auth=document.querySelector('#authScreen');
