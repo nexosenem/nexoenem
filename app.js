@@ -2648,6 +2648,13 @@ function openAdminVisualRepairModal(row){
   ].filter(Boolean).join(' · ');
   const prompt=$('#adminVisualRepairPrompt');
   if(prompt)prompt.textContent=row.prompt_preview||'Recurso visual obrigatório ainda não restaurado.';
+  const sourceLink=$('#adminVisualRepairSource');
+  if(sourceLink){
+    const source=String(row.source_reference||'').trim();
+    const allowed=source.startsWith('https://download.inep.gov.br/');
+    sourceLink.classList.toggle('hidden',!allowed);
+    if(allowed)sourceLink.href=source;
+  }
   if($('#adminVisualRepairType'))$('#adminVisualRepairType').value='image';
   if($('#adminVisualRepairUrl'))$('#adminVisualRepairUrl').value='';
   if($('#adminVisualRepairFile'))$('#adminVisualRepairFile').value='';
@@ -2674,6 +2681,7 @@ async function loadAdminVisualRepairQueue(){
           <small>${esc(row.topic||'')} · ${attempts} tentativa${attempts===1?'':'s'}${attempts?' · '+errRate+'% de erro':''}${reports?' · '+reports+' reporte'+(reports===1?'':'s')+' visual':''}</small>
           <div class="comment-actions">
             <button data-visual-repair="${row.question_id}">Restaurar mídia</button>
+            ${String(row.source_reference||'').startsWith('https://download.inep.gov.br/')?'<a class="admin-source-link" href="'+esc(row.source_reference)+'" target="_blank" rel="noopener noreferrer">Abrir prova oficial ↗</a>':''}
           </div>
         </div>
       </div>`;
