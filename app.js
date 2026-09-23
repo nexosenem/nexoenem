@@ -3563,7 +3563,7 @@ function renderNexoCore(){
   };
   const signalInfo=signalMeta[signal]||signalMeta.balanced;
   $$('.nexo-core-card').forEach(card=>card.classList.toggle('core-empty',!rec));
-  $('[data-core-status]').forEach(el=>{
+  document.querySelectorAll('[data-core-status]').forEach(el=>{
     const confidence=rec?.confidence_label&&!initial?' · confiança '+rec.confidence_label:'';
     el.textContent=initial?'primeiro diagnóstico':rec?('adaptativo · '+signalInfo.label.toLowerCase()+confidence):'calibrando';
   });
