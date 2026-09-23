@@ -1,6 +1,6 @@
-NEXO PHASE 2 · Sprint 2.7.6
+NEXO PHASE 2 · Sprint 2.10
 release_date=2026-09-23
-build=core-ux-essay-overflow-hardening
-completed=global-readability,touch-targets,fuzzy-search,search-recents,search-categories,ctrl-k,study-priority-actions,study-status-signals,question-recommendation,question-progressive-feedback,question-keyboard-radio,question-pace,visual-caption,pinch-zoom,essay-focus,essay-autosave-status,essay-step-navigation,essay-idea-organizer,repertoire-insert-feedback,repertoire-tags,comment-sorting,comment-report-dialog,nexo-comment-badge,dialog-focus-trap,drawer-swipe,keyboard-safe-nav,notification-sheet,grouped-more-menu,light-theme-prepaint,tablet-landscape,desktop-readability,css-consolidation,rich-resume-card,resume-time-estimate,semantic-score-cues,content-completion-feedback,selector-safety,cross-browser-mobile-smoke,bundle-budget,essay-grid-containment
+build=core-ux-progressive-depth
+completed=global-readability,touch-targets,fuzzy-search,search-recents,search-categories,ctrl-k,instant-search-render,search-keyboard-navigation,study-priority-actions,study-status-signals,study-subject-progress,question-recommendation,question-progressive-feedback,question-keyboard-radio,question-pace,visual-caption,pinch-zoom,home-next-action,rich-resume-card,resume-time-estimate,essay-focus,essay-autosave-status,essay-step-navigation,essay-progressive-depth,essay-history-visual,essay-idea-organizer,repertoire-insert-feedback,repertoire-tags,comment-sorting,comment-report-dialog,nexo-comment-badge,dialog-focus-trap,drawer-swipe,drawer-scroll-lock,keyboard-safe-nav,notification-sheet,grouped-more-menu,light-theme-prepaint,tablet-landscape,desktop-readability,css-consolidation,semantic-score-cues,content-completion-feedback,selector-safety,cross-browser-mobile-smoke,bundle-budget,essay-grid-containment
 quality_gates=phase1+phase2-ux+architecture+runtime+selector-safety+chromium+webkit
 status=validation
