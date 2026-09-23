@@ -138,14 +138,97 @@ function syncContinueRich(){
     const total=Number(source.size||source.queue?.length||source.ids?.length||0);
     const current=Math.min(total,Math.max(1,Number(source.index||0)+1));
     const topic=String(source.topic||source.subject||source.area||'treino').trim();
+    const safeTotal=Math.max(current,total);
+    const remaining=Math.max(1,safeTotal-current+1);
+    const estimateMin=Math.max(3,Math.ceil(remaining*2.5));
     if(title)title.textContent=topic&&topic!=='treino'?'Continuar · '+topic:'Continuar sessão';
-    if(sub)sub.textContent='Questão '+current+' de '+Math.max(current,total)+(topic?' · '+topic:'');
-    if(play)play.setAttribute('aria-label','Continuar '+topic+' na questão '+current+' de '+Math.max(current,total));
+    if(sub)sub.textContent='Questão '+current+' de '+safeTotal+' · ~'+estimateMin+' min restantes'+(topic?' · '+topic:'');
+    if(play)play.setAttribute('aria-label','Continuar '+topic+' na questão '+current+' de '+safeTotal+', aproximadamente '+estimateMin+' minutos restantes');
     card.dataset.nx2Resume='session';
   }else{
     card.dataset.nx2Resume='fallback';
     if(play&&!play.getAttribute('aria-label'))play.setAttribute('aria-label','Continuar estudando');
   }
+}
+
+function essayOrganizerKey(){
+  const s=safeState();
+  const uid=String(s?.user?.id||'guest');
+  const theme=String($('#essayTheme')?.value||'draft');
+  return 'nexo-essay-organizer-v1:'+uid+':'+theme;
+}
+function ensureEssayOrganizer(){
+  const page=$('#redacao');
+  const editor=$('.essay-editor-v2',page);
+  if(!page||!editor)return;
+  let box=$('.nx2-essay-organizer',page);
+  if(!box){
+    box=document.createElement('section');
+    box.className='nx2-essay-organizer';
+    box.setAttribute('aria-label','Organizador de ideias da redação');
+    box.innerHTML='<div><span class="eyebrow">ORGANIZADOR DE IDEIAS</span><b>Planeje antes de escrever</b><small>Guarde tese, repertórios e conexões sem colocar texto pronto na redação.</small></div><textarea class="nx2-essay-organizer-text" rows="4" maxlength="2400" placeholder="Ex.: tese central, repertórios, causas, consequências e proposta..."></textarea><span class="nx2-organizer-status" aria-live="polite">Salvo neste dispositivo</span>';
+    editor.insertAdjacentElement('beforebegin',box);
+    const area=$('.nx2-essay-organizer-text',box);
+    try{area.value=localStorage.getItem(essayOrganizerKey())||''}catch(_){}
+    let timer=0;
+    area.addEventListener('input',()=>{
+      clearTimeout(timer);
+      timer=setTimeout(()=>{
+        try{localStorage.setItem(essayOrganizerKey(),area.value||'')}catch(_){}
+        const status=$('.nx2-organizer-status',box);
+        if(status)status.textContent='Salvo agora';
+      },180);
+    },{passive:true});
+  }
+  ensureRepertoireInsertActions();
+}
+function appendRepertoireToOrganizer(article){
+  const box=$('#redacao .nx2-essay-organizer');
+  const area=$('.nx2-essay-organizer-text',box);
+  if(!box||!area||!article)return;
+  const name=$('b',article)?.textContent?.trim()||'Repertório';
+  const use=$('small',article)?.textContent?.replace(/^Como usar:\s*/i,'').trim()||'';
+  const line='• '+name+(use?' — '+use:'');
+  const current=String(area.value||'').trim();
+  if(!current.includes(line))area.value=(current?current+'\n':'')+line;
+  area.dispatchEvent(new Event('input',{bubbles:true}));
+  const status=$('.nx2-organizer-status',box);
+  if(status)status.textContent='Repertório adicionado ao organizador';
+  try{typeof nexoHaptic==='function'&&nexoHaptic([14])}catch(_){}
+  try{typeof toast==='function'&&toast('Repertório guardado no organizador.')}catch(_){}
+}
+function ensureRepertoireInsertActions(){
+  const list=$('#essayRepertoireList');
+  if(!list)return;
+  $('article',list).forEach(article=>{
+    if($('.nx2-repertoire-save',article))return;
+    const btn=document.createElement('button');
+    btn.type='button';
+    btn.className='nx2-repertoire-save';
+    btn.textContent='Guardar no organizador';
+    btn.setAttribute('aria-label','Guardar este repertório no organizador de ideias');
+    btn.addEventListener('click',()=>appendRepertoireToOrganizer(article));
+    article.appendChild(btn);
+  });
+  if(!list.dataset.nx2RepertoireObserver){
+    list.dataset.nx2RepertoireObserver='1';
+    new MutationObserver(()=>requestAnimationFrame(ensureRepertoireInsertActions))
+      .observe(list,{childList:true});
+  }
+}
+function ensureLearningCompletionFeedback(){
+  if(window.__nx2LearningCompletion)return;
+  window.__nx2LearningCompletion=true;
+  document.addEventListener('nexo:content-completed',event=>{
+    const topic=String(event.detail?.topic||'conteúdo').trim();
+    const live=$('#nx2RouteLive');
+    if(live)live.textContent='Conteúdo concluído: '+topic+'. Progresso atualizado.';
+    const button=$('#viewerComplete');
+    if(button){
+      button.classList.add('nx2-complete-pulse');
+      setTimeout(()=>button.classList.remove('nx2-complete-pulse'),650);
+    }
+  });
 }
 
 function ensureQuestionKeyboard(){
@@ -588,6 +671,8 @@ function sync(){
   ensureQuestionObserver();
   ensureQuestionKeyboard();
   ensureEssayTools();
+  ensureEssayOrganizer();
+  ensureLearningCompletionFeedback();
   ensureCommentReportExperience();
   ensureCommentSort();
   ensureMoreGroups();
