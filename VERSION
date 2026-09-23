@@ -1,6 +1,6 @@
-NEXO PHASE 2 · Sprint 1.2
+NEXO PHASE 2 · Sprint 1.3
 release_date=2026-09-23
-build=core-ux-readability-student-flows-consolidated-r2
-completed=global-readability,touch-targets,search-affordance,nav-a11y,question-recommendation,resume-progress,essay-flow,css-consolidation
+build=core-ux-global-readability-touch
+completed=global-readability,global-touch-targets,search-affordance,bottom-nav-legibility,question-recommendation,resume-progress,essay-flow
 quality_gates=phase1+phase2-ux+architecture
 status=validation
