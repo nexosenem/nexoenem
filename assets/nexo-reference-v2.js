@@ -231,6 +231,11 @@ function buildBottomNav(){
   const nav=document.createElement('nav');
   nav.className='nrx-bottom-nav';
   nav.setAttribute('aria-label','Navegação principal');
+  nav.style.setProperty('--nrx-active-index','0');
+  const slider=document.createElement('i');
+  slider.className='nrx-bottom-slider';
+  slider.setAttribute('aria-hidden','true');
+  nav.appendChild(slider);
   const items=[
     ['inicio','⌂','Início'],
     ['study','▣','Estudar'],
@@ -238,11 +243,19 @@ function buildBottomNav(){
     ['redacao','✎','Redação'],
     ['more','☰','Mais']
   ];
-  items.forEach(([page,icon,label])=>{
+  items.forEach(([page,icon,label],index)=>{
     const b=document.createElement('button');
     b.type='button';b.dataset.nrxBottom=page;
     b.innerHTML='<span>'+icon+'</span><small>'+label+'</small>';
+
+    // Immediate visual acknowledgement on touch; actual navigation remains on click.
+    b.addEventListener('pointerdown',()=>{
+      nav.style.setProperty('--nrx-active-index',String(index));
+      document.querySelectorAll('[data-nrx-bottom]').forEach(x=>x.classList.toggle('nrx-pending',x===b));
+    },{passive:true});
+
     b.addEventListener('click',e=>{
+      document.querySelectorAll('[data-nrx-bottom]').forEach(x=>x.classList.remove('nrx-pending'));
       if(page==='more'){
         e.preventDefault();
         e.stopPropagation();
@@ -256,6 +269,7 @@ function buildBottomNav(){
     nav.appendChild(b);
   });
   document.body.appendChild(nav);
+  syncBottom();
   syncShellVisibility();
   return nav;
 }
@@ -268,12 +282,18 @@ function syncBottom(){
   const active=$('.page.active')?.id||'inicio';
   const primary=new Set(['inicio','materiais','questoes','redacao']);
   const menuOpen=document.body.classList.contains('mobile-menu-open');
-  document.querySelectorAll('[data-nrx-bottom]').forEach(b=>{
+  const nav=$('.nrx-bottom-nav');
+  let activeIndex=0;
+  document.querySelectorAll('[data-nrx-bottom]').forEach((b,index)=>{
     const p=b.dataset.nrxBottom;
     const moreActive=p==='more'&&(menuOpen||!primary.has(active));
     const studyActive=p==='study'&&active==='materiais'&&document.body.dataset.nrxMaterialsView!=='resumos';
-    b.classList.toggle('active',p===active||studyActive||moreActive);
+    const isActive=p===active||studyActive||moreActive;
+    b.classList.toggle('active',isActive);
+    b.classList.remove('nrx-pending');
+    if(isActive)activeIndex=index;
   });
+  nav?.style.setProperty('--nrx-active-index',String(activeIndex));
   syncShellVisibility();
 }
 
