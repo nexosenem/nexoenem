@@ -247,24 +247,35 @@ function buildBottomNav(){
     const b=document.createElement('button');
     b.type='button';b.dataset.nrxBottom=page;
     b.innerHTML='<span>'+icon+'</span><small>'+label+'</small>';
+    let lastDirect=0;
 
-    // Immediate visual acknowledgement on touch; actual navigation remains on click.
-    b.addEventListener('pointerdown',()=>{
+    const activate=e=>{
       nav.style.setProperty('--nrx-active-index',String(index));
       document.querySelectorAll('[data-nrx-bottom]').forEach(x=>x.classList.toggle('nrx-pending',x===b));
-    },{passive:true});
-
-    b.addEventListener('click',e=>{
-      document.querySelectorAll('[data-nrx-bottom]').forEach(x=>x.classList.remove('nrx-pending'));
       if(page==='more'){
-        e.preventDefault();
-        e.stopPropagation();
+        e?.preventDefault?.();
+        e?.stopPropagation?.();
         $('#moreMobile')?.click();
         setTimeout(syncBottom,0);
       }else if(page==='study'){
         openMaterials('study');
-      }else go(page);
-      syncBottom();
+      }else{
+        go(page);
+      }
+      requestAnimationFrame(syncBottom);
+    };
+
+    // On touch/pen, navigate on pointer-down instead of waiting for the synthesized click.
+    // Keyboard and mouse keep normal click semantics.
+    b.addEventListener('pointerdown',e=>{
+      if(e.pointerType==='mouse')return;
+      e.preventDefault();
+      lastDirect=performance.now();
+      activate(e);
+    });
+    b.addEventListener('click',e=>{
+      if(performance.now()-lastDirect<700){e.preventDefault();return}
+      activate(e);
     });
     nav.appendChild(b);
   });
