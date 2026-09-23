@@ -8141,8 +8141,17 @@ function renderMaterials(){
   const subjectNav=$('#materialSubjectNav');
   if(subjectNav){
     subjectNav.innerHTML=subjects.map(subject=>{
-      const topicCount=new Set(all.filter(m=>(m.subject||m.area)===subject).map(m=>m.topic).filter(Boolean)).size;
-      return '<button class="material-subject-chip '+(state.materialSubject===subject?'active':'')+'" data-material-subject="'+esc(subject)+'"><span>'+esc(subject)+'</span><small>'+topicCount+' assunto'+(topicCount===1?'':'s')+'</small></button>';
+      const topicNames=[...new Set(all.filter(m=>(m.subject||m.area)===subject).map(m=>m.topic).filter(Boolean))];
+      const learning=topicNames.map(topic=>topicLearningMeta(topic,subject));
+      const mastered=learning.filter(x=>x.key==='mastered').length;
+      const review=learning.filter(x=>x.reviewDue||x.key==='review').length;
+      const progress=topicNames.length?Math.round((mastered/topicNames.length)*100):0;
+      const meta=[
+        topicNames.length+' assunto'+(topicNames.length===1?'':'s'),
+        review?review+' revisar':null,
+        mastered?mastered+' dominado'+(mastered===1?'':'s'):null
+      ].filter(Boolean).join(' · ');
+      return '<button class="material-subject-chip '+(state.materialSubject===subject?'active':'')+'" data-material-subject="'+esc(subject)+'" style="--nx2-subject-progress:'+progress+'%"><span>'+esc(subject)+'</span><small>'+esc(meta)+'</small><i class="nx2-subject-progress" aria-hidden="true"><em></em></i></button>';
     }).join('');
     $$('[data-material-subject]',subjectNav).forEach(btn=>btn.onclick=()=>{
       state.materialSubject=btn.dataset.materialSubject||'';
