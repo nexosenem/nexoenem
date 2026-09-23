@@ -10,9 +10,44 @@ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
 
-if (window.pdfjsLib) {
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+const NEXO_PDFJS_URL='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+const NEXO_PDFJS_WORKER='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let nexoPdfJsPromise=null;
+function configurePdfJs(){
+  if(!window.pdfjsLib)return null;
+  window.pdfjsLib.GlobalWorkerOptions.workerSrc=NEXO_PDFJS_WORKER;
+  return window.pdfjsLib;
+}
+function ensurePdfJs(){
+  const ready=configurePdfJs();
+  if(ready)return Promise.resolve(ready);
+  if(nexoPdfJsPromise)return nexoPdfJsPromise;
+  nexoPdfJsPromise=new Promise((resolve,reject)=>{
+    let script=document.querySelector('script[data-nexo-pdfjs]');
+    const finish=()=>{
+      const lib=configurePdfJs();
+      if(lib)resolve(lib);
+      else reject(new Error('PDF.js carregou sem expor pdfjsLib.'));
+    };
+    const fail=()=>reject(new Error('Não foi possível carregar o leitor de PDF.'));
+    if(script){
+      script.addEventListener('load',finish,{once:true});
+      script.addEventListener('error',fail,{once:true});
+      return;
+    }
+    script=document.createElement('script');
+    script.src=NEXO_PDFJS_URL;
+    script.async=true;
+    script.crossOrigin='anonymous';
+    script.dataset.nexoPdfjs='1';
+    script.addEventListener('load',finish,{once:true});
+    script.addEventListener('error',fail,{once:true});
+    document.head.appendChild(script);
+  }).catch(err=>{
+    nexoPdfJsPromise=null;
+    throw err;
+  });
+  return nexoPdfJsPromise;
 }
 
 const $ = (q, root=document) => root.querySelector(q);
@@ -4538,7 +4573,8 @@ async function getPdf(url) {
   });
   if(!res.ok) throw new Error('Falha ao carregar PDF');
   const bytes=new Uint8Array(await res.arrayBuffer());
-  const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  const pdfjs=await ensurePdfJs();
+  const pdf=await pdfjs.getDocument({data:bytes}).promise;
   state.pdfCache.set(url,pdf);
   return pdf;
 }
