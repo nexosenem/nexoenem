@@ -161,6 +161,7 @@ assert(app.includes("client.rpc('get_admin_visual_repair_queue'")&&app.includes(
 assert(app.includes('await uploadToCloudinary(file')&&app.includes('loadAdminVisualRepairQueue()'),'Restauração visual aceita upload assinado e atualiza a fila');
 assert(cssV15.includes('.admin-visual-repair-panel')&&cssV15.includes('.admin-visual-repair-sheet'),'Restauração visual segue o design system V15');
 assert(cssV15.includes('.answer-editorial-status')&&cssV15.includes('.admin-editorial-row'),'Estados editoriais seguem o design system V15')
+assert(cssV15.includes('Tablet bridge: preserve desktop navigation')&&cssV15.includes('width:calc(100vw - 176px)!important'),'Breakpoint 761–900 mantém desktop sem overflow horizontal');
 assert(app.includes("client.rpc('get_question_catalog_items_v2'"),'Banco usa catálogo leve com status de integridade visual');
 assert(app.includes("q.visual_status!=='repair'"),'Banco oculta questões visuais em restauração');
 assert(app.includes("if(!questionVisualCanBeResolved(data))"),'Abertura avulsa bloqueia questão visual irresolúvel');
