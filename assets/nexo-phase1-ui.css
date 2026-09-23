@@ -2673,3 +2673,35 @@ body.nexo-reference-ui #redacao .essay-writing-head>span{
   white-space:normal;
   text-align:center;
 }
+
+
+/* === PHASE 2 S2.7.6 · essay min-content hardening === */
+body.nexo-reference-ui #redacao .essay-structure-check{
+  grid-template-columns:repeat(4,minmax(0,1fr))!important;
+}
+body.nexo-reference-ui #redacao .essay-structure-check>span{
+  min-width:0!important;
+  overflow-wrap:anywhere!important;
+}
+body.nexo-reference-ui #redacao :is(.essay-editor-heading,.essay-writing-head){
+  flex-wrap:wrap!important;
+}
+body.nexo-reference-ui #redacao .essay-theme-tools{
+  min-width:0!important;
+  max-width:100%!important;
+}
+body.nexo-reference-ui #redacao .essay-theme-tools>*{
+  min-width:0!important;
+  max-width:100%!important;
+}
+body.nexo-reference-ui #redacao .essay-random-theme{
+  min-width:0!important;
+  max-width:100%!important;
+  white-space:normal!important;
+}
+body.nexo-reference-ui #redacao .essay-writing-shell,
+body.nexo-reference-ui #redacao .essay-writing-shell textarea{
+  min-width:0!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+}
