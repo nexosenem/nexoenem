@@ -1,11 +1,11 @@
 // NEXO V17.8 release · reference interface + living experience
-const NEXO_CACHE='nexo-phase1-s2-20260923-1';
+const NEXO_CACHE='nexo-phase1-s2-s7-20260923';
 const SHELL=[
   './',
   './index.html',
   './manifest.webmanifest',
   './styles.css?v=20260921-4',
-  './app.js?v=20260923-27',
+  './app.js?v=20260923-28',
   './assets/nexo-runtime-compat.js?v=20260921-2',
   './assets/nexo-v13-hardening.js?v=20260921-2',
   './assets/nexo-v13.css?v=20260921-3',
