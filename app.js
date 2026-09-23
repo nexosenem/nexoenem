@@ -1,5 +1,9 @@
 'use strict';
 
+const NEXO_BUILD='V16.3.0';
+window.NEXO_BUILD=NEXO_BUILD;
+document.documentElement.dataset.nexoBuild=NEXO_BUILD;
+
 const SUPABASE_URL = 'https://xeesttjsvscuqkeytmdz.supabase.co';
 const SUPABASE_KEY = 'sb_publishable_Y0hp9KlIhb_asEnVNUoTAw_XR22Cw2F';
 const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
