@@ -159,6 +159,7 @@ assert(index.includes('id="adminExplanationQueue"')&&index.includes('id="adminEx
 assert(index.includes('id="adminVisualRepairQueue"')&&index.includes('id="adminVisualRepairModal"'),'Fila e editor de restauração visual publicados no Admin');
 assert(app.includes("client.rpc('get_admin_visual_repair_queue'")&&app.includes("client.rpc('admin_set_question_media_path'"),'Fluxo Admin restaura mídia apenas por RPC protegido');
 assert(app.includes('await uploadToCloudinary(file')&&app.includes('loadAdminVisualRepairQueue()'),'Restauração visual aceita upload assinado e atualiza a fila');
+assert(index.includes('id="adminVisualRepairSource"')&&app.includes("source.startsWith('https://download.inep.gov.br/')")&&cssV15.includes('.admin-source-link'),'Restauração visual aponta para a prova oficial do Inep');
 assert(cssV15.includes('.admin-visual-repair-panel')&&cssV15.includes('.admin-visual-repair-sheet'),'Restauração visual segue o design system V15');
 assert(cssV15.includes('.answer-editorial-status')&&cssV15.includes('.admin-editorial-row'),'Estados editoriais seguem o design system V15')
 assert(cssV15.includes('Tablet bridge: preserve desktop navigation')&&cssV15.includes('width:calc(100vw - 176px)!important'),'Breakpoint 761–900 mantém desktop sem overflow horizontal');
