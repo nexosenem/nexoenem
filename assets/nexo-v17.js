@@ -253,9 +253,9 @@
     feliz:'./assets/nexo-expressions/feliz.avif'
   };
   function syncMood(id){
-    const page=id||$('.page.active')?.id||'inicio',mood=moodByPage[page]||'confiante',src=sources[mood];
+    const page=id||$('.page.active')?.id||'inicio',mood=moodByPage[page]||'confiante';
     ['#nexoAvatarImage','#nexoLauncherAvatar'].forEach(sel=>{
-      const img=$(sel);if(img&&img.dataset.nx17Mood!==mood){img.src=src;img.dataset.nx17Mood=mood}
+      const img=$(sel);if(img&&img.dataset.nx17Mood!==mood)img.dataset.nx17Mood=mood;
     });
     const panel=$('#niaPanel');if(panel&&panel.dataset.mood!==mood)panel.dataset.mood=mood;
   }
