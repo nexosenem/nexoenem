@@ -1682,17 +1682,16 @@ function nexoFuzzyMatch(query,terms){
   const q=normalizeTextKey(query).trim();
   if(q.length<4)return false;
   const limit=q.length<=5?1:2;
-  const qTokens=q.split(/\s+/).filter(Boolean);
-  return terms.some(term=>{
-    const t=normalizeTextKey(term);
-    if(Math.abs(t.length-q.length)<=limit&&nexoSearchDistance(q,t)<=limit)return true;
-    const tokens=t.split(/\s+/).filter(Boolean);
-    return qTokens.every(qt=>tokens.some(tt=>{
-      if(tt.includes(qt)||qt.includes(tt))return true;
-      const l=qt.length<=5?1:2;
-      return Math.abs(tt.length-qt.length)<=l&&nexoSearchDistance(qt,tt)<=l;
-    }));
-  });
+  if(q.includes(' ')){
+    return terms.some(term=>{
+      const t=normalizeTextKey(term).trim();
+      return Math.abs(t.length-q.length)<=limit&&nexoSearchDistance(q,t)<=limit;
+    });
+  }
+  return terms.some(term=>normalizeTextKey(term).split(/\s+/).some(token=>{
+    if(token.includes(q)||q.includes(token))return true;
+    return Math.abs(token.length-q.length)<=limit&&nexoSearchDistance(q,token)<=limit;
+  }));
 }
 const NEXO_RECENT_SEARCH_KEY='nexo-search-recents-v1';
 function getRecentNexoSearches(){
@@ -1739,7 +1738,7 @@ function buildSiteSearchActionResults(query){
     const terms=[title,...aliases,normalizeTextKey(action.meta||'')];
     const hay=terms.join(' ');
     const allTokens=tokens.every(token=>hay.includes(token));
-    const fuzzy=nexoFuzzyMatch(q,terms);
+    const fuzzy=nexoFuzzyMatch(q,[title,...aliases]);
     if(!hay.includes(q)&&!allTokens&&!fuzzy)return null;
     let score=fuzzy?6:5;
     if(title===q)score=12;
