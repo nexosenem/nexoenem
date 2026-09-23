@@ -1,0 +1,18 @@
+/* NEXO V18.3 · Study library */
+body.v17-live #materiais .page-head{margin-bottom:13px!important}
+body.v17-live #materiais .material-subject-nav{display:flex!important;overflow-x:auto!important;scrollbar-width:none}
+body.v17-live #materiais .material-subject-nav::-webkit-scrollbar{display:none}
+body.v17-live #materiais .material-subject-nav button{white-space:nowrap!important}
+body.v17-live #materiais #materialGrid{gap:8px!important}
+body.v17-live #materiais #materialGrid>*{position:relative;overflow:hidden;border-color:rgba(133,148,189,.12)!important}
+body.v17-live #materiais #materialGrid>*::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:3px;background:linear-gradient(#62d7ff,#8268ff);opacity:.55}
+body.v17-live #materiais #materialGrid>*:hover::before{opacity:1}
+body.v17-live #materiais .library-filter-deck,body.v17-live #materiais .content-filter-line{background:rgba(9,18,35,.68)!important}
+body.v17-live #materiais .nexo-content-head h3{letter-spacing:-.4px}
+@media(min-width:900px){
+ body.v17-live #materiais .library-shell,body.v17-live #materiais .material-library-shell{max-width:1120px;margin-inline:auto}
+}
+@media(max-width:760px){
+ body.v17-live #materiais .page-head h2{font-size:25px!important}
+ body.v17-live #materiais #materialGrid>*{min-height:78px!important}
+}
