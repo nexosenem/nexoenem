@@ -1,0 +1,1388 @@
+/* NEXO Phase 1 UI bundle
+   Consolidates the late visual layers into one request while preserving cascade order.
+   Generated from the source layers listed below. */
+
+/* ---- assets/nexo-v18-1-foundation.css ---- */
+/* NEXO V18.1 · visual foundation */
+:root{--nx18-bg:#050914;--nx18-panel:#0b1426;--nx18-panel2:#0f1b31;--nx18-line:rgba(132,146,188,.14);--nx18-violet:#785cff;--nx18-violet2:#9a7cff;--nx18-cyan:#5bd7ff;--nx18-mint:#68e1ba;--nx18-gold:#efc96b;--nx18-text:#f6f7ff;--nx18-muted:#93a1b7;--nx18-r1:10px;--nx18-r2:12px;--nx18-r3:16px;--nx18-r4:20px}
+body.v17-live{background:radial-gradient(circle at 76% 0%,rgba(83,57,180,.10),transparent 30%),radial-gradient(circle at 8% 24%,rgba(39,107,181,.07),transparent 28%),var(--nx18-bg)}
+body.v17-live :is(.panel,.nrx-stat-card,.nrx-preview,.nrx-mob-progress,.nrx-mob-continue){border-color:var(--nx18-line)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.018)!important}
+body.v17-live :is(.nrx-side-item,.nrx-shortcut,.nrx-mob-action,.nrx-bottom-nav button,.icon-btn,.nrx-btn){transition:transform .16s ease,border-color .16s ease,background-color .16s ease,box-shadow .16s ease,filter .16s ease!important}
+body.v17-live :is(button,[role="button"],a){-webkit-tap-highlight-color:transparent}
+body.v17-live .nrx-side-item.active{background:linear-gradient(90deg,rgba(119,89,255,.24),rgba(119,89,255,.07))!important}
+body.v17-live .nx18-icon-svg{width:18px;height:18px;display:block;fill:none;stroke:currentColor;stroke-width:1.85;stroke-linecap:round;stroke-linejoin:round}
+body.v17-live .nrx-shortcut .nx18-icon-svg,body.v17-live .nrx-mob-action .nx18-icon-svg{width:21px;height:21px}
+body.v17-live .nrx-bottom-nav .nx18-icon-svg{width:18px;height:18px}
+body.v17-live .nrx-side-item>span{border:0!important;background:transparent!important}
+body.v17-live .nrx-shortcut{border-radius:15px!important} body.v17-live .nrx-stat-card{border-radius:16px!important}
+body.v17-live input,body.v17-live textarea,body.v17-live select{border-radius:12px!important}
+body.v17-live .primary-btn,body.v17-live .outline-btn,body.v17-live .ghost-btn{border-radius:12px!important}
+@media(min-width:761px){body.v17-live .sidebar{background:linear-gradient(180deg,rgba(7,15,31,.985),rgba(5,11,24,.985))!important}body.v17-live .topbar{background:rgba(5,11,24,.78)!important;border-bottom-color:rgba(132,146,188,.09)!important}}
+@media(max-width:760px){body.v17-live main{padding-bottom:calc(90px + env(safe-area-inset-bottom))!important}body.v17-live .nrx-bottom-nav{backdrop-filter:blur(22px) saturate(125%);background:rgba(7,15,31,.92)!important}}
+body.light.v17-live{--nx18-bg:#f6f8fd;--nx18-panel:#fff;--nx18-panel2:#f8faff;--nx18-text:#18243a;--nx18-muted:#66758c}
+
+
+/* ---- assets/nexo-v18-2-home.css ---- */
+/* NEXO V18.2 · approved reference home */
+body.v17-live .nrx-hero{border:1px solid rgba(117,84,248,.30)!important;box-shadow:0 22px 70px rgba(0,0,0,.20)!important}
+body.v17-live .nrx-hero-copy{display:flex;flex-direction:column;justify-content:center}
+body.v17-live .nrx-greeting{color:#9db0ca!important}body.v17-live .nrx-greeting b{color:#cf90ff!important}
+body.v17-live .nrx-btn.primary{background:linear-gradient(135deg,#7659ff,#6548ef)!important;color:#fff!important;box-shadow:0 10px 28px rgba(101,72,239,.22)!important}
+body.v17-live .nrx-btn:not(.primary){background:rgba(8,15,31,.54)!important;border-color:rgba(147,160,198,.18)!important}
+body.v17-live .nrx-shortcuts{gap:10px!important}
+body.v17-live .nrx-shortcut{background:linear-gradient(180deg,rgba(14,26,48,.95),rgba(9,19,36,.95))!important}
+body.v17-live .nrx-shortcut small{color:#8897ad!important}
+body.v17-live .nrx-stat-grid{gap:10px!important}body.v17-live .nrx-stat-copy strong{color:#73ddb8!important}
+body.v17-live .nrx-preview{background:linear-gradient(180deg,rgba(13,25,46,.96),rgba(8,18,34,.96))!important}
+body.v17-live .nrx-preview:hover{transform:translateY(-2px)!important;border-color:rgba(120,92,255,.27)!important}
+@media(min-width:1060px){body.v17-live .nrx-hero{min-height:318px!important;grid-template-columns:minmax(0,56%) minmax(390px,44%)!important}body.v17-live .nrx-hero h1{font-size:clamp(44px,3.8vw,52px)!important;line-height:1.01!important}body.v17-live .nrx-hero-art img{object-fit:cover!important;object-position:center 46%!important;filter:saturate(1.05) contrast(1.02)}body.v17-live .nrx-shortcut{min-height:112px!important}}
+@media(max-width:760px){body.v17-live .nrx-mobile{gap:11px!important}body.v17-live .nrx-mob-hero{height:220px!important;min-height:220px!important;background:linear-gradient(90deg,rgba(7,18,38,.98) 0%,rgba(9,20,44,.96) 51%,rgba(20,18,66,.92) 100%)!important}body.v17-live .nrx-mob-hero-copy{width:70%!important;padding:19px 0 16px 17px!important}body.v17-live .nrx-mob-hero h1{font-size:clamp(25px,7.5vw,31px)!important}body.v17-live .nrx-mob-hero-media{right:-10px!important;width:49%!important}body.v17-live .nrx-mob-hero-media img{height:98%!important;filter:saturate(1.08) drop-shadow(0 10px 25px rgba(76,56,219,.20))}body.v17-live .nrx-mobile-search-slot .search{height:46px!important}body.v17-live .nrx-mob-actions{grid-template-columns:repeat(4,minmax(0,1fr))!important;gap:10px 5px!important}body.v17-live .nrx-mob-action i{width:48px!important;height:48px!important}body.v17-live .nrx-mob-progress{min-height:102px!important}body.v17-live .nrx-mob-continue{min-height:78px!important}}
+@media(max-width:360px){body.v17-live .nrx-mob-hero{height:205px!important;min-height:205px!important}}
+
+/* ---- assets/nexo-v18-3-study.css ---- */
+/* NEXO V18.3 · Study library */
+body.v17-live #materiais .page-head{margin-bottom:13px!important}
+body.v17-live #materiais .material-subject-nav{display:flex!important;overflow-x:auto!important;scrollbar-width:none}
+body.v17-live #materiais .material-subject-nav::-webkit-scrollbar{display:none}
+body.v17-live #materiais .material-subject-nav button{white-space:nowrap!important}
+body.v17-live #materiais #materialGrid{gap:8px!important}
+body.v17-live #materiais #materialGrid>*{position:relative;overflow:hidden;border-color:rgba(133,148,189,.12)!important}
+body.v17-live #materiais #materialGrid>*::before{content:"";position:absolute;left:0;top:14px;bottom:14px;width:2px;border-radius:3px;background:linear-gradient(#62d7ff,#8268ff);opacity:.55}
+body.v17-live #materiais #materialGrid>*:hover::before{opacity:1}
+body.v17-live #materiais .library-filter-deck,body.v17-live #materiais .content-filter-line{background:rgba(9,18,35,.68)!important}
+body.v17-live #materiais .nexo-content-head h3{letter-spacing:-.4px}
+@media(min-width:900px){body.v17-live #materiais .library-shell,body.v17-live #materiais .material-library-shell{max-width:1120px;margin-inline:auto}}
+@media(max-width:760px){body.v17-live #materiais .page-head h2{font-size:25px!important}body.v17-live #materiais #materialGrid>*{min-height:78px!important}}
+
+/* ---- assets/nexo-v18-4-questions.css ---- */
+/* NEXO V18.4 · Questions flow */
+body.v17-live #questoes .question-card{border-radius:18px!important;background:linear-gradient(180deg,rgba(13,25,46,.98),rgba(8,17,33,.98))!important}
+body.v17-live #questoes .q-option{min-height:52px!important;display:flex!important;align-items:center!important;gap:10px!important;transition:border-color .15s ease,background .15s ease,transform .15s ease!important}
+body.v17-live #questoes .q-option:hover{transform:translateY(-1px)}
+body.v17-live #questoes .q-option.selected{border-color:rgba(122,91,255,.72)!important;background:rgba(112,78,255,.10)!important}
+body.v17-live #questoes .q-option.correct{border-color:rgba(92,219,174,.54)!important;background:rgba(56,179,139,.09)!important}
+body.v17-live #questoes .q-option.wrong{border-color:rgba(255,107,127,.52)!important;background:rgba(210,77,98,.08)!important}
+body.v17-live #questoes .visual-wrap{background:rgba(5,12,25,.60)!important;border:1px solid rgba(130,146,189,.12)!important}
+body.v17-live #questoes .q-media-image{margin-inline:auto}
+body.v17-live #questoes .answer-feedback,body.v17-live #questoes .learning-block{border-radius:15px!important}
+body.v17-live #questoes #confirmAnswer:not(.hidden){box-shadow:0 10px 28px rgba(103,76,242,.18)}
+@media(max-width:760px){body.v17-live #questoes .question-card{padding:14px!important}body.v17-live #questoes .q-option{min-height:56px!important}body.v17-live #questoes .q-context,body.v17-live #questoes .q-prompt{font-size:14px!important;line-height:1.62!important}}
+
+/* ---- assets/nexo-v18-5-essay.css ---- */
+/* NEXO V18.5 · Essay workspace */
+body.v17-live #redacao .essay-writing-shell{max-width:1120px;margin-inline:auto}
+body.v17-live #redacao .essay-theme-control,body.v17-live #redacao .essay-guide-card,body.v17-live #redacao .essay-sheet-card{background:linear-gradient(180deg,rgba(14,26,48,.96),rgba(9,19,36,.96))!important;border-color:rgba(132,146,188,.13)!important}
+body.v17-live #redacao #essayText{min-height:390px!important;background:rgba(7,16,31,.72)!important;border-color:rgba(132,146,188,.16)!important;resize:vertical}
+body.v17-live #redacao #essayText:focus{border-color:rgba(118,89,255,.50)!important;box-shadow:0 0 0 3px rgba(118,89,255,.08)!important}
+body.v17-live #redacao .essay-result,body.v17-live #redacao .essay-report{border-radius:16px!important}
+body.v17-live #redacao .competency-card{border-radius:14px!important}
+@media(max-width:760px){body.v17-live #redacao #essayText{min-height:330px!important}body.v17-live #redacao .essay-writing-shell{gap:10px!important}}
+
+/* ---- assets/nexo-v18-6-learning.css ---- */
+/* NEXO V18.6 · Learning system */
+body.v17-live :is(#simulados,#desempenho,#semana,#focos,#radar) .panel{background:linear-gradient(180deg,rgba(13,25,46,.96),rgba(8,18,34,.96))!important;border-color:rgba(132,146,188,.12)!important}
+body.v17-live #simulados .sim-card{border-radius:16px!important;overflow:hidden}
+body.v17-live #desempenho :is(.stat,.performance-card,.mastery-card){border-radius:15px!important}
+body.v17-live #semana :is(.planner-day,.planner-card,.day-column){border-radius:15px!important}
+body.v17-live .nx17-score-low,[data-score-band="low"]{color:#ff7387!important}
+body.v17-live .nx17-score-mid,[data-score-band="mid"]{color:#efc96b!important}
+body.v17-live .nx17-score-high,[data-score-band="high"]{color:#68e1ba!important}
+body.v17-live :is(#desempenho,#radar) progress{accent-color:#785cff}
+@media(max-width:760px){body.v17-live :is(#simulados,#desempenho,#semana) .page-head{margin-bottom:12px!important}}
+
+/* ---- assets/nexo-v18-7-ecosystem.css ---- */
+/* NEXO V18.7 · Ecosystem */
+body.v17-live :is(.journey-store-grid,.wardrobe-grid,.journey-achievements-grid){gap:10px!important}
+body.v17-live :is(.store-item,.wardrobe-item,.journey-store-card,.wardrobe-card){border-radius:16px!important;overflow:hidden!important}
+body.v17-live .nia-panel{border:1px solid rgba(121,91,255,.25)!important;box-shadow:0 28px 80px rgba(0,0,0,.36)!important}
+body.v17-live .nia-head{background:linear-gradient(90deg,rgba(104,72,236,.12),transparent)!important}
+body.v17-live .nexo-welcome{border-radius:15px!important;background:linear-gradient(135deg,rgba(79,56,186,.11),rgba(42,133,189,.07))!important}
+body.v17-live .experience-settings-shell{border-color:rgba(121,91,255,.22)!important}
+body.v17-live .community-sheet{border-radius:18px!important;border-color:rgba(132,146,188,.15)!important}
+body.v17-live .journey-avatar-builder .avatar-preview,body.v17-live .onboarding-avatar-preview{position:sticky;top:86px}
+@media(max-width:760px){body.v17-live .nia-panel{left:8px!important;right:8px!important;bottom:calc(82px + env(safe-area-inset-bottom))!important;width:auto!important}body.v17-live .journey-avatar-builder .avatar-preview,body.v17-live .onboarding-avatar-preview{position:relative;top:auto}}
+
+/* ---- assets/nexo-v18-8-life.css ---- */
+/* NEXO V18.8 · Life + hardening */
+body.v17-live .nx18-life-orb{position:fixed;z-index:-1;width:360px;height:360px;border-radius:50%;pointer-events:none;filter:blur(72px);opacity:.08;background:#765cff;transition:transform .8s ease-out}
+body.v17-live .nx18-live-dot{width:7px;height:7px;border-radius:50%;background:#67dfb7;box-shadow:0 0 0 4px rgba(103,223,183,.07),0 0 18px rgba(103,223,183,.28)}
+body.v17-live .nx18-presence{display:inline-flex;align-items:center;gap:7px;color:#8fa0b8;font-size:9px;font-weight:700}
+body.v17-live .nx18-presence b{color:#dce5f3;font-size:9px}
+body.v17-live .nx18-soft-in{animation:nx18-soft-in .36s ease both}
+@keyframes nx18-soft-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+body.v17-live .nx18-ripple{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;background:currentColor;opacity:.14;transform:translate(-50%,-50%);animation:nx18-ripple .5s ease-out forwards}
+@keyframes nx18-ripple{to{width:110px;height:110px;opacity:0}}
+body.v17-live .nrx-shortcut,body.v17-live .nrx-mob-action i,body.v17-live .nrx-btn,body.v17-live .nrx-side-item{position:relative;overflow:hidden}
+body.v17-live .nrx-ring{transition:filter .3s ease}body.v17-live .nrx-ring:hover{filter:drop-shadow(0 0 14px rgba(92,218,201,.16))}
+body.v17-live img{user-select:none}
+body.v17-live :is(.nrx-side-item,.nrx-bottom-nav button,.nrx-mob-action,.nrx-shortcut):focus-visible{z-index:2}
+@media(prefers-reduced-motion:reduce){body.v17-live .nx18-soft-in,body.v17-live .nx18-ripple{animation:none!important}body.v17-live .nx18-life-orb{display:none!important}}
+@media(max-width:760px){body.v17-live .nrx-bottom-nav{padding-bottom:max(4px,env(safe-area-inset-bottom))!important}}
+
+/* ---- assets/nexo-v18-10-readable.css ---- */
+/* NEXO V18.10 · mobile legibility + touch scale
+   Larger typography and controls without inflating the hero or breaking density. */
+
+@media (max-width:760px){
+  body.nexo-reference-ui{
+    font-size:16px!important;
+  }
+
+  /* Header */
+  body.nexo-reference-ui .nrx-mobile-brand{
+    font-size:24px!important;
+    letter-spacing:-.8px!important;
+  }
+  body.nexo-reference-ui .nrx-mobile-brand i{
+    width:34px!important;
+    height:34px!important;
+    border-radius:11px!important;
+    font-size:16px!important;
+  }
+  body.nexo-reference-ui .nrx-mobile-theme,
+  body.nexo-reference-ui .nrx-mobile-crown,
+  body.nexo-reference-ui .nrx-mobile-menu,
+  body.nexo-reference-ui .topbar .icon-btn{
+    width:42px!important;
+    height:42px!important;
+    min-width:42px!important;
+    min-height:42px!important;
+    border-radius:12px!important;
+    font-size:19px!important;
+  }
+  body.nexo-reference-ui .topbar{
+    min-height:70px!important;
+  }
+
+  /* Keep hero strong, but do not make it taller. */
+  body.nexo-reference-ui .nrx-mob-hello{
+    font-size:14px!important;
+    line-height:1.25!important;
+  }
+  body.nexo-reference-ui .nrx-mob-hero h1{
+    font-size:clamp(30px,8.6vw,36px)!important;
+    line-height:1.01!important;
+  }
+  body.nexo-reference-ui .nrx-mob-hero p{
+    font-size:13.5px!important;
+    line-height:1.48!important;
+  }
+
+  /* Global search */
+  body.nexo-reference-ui .nrx-mobile-search-slot .search{
+    min-height:50px!important;
+    height:50px!important;
+    border-radius:15px!important;
+  }
+  body.nexo-reference-ui .nrx-mobile-search-slot .search input{
+    font-size:14.5px!important;
+    line-height:1.2!important;
+  }
+  body.nexo-reference-ui .nrx-mobile-search-slot .search>span{
+    font-size:21px!important;
+  }
+  body.nexo-reference-ui .v15-voice-search{
+    width:40px!important;
+    height:40px!important;
+  }
+  body.nexo-reference-ui .v15-voice-search .v15-icon{
+    width:20px!important;
+    height:20px!important;
+  }
+
+  /* Home shortcuts */
+  body.nexo-reference-ui .nrx-mob-actions{
+    gap:16px 7px!important;
+    margin:18px 0 20px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-action i{
+    width:54px!important;
+    height:54px!important;
+    border-radius:17px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-action i .v15-icon{
+    width:23px!important;
+    height:23px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-action b{
+    font-size:12px!important;
+    line-height:1.18!important;
+    margin-top:7px!important;
+    letter-spacing:-.1px!important;
+  }
+
+  /* Progress / resume */
+  body.nexo-reference-ui .nrx-mob-progress{
+    min-height:116px!important;
+    padding:15px!important;
+    grid-template-columns:78px 1fr auto!important;
+    gap:12px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-progress .nrx-ring{
+    width:70px!important;
+    height:70px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-progress .nrx-ring b{
+    font-size:18px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-progress strong{
+    font-size:15px!important;
+    line-height:1.25!important;
+  }
+  body.nexo-reference-ui .nrx-mob-progress small{
+    font-size:12px!important;
+    line-height:1.35!important;
+  }
+  body.nexo-reference-ui .nrx-chevron{
+    font-size:22px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-section-head b{
+    font-size:15px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-section-head span{
+    font-size:12px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-continue{
+    min-height:92px!important;
+    padding:14px!important;
+    grid-template-columns:48px 1fr 46px!important;
+    gap:11px!important;
+  }
+  body.nexo-reference-ui .nrx-continue-icon{
+    width:46px!important;
+    height:46px!important;
+    border-radius:13px!important;
+  }
+  body.nexo-reference-ui .nrx-mob-continue b{
+    font-size:14px!important;
+    line-height:1.2!important;
+  }
+  body.nexo-reference-ui .nrx-mob-continue small{
+    font-size:11.5px!important;
+    line-height:1.3!important;
+  }
+  body.nexo-reference-ui .nrx-play{
+    width:44px!important;
+    height:44px!important;
+    border-radius:12px!important;
+    font-size:18px!important;
+  }
+
+  /* Bottom navigation */
+  body.nexo-reference-ui .nrx-bottom-nav{
+    height:70px!important;
+    padding:6px 5px!important;
+    border-radius:19px!important;
+  }
+  body.nexo-reference-ui .nrx-bottom-nav button{
+    min-height:56px!important;
+    gap:4px!important;
+    border-radius:14px!important;
+    font-size:18px!important;
+  }
+  body.nexo-reference-ui .nrx-bottom-nav button .v15-icon{
+    width:21px!important;
+    height:21px!important;
+  }
+  body.nexo-reference-ui .nrx-bottom-nav button small{
+    font-size:10.5px!important;
+    line-height:1.1!important;
+    font-weight:700!important;
+  }
+  body.nexo-reference-ui main{
+    padding-bottom:calc(100px + env(safe-area-inset-bottom))!important;
+  }
+
+  /* Internal pages: readable headings and body copy */
+  body.nexo-reference-ui .page:not(#inicio) .page-head h2{
+    font-size:28px!important;
+    line-height:1.1!important;
+  }
+  body.nexo-reference-ui .page:not(#inicio) .page-head p{
+    font-size:13.5px!important;
+    line-height:1.45!important;
+  }
+  body.nexo-reference-ui .page:not(#inicio) :is(p,li){
+    line-height:1.5;
+  }
+  body.nexo-reference-ui .page:not(#inicio) :is(input,select,textarea){
+    font-size:16px!important;
+  }
+  body.nexo-reference-ui .page:not(#inicio) button{
+    font-size:13.5px;
+  }
+
+  /* Study */
+  body.nexo-reference-ui #materiais .text-input{
+    min-height:48px!important;
+    font-size:15px!important;
+  }
+  body.nexo-reference-ui #materiais .library-filter-deck select,
+  body.nexo-reference-ui #materiais .library-filter-deck button{
+    min-height:44px!important;
+    font-size:13px!important;
+  }
+  body.nexo-reference-ui #materiais .material-subject-nav button,
+  body.nexo-reference-ui .v15-material-tabs button{
+    min-height:42px!important;
+    padding-inline:15px!important;
+    font-size:12.5px!important;
+  }
+  body.nexo-reference-ui #materiais #materialGrid :is(h3,h4,b,strong){
+    font-size:max(1em,14px);
+  }
+  body.nexo-reference-ui #materiais #materialGrid :is(small,.muted){
+    font-size:11.5px!important;
+    line-height:1.35!important;
+  }
+
+  /* Questions */
+  body.nexo-reference-ui #questoes .v15-question-modes>button{
+    min-height:94px!important;
+    padding:14px!important;
+    grid-template-columns:48px 1fr 20px!important;
+  }
+  body.nexo-reference-ui #questoes .v15-question-modes>button>.v15-icon:first-child{
+    width:25px!important;
+    height:25px!important;
+  }
+  body.nexo-reference-ui #questoes .v15-question-modes b{
+    font-size:14px!important;
+  }
+  body.nexo-reference-ui #questoes .v15-question-modes small{
+    font-size:11.5px!important;
+    line-height:1.35!important;
+  }
+  body.nexo-reference-ui #questoes .study-area-grid button{
+    min-height:82px!important;
+    font-size:14px!important;
+  }
+  body.nexo-reference-ui #questoes .study-area-grid button span{
+    width:40px!important;
+    height:40px!important;
+  }
+  body.nexo-reference-ui #questoes .setup-fields label,
+  body.nexo-reference-ui #questoes .v15-advanced-label span{
+    font-size:12px!important;
+  }
+  body.nexo-reference-ui #questoes .v15-advanced-label small{
+    font-size:10.5px!important;
+  }
+  body.nexo-reference-ui #questoes .q-context,
+  body.nexo-reference-ui #questoes .q-prompt{
+    font-size:15px!important;
+    line-height:1.65!important;
+  }
+  body.nexo-reference-ui #questoes .q-option{
+    min-height:60px!important;
+    font-size:14px!important;
+  }
+
+  /* Essay */
+  body.nexo-reference-ui #redacao .v15-essay-tabs button{
+    min-height:42px!important;
+    padding-inline:15px!important;
+    font-size:12.5px!important;
+  }
+  body.nexo-reference-ui #redacao #essayText{
+    font-size:16px!important;
+    line-height:1.72!important;
+  }
+  body.nexo-reference-ui #redacao :is(label,.essay-label,.field-label){
+    font-size:12.5px!important;
+  }
+  body.nexo-reference-ui #redacao :is(.essay-guide-card,.essay-sheet-card,.essay-theme-control,.essay-result-v2){
+    font-size:13px!important;
+  }
+
+  /* Drawer / More menu */
+  body.nexo-reference-ui .nrx-side-panel .nrx-side-brand,
+  body.nexo-reference-ui .nrx-side-menu .brand{
+    font-size:26px!important;
+  }
+  body.nexo-reference-ui .nrx-side-item{
+    min-height:52px!important;
+    gap:12px!important;
+  }
+  body.nexo-reference-ui .nrx-side-item>b{
+    font-size:15px!important;
+  }
+  body.nexo-reference-ui .nrx-side-item>span{
+    width:34px!important;
+    height:34px!important;
+  }
+  body.nexo-reference-ui .nrx-side-item>span .v15-icon{
+    width:20px!important;
+    height:20px!important;
+  }
+
+  /* Notifications and utility sheets */
+  body.nexo-reference-ui :is(.notification-sheet,.notifications-panel,.nrx-notification-panel) h3{
+    font-size:18px!important;
+  }
+  body.nexo-reference-ui :is(.notification-sheet,.notifications-panel,.nrx-notification-panel) :is(p,small){
+    font-size:12px!important;
+    line-height:1.4!important;
+  }
+  body.nexo-reference-ui :is(.notification-sheet,.notifications-panel,.nrx-notification-panel) button{
+    min-height:46px!important;
+    font-size:13.5px!important;
+  }
+
+  /* Context bar: less bulky, but readable. */
+  body.nexo-reference-ui #nexoContextBar span{
+    font-size:9px!important;
+  }
+  body.nexo-reference-ui #nexoContextBar b{
+    font-size:12.5px!important;
+    line-height:1.25!important;
+  }
+  body.nexo-reference-ui #contextNextAction{
+    min-height:44px!important;
+    font-size:13px!important;
+  }
+}
+
+@media (max-width:390px){
+  body.nexo-reference-ui .nrx-mob-action b{font-size:11.5px!important}
+  body.nexo-reference-ui .nrx-bottom-nav button small{font-size:10px!important}
+  body.nexo-reference-ui .page:not(#inicio) .page-head h2{font-size:26px!important}
+}
+
+
+/* ---- assets/nexo-v18-11-life.css ---- */
+/* NEXO V18.11 · BIGGER + ALIVE + SMOOTH
+   Mobile-first legibility, controlled motion and lower-cost surfaces. */
+
+:root{
+  --nx11-violet:#7d61ff;
+  --nx11-cyan:#58d8ff;
+  --nx11-mint:#65ddb8;
+  --nx11-pink:#ff7093;
+  --nx11-gold:#f0c76a;
+}
+
+/* More atmosphere without expensive animated blur layers */
+body.v17-live{
+  background:
+    radial-gradient(58rem 36rem at 86% -8%,rgba(105,72,255,.14),transparent 58%),
+    radial-gradient(42rem 30rem at -8% 36%,rgba(32,151,217,.08),transparent 62%),
+    linear-gradient(180deg,#050914 0%,#050a14 58%,#040812 100%)!important;
+}
+
+/* Keep words readable: the old generic overflow-wrap:anywhere was breaking labels */
+body.v17-live :is(h1,h2,h3,h4,b,strong,small,span,label,button){
+  word-break:normal!important;
+  overflow-wrap:normal!important;
+}
+body.v17-live :is(p,.q-context,.q-prompt,.essay-prompt){
+  overflow-wrap:break-word!important;
+}
+
+/* Premium surfaces with restrained depth */
+body.v17-live :is(.panel,.nrx-mob-progress,.nrx-mob-continue,.v15-question-modes>button,.v15-advanced-setup,.v15-library-filters){
+  box-shadow:0 10px 28px rgba(0,0,0,.16),inset 0 1px 0 rgba(255,255,255,.025)!important;
+}
+body.v17-live .primary-btn,
+body.v17-live .nrx-btn.primary,
+body.v17-live .nrx-play{
+  background:linear-gradient(135deg,#7d61ff 0%,#684bfa 58%,#7757ff 100%)!important;
+  box-shadow:0 9px 24px rgba(104,75,250,.24)!important;
+}
+
+/* Page entrance: transform+opacity only (GPU cheap) */
+body.v17-live.nx11-ready .page.active>.page-head,
+body.v17-live.nx11-ready .page.active>.nexo-page-head{
+  animation:nx11-rise .34s cubic-bezier(.2,.75,.25,1) both;
+}
+body.v17-live.nx11-ready .page.active :is(.v15-question-modes>button,.material-topic-card,.sim-card,.essay-editor-v2){
+  animation:nx11-card-in .38s cubic-bezier(.2,.75,.25,1) both;
+}
+body.v17-live.nx11-ready .page.active .v15-question-modes>button:nth-child(2){animation-delay:.035s}
+body.v17-live.nx11-ready .page.active .v15-question-modes>button:nth-child(3){animation-delay:.07s}
+body.v17-live.nx11-ready .page.active .v15-question-modes>button:nth-child(4){animation-delay:.105s}
+@keyframes nx11-rise{from{opacity:.35;transform:translateY(8px)}to{opacity:1;transform:none}}
+@keyframes nx11-card-in{from{opacity:.2;transform:translateY(9px) scale(.992)}to{opacity:1;transform:none}}
+
+/* Mascot breathes subtly instead of the whole UI moving */
+body.v17-live.nx11-ready :is(.nrx-mob-hero-media img,.nrx-hero-art img,.page-nexo-mentor img){
+  animation:nx11-mascot 5.2s ease-in-out infinite;
+  transform-origin:50% 80%;
+}
+@keyframes nx11-mascot{0%,100%{transform:translateY(0) scale(1)}50%{transform:translateY(-4px) scale(1.008)}}
+
+/* Tiny living signal on active navigation */
+body.v17-live .nrx-bottom-nav button.active::after{
+  content:"";position:absolute;left:50%;bottom:4px;width:18px;height:2px;border-radius:999px;
+  background:#9c82ff;transform:translateX(-50%);box-shadow:0 0 10px rgba(156,130,255,.55);
+  animation:nx11-nav-pulse 2.8s ease-in-out infinite;
+}
+@keyframes nx11-nav-pulse{50%{opacity:.45;transform:translateX(-50%) scaleX(.72)}}
+
+/* Touch feedback without JS listeners */
+body.v17-live :is(.nrx-mob-action i,.v15-question-modes>button,.nrx-mob-continue,.primary-btn,.outline-btn,.nrx-bottom-nav button):active{
+  transform:scale(.975)!important;
+  transition-duration:.07s!important;
+}
+
+@media(max-width:760px){
+  /* Bigger baseline */
+  body.v17-live.nexo-reference-ui{font-size:17px!important}
+  body.v17-live.nexo-reference-ui main{
+    padding:14px 16px calc(108px + env(safe-area-inset-bottom))!important;
+  }
+
+  /* Mobile chrome: readable, less GPU-heavy */
+  body.v17-live.nexo-reference-ui .topbar{
+    min-height:76px!important;
+    height:76px!important;
+    padding:12px 16px!important;
+    background:#07101f!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mobile-brand{
+    font-size:26px!important;
+    line-height:1!important;
+  }
+  body.v17-live.nexo-reference-ui :is(.nrx-mobile-theme,.nrx-mobile-crown,.nrx-mobile-menu,.topbar .icon-btn){
+    width:46px!important;height:46px!important;min-width:46px!important;min-height:46px!important;
+    border-radius:14px!important;
+  }
+
+  /* HOME hero: fix clipping + give the mascot more presence */
+  body.v17-live.nexo-reference-ui .nrx-mob-hero{
+    height:252px!important;min-height:252px!important;border-radius:22px!important;overflow:hidden!important;
+    background:
+      radial-gradient(circle at 84% 44%,rgba(105,73,255,.25),transparent 34%),
+      linear-gradient(105deg,#09162d 0%,#0a1730 54%,#13134b 100%)!important;
+    box-shadow:0 16px 34px rgba(0,0,0,.23),inset 0 1px 0 rgba(255,255,255,.03)!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-hero::after{
+    content:"";position:absolute;inset:auto 16% -46% 38%;height:74%;border-radius:50%;
+    border-top:1px solid rgba(104,216,255,.16);pointer-events:none;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-hero-copy{
+    width:68%!important;padding:24px 0 20px 20px!important;z-index:3!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-hello{
+    font-size:15px!important;margin-bottom:10px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-hero h1{
+    font-size:clamp(34px,9.8vw,41px)!important;
+    line-height:.98!important;letter-spacing:-1.55px!important;
+    max-width:100%!important;margin-bottom:12px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-hero p{
+    display:block!important;font-size:14px!important;line-height:1.45!important;
+    max-width:94%!important;color:#c0cadb!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-hero-media{
+    width:48%!important;right:-5px!important;top:8px!important;bottom:0!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-hero-media img{
+    width:100%!important;height:100%!important;object-fit:cover!important;object-position:50% 40%!important;
+  }
+
+  /* Search needs to read like a search */
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot{margin-top:14px!important}
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search{
+    height:54px!important;min-height:54px!important;border-radius:16px!important;
+    padding-inline:16px 48px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search input{
+    font-size:15.5px!important;font-weight:560!important;color:#e9edf7!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search input::placeholder{
+    color:#9eabc0!important;opacity:1!important;
+  }
+
+  /* HOME actions: noticeably larger */
+  body.v17-live.nexo-reference-ui .nrx-mob-actions{
+    gap:18px 8px!important;margin:20px 0 22px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-action{gap:8px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-action i{
+    width:60px!important;height:60px!important;border-radius:18px!important;
+    box-shadow:0 9px 20px rgba(0,0,0,.18),inset 0 1px 0 rgba(255,255,255,.055)!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-action i :is(svg,.v15-icon){
+    width:26px!important;height:26px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-action b{
+    font-size:13px!important;line-height:1.16!important;letter-spacing:-.15px!important;
+  }
+
+  /* HOME progress + resume */
+  body.v17-live.nexo-reference-ui .nrx-mob-progress{
+    min-height:128px!important;padding:17px!important;border-radius:19px!important;
+    grid-template-columns:82px 1fr 24px!important;gap:14px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mob-progress .nrx-ring{width:76px!important;height:76px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-progress .nrx-ring b{font-size:20px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-progress strong{font-size:16px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-progress small{font-size:13px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-section-head{margin-top:21px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-section-head b{font-size:17px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-section-head span{font-size:13px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-continue{
+    min-height:102px!important;padding:15px 16px!important;border-radius:18px!important;
+    grid-template-columns:52px 1fr 50px!important;gap:13px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-continue-icon{width:50px!important;height:50px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-continue b{font-size:15px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-continue small{font-size:12.5px!important}
+  body.v17-live.nexo-reference-ui .nrx-play{width:48px!important;height:48px!important}
+
+  /* Internal pages: fill the phone and stop looking miniature */
+  body.v17-live.nexo-reference-ui .page:not(#inicio){
+    width:100%!important;max-width:none!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) .page-head{
+    margin:18px 0 20px!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) .page-head h2{
+    font-size:32px!important;line-height:1.03!important;letter-spacing:-1.15px!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) .page-head p{
+    font-size:15px!important;line-height:1.48!important;color:#aab5c8!important;
+  }
+  body.v17-live.nexo-reference-ui .eyebrow{font-size:10px!important;letter-spacing:2px!important}
+
+  /* Study */
+  body.v17-live.nexo-reference-ui #materiais .text-input{
+    min-height:54px!important;font-size:16px!important;border-radius:14px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-material-tabs{
+    padding:6px!important;border-radius:15px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-material-tabs button{
+    min-height:46px!important;padding-inline:18px!important;font-size:13.5px!important;border-radius:11px!important;
+  }
+  body.v17-live.nexo-reference-ui #materiais .material-subject-nav{
+    gap:9px!important;padding-top:7px!important;
+  }
+  body.v17-live.nexo-reference-ui #materiais .material-subject-nav button{
+    min-height:46px!important;padding-inline:17px!important;font-size:13px!important;border-radius:12px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-library-filters>summary{
+    min-height:56px!important;padding-inline:16px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-library-filters>summary b{font-size:14px!important}
+  body.v17-live.nexo-reference-ui .v15-library-filters>summary small{font-size:11.5px!important}
+  body.v17-live.nexo-reference-ui #materiais #materialGrid>*{
+    border-radius:17px!important;
+  }
+
+  /* Questions: readable cards and fix broken "Personalizar" label */
+  body.v17-live.nexo-reference-ui #questoes .question-head-actions .outline-btn{
+    min-height:52px!important;font-size:15px!important;border-radius:14px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes{
+    gap:12px!important;margin:17px 0 19px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes>button{
+    min-height:112px!important;padding:16px!important;
+    grid-template-columns:52px minmax(0,1fr) 18px!important;border-radius:17px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes b{
+    font-size:14.5px!important;line-height:1.2!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes small{
+    font-size:11.5px!important;line-height:1.38!important;margin-top:3px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-advanced-setup{
+    width:100%!important;border-radius:15px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-advanced-setup>summary{
+    min-height:60px!important;padding:0 16px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-advanced-setup>summary>span{
+    min-width:0!important;flex:1 1 auto!important;display:flex!important;align-items:baseline!important;gap:8px!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-advanced-setup>summary b{
+    font-size:14.5px!important;white-space:nowrap!important;
+  }
+  body.v17-live.nexo-reference-ui .v15-advanced-setup>summary small{
+    font-size:11px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .study-area-grid button{
+    min-height:94px!important;border-radius:15px!important;font-size:15px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .setup-fields select{
+    min-height:50px!important;font-size:16px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .setup-fields label,
+  body.v17-live.nexo-reference-ui #questoes .toggle-row b{font-size:13px!important}
+  body.v17-live.nexo-reference-ui #questoes .toggle-row small{font-size:11.5px!important}
+  body.v17-live.nexo-reference-ui #questoes .q-context,
+  body.v17-live.nexo-reference-ui #questoes .q-prompt{
+    font-size:16px!important;line-height:1.68!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .q-option{
+    min-height:64px!important;font-size:15px!important;border-radius:14px!important;
+  }
+
+  /* Essay */
+  body.v17-live.nexo-reference-ui #redacao .page-nexo-mentor{
+    min-height:64px!important;padding:10px 13px!important;border-radius:15px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .page-nexo-mentor img{width:44px!important;height:44px!important}
+  body.v17-live.nexo-reference-ui #redacao .page-nexo-mentor b{font-size:13.5px!important}
+  body.v17-live.nexo-reference-ui #redacao .page-nexo-mentor small{font-size:10.5px!important}
+  body.v17-live.nexo-reference-ui #redacao .v15-essay-tabs button{
+    min-height:48px!important;font-size:14px!important;padding-inline:17px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-flow-bar{
+    min-height:66px!important;border-radius:15px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-flow-bar b{font-size:12.5px!important}
+  body.v17-live.nexo-reference-ui #redacao .essay-flow-bar small{font-size:9.5px!important}
+  body.v17-live.nexo-reference-ui #redacao :is(.essay-theme-control select,.essay-theme-control button){
+    min-height:54px!important;font-size:16px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-editor-v2{
+    padding:18px!important;border-radius:18px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao #essayText{
+    min-height:410px!important;font-size:17px!important;line-height:1.75!important;
+  }
+
+  /* Drawer: less empty-feeling and more confident */
+  body.v17-live.nexo-reference-ui .nrx-side-panel{
+    width:min(88vw,390px)!important;
+    background:#07101f!important;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-side-item{
+    min-height:60px!important;padding:0 14px!important;border-radius:14px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-side-item>b{font-size:16px!important}
+  body.v17-live.nexo-reference-ui .nrx-side-item>span{width:38px!important;height:38px!important}
+  body.v17-live.nexo-reference-ui .nrx-side-item>span :is(svg,.v15-icon){width:22px!important;height:22px!important}
+
+  /* Bottom nav */
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav{
+    height:80px!important;left:12px!important;right:12px!important;bottom:8px!important;
+    padding:7px!important;border-radius:22px!important;
+    background:#081222!important;
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+    box-shadow:0 -9px 30px rgba(0,0,0,.26),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button{
+    min-height:64px!important;border-radius:16px!important;gap:5px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button :is(svg,.v15-icon){
+    width:24px!important;height:24px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{
+    font-size:11.5px!important;font-weight:760!important;
+  }
+
+  /* Reduce expensive mobile blur and giant shadows */
+  body.v17-live.nexo-reference-ui :is(.profile-menu,.nrx-side-more-panel,.v15-tutor-fab){
+    backdrop-filter:none!important;-webkit-backdrop-filter:none!important;
+  }
+  body.v17-live.nexo-reference-ui :is(.panel,.v15-question-modes>button,.nrx-mob-progress,.nrx-mob-continue){
+    box-shadow:0 8px 22px rgba(0,0,0,.15),inset 0 1px 0 rgba(255,255,255,.02)!important;
+  }
+}
+
+@media(max-width:390px){
+  body.v17-live.nexo-reference-ui main{padding-inline:12px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-hero h1{font-size:33px!important}
+  body.v17-live.nexo-reference-ui .nrx-mob-action i{width:56px!important;height:56px!important}
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes>button{padding:13px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.v17-live.nx11-ready *{animation-duration:.001ms!important;animation-iteration-count:1!important}
+}
+
+
+/* ---- assets/nexo-v18-12-spice.css ---- */
+/* NEXO V18.12 · RESPONSIVE NAV + BOLDER TYPE + PRODUCT "SPICE"
+   Keeps motion cheap (transform/opacity) and fixes bottom-navigation state. */
+
+:root{
+  --nx12-violet:#8d73ff;
+  --nx12-cyan:#58d9ff;
+  --nx12-mint:#66e0bd;
+  --nx12-panel:#0a1528;
+}
+
+/* More visual identity without adding JS work */
+body.v17-live.nexo-reference-ui main{
+  background:
+    radial-gradient(36rem 22rem at 86% 4%,rgba(112,78,255,.065),transparent 68%),
+    radial-gradient(28rem 20rem at 4% 52%,rgba(55,188,231,.035),transparent 70%);
+}
+body.v17-live.nexo-reference-ui :is(.primary-btn,.nrx-btn.primary,.nrx-play){
+  position:relative;
+  overflow:hidden;
+}
+body.v17-live.nexo-reference-ui :is(.primary-btn,.nrx-btn.primary,.nrx-play)::after{
+  content:"";
+  position:absolute;
+  inset:-40% auto -40% -45%;
+  width:28%;
+  transform:skewX(-18deg) translateX(-260%);
+  background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);
+  animation:nx12-sheen 6.8s ease-in-out infinite;
+  pointer-events:none;
+}
+@keyframes nx12-sheen{
+  0%,74%,100%{transform:skewX(-18deg) translateX(-260%)}
+  88%{transform:skewX(-18deg) translateX(620%)}
+}
+body.v17-live.nexo-reference-ui .nrx-ring{
+  animation:nx12-ring-breathe 4.8s ease-in-out infinite;
+}
+@keyframes nx12-ring-breathe{
+  0%,100%{transform:scale(1)}
+  50%{transform:scale(1.018)}
+}
+
+/* Page headers get a subtle energetic cue */
+body.v17-live.nexo-reference-ui .page.active .eyebrow{
+  text-shadow:0 0 16px rgba(142,113,255,.24);
+}
+body.v17-live.nexo-reference-ui .page.active .page-head h2{
+  text-wrap:balance;
+}
+
+/* Fix crowded panel titles seen in essay history / intelligence cards */
+body.v17-live.nexo-reference-ui .panel-title{
+  gap:12px!important;
+}
+body.v17-live.nexo-reference-ui .panel-title>div{
+  min-width:0!important;
+  display:grid!important;
+  gap:4px!important;
+}
+body.v17-live.nexo-reference-ui .panel-title>div>b,
+body.v17-live.nexo-reference-ui .panel-title>div>small{
+  display:block!important;
+}
+body.v17-live.nexo-reference-ui .panel-title>div>small{
+  color:#8f9db2!important;
+}
+
+/* Tap energy */
+body.v17-live.nexo-reference-ui :is(.panel,.nrx-mob-continue,.v15-question-modes>button,.nrx-mob-action i){
+  transition:transform .16s cubic-bezier(.2,.8,.2,1),border-color .18s ease,background-color .18s ease,box-shadow .18s ease!important;
+}
+body.v17-live.nexo-reference-ui :is(.nrx-mob-continue,.v15-question-modes>button,.nrx-mob-action i):active{
+  transform:scale(.978)!important;
+}
+
+/* Bottom navigation: one moving pill, no duplicate active blocks/underlines */
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.active::after{
+  content:none!important;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav{
+  --nrx-active-index:0;
+  isolation:isolate;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-slider{
+  position:absolute;
+  z-index:0;
+  top:7px;
+  bottom:7px;
+  left:7px;
+  width:calc((100% - 14px) / 5);
+  border-radius:16px;
+  background:
+    radial-gradient(circle at 50% 0%,rgba(140,110,255,.18),transparent 64%),
+    linear-gradient(180deg,rgba(91,71,203,.25),rgba(63,50,145,.16));
+  border:1px solid rgba(142,113,255,.08);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.028);
+  transform:translateX(calc(var(--nrx-active-index) * 100%));
+  transition:transform .20s cubic-bezier(.22,.82,.28,1);
+  pointer-events:none;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button{
+  position:relative!important;
+  z-index:1!important;
+  background:transparent!important;
+  box-shadow:none!important;
+  touch-action:manipulation;
+  transition:color .13s ease,transform .09s ease!important;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.active,
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.nrx-pending{
+  color:#ae94ff!important;
+}
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.nrx-pending{
+  transform:scale(.965)!important;
+}
+
+/* A tiny status line below the active bottom item */
+body.v17-live.nexo-reference-ui .nrx-bottom-nav button.active small::after{
+  content:"";
+  display:block;
+  width:22px;
+  height:2px;
+  margin:5px auto -3px;
+  border-radius:999px;
+  background:#9d7fff;
+  box-shadow:0 0 10px rgba(157,127,255,.45);
+  animation:nx12-active-line .28s ease-out both;
+}
+@keyframes nx12-active-line{
+  from{opacity:0;transform:scaleX(.35)}
+  to{opacity:1;transform:scaleX(1)}
+}
+
+@media(max-width:760px){
+  /* Minimum readable scale for the text that was still tiny */
+  body.v17-live.nexo-reference-ui .page:not(#inicio) p{
+    font-size:14px!important;
+    line-height:1.56!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) small{
+    font-size:11.5px!important;
+    line-height:1.38!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) label{
+    font-size:13px!important;
+    line-height:1.35!important;
+  }
+  body.v17-live.nexo-reference-ui .page:not(#inicio) button{
+    font-size:14px;
+  }
+
+  /* Question-mode cards were visually too small */
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes>button{
+    min-height:118px!important;
+    padding:18px 16px!important;
+    grid-template-columns:54px minmax(0,1fr) 20px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes>button>.v15-icon:first-child{
+    width:28px!important;height:28px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes b{
+    font-size:15.5px!important;
+    line-height:1.2!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes small{
+    font-size:12.5px!important;
+    line-height:1.38!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary b{
+    font-size:15px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary small{
+    font-size:11.5px!important;
+  }
+
+  /* Study */
+  body.v17-live.nexo-reference-ui #materiais :is(.material-topic-card,.panel) p{
+    font-size:13.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #materiais :is(.material-topic-card,.panel) small{
+    font-size:11.5px!important;
+  }
+
+  /* Essay lower sections had readable titles but micro-copy was too small */
+  body.v17-live.nexo-reference-ui #redacao :is(.essay-guide-card,.essay-sheet-card,.essay-history-card,.essay-version-compare-card,.essay-repertoire-card,.essay-argument-card) h3{
+    font-size:17px!important;
+    line-height:1.25!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao :is(.essay-guide-card,.essay-sheet-card,.essay-history-card,.essay-version-compare-card,.essay-repertoire-card,.essay-argument-card) p{
+    font-size:13.5px!important;
+    line-height:1.55!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao :is(.essay-guide-card,.essay-sheet-card,.essay-history-card,.essay-version-compare-card,.essay-repertoire-card,.essay-argument-card) small{
+    font-size:11.5px!important;
+    line-height:1.4!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-competency-mini small{
+    font-size:11px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-repertoire-list :is(b,strong){
+    font-size:15px!important;
+    line-height:1.35!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-repertoire-list :is(p,span){
+    font-size:13px!important;
+    line-height:1.5!important;
+  }
+
+  /* Bottom nav: responsive, instantly legible, one state at a time */
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav{
+    height:82px!important;
+    left:10px!important;
+    right:10px!important;
+    bottom:calc(7px + env(safe-area-inset-bottom))!important;
+    padding:7px!important;
+    border-radius:23px!important;
+    background:#081323!important;
+    border-color:rgba(129,146,185,.17)!important;
+    box-shadow:0 -8px 28px rgba(0,0,0,.24),0 12px 30px rgba(0,0,0,.20),inset 0 1px 0 rgba(255,255,255,.028)!important;
+    backdrop-filter:none!important;
+    -webkit-backdrop-filter:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button{
+    min-height:68px!important;
+    gap:3px!important;
+    border-radius:16px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button>span{
+    min-width:28px!important;
+    min-height:28px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button>span :is(svg,.v15-icon,.nx18-icon-svg){
+    width:25px!important;height:25px!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{
+    font-size:12.5px!important;
+    line-height:1.05!important;
+    font-weight:760!important;
+    letter-spacing:-.1px!important;
+  }
+  body.v17-live.nexo-reference-ui main{
+    padding-bottom:calc(112px + env(safe-area-inset-bottom))!important;
+  }
+
+  /* Header actions gain a touch of depth */
+  body.v17-live.nexo-reference-ui :is(.nrx-mobile-theme,.nrx-mobile-crown,.nrx-mobile-menu){
+    box-shadow:0 8px 18px rgba(0,0,0,.14),inset 0 1px 0 rgba(255,255,255,.035)!important;
+  }
+
+  /* Home quick actions get a subtle staggered "breath" only on transforms */
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(1) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(5) i{animation:nx12-icon-breathe 5.6s ease-in-out infinite}
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(2) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(6) i{animation:nx12-icon-breathe 5.6s .45s ease-in-out infinite}
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(3) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(7) i{animation:nx12-icon-breathe 5.6s .9s ease-in-out infinite}
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(4) i,
+  body.v17-live.nx11-ready .nrx-mob-action:nth-child(8) i{animation:nx12-icon-breathe 5.6s 1.35s ease-in-out infinite}
+  @keyframes nx12-icon-breathe{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(-2px)}
+  }
+}
+
+@media(max-width:390px){
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{font-size:11.5px!important}
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes b{font-size:14.5px!important}
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes small{font-size:11.8px!important}
+}
+
+@media(prefers-reduced-motion:reduce){
+  body.v17-live.nexo-reference-ui :is(.primary-btn,.nrx-btn.primary,.nrx-play)::after,
+  body.v17-live.nexo-reference-ui .nrx-ring,
+  body.v17-live.nx11-ready .nrx-mob-action i{
+    animation:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-slider{transition:none!important}
+}
+
+
+/* ---- assets/nexo-v18-13-readable-global.css ---- */
+/* NEXO V18.13 · GLOBAL READABILITY + INSTANT TOUCH
+   A single mobile typography floor for the whole product. */
+
+@media (max-width:760px){
+  html{
+    -webkit-text-size-adjust:100%;
+    text-size-adjust:100%;
+  }
+
+  body.v17-live.nexo-reference-ui{
+    font-size:17px!important;
+  }
+
+  /* Global text floor — all pages, not only Home/Questions/Essay. */
+  body.v17-live.nexo-reference-ui .page h1{
+    font-size:34px!important;
+    line-height:1.04!important;
+  }
+  body.v17-live.nexo-reference-ui .page h2{
+    font-size:32px!important;
+    line-height:1.07!important;
+  }
+  body.v17-live.nexo-reference-ui .page h3{
+    font-size:20px!important;
+    line-height:1.22!important;
+  }
+  body.v17-live.nexo-reference-ui .page h4{
+    font-size:17px!important;
+    line-height:1.28!important;
+  }
+  body.v17-live.nexo-reference-ui .page p{
+    font-size:15px!important;
+    line-height:1.58!important;
+  }
+  body.v17-live.nexo-reference-ui .page li{
+    font-size:14.5px!important;
+    line-height:1.5!important;
+  }
+  body.v17-live.nexo-reference-ui .page label{
+    font-size:14px!important;
+    line-height:1.36!important;
+  }
+  body.v17-live.nexo-reference-ui .page small{
+    font-size:12.5px!important;
+    line-height:1.42!important;
+  }
+  body.v17-live.nexo-reference-ui .page button{
+    font-size:15px;
+    line-height:1.2;
+  }
+  body.v17-live.nexo-reference-ui .page :is(input,select,textarea){
+    font-size:16.5px!important;
+    line-height:1.35!important;
+  }
+
+  body.v17-live.nexo-reference-ui .page :is(
+    .muted,.meta,.hint,.helper-text,.field-help,.subtle,.caption,
+    .eyebrow+small,.panel-title small,.card-meta,.stat-label
+  ){
+    font-size:12.5px!important;
+    line-height:1.42!important;
+  }
+
+  body.v17-live.nexo-reference-ui .panel-title>div>b{
+    font-size:17px!important;
+    line-height:1.2!important;
+  }
+  body.v17-live.nexo-reference-ui .panel-title>div>small{
+    font-size:12.5px!important;
+    line-height:1.38!important;
+  }
+
+  /* Common card copy across the product. */
+  body.v17-live.nexo-reference-ui .page :is(
+    .panel,.card,.stat,.sim-card,.material-topic-card,.performance-card,
+    .mastery-card,.planner-card,.journey-store-card,.wardrobe-card
+  ) :is(b,strong){
+    line-height:1.25!important;
+  }
+
+  /* Search: the first touch must feel native and immediate. */
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search{
+    touch-action:manipulation!important;
+    cursor:text!important;
+    contain:layout paint;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search input{
+    font-size:16.5px!important;
+    min-height:48px!important;
+    pointer-events:auto!important;
+    touch-action:manipulation!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-mobile-search-slot .search input::placeholder{
+    font-size:16px!important;
+  }
+
+  /* Bottom navigation: readable and optimized for direct touch. */
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav{
+    touch-action:manipulation!important;
+    contain:layout paint;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button{
+    touch-action:manipulation!important;
+    -webkit-tap-highlight-color:transparent!important;
+    user-select:none!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{
+    font-size:13px!important;
+    line-height:1.05!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-bottom-slider{
+    will-change:transform;
+    backface-visibility:hidden;
+  }
+
+  /* Questions */
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes b{
+    font-size:17px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-question-modes small{
+    font-size:13.5px!important;
+    line-height:1.42!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary b{
+    font-size:16px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .v15-advanced-setup>summary small{
+    font-size:12.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #questoes .q-option{
+    font-size:16px!important;
+  }
+
+  /* Study */
+  body.v17-live.nexo-reference-ui #materiais .material-subject-nav button,
+  body.v17-live.nexo-reference-ui #materiais .v15-material-tabs button{
+    font-size:14px!important;
+  }
+  body.v17-live.nexo-reference-ui #materiais #materialGrid small{
+    font-size:12.5px!important;
+  }
+
+  /* Essay */
+  body.v17-live.nexo-reference-ui #redacao .v15-essay-tabs button{
+    font-size:15px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-flow-bar b{
+    font-size:13.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao .essay-flow-bar small{
+    font-size:11.5px!important;
+  }
+  body.v17-live.nexo-reference-ui #redacao #essayText{
+    font-size:17px!important;
+    line-height:1.76!important;
+  }
+
+  /* Drawer / dialogs / assistant / notifications also follow the same scale. */
+  body.v17-live.nexo-reference-ui :is(
+    .nrx-side-panel,.profile-menu,.nia-panel,.community-modal,
+    .notifications-panel,.notification-sheet,.nrx-notification-panel
+  ) p{
+    font-size:14px!important;
+    line-height:1.5!important;
+  }
+  body.v17-live.nexo-reference-ui :is(
+    .nrx-side-panel,.profile-menu,.nia-panel,.community-modal,
+    .notifications-panel,.notification-sheet,.nrx-notification-panel
+  ) small{
+    font-size:12.5px!important;
+    line-height:1.4!important;
+  }
+  body.v17-live.nexo-reference-ui .nrx-side-item>b{
+    font-size:16.5px!important;
+  }
+
+  /* Prevent small utility labels from becoming unreadable. */
+  body.v17-live.nexo-reference-ui :is(
+    .chip,.tag,.badge,.pill,.status-badge,.topic-chip,.q-tag
+  ){
+    font-size:12px!important;
+    line-height:1.2!important;
+  }
+}
+
+@media (max-width:390px){
+  body.v17-live.nexo-reference-ui{font-size:16.5px!important}
+  body.v17-live.nexo-reference-ui .page h2{font-size:30px!important}
+  body.v17-live.nexo-reference-ui .page p{font-size:14.5px!important}
+  body.v17-live.nexo-reference-ui .page small{font-size:12px!important}
+  body.v17-live.nexo-reference-ui .nrx-bottom-nav button small{font-size:12px!important}
+}
+
+
+/* ---- assets/nexo-phase1-foundation.css ---- */
+/* NEXO Phase 1 · Architecture + performance foundation
+   Safe consolidation layer: tokens, mobile overflow guards, accessibility scale. */
+
+:root{
+  --nx-space-1:4px;
+  --nx-space-2:8px;
+  --nx-space-3:12px;
+  --nx-space-4:16px;
+  --nx-space-5:20px;
+  --nx-space-6:24px;
+  --nx-space-8:32px;
+  --nx-radius-input:12px;
+  --nx-radius-button:12px;
+  --nx-radius-card:16px;
+  --nx-radius-panel:20px;
+  --nx-shadow-surface:0 8px 22px rgba(0,0,0,.14);
+  --nx-shadow-raised:0 14px 36px rgba(0,0,0,.20);
+  --nx-perf-fast:100ms;
+}
+
+/* Prevent grid children from creating horizontal overflow. */
+body.nexo-reference-ui .nrx-mob-actions>*,
+body.nexo-reference-ui .nrx-mob-action,
+body.nexo-reference-ui .nrx-mob-action b{
+  min-width:0!important;
+  max-width:100%!important;
+}
+body.nexo-reference-ui .nrx-mob-action{
+  width:100%!important;
+  overflow:visible!important;
+}
+body.nexo-reference-ui .nrx-mob-action b{
+  white-space:normal!important;
+  word-break:normal!important;
+  overflow-wrap:break-word!important;
+  text-wrap:balance;
+}
+
+/* Accessibility font scaling must remain functional after the global mobile type floor. */
+@media(max-width:760px){
+  body.nexo-reference-ui[data-font-scale="large"] .nrx-mob-action b{font-size:14.5px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-mob-action b{font-size:16px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .nrx-bottom-nav button small{font-size:14px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-bottom-nav button small{font-size:15.5px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .page p{font-size:16px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .page p{font-size:17.5px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .page small{font-size:13.5px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .page small{font-size:15px!important}
+  body.nexo-reference-ui[data-font-scale="large"] .page button{font-size:16px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .page button{font-size:17px!important}
+}
+@media(min-width:761px){
+  body.nexo-reference-ui[data-font-scale="large"] .nrx-side-item>b{font-size:14px!important}
+  body.nexo-reference-ui[data-font-scale="xlarge"] .nrx-side-item>b{font-size:16px!important}
+}
+
+/* When the device is under main-thread pressure, pause ambient decoration before UX-critical motion. */
+body.nexo-perf-pressure :is(
+  .nrx-ring,
+  .nrx-mob-hero-media img,
+  .nrx-hero-art img,
+  .nrx-mob-action i,
+  .nx18-life-orb,
+  .page-nexo-mentor img
+){
+  animation-play-state:paused!important;
+}
+body.nexo-perf-pressure :is(.nx17-spark-burst,.nx18-ripple){
+  display:none!important;
+}
+
+/* Navigation/search stay GPU-cheap and responsive. */
+body.nexo-reference-ui .nrx-bottom-slider{
+  transform:translate3d(calc(var(--nrx-active-index) * 100%),0,0);
+  will-change:transform;
+}
+body.nexo-reference-ui .nrx-mobile-search-slot .search,
+body.nexo-reference-ui .nrx-bottom-nav{
+  -webkit-tap-highlight-color:transparent;
+}
+
+
+/* Phase 1 rendering containment: off-screen sections do not need full layout/paint. */
+@supports (content-visibility:auto){
+  body.nexo-reference-ui .page.active :is(
+    .panel,
+    .content-topic-group,
+    .theme-card,
+    .essay-history-row,
+    .feedback-entry,
+    .bank-row,
+    .journey-panel,
+    .simulation-card
+  ){
+    content-visibility:auto;
+    contain-intrinsic-size:auto 280px;
+  }
+}
+
+/* Long lists remain stable while the user scrolls. */
+#bankList,
+#materialGrid,
+#essayHistoryList{
+  overflow-anchor:auto;
+}
+.bank-load-more{
+  width:100%;
+  margin:var(--nx-space-4,16px) 0 var(--nx-space-6,24px);
+}
