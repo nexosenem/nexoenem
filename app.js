@@ -3729,6 +3729,30 @@ async function fetchQuestions(filters={}) {
 }
 
 async function fetchQuestionsResilient(filters={}){
+  const areaList=Array.isArray(filters.areas)?[...new Set(filters.areas.filter(Boolean))]:[];
+  if(areaList.length){
+    const requested=Math.max(1,Number(filters.size||10));
+    const base=Math.floor(requested/areaList.length);
+    let remainder=requested-(base*areaList.length);
+    const blocks=[],relaxed=[];
+    for(const area of areaList){
+      const quota=base+(remainder>0?1:0);
+      if(remainder>0)remainder--;
+      const part=await fetchQuestionsResilient({...filters,areas:undefined,area,size:Math.max(quota,1)});
+      const source=part.rows||[];
+      const ordered=source.length&&source.every(x=>typeof x._seen==='boolean')
+        ? [...source.filter(x=>!x._seen),...source.filter(x=>x._seen)]
+        : source;
+      blocks.push(...ordered.slice(0,quota));
+      (part.relaxed||[]).forEach(item=>relaxed.push(area+': '+item));
+    }
+    return {
+      rows:blocks,
+      filters:{...filters,area:'',areas:areaList},
+      relaxed:[...new Set(relaxed)]
+    };
+  }
+
   const attempts=[];
   const keys=new Set();
   const add=(candidate,relaxed)=>{
@@ -5591,7 +5615,47 @@ async function finishSession() {
   renderMathTrail();
 }
 
-$$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
+function openRealExamModal(){
+  const modal=$('#realExamModal');
+  if(!modal)return;
+  modal.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+}
+function closeRealExamModal(){
+  $('#realExamModal')?.classList.add('hidden');
+  document.body.style.overflow='';
+}
+async function startRealExamDay(day){
+  const dayNumber=Number(day)===2?2:1;
+  const areas=dayNumber===1
+    ? ['Linguagens','Ciências Humanas']
+    : ['Ciências da Natureza','Matemática'];
+  closeRealExamModal();
+  openPage('questoes');
+  await startStudySession({
+    mode:'simulado',
+    examMode:true,
+    examDay:dayNumber,
+    areas,
+    area:'',
+    subject:'',
+    topic:'',
+    difficulty:'',
+    visualOnly:false,
+    size:90
+  });
+  if(state.session){
+    $('#sessionAreaBadge').textContent='ENEM REAL · DIA '+dayNumber;
+    $('#sessionTitle').textContent=dayNumber===1?'Linguagens + Ciências Humanas':'Natureza + Matemática';
+    $('#sessionSubtitle').textContent='90 questões em dois blocos de 45 · gabarito somente no relatório final.';
+    ensureExamClock();
+  }
+}
+$('#closeRealExam')?.addEventListener('click',closeRealExamModal);
+$('#realExamModal')?.addEventListener('click',e=>{if(e.target===$('#realExamModal'))closeRealExamModal()});
+$('[data-real-exam-day]').forEach(btn=>btn.addEventListener('click',()=>startRealExamDay(btn.dataset.realExamDay)));
+
+$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
   const mode=b.dataset.simMode||'area';
   const startExam=async(config,label,title,subtitle)=>{
     openPage('questoes');
@@ -5630,9 +5694,9 @@ $$('[data-sim-area], [data-sim-mode]').forEach(b=>b.onclick=async()=>{
 
   if(mode==='full'){
     if(!state.membership)await loadNexoMembership({silent:true});
-    if(nexoAccessTier()==='free')return openNexoPlans('A prova longa de 90 questões é um modo intensivo do NEXO Plus.');
-    return startExam({area:'',subject:'',topic:'',difficulty:'',visualOnly:false,size:90},
-      'PROVA LONGA','90 questões','Modo prova longo. Use o relógio, pule quando necessário e corrija tudo no final.');
+    if(nexoAccessTier()==='free')return openNexoPlans('O ENEM Real de 90 questões é um modo intensivo do NEXO Plus.');
+    openRealExamModal();
+    return;
   }
 
   const area=b.dataset.simArea||'';
