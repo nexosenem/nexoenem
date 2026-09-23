@@ -2,7 +2,9 @@ name: NEXO Production Smoke
 
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - 'v*'
   pull_request:
     branches: [main]
   schedule:
@@ -68,7 +70,7 @@ jobs:
           retention-days: 14
 
       - name: Build Cloudflare asset bundle
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: |
           rm -rf dist
           mkdir -p dist
@@ -77,7 +79,7 @@ jobs:
           cp -R assets dist/assets
 
       - name: Require Cloudflare deploy credentials
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         env:
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -86,7 +88,7 @@ jobs:
           test -n "$CF_TOKEN" || (echo "::error::Missing CLOUDFLARE_API_TOKEN secret" && exit 1)
 
       - name: Deploy current main to Cloudflare Worker
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
@@ -94,5 +96,5 @@ jobs:
           command: deploy
 
       - name: Public Cloudflare runtime smoke
-        if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request' && github.ref == 'refs/heads/main'
         run: node scripts/nexo-live-smoke.mjs
