@@ -3102,3 +3102,68 @@ body.nexo-reference-ui #toggleNexoHaptics{
 @media(prefers-reduced-motion:reduce){
   body.nexo-reference-ui #essayLoader .orb-loader i{animation:none!important}
 }
+
+
+/* === PHASE 2 S2.12 · touch, wide-screen and keyboard hardening === */
+@media(max-width:760px){
+  body.nexo-reference-ui :is(
+    .primary-btn,.outline-btn,.ghost-btn,.icon-btn,.nrx-btn,
+    .community-close,.profile-menu button,.essay-sheet-actions button,
+    .question-mobile-actions button,.post-answer-actions button
+  ){
+    min-height:44px!important;
+  }
+  body.nexo-reference-ui :is(input,select,textarea){
+    scroll-margin-top:92px;
+    scroll-margin-bottom:120px;
+  }
+  body.nexo-reference-ui textarea{
+    min-block-size:88px;
+  }
+
+  /* Touch devices should not depend on hover-only movement. */
+  @media(hover:none){
+    body.nexo-reference-ui :is(button,a,[role="button"]):hover{
+      transform:none!important;
+    }
+  }
+}
+
+/* Desktop stays compact but more readable than legacy 10–12px controls. */
+@media(min-width:1025px){
+  body.nexo-reference-ui{
+    --sidebar:220px;
+  }
+  body.nexo-reference-ui .page:not(#inicio){
+    max-width:1280px;
+    margin-inline:auto;
+  }
+  body.nexo-reference-ui .page-head p,
+  body.nexo-reference-ui .nexo-page-head p{
+    max-width:72ch;
+  }
+  body.nexo-reference-ui .nrx-btn{
+    min-height:42px!important;
+    font-size:12px!important;
+  }
+  body.nexo-reference-ui .nrx-greeting{font-size:12px!important}
+  body.nexo-reference-ui .nrx-hero p{font-size:13px!important}
+}
+
+/* Ultra-wide screens keep reading lines controlled instead of stretching content. */
+@media(min-width:1500px){
+  body.nexo-reference-ui .nrx-home{max-width:1240px}
+  body.nexo-reference-ui .page:not(#inicio){max-width:1320px}
+}
+
+/* Safe areas on devices with notches/home indicators. */
+@media(max-width:760px){
+  body.nexo-reference-ui .topbar{
+    padding-left:max(14px,env(safe-area-inset-left))!important;
+    padding-right:max(14px,env(safe-area-inset-right))!important;
+  }
+  body.nexo-reference-ui .nrx-bottom-nav{
+    left:max(10px,env(safe-area-inset-left))!important;
+    right:max(10px,env(safe-area-inset-right))!important;
+  }
+}
