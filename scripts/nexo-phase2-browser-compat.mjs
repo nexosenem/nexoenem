@@ -52,7 +52,7 @@ for(const scenario of scenarios){
       app?.classList.remove('hidden');
       auth?.classList.add('hidden');
       if(typeof openPage==='function')openPage('inicio');
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      await new Promise(r=>setTimeout(r,20));
 
       const nav=document.querySelector('.nrx-bottom-nav');
       const search=document.querySelector('#globalSearch');
@@ -68,11 +68,11 @@ for(const scenario of scenarios){
       const q=document.querySelector('[data-nrx-bottom="questoes"]');
       if(webkitLayout)q?.click();
       else q?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      await new Promise(r=>setTimeout(r,20));
       const after=document.querySelector('.page.active')?.id||'';
 
       if(typeof openPage==='function')openPage('redacao');
-      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      await new Promise(r=>setTimeout(r,20));
       const essay=document.querySelector('#essayText');
       const overflow=document.documentElement.scrollWidth>document.documentElement.clientWidth+2;
       const navRect=nav?.getBoundingClientRect();
