@@ -1833,6 +1833,13 @@ function nexoApplyPercentTones(root=document){
     if(!tone)return;
     el.classList.add('nexo-score-'+tone);
     el.dataset.scoreTone=tone;
+    const semantic=tone==='low'?'atenção':tone==='mid'?'em progresso':'bom domínio';
+    el.dataset.scoreLabel=semantic;
+    if(!el.hasAttribute('aria-label')||el.dataset.nexoScoreAria==='1'){
+      el.setAttribute('aria-label',text+' · '+semantic);
+      el.dataset.nexoScoreAria='1';
+    }
+    el.title=text+' · '+semantic;
   });
 }
 let nexoPercentToneQueued=false;
