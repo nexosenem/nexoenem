@@ -3166,10 +3166,49 @@ async function initApp(session) {
   else $('#niaButton')?.classList.remove('hidden');
 }
 
+function nexoHasCriticalUnsavedWork(){
+  const active=$('.page.active')?.id||'';
+  const study=Boolean(state.session?.queue?.length&&Number(state.session?.index||0)<Number(state.session?.queue?.length||0));
+  const essay=active==='redacao'&&Boolean(String($('#essayText')?.value||'').trim());
+  const focus=Boolean(focusModeState?.running);
+  return study||essay||focus;
+}
+function markNexoUpdateReady(registration){
+  if(!registration?.waiting)return false;
+  window.__nexoWaitingServiceWorker=registration.waiting;
+  document.body.dataset.nexoUpdateReady='true';
+  document.dispatchEvent(new CustomEvent('nexo:update-ready',{detail:{critical:nexoHasCriticalUnsavedWork()}}));
+  return true;
+}
+window.nexoApplyPendingUpdate=({force=false}={})=>{
+  const worker=window.__nexoWaitingServiceWorker;
+  if(!worker)return false;
+  if(!force&&nexoHasCriticalUnsavedWork())return false;
+  persistEssayDraftLocal?.();
+  try{persistStudySession?.()}catch(_){}
+  worker.postMessage({type:'NEXO_ACTIVATE_UPDATE'});
+  return true;
+};
 function registerNexoServiceWorker(){
   const localDev=location.hostname==='localhost'||location.hostname==='127.0.0.1';
   if(!('serviceWorker' in navigator)||(location.protocol!=='https:'&&!localDev))return;
-  const register=()=>navigator.serviceWorker.register('./sw.js').catch(err=>console.warn('service worker',err));
+  const register=async()=>{
+    try{
+      const reg=await navigator.serviceWorker.register('./sw.js');
+      if(reg.waiting)markNexoUpdateReady(reg);
+      reg.addEventListener('updatefound',()=>{
+        const installing=reg.installing;
+        if(!installing)return;
+        installing.addEventListener('statechange',()=>{
+          if(installing.state==='installed'&&navigator.serviceWorker.controller)markNexoUpdateReady(reg);
+        });
+      });
+      return reg;
+    }catch(err){
+      console.warn('service worker',err);
+      return null;
+    }
+  };
   if(document.readyState==='complete')register();
   else window.addEventListener('load',register,{once:true});
 }
