@@ -981,3 +981,34 @@ body.light.nexo-reference-ui .admin-visual-repair-sheet input[type="file"]{
     grid-column:auto!important;
   }
 }
+
+
+/* Official-source action used by the visual restoration workflow. */
+.admin-source-link{
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  min-height:32px;
+  padding:0 11px;
+  border:1px solid rgba(105,201,255,.20);
+  border-radius:10px;
+  background:rgba(68,166,225,.07);
+  color:#82d8ff!important;
+  font:700 10px/1.2 Inter,system-ui,sans-serif;
+  text-decoration:none!important;
+  cursor:pointer;
+}
+.admin-source-link:hover{
+  border-color:rgba(105,201,255,.42);
+  background:rgba(68,166,225,.12);
+}
+.admin-visual-repair-sheet>#adminVisualRepairSource{
+  width:max-content;
+  max-width:100%;
+  margin:0 0 12px;
+}
+body.light.nexo-reference-ui .admin-source-link{
+  background:#eef8ff!important;
+  color:#246b94!important;
+  border-color:rgba(44,129,180,.20)!important;
+}
