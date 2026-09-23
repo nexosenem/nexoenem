@@ -144,6 +144,8 @@ const fetchQuestionsBlock=app.slice(app.indexOf('async function fetchQuestions(f
 assert(fetchQuestionsBlock.includes('media_path'),'Fila leve conhece caminho de mídia sem buscar o blob visual');
 assert(!fetchQuestionsBlock.includes('data_uri'),'Filas de questões não carregam Base64 antecipadamente');
 assert(app.includes('function hasAccessibleVisualDescription')&&app.includes('function questionVisualCanBeResolved'),'Integridade visual filtra questões irresolvíveis sem apagar descrições acessíveis');
+assert(app.includes('NEXO_VISUAL_TEXT_SUFFICIENT_IDS')&&app.includes('NEXO_VISUAL_REQUIRED_IDS')&&app.includes('NEXO_VISUAL_FALSE_POSITIVE_IDS'),'Revisão editorial visual separa recurso obrigatório, ilustrativo e falso positivo');
+assert(app.includes("if(reviewed==='text_sufficient'||reviewed==='not_visual')return true")&&app.includes("if(reviewed==='visual_required')return false"),'Cliente respeita a decisão editorial de suficiência visual');
 assert(app.includes('const transcribedTable=')&&app.includes('lineBreaks>=8'),'Quadros/tabelas integralmente transcritos podem ser resolvidos sem imagem ornamental');
 assert(app.includes('const nonVisualQuadro=')&&app.includes("subject==='artes'"),'Detector visual distingue figura/quadro ambíguos de recursos realmente exibidos');
 assert(app.includes("String([q?.base_text,q?.prompt].filter(Boolean).join('\\n'))"),'Descrição visual acessível preserva texto-base, enunciado e estrutura de linhas importada');
