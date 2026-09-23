@@ -1012,3 +1012,68 @@ body.light.nexo-reference-ui .admin-source-link{
   color:#246b94!important;
   border-color:rgba(44,129,180,.20)!important;
 }
+
+
+/* V16.2 · ENEM Real day selector */
+.real-exam-sheet{
+  max-width:720px!important;
+}
+.real-exam-intro{
+  margin:2px 0 14px;
+  color:var(--muted);
+  font-size:11px;
+  line-height:1.55;
+}
+.real-exam-options{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.real-exam-options>button{
+  position:relative;
+  min-height:126px;
+  display:grid;
+  align-content:start;
+  gap:6px;
+  padding:16px 44px 16px 16px;
+  text-align:left;
+  color:var(--text);
+  border:1px solid rgba(128,143,184,.14);
+  border-radius:15px;
+  background:linear-gradient(180deg,rgba(18,31,55,.95),rgba(10,21,40,.95));
+  cursor:pointer;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease;
+}
+.real-exam-options>button:hover{
+  transform:translateY(-2px);
+  border-color:rgba(126,92,255,.40);
+  background:linear-gradient(180deg,rgba(25,39,68,.98),rgba(13,25,47,.98));
+}
+.real-exam-options>button>span{
+  font-size:8.5px;
+  font-weight:850;
+  letter-spacing:.8px;
+  color:#9b86ff;
+}
+.real-exam-options>button>b{font-size:13px;line-height:1.3}
+.real-exam-options>button>small{font-size:9.5px;line-height:1.45;color:#8997ac}
+.real-exam-options>button>i{
+  position:absolute;right:15px;bottom:14px;
+  font-style:normal;font-size:18px;color:#927cff;
+}
+.real-exam-note{
+  display:block;
+  margin-top:12px;
+  color:var(--muted);
+  font-size:9.5px;
+  line-height:1.45;
+}
+body.light.nexo-reference-ui .real-exam-options>button{
+  background:#fff!important;
+  color:#172239!important;
+  border-color:rgba(54,71,105,.11)!important;
+}
+@media(max-width:620px){
+  .real-exam-options{grid-template-columns:1fr}
+  .real-exam-options>button{min-height:112px}
+}
