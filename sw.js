@@ -45,8 +45,13 @@ self.addEventListener('install',event=>{
   event.waitUntil((async()=>{
     const cache=await caches.open(NEXO_CACHE);
     await Promise.allSettled(SHELL.map(url=>cache.add(new Request(url,{cache:'reload'}))));
-    await self.skipWaiting();
+    // Do not skipWaiting automatically. A new release must never replace the
+    // running app in the middle of a question, essay or simulation.
   })());
+});
+
+self.addEventListener('message',event=>{
+  if(event.data?.type==='NEXO_ACTIVATE_UPDATE')self.skipWaiting();
 });
 
 self.addEventListener('activate',event=>{
