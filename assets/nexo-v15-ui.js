@@ -407,9 +407,20 @@
 
   document.addEventListener('DOMContentLoaded',()=>{
     apply();
-    const observer=new MutationObserver(()=>requestAnimationFrame(apply));
-    observer.observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
-    window.addEventListener('resize',apply,{passive:true});
-    setInterval(()=>{syncResume();applyIconography();markLayout()},1800);
+    let queued=false;
+    const schedule=()=>{
+      if(queued)return;
+      queued=true;
+      requestAnimationFrame(()=>{queued=false;apply()});
+    };
+    ['#inicio','#materiais','#questoes','#redacao','#desempenho','#simulados','#semana','#ranking'].forEach(sel=>{
+      const root=$(sel);
+      if(root)new MutationObserver(schedule).observe(root,{subtree:true,childList:true});
+    });
+    document.addEventListener('nexo:pagechange',schedule);
+    document.addEventListener('click',e=>{
+      if(e.target.closest?.('#themeToggle,.nrx-mobile-theme,[data-nrx-utility="theme"]'))requestAnimationFrame(schedule);
+    },{passive:true});
+    window.addEventListener('resize',schedule,{passive:true});
   });
 })();
