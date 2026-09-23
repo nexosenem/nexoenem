@@ -7964,6 +7964,8 @@ async function openContentViewer(type,id){
       player.addEventListener('ended',async()=>{
         await saveContentProgress('video',id,{seconds:player.duration||0,percent:100,completed:true});
         renderVideos();
+        nexoHaptic([16,24,28]);
+        document.dispatchEvent(new CustomEvent('nexo:content-completed',{detail:{type:'video',id,topic:item.topic||item.subject||item.title||'Videoaula'}}));
         toast('Videoaula concluída.');
       });
     }
@@ -8000,6 +8002,12 @@ async function markViewerComplete(){
   viewer.type==='video'?renderVideos():renderMaterials();
   renderNexoToday();
   renderMathTrail();
+  nexoHaptic([16,24,28]);
+  document.dispatchEvent(new CustomEvent('nexo:content-completed',{detail:{
+    type:viewer.type,
+    id:viewer.item.id,
+    topic:viewer.item.topic||viewer.item.subject||viewer.item.title||'Conteúdo'
+  }}));
   toast('Conteúdo marcado como concluído.');
 }
 
