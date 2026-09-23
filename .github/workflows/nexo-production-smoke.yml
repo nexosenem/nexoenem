@@ -64,6 +64,9 @@ jobs:
       - name: Resilience smoke
         run: node scripts/nexo-resilience-smoke.mjs
 
+      - name: Phase 2 core UX smoke
+        run: node scripts/nexo-phase2-ux-smoke.mjs
+
       - name: Browser runtime smoke
         run: node scripts/nexo-browser-smoke.mjs
 
