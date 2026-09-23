@@ -37,6 +37,34 @@ try{
 
     const docOverflow=document.documentElement.scrollWidth>document.documentElement.clientWidth+2;
 
+    // Home should react to real recommendation/session state instead of staying static.
+    if(typeof state!=='undefined'){
+      state.core={...(state.core||{}),recommended_action:{topic:'Porcentagem',size:6,reason:'Prioridade de teste baseada no desempenho recente.'}};
+    }
+    if(typeof openPage==='function')openPage('inicio');
+    document.dispatchEvent(new CustomEvent('nexo:pagechange',{detail:{id:'inicio'}}));
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const homeNext=document.querySelector('.nrx-mobile .nx2-home-next');
+
+    // Search results should paint on the next frame and support keyboard navigation.
+    let searchKeyboard=false;
+    if(search){
+      search.value='redacao';
+      search.dispatchEvent(new Event('input',{bubbles:true}));
+      await new Promise(r=>requestAnimationFrame(r));
+      search.focus();
+      search.dispatchEvent(new KeyboardEvent('keydown',{key:'ArrowDown',bubbles:true,cancelable:true}));
+      searchKeyboard=Boolean(document.activeElement?.matches?.('#globalSearchResults button'));
+      search.value='';
+      search.dispatchEvent(new Event('input',{bubbles:true}));
+    }
+
+    // Mobile drawer must lock background scrolling.
+    document.querySelector('#moreMobile')?.click();
+    await new Promise(r=>requestAnimationFrame(r));
+    const menuLocked=document.body.classList.contains('mobile-menu-open')&&document.documentElement.classList.contains('mobile-menu-open');
+    document.querySelector('#closeMenu')?.click();
+
     // Questões: the Phase 1 interaction budget already validates pointerdown navigation.
     // Here we validate the Phase 2 page itself after routing.
     if(typeof openPage==='function')openPage('questoes');
@@ -104,6 +132,12 @@ try{
       homeActionFont:cssPx(homeAction),
       bottomSizes,
       docOverflow,
+      homeGuidance:{
+        visible:Boolean(homeNext),
+        title:homeNext?.querySelector('b')?.textContent?.trim()||''
+      },
+      searchKeyboard,
+      menuLocked,
       questions:questionsSnapshot,
       essay:{
         font:cssPx(essay),
@@ -129,6 +163,9 @@ try{
   if(result.search.font<16)failures.push('search-font-too-small');
   if(result.homeActionFont<13)failures.push('home-action-font-too-small');
   if(result.docOverflow)failures.push('document-overflow');
+  if(!result.homeGuidance.visible||!/Porcentagem/i.test(result.homeGuidance.title))failures.push('home-next-action');
+  if(!result.searchKeyboard)failures.push('search-keyboard-navigation');
+  if(!result.menuLocked)failures.push('mobile-menu-scroll-lock');
   if(result.bottomSizes.some(x=>x.h<44||x.font<11.5))failures.push('bottom-nav-touch-or-type');
   if(!result.questions.recommended)failures.push('questions-recommended-cta');
   if(result.questions.recommendedButtonHeight<44)failures.push('questions-recommended-touch');
