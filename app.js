@@ -3068,7 +3068,13 @@ function openPage(id) {
     if (id==='videoaulas') loadVideos();
     if (id==='materiais') loadMaterials();
     if (id==='radar') loadEnemRadar({silent:false});
-    if (id==='banco') { renderBank(); renderSavedQuestions(); }
+    if (id==='banco') {
+      loadQuestionMeta().then(()=>{renderBank({reset:true});renderSavedQuestions()}).catch(err=>{
+        console.error('bank catalog',err);
+        logClientError('bank',err,'bank_catalog_load');
+        toast('Não consegui carregar o acervo agora.','error');
+      });
+    }
     if (id==='semana') loadNexoWeekPlan({silent:false});
     if (id==='redacao') {
       loadEssayThemeProgress({rerender:true}).catch(()=>{});
@@ -3161,7 +3167,7 @@ async function initApp(session) {
   const needsOnboarding=!state.profile.onboarding_completed_at;
 
   const results=await Promise.allSettled([
-    loadQuestionMeta(),
+    loadQuestionMeta({catalogOnly:true}),
     loadDashboard(),
     loadNexoCore(),
     loadAssistantIntents(),
@@ -3207,7 +3213,7 @@ async function initApp(session) {
     renderSavedQuestions();
   });
   loadRecentAttempts().catch(err=>logClientError('recent_attempts',err,'recent_load'));
-  await safeBootStep('banco',async()=>renderBank());
+  await safeBootStep('banco',async()=>{if(state.questionMeta?.length)renderBank()});
 
   if(needsOnboarding)await safeBootStep('onboarding',async()=>openNexoOnboarding(false));
   else $('#niaButton')?.classList.remove('hidden');
@@ -3427,29 +3433,8 @@ function applyQuestionCatalogSummary(summary){
   }
 }
 
-async function loadQuestionMeta() {
-  let rows=[];
-  try{
-    const {data,error}=await client.rpc('get_question_catalog_items_v2');
-    if(error)throw error;
-    rows=data||[];
-  }catch(err){
-    console.warn('question catalog items v2 fallback',err);
-    const pageSize=1000;
-    for(let from=0;from<10000;from+=pageSize){
-      const {data,error}=await client.from('questions')
-        .select('id,area,subject,topic,difficulty,source_year,source_question_number,media_type')
-        .eq('is_active',true)
-        .order('id',{ascending:true})
-        .range(from,from+pageSize-1);
-      if(error)throw error;
-      const page=data||[];
-      rows.push(...page.map(q=>({...q,has_visual:Boolean(q.media_type),visual_status:'ready'})));
-      if(page.length<pageSize)break;
-    }
-  }
-  state.questionMeta=rows;
-
+let questionMetaLoadPromise=null;
+async function loadQuestionMeta({catalogOnly=false}={}) {
   let catalog=null;
   try{
     const {data,error}=await client.rpc('get_question_catalog_summary');
@@ -3467,13 +3452,47 @@ async function loadQuestionMeta() {
       state.subjects[row.area]??=new Set();
       state.subjects[row.area].add(row.subject);
     }
-  }else{
-    for(const q of state.questionMeta){
-      state.subjects[q.area]??=new Set();
-      state.subjects[q.area].add(q.subject);
-    }
   }
+
   applyQuestionCatalogSummary(catalog);
+  if(catalogOnly)return state.questionMeta||[];
+  if(state.questionMeta?.length)return state.questionMeta;
+  if(questionMetaLoadPromise)return questionMetaLoadPromise;
+
+  questionMetaLoadPromise=(async()=>{
+    let rows=[];
+    try{
+      const {data,error}=await client.rpc('get_question_catalog_items_v2');
+      if(error)throw error;
+      rows=data||[];
+    }catch(err){
+      console.warn('question catalog items v2 fallback',err);
+      const pageSize=1000;
+      for(let from=0;from<10000;from+=pageSize){
+        const {data,error}=await client.from('questions')
+          .select('id,area,subject,topic,difficulty,source_year,source_question_number,media_type')
+          .eq('is_active',true)
+          .order('id',{ascending:true})
+          .range(from,from+pageSize-1);
+        if(error)throw error;
+        const page=data||[];
+        rows.push(...page.map(q=>({...q,has_visual:Boolean(q.media_type),visual_status:'ready'})));
+        if(page.length<pageSize)break;
+      }
+    }
+    state.questionMeta=rows;
+
+    if(!Object.keys(state.subjects||{}).length){
+      for(const q of rows){
+        state.subjects[q.area]??=new Set();
+        state.subjects[q.area].add(q.subject);
+      }
+    }
+    return rows;
+  })();
+
+  try{return await questionMetaLoadPromise}
+  finally{questionMetaLoadPromise=null}
 }
 
 async function loadDashboard() {
