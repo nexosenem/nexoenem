@@ -46,6 +46,9 @@ jobs:
       - name: Install Chromium
         run: npx playwright install --with-deps chromium
 
+      - name: Install WebKit
+        run: npx playwright install --with-deps webkit
+
       - name: Serve static app
         run: |
           python3 -m http.server 4173 >/tmp/nexo-http.log 2>&1 &
@@ -69,6 +72,9 @@ jobs:
 
       - name: Phase 2 core UX smoke
         run: node scripts/nexo-phase2-ux-smoke.mjs
+
+      - name: Cross-browser mobile smoke
+        run: node scripts/nexo-phase2-browser-compat.mjs
 
       - name: Browser runtime smoke
         run: node scripts/nexo-browser-smoke.mjs
