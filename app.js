@@ -2614,11 +2614,12 @@ $('#saveAdminExplanation')?.addEventListener('click',async()=>{
   if(text.length<40)return toast('Escreva uma resolução editorial mais completa antes de salvar.','error');
   btn.disabled=true;btn.textContent='Salvando...';
   try{
-    const {error}=await client.rpc('admin_set_question_explanation',{p_question_id:Number(row.question_id),p_explanation:text});
+    const {data,error}=await client.rpc('admin_set_question_explanation',{p_question_id:Number(row.question_id),p_explanation:text});
     if(error)throw error;
     closeAdminExplanationModal();
-    toast('Resolução editorial validada e publicada.');
-    await loadAdminExplanationQueue();
+    const resolved=Number(data?.resolved_reports||0);
+    toast('Resolução editorial validada e publicada.'+(resolved?' '+resolved+' reporte'+(resolved===1?'':'s')+' relacionado'+(resolved===1?'':'s')+' também foi'+(resolved===1?'':'ram')+' resolvido'+(resolved===1?'':'s')+'.':''));
+    await Promise.all([loadAdminExplanationQueue(),loadAdminQuestionIssues()]);
   }catch(err){
     console.error('save editorial explanation',err);
     toast('Não foi possível salvar a resolução editorial.','error');
