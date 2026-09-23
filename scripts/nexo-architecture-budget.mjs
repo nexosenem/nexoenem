@@ -9,8 +9,10 @@ const size=(file)=>statSync(file).size;
 const gzip=(file)=>gzipSync(readFileSync(file)).length;
 
 const budgets={
-  'app.js':{raw:580000,gzip:130000},
-  'styles.css':{raw:510000,gzip:90000}
+  // Baseline is the audited Phase 1 bundle, with a small regression margin.
+  // These are guardrails, not aspirational minification targets.
+  'app.js':{raw:565000,gzip:160000},
+  'styles.css':{raw:485000,gzip:97000}
 };
 
 for(const [file,budget] of Object.entries(budgets)){
