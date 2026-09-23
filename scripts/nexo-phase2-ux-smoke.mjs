@@ -62,8 +62,25 @@ try{
     // Accessibility current route.
     const current=[...document.querySelectorAll('.nrx-bottom-nav [aria-current="page"]')].map(x=>x.dataset.nrxBottom);
 
+    // Phase 2 deeper flows.
+    if(typeof openPage==='function')openPage('materiais');
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const studyPriority=[...document.querySelectorAll('#materiais .nx2-study-priority [data-nx2-study]')].map(x=>x.dataset.nx2Study);
+    const moreGroups=[...document.querySelectorAll('.nx2-more-group>h4')].map(x=>x.textContent.trim());
+
+    if(typeof openPage==='function')openPage('redacao');
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const draftStatus=document.querySelector('#redacao .nx2-draft-status');
+    const focusMode=document.querySelector('#redacao .nx2-essay-focus-btn');
+    const flowHints=[...document.querySelectorAll('#redacao .essay-flow-bar small')].map(x=>({
+      text:x.textContent.trim(),
+      display:getComputedStyle(x).display,
+      height:x.getBoundingClientRect().height
+    }));
+    const dialog=document.querySelector('#commentModal');
+
     return {
-      phase2:Boolean(window.NEXO_PHASE2?.coreUx),
+      phase2:Boolean(window.NEXO_PHASE2?.coreUx&&window.NEXO_PHASE2?.flows),
       search:{
         placeholder:search?.placeholder||'',
         font:cssPx(search)
@@ -77,7 +94,16 @@ try{
         flowVisible:Boolean(flow&&getComputedStyle(flow).display!=='none'),
         flowHeight:rect(flow)?.height||0
       },
-      current
+      current,
+      studyPriority,
+      moreGroups,
+      draftStatus:Boolean(draftStatus),
+      focusMode:Boolean(focusMode),
+      flowHints,
+      dialogSemantics:{
+        role:dialog?.getAttribute('role')||'',
+        modal:dialog?.getAttribute('aria-modal')||''
+      }
     };
   });
 
@@ -93,6 +119,11 @@ try{
   if(result.essay.font<16)failures.push('essay-font-too-small');
   if(!result.essay.flowVisible)failures.push('essay-flow-hidden');
   if(!result.current.includes('redacao'))failures.push('aria-current-route');
+  if(!['continue','review','recommend'].every(x=>result.studyPriority.includes(x)))failures.push('study-priority-actions');
+  if(!result.draftStatus||!result.focusMode)failures.push('essay-writing-tools');
+  if(result.flowHints.some(x=>x.display==='none'||x.height<=0))failures.push('essay-guidance-hidden');
+  if(result.dialogSemantics.role!=='dialog'||result.dialogSemantics.modal!=='true')failures.push('dialog-semantics');
+  if(result.moreGroups.length<2)failures.push('more-menu-groups');
 
   console.log(JSON.stringify({name:'NEXO Phase 2 core UX smoke',result,failures},null,2));
   await context.close();
