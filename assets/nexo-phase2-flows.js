@@ -270,8 +270,8 @@ function ensureCommentSort(){
     bar.setAttribute('aria-label','Ordenar comentários');
     bar.innerHTML='<button type="button" class="active" data-nx2-comment-sort="recent">Recentes</button><button type="button" data-nx2-comment-sort="helpful">Mais úteis</button>';
     list.insertAdjacentElement('beforebegin',bar);
-    $('[data-nx2-comment-sort]',bar).forEach(btn=>btn.addEventListener('click',()=>{
-      $('[data-nx2-comment-sort]',bar).forEach(x=>x.classList.toggle('active',x===btn));
+    bar.querySelectorAll('[data-nx2-comment-sort]').forEach(btn=>btn.addEventListener('click',()=>{
+      bar.querySelectorAll('[data-nx2-comment-sort]').forEach(x=>x.classList.toggle('active',x===btn));
       modal.dataset.nx2Sort=btn.dataset.nx2CommentSort;
       sortComments();
     }));
