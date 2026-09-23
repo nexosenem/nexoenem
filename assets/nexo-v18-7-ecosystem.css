@@ -1,0 +1,10 @@
+/* NEXO V18.7 · Ecosystem */
+body.v17-live :is(.journey-store-grid,.wardrobe-grid,.journey-achievements-grid){gap:10px!important}
+body.v17-live :is(.store-item,.wardrobe-item,.journey-store-card,.wardrobe-card){border-radius:16px!important;overflow:hidden!important}
+body.v17-live .nia-panel{border:1px solid rgba(121,91,255,.25)!important;box-shadow:0 28px 80px rgba(0,0,0,.36)!important}
+body.v17-live .nia-head{background:linear-gradient(90deg,rgba(104,72,236,.12),transparent)!important}
+body.v17-live .nexo-welcome{border-radius:15px!important;background:linear-gradient(135deg,rgba(79,56,186,.11),rgba(42,133,189,.07))!important}
+body.v17-live .experience-settings-shell{border-color:rgba(121,91,255,.22)!important}
+body.v17-live .community-sheet{border-radius:18px!important;border-color:rgba(132,146,188,.15)!important}
+body.v17-live .journey-avatar-builder .avatar-preview,body.v17-live .onboarding-avatar-preview{position:sticky;top:86px}
+@media(max-width:760px){body.v17-live .nia-panel{left:8px!important;right:8px!important;bottom:calc(82px + env(safe-area-inset-bottom))!important;width:auto!important}body.v17-live .journey-avatar-builder .avatar-preview,body.v17-live .onboarding-avatar-preview{position:relative;top:auto}}
