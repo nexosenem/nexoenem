@@ -46,6 +46,12 @@ try{
     const recommendedButton=recommended?.querySelector('button');
     const advanced=document.querySelector('#v15AdvancedQuestionSetup');
     const advancedTitle=advanced?.querySelector('summary b')?.textContent?.trim()||'';
+    const questionsSnapshot={
+      active:qPage?.classList.contains('active')||false,
+      recommended:Boolean(recommended),
+      recommendedButtonHeight:rect(recommendedButton)?.height||0,
+      advancedTitle
+    };
 
     // Redação.
     if(typeof openPage==='function')openPage('redacao');
@@ -65,12 +71,7 @@ try{
       homeActionFont:cssPx(homeAction),
       bottomSizes,
       docOverflow,
-      questions:{
-        active:qPage?.classList.contains('active')||false,
-        recommended:Boolean(recommended),
-        recommendedButtonHeight:rect(recommendedButton)?.height||0,
-        advancedTitle
-      },
+      questions:questionsSnapshot,
       essay:{
         font:cssPx(essay),
         flowVisible:Boolean(flow&&getComputedStyle(flow).display!=='none'),
