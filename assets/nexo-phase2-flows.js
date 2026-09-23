@@ -342,7 +342,7 @@ function ensureCommentSort(){
 function sortComments(){
   const modal=$('#commentModal'),list=$('#questionComments');
   if(!modal||!list||sortingComments)return;
-  const current=$('.comment-item',list);
+  const current=$$('.comment-item',list);
   current.forEach((item,index)=>{
     if(item.dataset.nx2Original==null)item.dataset.nx2Original=String(index);
   });
