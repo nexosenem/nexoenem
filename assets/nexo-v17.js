@@ -126,3 +126,49 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
   const page=$('#materiais');if(page)new MutationObserver(run).observe(page,{subtree:true,childList:true});
 })();
+
+
+/* V17.4 — Question media viewer + explicit answer-state cue */
+(function(){
+  'use strict';
+  const $=(s,r=document)=>r.querySelector(s);
+  function ensureViewer(){
+    let viewer=$('#nx17MediaZoom');if(viewer)return viewer;
+    viewer=document.createElement('div');viewer.id='nx17MediaZoom';viewer.className='nx17-media-zoom hidden';
+    viewer.setAttribute('role','dialog');viewer.setAttribute('aria-modal','true');viewer.setAttribute('aria-label','Imagem ampliada da questão');
+    viewer.innerHTML='<button type="button" aria-label="Fechar imagem">×</button><img alt="">';
+    document.body.appendChild(viewer);
+    const close=()=>{viewer.classList.add('hidden');viewer.querySelector('img').removeAttribute('src')};
+    viewer.querySelector('button').onclick=close;
+    viewer.addEventListener('click',e=>{if(e.target===viewer)close()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'&&!viewer.classList.contains('hidden'))close()});
+    return viewer;
+  }
+  function bindMedia(){
+    const page=$('#questoes');if(!page)return;
+    page.querySelectorAll('.visual-stage img,.q-media-gallery img,.q-option-media').forEach(img=>{
+      if(img.dataset.nx17Zoom)return;img.dataset.nx17Zoom='1';
+      img.addEventListener('click',e=>{
+        if(!img.currentSrc&&!img.src)return;
+        e.stopPropagation();
+        const viewer=ensureViewer(),target=viewer.querySelector('img');
+        target.src=img.currentSrc||img.src;target.alt=img.alt||'Recurso visual ampliado';
+        viewer.classList.remove('hidden');viewer.querySelector('button').focus();
+      });
+    });
+  }
+  function answerCue(){
+    const card=$('#questionCard');if(!card)return;
+    let cue=$('.nx17-question-state',card);
+    const confirm=$('#confirmAnswer',card);
+    const selected=$('.q-option.selected',card);
+    const answered=Boolean($('.q-option.correct,.q-option.wrong,.q-option.incorrect',card));
+    const label=answered?'Resposta registrada':selected?'Alternativa selecionada — confirme quando estiver pronto':'Escolha uma alternativa antes de confirmar';
+    if(!cue){cue=document.createElement('div');cue.className='nx17-question-state';cue.innerHTML='<i></i><span></span>';const options=$('.q-options',card);options?.insertAdjacentElement('beforebegin',cue)}
+    const span=cue&&cue.querySelector('span');if(span)span.textContent=label;
+    if(confirm)confirm.setAttribute('aria-live','polite');
+  }
+  function run(){bindMedia();answerCue()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+  const page=$('#questoes');if(page)new MutationObserver(()=>requestAnimationFrame(run)).observe(page,{subtree:true,childList:true,attributes:true,attributeFilter:['class','disabled']});
+})();
