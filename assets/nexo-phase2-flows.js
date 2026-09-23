@@ -200,7 +200,7 @@ function appendRepertoireToOrganizer(article){
 function ensureRepertoireInsertActions(){
   const list=$('#essayRepertoireList');
   if(!list)return;
-  $('article',list).forEach(article=>{
+  $$('article',list).forEach(article=>{
     if($('.nx2-repertoire-save',article))return;
     const btn=document.createElement('button');
     btn.type='button';
