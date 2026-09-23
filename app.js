@@ -496,7 +496,7 @@ function beginFocusInterval(){
       focusModeState.remaining=0;
       saveFocusMode();
       renderFocusMode();
-      try{navigator.vibrate?.([180,80,180])}catch(_){}
+      nexoHaptic([70,45,70]);
       toast('Foco concluído. Hora de transformar atenção em acertos.');
       $('#focusModeModal')?.classList.remove('hidden');
       document.body.style.overflow='hidden';
@@ -9127,7 +9127,7 @@ function applyAvatarLook(code){
   });
   renderAvatarBuilder();
   toast(look.name+' equipado. Salve o personagem para confirmar.');
-  if(navigator.vibrate)navigator.vibrate(12);
+  nexoHaptic([12]);
 }
 
 function renderAvatarEditorCategory(){
@@ -9427,7 +9427,7 @@ function applyAvatarChoice(btn){
     }
     state.avatarDraft=normalizeAvatarDraftForBase(state.avatarDraft);
     renderAvatarBuilder();
-    if(navigator.vibrate)navigator.vibrate(8);
+    nexoHaptic([8]);
   }catch(err){
     console.error('avatar choice',err);
     logClientError('journey_avatar',err,'avatar_choice');
