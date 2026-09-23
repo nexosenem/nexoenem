@@ -1,0 +1,12 @@
+/* NEXO V18.4 · Questions flow */
+body.v17-live #questoes .question-card{border-radius:18px!important;background:linear-gradient(180deg,rgba(13,25,46,.98),rgba(8,17,33,.98))!important}
+body.v17-live #questoes .q-option{min-height:52px!important;display:flex!important;align-items:center!important;gap:10px!important;transition:border-color .15s ease,background .15s ease,transform .15s ease!important}
+body.v17-live #questoes .q-option:hover{transform:translateY(-1px)}
+body.v17-live #questoes .q-option.selected{border-color:rgba(122,91,255,.72)!important;background:rgba(112,78,255,.10)!important}
+body.v17-live #questoes .q-option.correct{border-color:rgba(92,219,174,.54)!important;background:rgba(56,179,139,.09)!important}
+body.v17-live #questoes .q-option.wrong{border-color:rgba(255,107,127,.52)!important;background:rgba(210,77,98,.08)!important}
+body.v17-live #questoes .visual-wrap{background:rgba(5,12,25,.60)!important;border:1px solid rgba(130,146,189,.12)!important}
+body.v17-live #questoes .q-media-image{margin-inline:auto}
+body.v17-live #questoes .answer-feedback,body.v17-live #questoes .learning-block{border-radius:15px!important}
+body.v17-live #questoes #confirmAnswer:not(.hidden){box-shadow:0 10px 28px rgba(103,76,242,.18)}
+@media(max-width:760px){body.v17-live #questoes .question-card{padding:14px!important}body.v17-live #questoes .q-option{min-height:56px!important}body.v17-live #questoes .q-context,body.v17-live #questoes .q-prompt{font-size:14px!important;line-height:1.62!important}}
