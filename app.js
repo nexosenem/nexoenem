@@ -1858,11 +1858,11 @@ document.addEventListener('nexo:pagechange',scheduleNexoPercentTones);
 window.nexoApplyPercentTones=nexoApplyPercentTones;
 window.nexoPercentTone=nexoPercentTone;
 
-let globalSearchTimer=null;
+let globalSearchFrame=0;
 globalSearch.addEventListener('input',e=>{
-  clearTimeout(globalSearchTimer);
   const value=e.target.value||'';
-  globalSearchTimer=setTimeout(()=>renderGlobalSearchResults(value),45);
+  cancelAnimationFrame(globalSearchFrame);
+  globalSearchFrame=requestAnimationFrame(()=>renderGlobalSearchResults(value));
 });
 
 
@@ -1923,7 +1923,9 @@ function toggleMenu(open) {
   const isOpen=Boolean(open);
   $('#sidebar')?.classList.toggle('open',isOpen);
   $('#scrim')?.classList.toggle('hidden',!isOpen);
-  document.body.classList.toggle('mobile-menu-open',isOpen&&innerWidth<=760);
+  const mobileOpen=isOpen&&innerWidth<=760;
+  document.body.classList.toggle('mobile-menu-open',mobileOpen);
+  document.documentElement.classList.toggle('mobile-menu-open',mobileOpen);
 
   const contextBar=$('#nexoContextBar');
   if(contextBar){
