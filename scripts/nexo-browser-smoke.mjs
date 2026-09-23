@@ -605,13 +605,14 @@ async function runProfile(browser,name,viewport){
     try{
       state.profile={...(state.profile||{}),role:'admin'};
       client.rpc=async(name,args)=>{
-        if(name==='get_admin_visual_repair_queue'){
+        if(name==='get_admin_visual_repair_queue_v2'||name==='get_admin_visual_repair_queue'){
           return {data:[{
             question_id:-99041,source_year:2025,source_exam:'ENEM 2025',source_question_number:114,
             area:'Ciências da Natureza',subject:'Física',topic:'Fenômenos físicos e energia',
             prompt_preview:'A tirinha ilustra um processo físico em que uma onda sonora causa a quebra das taças.',
             attempts:18,wrong:9,open_reports:1,
-            source_reference:'https://download.inep.gov.br/enem/provas_e_gabaritos/2025_PV_impresso_D2_CD7.pdf'
+            source_reference:'INEP · ENEM 2025 · prova oficial',
+            source_pdf_url:'https://download.inep.gov.br/enem/provas_e_gabaritos/2025_PV_impresso_D2_CD7.pdf'
           }],error:null};
         }
         if(name==='admin_set_question_media_path'){
