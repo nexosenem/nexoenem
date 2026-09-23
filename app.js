@@ -6,9 +6,30 @@ const client = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
   auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true }
 });
 
-if (window.pdfjsLib) {
-  window.pdfjsLib.GlobalWorkerOptions.workerSrc =
-    'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+let nexoPdfJsPromise=null;
+async function ensureNexoPdfJs(){
+  if(window.pdfjsLib)return window.pdfjsLib;
+  if(nexoPdfJsPromise)return nexoPdfJsPromise;
+  nexoPdfJsPromise=new Promise((resolve,reject)=>{
+    const existing=document.querySelector('script[data-nexo-pdfjs]');
+    if(existing){
+      existing.addEventListener('load',()=>resolve(window.pdfjsLib),{once:true});
+      existing.addEventListener('error',()=>reject(new Error('Falha ao carregar PDF.js')),{once:true});
+      return;
+    }
+    const script=document.createElement('script');
+    script.src='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js';
+    script.async=true;
+    script.dataset.nexoPdfjs='1';
+    script.onload=()=>{
+      if(!window.pdfjsLib)return reject(new Error('PDF.js indisponível'));
+      window.pdfjsLib.GlobalWorkerOptions.workerSrc='https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+      resolve(window.pdfjsLib);
+    };
+    script.onerror=()=>reject(new Error('Falha ao carregar PDF.js'));
+    document.head.appendChild(script);
+  }).catch(err=>{nexoPdfJsPromise=null;throw err});
+  return nexoPdfJsPromise;
 }
 
 const $ = (q, root=document) => root.querySelector(q);
@@ -4603,6 +4624,7 @@ function showVisualFallback(q){
 
 async function getPdf(url) {
   if(state.pdfCache.has(url)) return state.pdfCache.get(url);
+  const pdfjs=await ensureNexoPdfJs();
   const { data:{session} } = await client.auth.getSession();
   if(!session) throw new Error('Sessão expirada');
   const res = await fetch(`${SUPABASE_URL}/functions/v1/pdf-proxy`,{
@@ -4616,7 +4638,7 @@ async function getPdf(url) {
   });
   if(!res.ok) throw new Error('Falha ao carregar PDF');
   const bytes=new Uint8Array(await res.arrayBuffer());
-  const pdf=await window.pdfjsLib.getDocument({data:bytes}).promise;
+  const pdf=await pdfjs.getDocument({data:bytes}).promise;
   state.pdfCache.set(url,pdf);
   return pdf;
 }
@@ -7984,7 +8006,11 @@ function renderMaterials(){
     if(items[0])startContentPractice(items[0]);
   });
 }
-$('#materialSearch')?.addEventListener('input',renderMaterials);
+let materialSearchTimer=0;
+$('#materialSearch')?.addEventListener('input',()=>{
+  clearTimeout(materialSearchTimer);
+  materialSearchTimer=setTimeout(renderMaterials,100);
+});
 $('#materialFavoritesOnly')?.addEventListener('click',e=>{e.currentTarget.classList.toggle('active');renderMaterials()});
 $('#materialStatusFilter')?.addEventListener('change',renderMaterials);
 $('#materialTypeFilter')?.addEventListener('change',renderMaterials);
@@ -8007,17 +8033,29 @@ $('#materialClearFilters')?.addEventListener('click',()=>{
   renderMaterials();
 });
 
-function renderBank(){
+let bankVisibleLimit=80;
+let bankSearchTimer=0;
+function renderBank({reset=false}={}){
+  if(reset)bankVisibleLimit=80;
   const search=$('#bankSearch').value.toLowerCase().trim(),area=$('#bankArea').value;
-  const list=state.questionMeta
+  const filtered=state.questionMeta
     .filter(q=>q.visual_status!=='repair')
-    .filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search)))
-    .slice(0,150);
-  $('#bankList').innerHTML=list.length?list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.has_visual||q.media_type?' · ◉ visual':''}${q.visual_status==='recoverable'?' · recuperável':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join(''):'<p class="learning-empty">Nenhuma questão respondível encontrada neste filtro.</p>';
+    .filter(q=>(!area||q.area===area)&&(!search||[q.subject,q.topic,q.source_year,q.source_question_number].join(' ').toLowerCase().includes(search)));
+  const list=filtered.slice(0,bankVisibleLimit);
+  const more=filtered.length>list.length
+    ? '<button class="outline-btn bank-load-more" id="bankLoadMore">Carregar mais · '+(filtered.length-list.length)+' restantes</button>'
+    : '';
+  $('#bankList').innerHTML=list.length
+    ? list.map(q=>`<button class="bank-row" data-bank="${q.id}"><b>#${q.source_question_number||q.id}</b><span><b>${esc(q.subject)}</b><small>${esc(q.topic)}${q.has_visual||q.media_type?' · ◉ visual':''}${q.visual_status==='recoverable'?' · recuperável':''}</small></span><small>${esc(q.area)}</small><small>ENEM ${esc(q.source_year||'')}</small></button>`).join('')+more
+    : '<p class="learning-empty">Nenhuma questão respondível encontrada neste filtro.</p>';
   document.querySelectorAll('[data-bank]').forEach(b=>b.onclick=()=>openSingleQuestion(Number(b.dataset.bank)));
+  $('#bankLoadMore')?.addEventListener('click',()=>{bankVisibleLimit+=80;renderBank()});
 }
-$('#bankSearch').addEventListener('input',renderBank);
-$('#bankArea').addEventListener('change',renderBank);
+$('#bankSearch').addEventListener('input',()=>{
+  clearTimeout(bankSearchTimer);
+  bankSearchTimer=setTimeout(()=>renderBank({reset:true}),100);
+});
+$('#bankArea').addEventListener('change',()=>renderBank({reset:true}));
 $('#globalSearch').addEventListener('keydown',e=>{if(e.key==='Enter'){openPage('banco');$('#bankSearch').value=e.target.value;renderBank();setMobileSearchOpen(false,{focus:false})}});
 async function openSingleQuestion(id){
   const {data,error}=await client.from('questions').select('id,area,subject,topic,difficulty,source_year,source_exam,source_question_number,source_reference,base_text,prompt,options,media_type,media_path,source_pdf_url,source_page,media_crop').eq('id',id).single();
