@@ -1,11 +1,11 @@
 // NEXO V17.8 release · reference interface + living experience
-const NEXO_CACHE='nexo-phase2-s2-3-2-20260923';
+const NEXO_CACHE='nexo-phase2-s2-4-20260923';
 const SHELL=[
   './',
   './index.html',
   './manifest.webmanifest',
   './styles.css?v=20260921-4',
-  './app.js?v=20260923-38',
+  './app.js?v=20260923-39',
   './assets/nexo-runtime-compat.js?v=20260921-2',
   './assets/nexo-v13-hardening.js?v=20260921-2',
   './assets/nexo-v13.css?v=20260921-3',
@@ -30,8 +30,8 @@ const SHELL=[
   './assets/nexo-v17.js?v=20260923-14',
   './assets/nexo-v18-11-life.js?v=20260923-1',
   './assets/nexo-phase1-core.js?v=20260923-1',
-  './assets/nexo-phase2-core-ux.js?v=20260923-3',
-  './assets/nexo-phase2-flows.js?v=20260923-4',
+  './assets/nexo-phase2-core-ux.js?v=20260923-4',
+  './assets/nexo-phase2-flows.js?v=20260923-5',
   './assets/nexo-family/bust.avif',
   './assets/nexo-family/bust-confiante.avif',
   './assets/nexo-family/bust-pensativo.avif',
