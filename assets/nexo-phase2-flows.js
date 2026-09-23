@@ -241,7 +241,7 @@ function ensureQuestionKeyboard(){
   if(group.dataset.nx2Keyboard)return;
   group.dataset.nx2Keyboard='1';
   group.addEventListener('keydown',e=>{
-    const opts=$('.q-option',group).filter(x=>!x.disabled&&x.getAttribute('aria-disabled')!=='true');
+    const opts=$$('.q-option',group).filter(x=>!x.disabled&&x.getAttribute('aria-disabled')!=='true');
     if(!opts.length)return;
     const current=Math.max(0,opts.indexOf(document.activeElement));
     let next=current;
