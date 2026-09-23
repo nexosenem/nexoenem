@@ -1571,6 +1571,7 @@ function updateNetworkStatus(){
   if(online){
     logProductEvent('network_restored',{},$('.page.active')?.id||null);
     flushContentProgressQueue().catch(()=>{});
+    flushContentFavoriteQueue().catch(()=>{});
   }
 }
 window.addEventListener('online',()=>{updateNetworkStatus();toast('Conexão restaurada.')});
@@ -7252,20 +7253,94 @@ function getContentProgress(type,id){
 
 function favoriteContent(type,id){return state.favorites.has(contentKey(type,id))}
 
-async function toggleContentFavorite(type,id){
-  if(!state.user?.id)return;
-  const key=contentKey(type,id);
-  if(state.favorites.has(key)){
-    const {error}=await client.from('content_favorites').delete().eq('user_id',state.user.id).eq('content_type',type).eq('content_id',id);
-    if(error)return toast('Não foi possível remover dos favoritos.','error');
-    state.favorites.delete(key);
-  }else{
-    const {error}=await client.from('content_favorites').insert({user_id:state.user.id,content_type:type,content_id:id});
-    if(error)return toast('Não foi possível favoritar.','error');
-    state.favorites.add(key);
+const NEXO_FAVORITE_QUEUE_KEY='nexo-favorite-queue-v1';
+function readFavoriteQueue(){
+  try{return JSON.parse(localStorage.getItem(NEXO_FAVORITE_QUEUE_KEY)||'[]')}catch(_){return []}
+}
+function queueFavoriteMutation(row){
+  const rows=readFavoriteQueue().filter(x=>!(
+    x.user_id===row.user_id &&
+    x.content_type===row.content_type &&
+    Number(x.content_id)===Number(row.content_id)
+  ));
+  rows.push(row);
+  try{localStorage.setItem(NEXO_FAVORITE_QUEUE_KEY,JSON.stringify(rows.slice(-120)))}catch(_){}
+}
+async function flushContentFavoriteQueue(){
+  if(!navigator.onLine||!state.user?.id)return false;
+  const mine=readFavoriteQueue().filter(x=>x.user_id===state.user.id);
+  if(!mine.length)return true;
+  const keep=readFavoriteQueue().filter(x=>x.user_id!==state.user.id);
+  for(const row of mine){
+    try{
+      let result;
+      if(row.favorite){
+        result=await client.from('content_favorites').upsert({
+          user_id:row.user_id,
+          content_type:row.content_type,
+          content_id:Number(row.content_id)
+        },{onConflict:'user_id,content_type,content_id'});
+      }else{
+        result=await client.from('content_favorites').delete()
+          .eq('user_id',row.user_id)
+          .eq('content_type',row.content_type)
+          .eq('content_id',Number(row.content_id));
+      }
+      if(result?.error)throw result.error;
+    }catch(err){
+      console.warn('favorite queue',err);
+      keep.push(row);
+    }
   }
-  if(type==='video')renderVideos();else renderMaterials();
+  try{localStorage.setItem(NEXO_FAVORITE_QUEUE_KEY,JSON.stringify(keep.slice(-120)))}catch(_){}
+  return keep.every(x=>x.user_id!==state.user.id);
+}
+
+async function toggleContentFavorite(type,id){
+  if(!state.user?.id)return false;
+  const key=contentKey(type,id);
+  const nextFavorite=!state.favorites.has(key);
+  const mutation={
+    user_id:state.user.id,
+    content_type:type,
+    content_id:Number(id),
+    favorite:nextFavorite,
+    updated_at:new Date().toISOString()
+  };
+
+  // Optimistic state: the star reacts in the same frame as the tap.
+  if(nextFavorite)state.favorites.add(key);
+  else state.favorites.delete(key);
   updateViewerFavoriteButton();
+  if(type==='video')renderVideos();else renderMaterials();
+
+  if(!navigator.onLine){
+    queueFavoriteMutation(mutation);
+    return true;
+  }
+
+  try{
+    let result;
+    if(nextFavorite){
+      result=await client.from('content_favorites').upsert({
+        user_id:state.user.id,
+        content_type:type,
+        content_id:Number(id)
+      },{onConflict:'user_id,content_type,content_id'});
+    }else{
+      result=await client.from('content_favorites').delete()
+        .eq('user_id',state.user.id)
+        .eq('content_type',type)
+        .eq('content_id',Number(id));
+    }
+    if(result?.error)throw result.error;
+    return true;
+  }catch(err){
+    // Preserve the user's action and reconcile it when connectivity/API recovers.
+    queueFavoriteMutation(mutation);
+    console.warn('favorite sync deferred',err);
+    return false;
+  }
 }
 
 const NEXO_PROGRESS_QUEUE_KEY='nexo-progress-queue-v1';
