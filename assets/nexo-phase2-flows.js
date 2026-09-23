@@ -151,6 +151,70 @@ function syncContinueRich(){
   }
 }
 
+function ensureHomeNextAction(){
+  const s=safeState();
+  const homes=$('.nrx-home');
+  if(!homes.length)return;
+
+  let session=s?.session?.queue?.length?s.session:null;
+  if(!session&&typeof readPersistedStudySession==='function'){
+    try{session=readPersistedStudySession()}catch(_){}
+  }
+  const rec=s?.core?.recommended_action||null;
+
+  homes.forEach(home=>{
+    let card=$('.nx2-home-next',home);
+    if(!session&&!rec){
+      card?.remove();
+      return;
+    }
+    if(!card){
+      card=document.createElement('section');
+      card.className='nx2-home-next';
+      card.innerHTML='<div><span class="eyebrow">PRÓXIMO PASSO</span><b data-nx2-home-next-title></b><small data-nx2-home-next-meta></small></div><button type="button" class="outline-btn" data-nx2-home-next-action>Continuar →</button>';
+      const anchor=home.classList.contains('nrx-mobile')
+        ? $('.nrx-mob-progress',home)
+        : $('.nrx-shortcuts',home);
+      anchor?.insertAdjacentElement('afterend',card);
+    }
+    const title=$('[data-nx2-home-next-title]',card);
+    const meta=$('[data-nx2-home-next-meta]',card);
+    const button=$('[data-nx2-home-next-action]',card);
+
+    if(session){
+      const total=Math.max(1,Number(session.size||session.queue?.length||session.ids?.length||1));
+      const current=Math.min(total,Math.max(1,Number(session.index||0)+1));
+      const topic=String(session.topic||session.subject||session.area||'seu treino').trim();
+      const remaining=Math.max(1,total-current+1);
+      if(title)title.textContent='Retomar '+topic;
+      if(meta)meta.textContent='Questão '+current+' de '+total+' · cerca de '+Math.max(3,Math.ceil(remaining*2.5))+' min restantes';
+      if(button){
+        button.textContent='Continuar sessão →';
+        button.onclick=()=>{
+          const trigger=home.querySelector('[data-nrx-resume]')||document.querySelector('[data-nrx-resume]');
+          trigger?.click();
+        };
+      }
+      card.dataset.mode='resume';
+      return;
+    }
+
+    const topic=String(rec?.topic||rec?.subject||rec?.area||'treino adaptativo');
+    if(title)title.textContent='Treinar '+topic;
+    if(meta)meta.textContent=String(rec?.reason||'Recomendação criada com base no seu desempenho recente.');
+    if(button){
+      button.textContent='Começar '+String(rec?.size||8)+' questões →';
+      button.onclick=()=>{
+        try{
+          if(typeof startCoreRecommendation==='function')return startCoreRecommendation();
+        }catch(_){}
+        try{if(typeof openPage==='function')openPage('questoes')}catch(_){}
+      };
+    }
+    card.dataset.mode='recommendation';
+  });
+}
+
 function essayOrganizerKey(){
   const s=safeState();
   const uid=String(s?.user?.id||'guest');
@@ -666,6 +730,7 @@ function ensureMediaPinch(){
 function sync(){
   ensureStudyPriority();
   ensureStudyStatusSignals();
+  ensureHomeNextAction();
   syncQuestionRecommendation();
   syncContinueRich();
   ensureQuestionObserver();
