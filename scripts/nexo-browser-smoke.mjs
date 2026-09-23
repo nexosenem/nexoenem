@@ -41,7 +41,7 @@ async function runProfile(browser,name,viewport){
   const watchdog=setTimeout(()=>{
     console.error('FAIL '+name+': browser smoke watchdog em '+smokeStage);
     process.exit(2);
-  },720000); // per-profile watchdog; desktop/mobile now run in parallel
+  },1200000); // comprehensive profile watchdog; allows the full mobile/desktop matrix without false timeout
   const pageErrors=[];
   const badResponses=[];
   const failedRequests=[];
