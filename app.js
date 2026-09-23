@@ -3006,7 +3006,7 @@ function openPage(id) {
     toast('Essa área é restrita ao administrador.','error'); return;
   }
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));
-  $('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  document.querySelectorAll('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
   setTimeout(()=>document.dispatchEvent(new CustomEvent('nexo:pagechange',{detail:{id}})),0);
   toggleMenu(false);
   const isMobileNav=window.matchMedia?.('(max-width:760px)')?.matches||innerWidth<=760;
