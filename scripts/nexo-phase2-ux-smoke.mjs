@@ -37,9 +37,9 @@ try{
 
     const docOverflow=document.documentElement.scrollWidth>document.documentElement.clientWidth+2;
 
-    // Questões.
-    const qBtn=document.querySelector('[data-nrx-bottom="questoes"]');
-    qBtn?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
+    // Questões: the Phase 1 interaction budget already validates pointerdown navigation.
+    // Here we validate the Phase 2 page itself after routing.
+    if(typeof openPage==='function')openPage('questoes');
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     const qPage=document.querySelector('#questoes');
     const recommended=document.querySelector('#questoes .nx2-question-start');
@@ -48,8 +48,7 @@ try{
     const advancedTitle=advanced?.querySelector('summary b')?.textContent?.trim()||'';
 
     // Redação.
-    const rBtn=document.querySelector('[data-nrx-bottom="redacao"]');
-    rBtn?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
+    if(typeof openPage==='function')openPage('redacao');
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     const essay=document.querySelector('#essayText');
     const flow=document.querySelector('#redacao .essay-flow-bar');
