@@ -32,7 +32,7 @@ async function runProfile(browser,name,viewport){
   const watchdog=setTimeout(()=>{
     console.error('FAIL '+name+': browser smoke watchdog em '+smokeStage);
     process.exit(2);
-  },540000); // full functional + visual audit can exceed 5 min on cold GitHub runners
+  },720000); // per-profile watchdog; desktop/mobile now run in parallel
   const pageErrors=[];
   const badResponses=[];
   const failedRequests=[];
@@ -2897,15 +2897,21 @@ async function runViewportAudit(browser,name,viewport){
 
 const browser=await chromium.launch({headless:true});
 try{
-  await runProfile(browser,'desktop',{width:1440,height:900});
-  await runProfile(browser,'mobile',{width:390,height:844});
-  await runViewportAudit(browser,'mobile-360',{width:360,height:800});
-  await runViewportAudit(browser,'mobile-430',{width:430,height:932});
-  await runViewportAudit(browser,'breakpoint-760',{width:760,height:900});
-  await runViewportAudit(browser,'breakpoint-761',{width:761,height:900});
-  await runViewportAudit(browser,'tablet-1024',{width:1024,height:768});
-  await runViewportAudit(browser,'desktop-1280',{width:1280,height:800});
-  await runViewportAudit(browser,'ultrawide-1920',{width:1920,height:1080});
+  await Promise.all([
+    runProfile(browser,'desktop',{width:1440,height:900}),
+    runProfile(browser,'mobile',{width:390,height:844})
+  ]);
+  await Promise.all([
+    runViewportAudit(browser,'mobile-360',{width:360,height:800}),
+    runViewportAudit(browser,'mobile-430',{width:430,height:932}),
+    runViewportAudit(browser,'breakpoint-760',{width:760,height:900}),
+    runViewportAudit(browser,'breakpoint-761',{width:761,height:900})
+  ]);
+  await Promise.all([
+    runViewportAudit(browser,'tablet-1024',{width:1024,height:768}),
+    runViewportAudit(browser,'desktop-1280',{width:1280,height:800}),
+    runViewportAudit(browser,'ultrawide-1920',{width:1920,height:1080})
+  ]);
 }finally{
   await browser.close();
 }
