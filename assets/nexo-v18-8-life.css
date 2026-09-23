@@ -1,0 +1,15 @@
+/* NEXO V18.8 · Life + hardening */
+body.v17-live .nx18-life-orb{position:fixed;z-index:-1;width:360px;height:360px;border-radius:50%;pointer-events:none;filter:blur(72px);opacity:.08;background:#765cff;transition:transform .8s ease-out}
+body.v17-live .nx18-live-dot{width:7px;height:7px;border-radius:50%;background:#67dfb7;box-shadow:0 0 0 4px rgba(103,223,183,.07),0 0 18px rgba(103,223,183,.28)}
+body.v17-live .nx18-presence{display:inline-flex;align-items:center;gap:7px;color:#8fa0b8;font-size:9px;font-weight:700}
+body.v17-live .nx18-presence b{color:#dce5f3;font-size:9px}
+body.v17-live .nx18-soft-in{animation:nx18-soft-in .36s ease both}
+@keyframes nx18-soft-in{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+body.v17-live .nx18-ripple{position:absolute;width:8px;height:8px;border-radius:50%;pointer-events:none;background:currentColor;opacity:.14;transform:translate(-50%,-50%);animation:nx18-ripple .5s ease-out forwards}
+@keyframes nx18-ripple{to{width:110px;height:110px;opacity:0}}
+body.v17-live .nrx-shortcut,body.v17-live .nrx-mob-action i,body.v17-live .nrx-btn,body.v17-live .nrx-side-item{position:relative;overflow:hidden}
+body.v17-live .nrx-ring{transition:filter .3s ease}body.v17-live .nrx-ring:hover{filter:drop-shadow(0 0 14px rgba(92,218,201,.16))}
+body.v17-live img{user-select:none}
+body.v17-live :is(.nrx-side-item,.nrx-bottom-nav button,.nrx-mob-action,.nrx-shortcut):focus-visible{z-index:2}
+@media(prefers-reduced-motion:reduce){body.v17-live .nx18-soft-in,body.v17-live .nx18-ripple{animation:none!important}body.v17-live .nx18-life-orb{display:none!important}}
+@media(max-width:760px){body.v17-live .nrx-bottom-nav{padding-bottom:max(4px,env(safe-area-inset-bottom))!important}}
