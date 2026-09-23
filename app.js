@@ -1557,9 +1557,7 @@ function setMobileSearchOpen(open,{focus=true}={}){
   searchBox.classList.toggle('search-open',shouldOpen);
   searchBox.setAttribute('aria-expanded',String(shouldOpen));
   if(shouldOpen&&focus){
-    requestAnimationFrame(()=>{
-      try{globalSearch.focus({preventScroll:true})}catch(_){globalSearch.focus()}
-    });
+    try{globalSearch.focus({preventScroll:true})}catch(_){globalSearch.focus()}
   }else if(!shouldOpen&&document.activeElement===globalSearch){
     globalSearch.blur();
   }
@@ -1572,6 +1570,17 @@ $('#themeToggle').onclick=()=>{
 $('#profileButton').onclick=()=>$('#profileMenu').classList.toggle('hidden');
 
 globalSearch.addEventListener('focus',()=>{if(innerWidth<=760)setMobileSearchOpen(true,{focus:false})});
+searchBox.addEventListener('pointerdown',e=>{
+  if(innerWidth>760||e.target.closest?.('.v15-voice-search'))return;
+  if(!searchBox.classList.contains('search-open')){
+    searchBox.classList.add('search-open');
+    searchBox.setAttribute('aria-expanded','true');
+  }
+  if(e.target!==globalSearch){
+    e.preventDefault();
+    try{globalSearch.focus({preventScroll:true})}catch(_){globalSearch.focus()}
+  }
+},{capture:true});
 searchBox.addEventListener('click',e=>{
   if(innerWidth<=760&&!searchBox.classList.contains('search-open')){
     e.preventDefault();
@@ -2997,7 +3006,8 @@ function openPage(id) {
     toast('Essa área é restrita ao administrador.','error'); return;
   }
   $$('.page').forEach(p=>p.classList.toggle('active',p.id===id));
-  $$('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  $('.nav-item[data-page], .mobile-bottom [data-page]').forEach(b=>b.classList.toggle('active',b.dataset.page===id));
+  setTimeout(()=>document.dispatchEvent(new CustomEvent('nexo:pagechange',{detail:{id}})),0);
   toggleMenu(false);
   const isMobileNav=window.matchMedia?.('(max-width:760px)')?.matches||innerWidth<=760;
   window.scrollTo({top:0,behavior:isMobileNav||document.body.dataset.motion==='reduced'?'auto':'smooth'});
