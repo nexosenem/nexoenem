@@ -66,6 +66,42 @@ function ensureStudyPriority(){
   }
 }
 
+function ensureStudyStatusSignals(){
+  const page=$('#materiais');
+  if(!page||!page.classList.contains('active'))return;
+  const s=safeState();
+  const materials=Array.isArray(s?.materials)?s.materials:[];
+  $('.content-topic-group',page).forEach(group=>{
+    const topic=$('.content-topic-name h3',group)?.textContent?.trim()||'';
+    if(!topic)return;
+    const item=materials.find(m=>String(m.topic||'').trim()===topic)||null;
+    let meta=null;
+    try{
+      if(typeof topicLearningMeta==='function')meta=topicLearningMeta(topic,item?.subject||'');
+    }catch(_){}
+    if(!meta)return;
+    const host=$('.content-topic-meta',group)||$('.content-topic-name',group);
+    let badge=$('.nx2-topic-status',group);
+    if(!badge){
+      badge=document.createElement('span');
+      badge.className='nx2-topic-status';
+      host?.appendChild(badge);
+    }
+    badge.dataset.status=meta.key||'new';
+    badge.textContent=meta.label||'NOVO';
+    const toggle=$('.content-topic-toggle',group);
+    if(toggle){
+      const details=[
+        meta.label||'Novo',
+        Number(meta.completed||0)+' de '+Math.max(1,Number(meta.materials?.length||0))+' conteúdos',
+        Number(meta.attempts||0)>0?Number(meta.attempts||0)+' questões respondidas':null,
+        meta.reviewDue?'revisão recomendada':null
+      ].filter(Boolean).join(' · ');
+      toggle.setAttribute('aria-label',topic+' · '+details);
+    }
+  });
+}
+
 function syncQuestionRecommendation(){
   const card=$('#questoes .nx2-question-start');
   if(!card)return;
@@ -546,6 +582,7 @@ function ensureMediaPinch(){
 
 function sync(){
   ensureStudyPriority();
+  ensureStudyStatusSignals();
   syncQuestionRecommendation();
   syncContinueRich();
   ensureQuestionObserver();
