@@ -2016,8 +2016,8 @@ async function refreshCurrentRole({silent=true}={}){
     const isAdmin=data.role==='admin';
     renderPlanExperience();
 
-    $('.admin-only:not(.community-modal)').forEach(el=>el.classList.toggle('hidden',!isAdmin));
-    if(!isAdmin)$('.community-modal.admin-only').forEach(el=>el.classList.add('hidden'));
+    document.querySelectorAll('.admin-only:not(.community-modal)').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    if(!isAdmin)document.querySelectorAll('.community-modal.admin-only').forEach(el=>el.classList.add('hidden'));
     const roleLabel=$('#profileRole');
     if(roleLabel)roleLabel.textContent=nexoRolePlanLabel();
 
@@ -3073,8 +3073,8 @@ async function initApp(session) {
     if($('#profileRole'))$('#profileRole').textContent=nexoRolePlanLabel();
     if($('#avatarFallback'))$('#avatarFallback').textContent=initials(name);
     const isAdmin=state.profile.role==='admin';
-    $('.admin-only:not(.community-modal)').forEach(el=>el.classList.toggle('hidden',!isAdmin));
-    $('.community-modal.admin-only').forEach(el=>el.classList.add('hidden'));
+    document.querySelectorAll('.admin-only:not(.community-modal)').forEach(el=>el.classList.toggle('hidden',!isAdmin));
+    document.querySelectorAll('.community-modal.admin-only').forEach(el=>el.classList.add('hidden'));
   });
   await safeBootStep('estilo',async()=>applyNexoStyle(state.profile.assistant_outfit || localStorage.getItem('nexo-style') || localStorage.getItem('nia-outfit') || 'classic', false));
   await safeBootStep('home',async()=>{updateHomeExperience();renderHapticPreference()});
