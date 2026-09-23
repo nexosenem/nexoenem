@@ -227,3 +227,73 @@
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
   new MutationObserver(run).observe(document.body,{subtree:true,childList:true,characterData:true});
 })();
+
+
+/* V17.7 — Micro-feedback, contextual Professor Nexo mood and celebration */
+(function(){
+  'use strict';
+  const $=(s,r=document)=>r.querySelector(s);
+  const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
+  const moodByPage={
+    inicio:'confiante',questoes:'pensativo',redacao:'acolhedor',materiais:'pensativo',
+    desempenho:'confiante',simulados:'serio',semana:'acolhedor',ranking:'feliz'
+  };
+  const sources={
+    confiante:'./assets/nexo-expressions/confiante.avif',
+    pensativo:'./assets/nexo-expressions/pensativo.avif',
+    acolhedor:'./assets/nexo-expressions/acolhedor.avif',
+    serio:'./assets/nexo-expressions/serio.avif',
+    feliz:'./assets/nexo-expressions/feliz.avif'
+  };
+  function syncMood(){
+    const page=$('.page.active')?.id||'inicio',mood=moodByPage[page]||'confiante',src=sources[mood];
+    ['#nexoAvatarImage','#nexoLauncherAvatar'].forEach(sel=>{
+      const img=$(sel);if(img&&img.dataset.nx17Mood!==mood){img.src=src;img.dataset.nx17Mood=mood}
+    });
+    const panel=$('#niaPanel');if(panel)panel.dataset.mood=mood;
+  }
+  function bindRipples(){
+    $$('button').forEach(btn=>{
+      if(btn.dataset.nx17Ripple)return;btn.dataset.nx17Ripple='1';
+      btn.addEventListener('pointerdown',e=>{
+        if(window.NEXOV17?.reduceMotion?.()||btn.disabled)return;
+        const style=getComputedStyle(btn);if(style.position==='static')btn.style.position='relative';
+        if(style.overflow==='visible')btn.style.overflow='hidden';
+        const r=btn.getBoundingClientRect(),dot=document.createElement('i');
+        dot.className='nx17-ripple';dot.style.left=(e.clientX-r.left)+'px';dot.style.top=(e.clientY-r.top)+'px';
+        btn.appendChild(dot);setTimeout(()=>dot.remove(),560);
+      },{passive:true});
+    });
+  }
+  function burst(){
+    if(window.NEXOV17?.reduceMotion?.())return;
+    const x=innerWidth*.5,y=Math.min(innerHeight*.55,420);
+    for(let i=0;i<9;i++){
+      const s=document.createElement('i');s.className='nx17-spark-burst';
+      s.style.left=x+'px';s.style.top=y+'px';
+      const a=(Math.PI*2/9)*i,dist=34+(i%3)*14;
+      s.style.setProperty('--dx',(Math.cos(a)*dist).toFixed(1)+'px');
+      s.style.setProperty('--dy',(Math.sin(a)*dist).toFixed(1)+'px');
+      document.body.appendChild(s);setTimeout(()=>s.remove(),760);
+    }
+  }
+  let lastToast='';
+  function watchDelight(){
+    const toast=$('#toast');
+    if(toast&&!toast.classList.contains('hidden')){
+      const text=(toast.textContent||'').trim().toLocaleLowerCase('pt-BR');
+      if(text&&text!==lastToast){
+        lastToast=text;
+        if(/corret|conquist|conclu|salv|parab|sequência|sequencia/.test(text))burst();
+      }
+    }
+    const celebration=$('#achievementCelebration');
+    if(celebration&&!celebration.classList.contains('hidden')&&!celebration.dataset.nx17Burst){
+      celebration.dataset.nx17Burst='1';burst();
+    }
+    if(celebration?.classList.contains('hidden'))delete celebration.dataset.nx17Burst;
+  }
+  function run(){syncMood();bindRipples();watchDelight()}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',run,{once:true});else run();
+  new MutationObserver(()=>requestAnimationFrame(run)).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['class']});
+})();
