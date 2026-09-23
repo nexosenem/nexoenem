@@ -1724,3 +1724,14 @@ body.nexo-reference-ui .page:not(#inicio)>:is(.panel,.nrx-question-modes,.nx2-qu
     transition:none!important;
   }
 }
+/* Phase 2 S1.2 fixes: global search can be portaled outside #app. */
+@media(max-width:760px){
+  body.nexo-reference-ui #globalSearch{
+    font-size:16.5px!important;
+    line-height:1.3!important;
+    min-height:48px!important;
+  }
+  body.nexo-reference-ui #globalSearch::placeholder{
+    font-size:16px!important;
+  }
+}
