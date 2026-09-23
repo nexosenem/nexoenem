@@ -399,6 +399,24 @@ function syncKeyboardState(){
   const diff=window.innerHeight-window.visualViewport.height;
   document.body.classList.toggle('nexo-keyboard-open',diff>140);
 }
+function ensureSearchShortcut(){
+  if(window.__nx2SearchShortcut)return;
+  window.__nx2SearchShortcut=true;
+  document.addEventListener('keydown',e=>{
+    const key=String(e.key||'').toLowerCase();
+    if(!(e.ctrlKey||e.metaKey)||key!=='k')return;
+    e.preventDefault();
+    const input=$('#globalSearch');
+    if(!input)return;
+    try{ if(innerWidth<=760&&typeof openPage==='function'&&!$('#inicio')?.classList.contains('active'))openPage('inicio') }catch(_){}
+    requestAnimationFrame(()=>{
+      try{ if(typeof setMobileSearchOpen==='function')setMobileSearchOpen(innerWidth<=760,{focus:false}) }catch(_){}
+      try{input.focus({preventScroll:false})}catch(_){input.focus()}
+      input.select?.();
+    });
+  });
+}
+
 function ensureViewportKeyboard(){
   if(!window.visualViewport||window.__nx2Viewport)return;
   window.__nx2Viewport=true;
@@ -458,6 +476,7 @@ function sync(){
   ensureMoreGroups();
   ensureDialogSemantics();
   ensureDrawerSwipe();
+  ensureSearchShortcut();
   ensureViewportKeyboard();
   ensureMediaPinch();
 }
