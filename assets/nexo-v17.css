@@ -319,3 +319,62 @@ body.light.v17-live .nrx-hero{box-shadow:0 18px 42px rgba(39,55,100,.10)!importa
   body.v17-live .nrx-hero-note,
   .nx17-ambient>i{animation:none!important}
 }
+
+
+/* V17.3 — Estudar: compact learning library with clear subject hierarchy */
+body.v17-live #materiais .page-head{align-items:flex-end!important}
+body.v17-live #materiais .page-head>div:first-child{max-width:720px}
+body.v17-live #materiais .nexo-content-head{gap:14px!important}
+body.v17-live #materiais .v15-material-tabs{
+  position:sticky;top:76px;z-index:8;
+  backdrop-filter:blur(18px);background:rgba(8,16,31,.88)!important;
+}
+body.v17-live #materiais .material-subject-nav{
+  gap:8px!important;padding:2px 1px 12px!important;
+  mask-image:linear-gradient(90deg,#000 94%,transparent);
+}
+body.v17-live #materiais .material-subject-nav button{
+  min-height:38px!important;padding:0 14px!important;border-radius:11px!important;
+}
+body.v17-live #materiais #materialLibraryMeta{margin:4px 0 12px}
+body.v17-live #materiais .library-course-meta{
+  border:1px solid rgba(129,145,188,.13)!important;border-radius:14px!important;
+  background:linear-gradient(180deg,rgba(13,25,46,.90),rgba(9,18,35,.90))!important;
+}
+body.v17-live #materiais #materialGrid{
+  display:grid!important;grid-template-columns:1fr!important;gap:9px!important;
+}
+body.v17-live #materiais #materialGrid>*{
+  min-height:88px!important;margin:0!important;padding:13px 14px!important;
+  border-radius:14px!important;
+  background:linear-gradient(180deg,rgba(14,26,48,.96),rgba(9,19,36,.96))!important;
+  transition:transform .16s ease,border-color .16s ease,background .16s ease!important;
+}
+body.v17-live #materiais #materialGrid>*:hover{
+  transform:translateY(-1px);border-color:rgba(119,90,248,.30)!important;
+  background:linear-gradient(180deg,rgba(18,31,57,.97),rgba(11,22,42,.97))!important;
+}
+body.v17-live #materiais #materialGrid :is(h3,b,strong){letter-spacing:-.15px}
+body.v17-live #materiais #materialGrid :is(p,small){line-height:1.4}
+body.v17-live #materiais .v15-library-filters{
+  border-radius:13px!important;background:rgba(10,19,36,.76)!important;
+}
+.nx17-study-live{
+  display:flex;align-items:center;gap:9px;width:max-content;max-width:100%;
+  margin:0 0 10px;padding:7px 10px;border:1px solid rgba(94,211,190,.14);border-radius:999px;
+  background:rgba(57,192,165,.055);color:#9aa9bd;font-size:9.5px;font-weight:650;
+}
+.nx17-study-live i{
+  width:7px;height:7px;border-radius:50%;background:#62ddb8;box-shadow:0 0 0 4px rgba(98,221,184,.08);
+}
+.nx17-study-live b{color:#d9e0ec;font-size:9.5px}
+@media(max-width:760px){
+  body.v17-live #materiais .v15-material-tabs{top:63px}
+  body.v17-live #materiais .material-subject-nav{padding-bottom:9px!important}
+  body.v17-live #materiais #materialGrid>*{min-height:82px!important;padding:12px!important}
+  .nx17-study-live{width:100%;justify-content:center;border-radius:12px}
+}
+body.light.v17-live #materiais .v15-material-tabs{background:rgba(255,255,255,.91)!important}
+body.light.v17-live #materiais #materialGrid>*{background:#fff!important}
+body.light.v17-live .nx17-study-live{background:#f2fbf8;border-color:rgba(35,151,118,.12);color:#64758b}
+body.light.v17-live .nx17-study-live b{color:#26344c}
