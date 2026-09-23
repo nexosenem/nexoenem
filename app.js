@@ -2897,7 +2897,10 @@ function persistStudySession(){
       coachLongSeconds:s.coachLongSeconds||null,
       examMode:Boolean(s.examMode),
       examStartedAt:s.examStartedAt||null,
-      paceAlerts:s.paceAlerts||{}
+      paceAlerts:s.paceAlerts||{},
+      currentQuestionId:Number(state.current?.id||0)||null,
+      selectedOption:Number.isInteger(state.selectedOption)?Number(state.selectedOption):null,
+      questionElapsedSeconds:state.questionStartedAt?Math.max(0,Math.round((Date.now()-state.questionStartedAt)/1000)):0
     }));
   }catch(_){}
 }
@@ -2952,8 +2955,17 @@ async function resumePersistedStudySession(){
     $('#sessionSubtitle').textContent='Você voltou exatamente de onde parou.';
     updateStudyNavigation(state.session);
     ensureExamClock();
+    const resumeOption=Number.isInteger(saved.selectedOption)?Number(saved.selectedOption):null;
+    const resumeQuestionId=Number(saved.currentQuestionId||0);
+    const resumeElapsed=Math.max(0,Number(saved.questionElapsedSeconds||0));
     await showCurrentQuestion();
-    toast('Sessão retomada.');
+    if(resumeOption!==null&&Number(state.current?.id||0)===resumeQuestionId){
+      state.questionStartedAt=Date.now()-(resumeElapsed*1000);
+      selectAnswerOption(resumeOption);
+      toast('Sessão e alternativa restauradas.');
+    }else{
+      toast('Sessão retomada.');
+    }
   }catch(err){
     console.error('resume session',err);
     clearPersistedStudySession();
@@ -4523,6 +4535,7 @@ function selectAnswerOption(option){
     confirm.textContent=`Confirmar ${'ABCDE'[option]}`;
     confirm.onclick=()=>submitAnswer(option);
   }
+  persistStudySession();
 }
 
 function bindVisualZoom(stage){
@@ -5176,7 +5189,10 @@ function buildImmediateNexoReaction(q,data,duration,behavior={}){
 }
 async function submitAnswer(option) {
   if(state.answered||!state.current||state.selectedOption===null)return;
-  if(!navigator.onLine)return toast('Você está offline. Reconecte para registrar e corrigir esta resposta.','error');
+  if(!navigator.onLine){
+    persistStudySession();
+    return toast('Você está offline. Sua alternativa foi preservada; reconecte para registrar e corrigir.','info');
+  }
   const behaviorSnapshot=state.questionBehavior?{
     questionId:state.questionBehavior.questionId,
     startedAt:state.questionBehavior.startedAt,
