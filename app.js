@@ -2650,7 +2650,7 @@ function openAdminVisualRepairModal(row){
   if(prompt)prompt.textContent=row.prompt_preview||'Recurso visual obrigatório ainda não restaurado.';
   const sourceLink=$('#adminVisualRepairSource');
   if(sourceLink){
-    const source=String(row.source_reference||'').trim();
+    const source=String(row.source_pdf_url||'').trim();
     const allowed=source.startsWith('https://download.inep.gov.br/');
     sourceLink.classList.toggle('hidden',!allowed);
     if(allowed)sourceLink.href=source;
@@ -2666,9 +2666,13 @@ async function loadAdminVisualRepairQueue(){
   if(state.profile?.role!=='admin')return;
   const target=$('#adminVisualRepairQueue');if(!target)return;
   try{
-    const {data,error}=await client.rpc('get_admin_visual_repair_queue',{p_limit:100});
-    if(error)throw error;
-    const rows=data||[];
+    let result=await client.rpc('get_admin_visual_repair_queue_v2',{p_limit:100});
+    if(result.error){
+      console.warn('visual repair queue v2 fallback',result.error);
+      result=await client.rpc('get_admin_visual_repair_queue',{p_limit:100});
+    }
+    if(result.error)throw result.error;
+    const rows=result.data||[];
     if($('#adminVisualRepairCount'))$('#adminVisualRepairCount').textContent=rows.length+' pendente'+(rows.length===1?'':'s');
     target.innerHTML=rows.length?rows.map(row=>{
       const attempts=Number(row.attempts||0),wrong=Number(row.wrong||0),reports=Number(row.open_reports||0);
@@ -2681,7 +2685,7 @@ async function loadAdminVisualRepairQueue(){
           <small>${esc(row.topic||'')} · ${attempts} tentativa${attempts===1?'':'s'}${attempts?' · '+errRate+'% de erro':''}${reports?' · '+reports+' reporte'+(reports===1?'':'s')+' visual':''}</small>
           <div class="comment-actions">
             <button data-visual-repair="${row.question_id}">Restaurar mídia</button>
-            ${String(row.source_reference||'').startsWith('https://download.inep.gov.br/')?'<a class="admin-source-link" href="'+esc(row.source_reference)+'" target="_blank" rel="noopener noreferrer">Abrir prova oficial ↗</a>':''}
+            ${String(row.source_pdf_url||'').startsWith('https://download.inep.gov.br/')?'<a class="admin-source-link" href="'+esc(row.source_pdf_url)+'" target="_blank" rel="noopener noreferrer">Abrir prova oficial ↗</a>':''}
           </div>
         </div>
       </div>`;
