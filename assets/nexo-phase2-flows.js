@@ -709,6 +709,24 @@ function ensureSearchShortcut(){
   });
 }
 
+function ensureKeyboardFocusVisibility(){
+  if(window.__nx2FocusVisibility)return;
+  window.__nx2FocusVisibility=true;
+  document.addEventListener('focusin',e=>{
+    if(innerWidth>760||!e.target.matches?.('input,textarea,select,[contenteditable="true"]'))return;
+    const el=e.target;
+    setTimeout(()=>{
+      const viewport=window.visualViewport;
+      const r=el.getBoundingClientRect();
+      const topLimit=82;
+      const bottomLimit=viewport?viewport.height-18:innerHeight-18;
+      if(r.top<topLimit||r.bottom>bottomLimit){
+        try{el.scrollIntoView({behavior:document.body.dataset.motion==='reduced'?'auto':'smooth',block:'center'})}catch(_){}
+      }
+    },180);
+  },true);
+}
+
 function ensureViewportKeyboard(){
   if(!window.visualViewport||window.__nx2Viewport)return;
   window.__nx2Viewport=true;
@@ -776,6 +794,7 @@ function sync(){
   ensureDialogSemantics();
   ensureDrawerSwipe();
   ensureSearchShortcut();
+  ensureKeyboardFocusVisibility();
   ensureViewportKeyboard();
   ensureMediaPinch();
 }
