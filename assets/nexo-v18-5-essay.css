@@ -1,0 +1,8 @@
+/* NEXO V18.5 · Essay workspace */
+body.v17-live #redacao .essay-writing-shell{max-width:1120px;margin-inline:auto}
+body.v17-live #redacao .essay-theme-control,body.v17-live #redacao .essay-guide-card,body.v17-live #redacao .essay-sheet-card{background:linear-gradient(180deg,rgba(14,26,48,.96),rgba(9,19,36,.96))!important;border-color:rgba(132,146,188,.13)!important}
+body.v17-live #redacao #essayText{min-height:390px!important;background:rgba(7,16,31,.72)!important;border-color:rgba(132,146,188,.16)!important;resize:vertical}
+body.v17-live #redacao #essayText:focus{border-color:rgba(118,89,255,.50)!important;box-shadow:0 0 0 3px rgba(118,89,255,.08)!important}
+body.v17-live #redacao .essay-result,body.v17-live #redacao .essay-report{border-radius:16px!important}
+body.v17-live #redacao .competency-card{border-radius:14px!important}
+@media(max-width:760px){body.v17-live #redacao #essayText{min-height:330px!important}body.v17-live #redacao .essay-writing-shell{gap:10px!important}}
