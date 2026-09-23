@@ -1470,6 +1470,25 @@
     </nav>
   </div>
 
+  <div id="realExamModal" class="community-modal hidden" aria-modal="true" role="dialog" aria-labelledby="realExamTitle">
+    <div class="community-sheet real-exam-sheet">
+      <div class="community-head">
+        <div><span class="eyebrow">ENEM REAL</span><h3 id="realExamTitle">Qual dia você quer simular?</h3></div>
+        <button id="closeRealExam" class="icon-btn" aria-label="Fechar escolha do ENEM Real">×</button>
+      </div>
+      <p class="real-exam-intro">O NEXO preserva a divisão oficial das áreas. São 90 questões objetivas em modo prova, com gabarito somente no relatório final.</p>
+      <div class="real-exam-options">
+        <button type="button" data-real-exam-day="1">
+          <span>1º DIA</span><b>Linguagens + Ciências Humanas</b><small>45 questões de Linguagens · 45 de Humanas</small><i>→</i>
+        </button>
+        <button type="button" data-real-exam-day="2">
+          <span>2º DIA</span><b>Ciências da Natureza + Matemática</b><small>45 questões de Natureza · 45 de Matemática</small><i>→</i>
+        </button>
+      </div>
+      <small class="real-exam-note">A redação continua disponível no módulo Redação e não é misturada automaticamente ao cronômetro desta sessão objetiva.</small>
+    </div>
+  </div>
+
   <div id="experienceSettingsModal" class="experience-settings-modal hidden" aria-modal="true" role="dialog">
     <section class="experience-settings-shell">
       <header><div><span class="eyebrow">NEXO · EXPERIÊNCIA</span><h3>Ajuste o NEXO para você.</h3><p>Tamanho de texto, contraste, animações e consumo de dados ficam salvos neste aparelho.</p></div><button id="closeExperienceSettings" class="icon-btn">×</button></header>
