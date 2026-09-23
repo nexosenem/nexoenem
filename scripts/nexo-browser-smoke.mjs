@@ -2930,10 +2930,11 @@ async function runViewportAudit(browser,name,viewport){
 
 const browser=await chromium.launch({headless:true});
 try{
-  await Promise.all([
-    runProfile(browser,'desktop',{width:1440,height:900}),
-    runProfile(browser,'mobile',{width:390,height:844})
-  ]);
+  // Full profiles share the same localhost service-worker origin.
+  // Run them sequentially so one profile cannot activate a worker while the
+  // other is inside page.evaluate(), which would destroy its execution context.
+  await runProfile(browser,'desktop',{width:1440,height:900});
+  await runProfile(browser,'mobile',{width:390,height:844});
   await Promise.all([
     runViewportAudit(browser,'mobile-360',{width:360,height:800}),
     runViewportAudit(browser,'mobile-430',{width:430,height:932}),
