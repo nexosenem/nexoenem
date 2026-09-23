@@ -576,3 +576,43 @@ body.v17-live .achievement-celebration:not(.hidden) .achievement-celebration-car
   body.v17-live .nrx-side-item.active>span,
   body.v17-live .nrx-bottom-nav button.active>span{animation:none!important}
 }
+
+
+/* V17.8 — final hardening: performance, safe areas, keyboard, low-motion, light theme */
+body.v17-live :is(#materialGrid,#bankList,#performanceTimeline,#sessionHistory,#essayHistoryList,.journey-store-grid,.wardrobe-grid,.admin-user-list){
+  content-visibility:auto;contain-intrinsic-size:1px 720px;
+}
+body.v17-live img[loading="lazy"]{content-visibility:auto}
+body.v17-live button:disabled{cursor:not-allowed!important}
+body.v17-live .nx17-offline{
+  position:fixed;z-index:130;left:50%;top:max(10px,env(safe-area-inset-top));
+  transform:translateX(-50%);display:flex;align-items:center;gap:7px;
+  padding:8px 11px;border-radius:999px;
+  border:1px solid rgba(239,202,105,.22);background:rgba(24,21,14,.92);color:#f2d889;
+  box-shadow:0 10px 28px rgba(0,0,0,.24);backdrop-filter:blur(16px);
+  font-size:9px;font-weight:750;
+}
+body.v17-live .nx17-offline.hidden{display:none}
+body.v17-live .nx17-offline i{width:7px;height:7px;border-radius:50%;background:#efca69}
+@media(max-width:760px){
+  body.v17-live input,
+  body.v17-live textarea,
+  body.v17-live select{font-size:16px!important}
+  body.v17-live :is(button,a,[role="button"]){min-height:min(44px,var(--nx17-control-height,44px))}
+  body.v17-live .nrx-mob-action{min-height:auto!important}
+  body.v17-live .nrx-mob-action i{min-height:48px}
+  body.v17-live .nrx-bottom-nav button{min-height:52px!important}
+}
+@media(hover:none){
+  body.v17-live .nrx-shortcut:hover,
+  body.v17-live .sim-card:hover,
+  body.v17-live .v15-question-modes>button:hover{transform:none!important}
+}
+@media(prefers-reduced-motion:reduce){
+  body.v17-live *,body.v17-live *::before,body.v17-live *::after{
+    scroll-behavior:auto!important;transition-duration:.001ms!important;animation-duration:.001ms!important;animation-iteration-count:1!important;
+  }
+}
+@media(forced-colors:active){
+  body.v17-live :is(button,a,input,textarea,select,.panel,.nrx-stat-card){forced-color-adjust:auto}
+}
