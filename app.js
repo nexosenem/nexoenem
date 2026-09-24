@@ -362,6 +362,9 @@ const state = {
     avatar:null
   }
 };
+// Explicit shared state bridge for modular Phase 2+ layers.
+// Keeps newer modules from depending on classic-script lexical scope.
+window.NEXO_STATE=state;
 
 function nexoHapticsEnabled(){
   return localStorage.getItem('nexo-haptics')==='on';
