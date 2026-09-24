@@ -156,7 +156,7 @@ function syncContinueRich(){
 
 function ensureHomeNextAction(){
   const s=safeState();
-  const homes=$('.nrx-home');
+  const homes=Array.from(document.querySelectorAll('.nrx-home'));
   if(!homes.length)return;
 
   let session=s?.session?.queue?.length?s.session:null;
