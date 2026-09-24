@@ -811,6 +811,13 @@ document.addEventListener('click',e=>{
 },{passive:true});
 new MutationObserver(syncDraftStatus).observe(document.body,{attributes:true,attributeFilter:['data-essay-draft-state']});
 
+Object.assign(window.NEXO_PHASE2,{
+  refresh:sync,
+  refreshHome:ensureHomeNextAction,
+  refreshQuestion:()=>{syncQuestionRecommendation();enhanceQuestionCard()},
+  refreshEssay:()=>{ensureEssayTools();ensureEssayAdvancedDisclosure();ensureEssayOrganizer()}
+});
+
 const boot=()=>requestAnimationFrame(()=>{sync();requestAnimationFrame(()=>document.body.classList.add('theme-ready'))});
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});
 else boot();
