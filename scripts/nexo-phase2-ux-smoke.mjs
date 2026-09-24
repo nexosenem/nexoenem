@@ -14,7 +14,7 @@ try{
   page.setDefaultTimeout(12000);
 
   await page.goto(BASE+'?phase2_ux=1',{waitUntil:'domcontentloaded'});
-  await page.waitForFunction(()=>Boolean(window.NEXO_PHASE2?.coreUx&&document.querySelector('.nrx-bottom-nav')));
+  await page.waitForFunction(()=>Boolean(window.NEXO_PHASE2?.coreUx&&window.NEXO_PHASE2?.flows&&document.querySelector('.nrx-bottom-nav')));
 
   const result=await page.evaluate(async()=>{
     const app=document.querySelector('#app');
