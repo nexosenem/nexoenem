@@ -44,6 +44,7 @@ try{
     if(typeof openPage==='function')openPage('inicio');
     document.dispatchEvent(new CustomEvent('nexo:core-updated',{detail:{core:window.NEXO_STATE?.core||null}}));
     document.dispatchEvent(new CustomEvent('nexo:pagechange',{detail:{id:'inicio'}}));
+    window.NEXO_PHASE2?.refreshHome?.();
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     const homeNext=document.querySelector('.nrx-mobile .nx2-home-next');
 
