@@ -3167,3 +3167,53 @@ body.nexo-reference-ui #toggleNexoHaptics{
     right:max(10px,env(safe-area-inset-right))!important;
   }
 }
+
+
+/* === PHASE 2 S2.13 · content overflow and media resilience === */
+body.nexo-reference-ui .page :is(
+  .panel,.card,.question-card,.essay-editor-v2,.essay-side-v2,
+  .content-topic-group,.sim-card,.performance-card,.planner-card,
+  .nrx-stat-card,.nrx-preview
+){
+  min-width:0;
+  max-width:100%;
+}
+body.nexo-reference-ui .page :is(img,video,canvas){
+  max-width:100%;
+}
+body.nexo-reference-ui .page :is(p,li,small,label,.muted,.meta){
+  overflow-wrap:break-word;
+}
+body.nexo-reference-ui .page a{
+  overflow-wrap:anywhere;
+}
+body.nexo-reference-ui .page table{
+  max-width:100%;
+}
+body.nexo-reference-ui .q-context table,
+body.nexo-reference-ui .q-prompt table,
+body.nexo-reference-ui .visual-stage table{
+  display:block;
+  width:max-content;
+  max-width:100%;
+  overflow-x:auto;
+  -webkit-overflow-scrolling:touch;
+}
+body.nexo-reference-ui .q-context pre,
+body.nexo-reference-ui .q-prompt pre{
+  max-width:100%;
+  overflow:auto;
+}
+@media(max-width:760px){
+  body.nexo-reference-ui .page{
+    overflow-x:clip;
+  }
+  body.nexo-reference-ui :is(.q-context,.q-prompt,.essay-prompt,.material-viewer-body){
+    min-width:0;
+    max-width:100%;
+  }
+  body.nexo-reference-ui :is(.visual-stage,.q-media-gallery){
+    max-width:100%;
+    overflow:hidden;
+  }
+}
