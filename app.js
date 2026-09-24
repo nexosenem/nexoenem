@@ -3620,6 +3620,7 @@ async function loadNexoCore(){
   }
   renderNexoCore();
   document.dispatchEvent(new CustomEvent('nexo:core-updated',{detail:{core:state.core}}));
+  window.NEXO_PHASE2?.refreshHome?.();
   return state.core;
 }
 
