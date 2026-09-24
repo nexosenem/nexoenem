@@ -38,11 +38,11 @@ try{
     const docOverflow=document.documentElement.scrollWidth>document.documentElement.clientWidth+2;
 
     // Home should react to real recommendation/session state instead of staying static.
-    if(typeof state!=='undefined'){
-      state.core={...(state.core||{}),recommended_action:{topic:'Porcentagem',size:6,reason:'Prioridade de teste baseada no desempenho recente.'}};
+    if(window.NEXO_STATE){
+      window.NEXO_STATE.core={...(window.NEXO_STATE.core||{}),recommended_action:{topic:'Porcentagem',size:6,reason:'Prioridade de teste baseada no desempenho recente.'}};
     }
     if(typeof openPage==='function')openPage('inicio');
-    document.dispatchEvent(new CustomEvent('nexo:core-updated',{detail:{core:typeof state!=='undefined'?state.core:null}}));
+    document.dispatchEvent(new CustomEvent('nexo:core-updated',{detail:{core:window.NEXO_STATE?.core||null}}));
     document.dispatchEvent(new CustomEvent('nexo:pagechange',{detail:{id:'inicio'}}));
     await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
     const homeNext=document.querySelector('.nrx-mobile .nx2-home-next');
