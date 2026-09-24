@@ -7,7 +7,10 @@ const $=(s,r=document)=>r.querySelector(s);
 const $$=(s,r=document)=>Array.from(r.querySelectorAll(s));
 
 function safeState(){
-  try{return typeof state!=='undefined'?state:null}catch(_){return null}
+  try{
+    if(window.NEXO_STATE)return window.NEXO_STATE;
+    return typeof state!=='undefined'?state:null;
+  }catch(_){return null}
 }
 
 function dispatchChange(el){
