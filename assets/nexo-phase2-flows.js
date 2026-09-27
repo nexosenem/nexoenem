@@ -585,7 +585,11 @@ function sortComments(){
 
 function visibleDialog(){
   if(document.body.classList.contains('mobile-menu-open'))return $('#sidebar');
-  const selectors=['#nexoOnboarding:not(.hidden)','.community-modal:not(.hidden)','#notificationPanel:not(.hidden)','#profileMenu:not(.hidden)','.nia-panel:not(.hidden)'];
+  if(document.body.classList.contains('onboarding-open')){
+    const onboarding=$('#nexoOnboarding:not(.hidden)');
+    if(onboarding)return onboarding;
+  }
+  const selectors=['.community-modal:not(.hidden)','#notificationPanel:not(.hidden)','#profileMenu:not(.hidden)','.nia-panel:not(.hidden)'];
   return selectors.map(s=>$(s)).find(Boolean)||null;
 }
 function closeDialog(dialog){
@@ -684,7 +688,8 @@ function syncOnboardingSemantics({focus=false}={}){
     progress.setAttribute('aria-valuemax',String(Math.max(1,steps.length)));
     progress.setAttribute('aria-valuenow',String(current));
   }
-  if(focus&&!modal.classList.contains('hidden')&&active){
+  const trulyOpen=!modal.classList.contains('hidden')&&document.body.classList.contains('onboarding-open');
+  if(focus&&trulyOpen&&active){
     const title=$('h3',active);
     requestAnimationFrame(()=>{
       try{title?.focus({preventScroll:true})}catch(_){title?.focus()}
@@ -702,13 +707,13 @@ function ensureOnboardingA11y(){
     queued=true;
     requestAnimationFrame(()=>{
       queued=false;
-      syncOnboardingSemantics({focus:!modal.classList.contains('hidden')});
+      syncOnboardingSemantics({focus:!modal.classList.contains('hidden')&&document.body.classList.contains('onboarding-open')});
     });
   };
   const observer=new MutationObserver(queue);
   observer.observe(modal,{attributes:true,attributeFilter:['class']});
   $('[data-onboarding-step]',modal).forEach(step=>observer.observe(step,{attributes:true,attributeFilter:['class']}));
-  syncOnboardingSemantics({focus:!modal.classList.contains('hidden')});
+  syncOnboardingSemantics({focus:!modal.classList.contains('hidden')&&document.body.classList.contains('onboarding-open')});
 }
 
 function ensureDrawerSwipe(){
