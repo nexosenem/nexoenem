@@ -25,6 +25,7 @@ try{
     const s0=performance.now();
     searchBox?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
     const searchMs=performance.now()-s0;
+    const searchFocused=document.activeElement===search;
 
     async function nav(key,id){
       const btn=document.querySelector('[data-nrx-bottom="'+key+'"]');
@@ -56,7 +57,7 @@ try{
 
     return {
       phase1:Boolean(window.NEXO_PHASE1?.ready),
-      search:{focused:document.activeElement===search,ms:searchMs},
+      search:{focused:searchFocused,ms:searchMs},
       navigation,
       typography:{normalFont,xlargeFont},
       overflows
