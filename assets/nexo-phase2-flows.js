@@ -646,7 +646,7 @@ function ensureMoreGroups(){
 }
 
 function ensureDialogSemantics(){
-  $('.community-modal').forEach(modal=>{
+  $$('.community-modal').forEach(modal=>{
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-modal','true');
     const h=$('h3',modal);
@@ -666,7 +666,7 @@ function ensureDialogSemantics(){
 function syncOnboardingSemantics({focus=false}={}){
   const modal=$('#nexoOnboarding');
   if(!modal)return;
-  const steps=$('[data-onboarding-step]',modal);
+  const steps=$$('[data-onboarding-step]',modal);
   const active=steps.find(step=>!step.classList.contains('hidden'))||null;
   steps.forEach(step=>{
     const hidden=step!==active;
@@ -712,7 +712,7 @@ function ensureOnboardingA11y(){
   };
   const observer=new MutationObserver(queue);
   observer.observe(modal,{attributes:true,attributeFilter:['class']});
-  $('[data-onboarding-step]',modal).forEach(step=>observer.observe(step,{attributes:true,attributeFilter:['class']}));
+  $$('[data-onboarding-step]',modal).forEach(step=>observer.observe(step,{attributes:true,attributeFilter:['class']}));
   syncOnboardingSemantics({focus:!modal.classList.contains('hidden')&&document.body.classList.contains('onboarding-open')});
 }
 
