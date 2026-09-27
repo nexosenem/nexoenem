@@ -585,7 +585,7 @@ function sortComments(){
 
 function visibleDialog(){
   if(document.body.classList.contains('mobile-menu-open'))return $('#sidebar');
-  const selectors=['.community-modal:not(.hidden)','#notificationPanel:not(.hidden)','#profileMenu:not(.hidden)','.nia-panel:not(.hidden)'];
+  const selectors=['#nexoOnboarding:not(.hidden)','.community-modal:not(.hidden)','#notificationPanel:not(.hidden)','#profileMenu:not(.hidden)','.nia-panel:not(.hidden)'];
   return selectors.map(s=>$(s)).find(Boolean)||null;
 }
 function closeDialog(dialog){
@@ -602,7 +602,12 @@ function trapDialogKeydown(e){
   if(e.key==='Escape'){
     e.preventDefault();
     if(dialog.id==='sidebar')$('#closeMenu')?.click();
-    else closeDialog(dialog);
+    else if(dialog.id==='nexoOnboarding'){
+      // Initial onboarding is intentional and must not be bypassed by Escape.
+      try{
+        if(typeof state!=='undefined'&&state?.onboarding?.manual&&typeof closeNexoOnboarding==='function')closeNexoOnboarding();
+      }catch(_){}
+    }else closeDialog(dialog);
     return;
   }
   if(e.key!=='Tab')return;
@@ -637,7 +642,7 @@ function ensureMoreGroups(){
 }
 
 function ensureDialogSemantics(){
-  $$('.community-modal').forEach(modal=>{
+  $('.community-modal').forEach(modal=>{
     modal.setAttribute('role','dialog');
     modal.setAttribute('aria-modal','true');
     const h=$('h3',modal);
@@ -652,6 +657,58 @@ function ensureDialogSemantics(){
     notice.setAttribute('aria-modal','false');
     notice.setAttribute('aria-label','Notificações');
   }
+}
+
+function syncOnboardingSemantics({focus=false}={}){
+  const modal=$('#nexoOnboarding');
+  if(!modal)return;
+  const steps=$('[data-onboarding-step]',modal);
+  const active=steps.find(step=>!step.classList.contains('hidden'))||null;
+  steps.forEach(step=>{
+    const hidden=step!==active;
+    step.setAttribute('aria-hidden',String(hidden));
+    const title=$('h3',step);
+    if(title){
+      if(!title.id)title.id='nx2-onboarding-step-'+String(step.dataset.onboardingStep||'');
+      title.tabIndex=-1;
+    }
+  });
+  const label=$('#onboardingStepLabel',modal);
+  if(label)label.setAttribute('aria-live','polite');
+  const progress=$('.onboarding-progress',modal);
+  const current=Math.max(1,Number(active?.dataset.onboardingStep||1));
+  if(progress){
+    progress.setAttribute('role','progressbar');
+    progress.setAttribute('aria-label','Progresso da configuração inicial');
+    progress.setAttribute('aria-valuemin','1');
+    progress.setAttribute('aria-valuemax',String(Math.max(1,steps.length)));
+    progress.setAttribute('aria-valuenow',String(current));
+  }
+  if(focus&&!modal.classList.contains('hidden')&&active){
+    const title=$('h3',active);
+    requestAnimationFrame(()=>{
+      try{title?.focus({preventScroll:true})}catch(_){title?.focus()}
+    });
+  }
+}
+
+function ensureOnboardingA11y(){
+  const modal=$('#nexoOnboarding');
+  if(!modal||modal.dataset.nx2A11y)return;
+  modal.dataset.nx2A11y='1';
+  let queued=false;
+  const queue=()=>{
+    if(queued)return;
+    queued=true;
+    requestAnimationFrame(()=>{
+      queued=false;
+      syncOnboardingSemantics({focus:!modal.classList.contains('hidden')});
+    });
+  };
+  const observer=new MutationObserver(queue);
+  observer.observe(modal,{attributes:true,attributeFilter:['class']});
+  $('[data-onboarding-step]',modal).forEach(step=>observer.observe(step,{attributes:true,attributeFilter:['class']}));
+  syncOnboardingSemantics({focus:!modal.classList.contains('hidden')});
 }
 
 function ensureDrawerSwipe(){
@@ -795,6 +852,7 @@ function sync(){
   ensureCommentSort();
   ensureMoreGroups();
   ensureDialogSemantics();
+  ensureOnboardingA11y();
   ensureDrawerSwipe();
   ensureSearchShortcut();
   ensureKeyboardFocusVisibility();
