@@ -60,7 +60,62 @@ try{
     textarea?.focus();
     const keyboardScrollMargin=textarea?parseFloat(getComputedStyle(textarea).scrollMarginTop):0;
 
-    return {textNodes,keyTargets,unlabeled,focusVisible,light,keyboardScrollMargin};
+    const onboarding={};
+    const previous={
+      user:typeof state!=='undefined'?state.user:null,
+      profile:typeof state!=='undefined'?state.profile:null,
+      onboarding:typeof state!=='undefined'?state.onboarding:null
+    };
+    try{
+      if(typeof state!=='undefined'){
+        state.user=state.user||{id:'phase2-a11y-user',email:'a11y@nexo.local'};
+        state.profile={...(state.profile||{}),goal_score:750,difficult_areas:['Matemática'],daily_minutes:60};
+      }
+      if(typeof openNexoOnboarding==='function')openNexoOnboarding(true);
+      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      const modal=document.querySelector('#nexoOnboarding');
+      const step1=modal?.querySelector('[data-onboarding-step="1"]');
+      const title1=step1?.querySelector('h3');
+      const progress=modal?.querySelector('.onboarding-progress');
+      onboarding.open=Boolean(modal&&!modal.classList.contains('hidden'));
+      onboarding.step1Semantic=Boolean(step1?.getAttribute('aria-hidden')==='false'&&title1?.tabIndex===-1);
+      onboarding.progress1=Boolean(
+        progress?.getAttribute('role')==='progressbar' &&
+        progress?.getAttribute('aria-valuenow')==='1' &&
+        Number(progress?.getAttribute('aria-valuemax')||0)>=5
+      );
+      onboarding.initialFocus=document.activeElement===title1;
+
+      modal?.querySelector('#onboardingNext')?.click();
+      await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+      const step2=modal?.querySelector('[data-onboarding-step="2"]');
+      const title2=step2?.querySelector('h3');
+      onboarding.step2Semantic=Boolean(
+        step1?.getAttribute('aria-hidden')==='true' &&
+        step2?.getAttribute('aria-hidden')==='false' &&
+        progress?.getAttribute('aria-valuenow')==='2'
+      );
+      onboarding.step2Focus=document.activeElement===title2;
+
+      const focusables=[...(modal?.querySelectorAll('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])')||[])]
+        .filter(el=>!el.disabled&&el.getBoundingClientRect().width>0&&el.getBoundingClientRect().height>0);
+      const first=focusables[0],last=focusables[focusables.length-1];
+      last?.focus();
+      last?.dispatchEvent(new KeyboardEvent('keydown',{key:'Tab',bubbles:true,cancelable:true}));
+      onboarding.focusTrap=Boolean(first&&document.activeElement===first);
+
+      if(typeof closeNexoOnboarding==='function')closeNexoOnboarding();
+    }finally{
+      if(typeof state!=='undefined'){
+        state.user=previous.user;
+        state.profile=previous.profile;
+        state.onboarding=previous.onboarding;
+      }
+      document.querySelector('#nexoOnboarding')?.classList.add('hidden');
+      document.body.classList.remove('onboarding-open');
+    }
+
+    return {textNodes,keyTargets,unlabeled,focusVisible,light,keyboardScrollMargin,onboarding};
   });
 
   const tooSmall=result.textNodes.filter(x=>x.font<11);
@@ -71,6 +126,7 @@ try{
   if(!result.focusVisible)failures.push('focus-visible');
   if(result.light.overflow)failures.push('light-theme-overflow');
   if(result.keyboardScrollMargin<70)failures.push('keyboard-focus-scroll-margin');
+  if(Object.values(result.onboarding||{}).some(value=>value!==true))failures.push('onboarding-dialog-a11y');
 
   console.log(JSON.stringify({name:'NEXO Phase 2 accessibility smoke',result:{
     minFont:Math.min(...result.textNodes.map(x=>x.font),99),
@@ -79,7 +135,8 @@ try{
     unlabeled:result.unlabeled.slice(0,20),
     focusVisible:result.focusVisible,
     light:result.light,
-    keyboardScrollMargin:result.keyboardScrollMargin
+    keyboardScrollMargin:result.keyboardScrollMargin,
+    onboarding:result.onboarding
   },failures},null,2));
   await context.close();
 }finally{
