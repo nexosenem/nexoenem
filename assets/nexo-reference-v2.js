@@ -19,7 +19,21 @@ function pctNumber(text){
 function toneClass(p){
   return p<=39?'nrx-score-low':p<=79?'nrx-score-mid':'nrx-score-high';
 }
-function go(page){
+function closeReferenceTransientUi({keepSearch=false}={}){
+  $('#profileMenu')?.classList.add('hidden');
+  try{if(typeof closeReferenceMore==='function')closeReferenceMore()}catch(_){}
+  if(document.body.classList.contains('mobile-menu-open')){
+    $('#closeMenu')?.click();
+  }
+  if(!keepSearch){
+    try{
+      if(typeof setMobileSearchOpen==='function')setMobileSearchOpen(false,{focus:false});
+    }catch(_){}
+  }
+}
+
+function go(page,{keepSearch=false}={}){
+  closeReferenceTransientUi({keepSearch});
   try{
     if(typeof window.openPage==='function'){window.openPage(page);return}
   }catch(_){}
@@ -255,6 +269,7 @@ function buildBottomNav(){
       if(page==='more'){
         e?.preventDefault?.();
         e?.stopPropagation?.();
+        closeReferenceTransientUi();
         $('#moreMobile')?.click();
         setTimeout(syncBottom,0);
       }else if(page==='study'){
@@ -384,9 +399,17 @@ function buildReferenceProfileTools(){
   searchBtn.type='button';searchBtn.dataset.nrxUtility='search';
   searchBtn.innerHTML='<span>⌕</span><b>Pesquisar no NEXO</b>';
   searchBtn.addEventListener('click',()=>{
-    menu.classList.add('hidden');
-    go('inicio');
-    setTimeout(()=>{placeSearch();const input=$('#globalSearch');if(input){try{input.focus({preventScroll:false})}catch(_){input.focus()}}},80);
+    go('inicio',{keepSearch:true});
+    requestAnimationFrame(()=>requestAnimationFrame(()=>{
+      placeSearch();
+      const input=$('#globalSearch');
+      if(!input)return;
+      try{
+        if(typeof setMobileSearchOpen==='function')setMobileSearchOpen(innerWidth<=760,{focus:false});
+      }catch(_){}
+      try{input.focus({preventScroll:false})}catch(_){input.focus()}
+      input.select?.();
+    }));
   });
   utilities.appendChild(searchBtn);
   const themeBtn=document.createElement('button');
