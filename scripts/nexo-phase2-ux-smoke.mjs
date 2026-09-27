@@ -65,7 +65,31 @@ try{
     document.querySelector('#moreMobile')?.click();
     await new Promise(r=>requestAnimationFrame(r));
     const menuLocked=document.body.classList.contains('mobile-menu-open')&&document.documentElement.classList.contains('mobile-menu-open');
-    document.querySelector('#closeMenu')?.click();
+
+    // Routing from the fixed mobile nav must clear transient UI layers so the next tap is never blocked.
+    const routeFromMenu=document.querySelector('[data-nrx-bottom="questoes"]');
+    routeFromMenu?.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',isPrimary:true}));
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(r)));
+    const routeClearsTransientUi=Boolean(
+      document.querySelector('#questoes')?.classList.contains('active') &&
+      !document.body.classList.contains('mobile-menu-open') &&
+      !document.documentElement.classList.contains('mobile-menu-open') &&
+      !document.querySelector('#sidebar')?.classList.contains('open') &&
+      document.querySelector('#scrim')?.classList.contains('hidden')
+    );
+
+    // Profile search should route home and focus without the old fixed timeout.
+    if(typeof openPage==='function')openPage('redacao');
+    await new Promise(r=>requestAnimationFrame(r));
+    document.querySelector('#profileButton')?.click();
+    const profileSearch=document.querySelector('[data-nrx-utility="search"]');
+    profileSearch?.click();
+    await new Promise(r=>requestAnimationFrame(()=>requestAnimationFrame(()=>requestAnimationFrame(r))));
+    const profileSearchReady=Boolean(
+      document.querySelector('#inicio')?.classList.contains('active') &&
+      document.activeElement===search &&
+      search?.closest('.search')?.classList.contains('search-open')
+    );
 
     // Questões: the Phase 1 interaction budget already validates pointerdown navigation.
     // Here we validate the Phase 2 page itself after routing.
@@ -163,6 +187,8 @@ try{
       },
       searchKeyboard,
       menuLocked,
+      routeClearsTransientUi,
+      profileSearchReady,
       questions:questionsSnapshot,
       essay:{
         font:cssPx(essay),
@@ -194,6 +220,8 @@ try{
   if(!result.homeGuidance.visible||!/Porcentagem/i.test(result.homeGuidance.title))failures.push('home-next-action');
   if(!result.searchKeyboard)failures.push('search-keyboard-navigation');
   if(!result.menuLocked)failures.push('mobile-menu-scroll-lock');
+  if(!result.routeClearsTransientUi)failures.push('mobile-route-transient-ui');
+  if(!result.profileSearchReady)failures.push('profile-search-route-focus');
   if(result.bottomSizes.some(x=>x.h<44||x.font<11.5))failures.push('bottom-nav-touch-or-type');
   if(!result.questions.recommended)failures.push('questions-recommended-cta');
   if(result.questions.recommendedButtonHeight<44)failures.push('questions-recommended-touch');
