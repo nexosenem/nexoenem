@@ -615,7 +615,7 @@ function trapDialogKeydown(e){
     return;
   }
   if(e.key!=='Tab')return;
-  const focusables=$('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',dialog)
+  const focusables=$$('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',dialog)
     .filter(el=>!el.disabled&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden');
   if(!focusables.length)return;
   const first=focusables[0],last=focusables[focusables.length-1];
