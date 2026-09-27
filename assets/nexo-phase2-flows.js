@@ -615,8 +615,8 @@ function trapDialogKeydown(e){
     return;
   }
   if(e.key!=='Tab')return;
-  const focusables=$$('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',dialog)
-    .filter(el=>!el.disabled&&getComputedStyle(el).display!=='none');
+  const focusables=$('button,[href],input,select,textarea,[tabindex]:not([tabindex="-1"])',dialog)
+    .filter(el=>!el.disabled&&el.getClientRects().length>0&&getComputedStyle(el).visibility!=='hidden');
   if(!focusables.length)return;
   const first=focusables[0],last=focusables[focusables.length-1];
   if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus()}
@@ -691,9 +691,7 @@ function syncOnboardingSemantics({focus=false}={}){
   const trulyOpen=!modal.classList.contains('hidden')&&document.body.classList.contains('onboarding-open');
   if(focus&&trulyOpen&&active){
     const title=$('h3',active);
-    requestAnimationFrame(()=>{
-      try{title?.focus({preventScroll:true})}catch(_){title?.focus()}
-    });
+    try{title?.focus({preventScroll:true})}catch(_){title?.focus()}
   }
 }
 
