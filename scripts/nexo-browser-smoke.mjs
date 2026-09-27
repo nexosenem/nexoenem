@@ -2224,10 +2224,36 @@ async function runProfile(browser,name,viewport){
       document.querySelector('#onboardingNext')?.click();
       await wait(30);
       const step2=Number(state.onboarding?.step||0);
-      result.onboarding.next=step2!==step1&&step2>0;
+      result.onboarding.step2=step2===2;
+
+      document.querySelector('[data-goal-score="850"]')?.click();
+      result.onboarding.goalSelection=Number(state.onboarding?.goalScore||0)===850;
+      document.querySelector('#onboardingNext')?.click();
+      await wait(30);
+      const step3=Number(state.onboarding?.step||0);
+      result.onboarding.step3=step3===3;
+
+      if(!state.onboarding?.areas?.length)document.querySelector('[data-onboarding-area="Matemática"]')?.click();
+      result.onboarding.areaSelection=Boolean(state.onboarding?.areas?.length);
+      document.querySelector('#onboardingNext')?.click();
+      await wait(30);
+      const step4=Number(state.onboarding?.step||0);
+      result.onboarding.step4=step4===4;
+
+      document.querySelector('[data-onboarding-minutes="30"]')?.click();
+      result.onboarding.minutesSelection=Number(state.onboarding?.dailyMinutes||0)===30;
+      document.querySelector('#onboardingNext')?.click();
+      await wait(30);
+      const step5=Number(state.onboarding?.step||0);
+      result.onboarding.step5=step5===5;
+
+      document.querySelector('[data-onboarding-diagnostic="no"]')?.click();
+      result.onboarding.diagnosticSelection=state.onboarding?.diagnostic===false;
+      result.onboarding.finalCta=/criar meu plano/i.test(document.querySelector('#onboardingNext')?.textContent||'');
+
       document.querySelector('#onboardingBack')?.click();
       await wait(30);
-      result.onboarding.back=Number(state.onboarding?.step||0)===step1;
+      result.onboarding.back=Number(state.onboarding?.step||0)===4;
       if(typeof closeNexoOnboarding==='function')closeNexoOnboarding();
       result.onboarding.closed=Boolean(onboarding?.classList.contains('hidden'))&&!document.body.classList.contains('onboarding-open');
 
