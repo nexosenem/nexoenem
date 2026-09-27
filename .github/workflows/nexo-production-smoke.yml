@@ -76,6 +76,9 @@ jobs:
       - name: Phase 2 accessibility smoke
         run: node scripts/nexo-phase2-accessibility-smoke.mjs
 
+      - name: Phase 2 admin isolation smoke
+        run: node scripts/nexo-phase2-admin-isolation.mjs
+
       - name: Cross-browser mobile smoke
         run: node scripts/nexo-phase2-browser-compat.mjs
 
